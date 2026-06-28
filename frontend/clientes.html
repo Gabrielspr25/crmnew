@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VentasPro Nuevo — Clientes (CONECTADO)</title>
+<style>
+  body[data-theme="day"]{ --bg:#e9edf6; --card:#fff; --card2:#f4f6fc; --line:#e3e8f2; --txt:#1f2740; --txt2:#5b6480; --txt3:#9099b3; --primary:#2f6bff; --primary-soft:#e8efff; --green:#15a35a; --green-soft:#d8f5e6; --green-border:#a7e3c4; --violet:#6d57e0; --violet-soft:#ece8fc; --red:#dc2626;}
+  body[data-theme="dark"]{ --bg:#0f1320; --card:#1a1f33; --card2:#212744; --line:rgba(255,255,255,0.08); --txt:#eef0fb; --txt2:#9aa3bd; --txt3:#6b7494; --primary:#4b82ff; --primary-soft:rgba(75,130,255,0.16); --green:#34d399; --green-soft:rgba(52,211,153,0.15); --green-border:rgba(52,211,153,0.4); --violet:#a78bfa; --violet-soft:rgba(139,124,246,0.18); --red:#f87171;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Segoe UI",Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);display:flex;min-height:100vh;}
+  .side{width:200px;flex-shrink:0;background:#0e1426;color:#cdd5ea;padding:18px 12px;}
+  .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:#fff;padding:6px 8px 16px;}
+  .brand .logo{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#4b82ff,#6d57e0);display:flex;align-items:center;justify-content:center;}
+  .nav{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;font-size:13.5px;color:#aab3cd;}
+  .nav.on{background:var(--primary);color:#fff;} .nav .d{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--line);background:var(--card);}
+  .conn{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;}
+  .conn.ok{color:var(--green);background:var(--green-soft);border:1px solid var(--green-border);}
+  .conn.bad{color:var(--red);background:rgba(220,38,38,.12);}
+  .sp{flex:1;}
+  .toggle{background:var(--primary);color:#fff;border:none;border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+  .content{padding:22px;overflow:auto;}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .head h1{font-size:23px;font-weight:700;}
+  .head .s{font-size:12.5px;color:var(--txt2);}
+  .newbtn{background:var(--primary);color:#fff;border:none;border-radius:11px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--txt3);font-weight:500;font-size:11px;text-transform:uppercase;padding:12px 16px;background:var(--card2);}
+  td{padding:13px 16px;border-top:1px solid var(--line);}
+  .cli{display:flex;align-items:center;gap:11px;}
+  .av{width:34px;height:34px;border-radius:10px;background:var(--violet-soft);color:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+  .pill{font-size:11px;font-weight:600;padding:3px 11px;border-radius:999px;color:var(--green);background:var(--green-soft);}
+  .empty{padding:30px;text-align:center;color:var(--txt3);}
+</style>
+</head>
+<body data-theme="day">
+  <aside class="side">
+    <div class="brand"><span class="logo">V</span> VentasPro</div>
+    <div class="nav on"><span class="d"></span>Clientes</div>
+    <div class="nav"><span class="d"></span>Asana Seg.</div>
+    <div class="nav"><span class="d"></span>Comisiones</div>
+    <div class="nav"><span class="d"></span>Configuración</div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <span id="conn" class="conn bad">conectando…</span>
+      <div class="sp"></div>
+      <button class="toggle" onclick="tog()"><span id="tgt">Modo noche</span></button>
+    </div>
+    <div class="content">
+      <div class="head">
+        <div><h1>Clientes</h1><div class="s">Datos en vivo desde el backend nuevo (puerto 4000) 🔌</div></div>
+        <button class="newbtn" onclick="addClient()">+ Nuevo cliente</button>
+      </div>
+      <div class="tablecard">
+        <table>
+          <thead><tr><th>Empresa</th><th>Vendedor</th><th>Ciudad</th><th>BANs</th><th>Líneas activas</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="5" class="empty">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API = 'http://localhost:4000';
+  let token = null;
+  function tog(){var b=document.body,d=b.getAttribute('data-theme')==='day';b.setAttribute('data-theme',d?'dark':'day');document.getElementById('tgt').textContent=d?'Modo día':'Modo noche';}
+  function ini(n){return (n||'?').trim().slice(0,2).toUpperCase();}
+
+  async function init(){
+    try{
+      const r = await fetch(API+'/api/auth/dev-login',{method:'POST'});
+      token = (await r.json()).token;
+      document.getElementById('conn').className='conn ok';
+      document.getElementById('conn').textContent='✓ conectado al backend';
+      load();
+    }catch(e){
+      document.getElementById('conn').textContent='✗ backend apagado (puerto 4000)';
+      document.getElementById('rows').innerHTML='<tr><td colspan="5" class="empty">No se pudo conectar. ¿Está prendido el backend?</td></tr>';
+    }
+  }
+  async function load(){
+    const r = await fetch(API+'/api/clients',{headers:{Authorization:'Bearer '+token}});
+    const data = await r.json();
+    const tb = document.getElementById('rows');
+    if(!data.length){ tb.innerHTML='<tr><td colspan="5" class="empty">Sin clientes todavía. Agregá uno con el botón.</td></tr>'; return; }
+    tb.innerHTML = data.map(c=>`<tr>
+      <td><div class="cli"><span class="av">${ini(c.name)}</span><b>${c.name}</b></div></td>
+      <td>${c.salesperson || '<span style="color:var(--txt3)">— sin asignar</span>'}</td>
+      <td>${c.city || '—'}</td>
+      <td>${c.ban_count}</td>
+      <td><span class="pill">${c.active_lines}</span></td>
+    </tr>`).join('');
+  }
+  async function addClient(){
+    const name = prompt('Nombre del cliente nuevo:');
+    if(!name) return;
+    await fetch(API+'/api/clients',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name})});
+    load();
+  }
+  init();
+</script>
+</body>
+</html>

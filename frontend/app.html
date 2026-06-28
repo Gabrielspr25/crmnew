@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VentasPro Nuevo</title>
+<style>
+  body[data-theme="day"]{ --bg:#e9edf6; --card:#fff; --card2:#f4f6fc; --line:#e3e8f2; --txt:#1f2740; --txt2:#5b6480; --txt3:#9099b3; --primary:#2f6bff; --primary-soft:#e8efff; --green:#15a35a; --green-soft:#d8f5e6; --green-border:#a7e3c4; --amber:#c9820a; --amber-soft:#fdf0d4; --amber-border:#f0d294; --red:#dc2626; --red-soft:#fde7e7; --violet:#6d57e0; --violet-soft:#ece8fc; --teal:#0d9488; --teal-soft:#d4f3ef; --track:#e7ebf3;}
+  body[data-theme="dark"]{ --bg:#0f1320; --card:#1a1f33; --card2:#212744; --line:rgba(255,255,255,0.08); --txt:#eef0fb; --txt2:#9aa3bd; --txt3:#6b7494; --primary:#4b82ff; --primary-soft:rgba(75,130,255,0.16); --green:#34d399; --green-soft:rgba(52,211,153,0.15); --green-border:rgba(52,211,153,0.4); --amber:#fbbf5a; --amber-soft:rgba(251,191,90,0.15); --amber-border:rgba(251,191,90,0.4); --red:#f87171; --red-soft:rgba(248,113,113,0.13); --violet:#a78bfa; --violet-soft:rgba(139,124,246,0.18); --teal:#2dd4bf; --teal-soft:rgba(45,212,191,0.15); --track:rgba(255,255,255,0.08);}
+  *{box-sizing:border-box;margin:0;padding:0;} a{color:inherit;text-decoration:none;}
+  body{font-family:"Segoe UI",Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);display:flex;min-height:100vh;}
+  .side{width:206px;flex-shrink:0;background:#0e1426;color:#cdd5ea;padding:18px 12px;overflow-y:auto;max-height:100vh;}
+  .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:#fff;padding:6px 8px 16px;}
+  .brand .logo{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#4b82ff,#6d57e0);display:flex;align-items:center;justify-content:center;}
+  .nav{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;font-size:13.5px;color:#aab3cd;cursor:pointer;margin-bottom:2px;}
+  .nav.on{background:var(--primary);color:#fff;} .nav .d{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid var(--line);background:var(--card);}
+  .conn{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;}
+  .conn.ok{color:var(--green);background:var(--green-soft);border:1px solid var(--green-border);} .conn.bad{color:var(--red);background:var(--red-soft);}
+  .sp{flex:1;} .toggle{background:var(--primary);color:#fff;border:none;border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+  .content{padding:22px;overflow:auto;}
+  h1{font-size:23px;font-weight:700;} .crumb{font-size:13px;color:var(--txt2);margin-bottom:14px;} .crumb a{color:var(--primary);}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .head .s{font-size:12.5px;color:var(--txt2);}
+  .btn{background:var(--primary);color:#fff;border:none;border-radius:11px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .btn.green{background:var(--green);} .btn.ghost{background:var(--card2);color:var(--txt2);border:1px solid var(--line);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--txt3);font-weight:500;font-size:11px;text-transform:uppercase;padding:12px 16px;background:var(--card2);}
+  td{padding:13px 16px;border-top:1px solid var(--line);}
+  tr.click{cursor:pointer;} tr.click:hover{background:var(--card2);}
+  .av{width:34px;height:34px;border-radius:10px;background:var(--violet-soft);color:var(--violet);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+  .cli{display:flex;align-items:center;gap:11px;}
+  .pill{font-size:11px;font-weight:600;padding:3px 11px;border-radius:999px;}
+  .pill.green{color:var(--green);background:var(--green-soft);} .pill.amber{color:var(--amber);background:var(--amber-soft);} .pill.red{color:var(--red);background:var(--red-soft);} .pill.violet{color:var(--violet);background:var(--violet-soft);}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 16px;}
+  .kpi .l{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;} .kpi .v{font-size:21px;font-weight:700;margin-top:3px;}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;} @media(max-width:900px){.grid2{grid-template-columns:1fr;}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;}
+  .panel h3{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;}
+  .steps{display:flex;flex-direction:column;gap:8px;}
+  .step{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;background:var(--card2);}
+  .step.done{background:var(--green-soft);} .step.cur{border:1.5px solid var(--green-border);}
+  .sdot{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;background:var(--card);border:1px solid var(--line);color:var(--txt3);}
+  .sdot.done{background:var(--green);color:#fff;border:none;}
+  .flowgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px;}
+  .flowcard{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:13px;}
+  .flowhead{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .flowtitle{font-weight:800;color:var(--txt);font-size:13px;}
+  .flowcount{margin-left:auto;color:var(--txt3);font-size:11px;font-weight:700;}
+  .flowbar{height:7px;background:var(--track);border-radius:99px;overflow:hidden;margin-bottom:12px;}
+  .flowbar span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:99px;}
+  .nowstep{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--green-border);border-radius:11px;padding:10px 11px;margin-bottom:10px;}
+  .nowstep .label{font-size:10px;text-transform:uppercase;color:var(--green);font-weight:800;letter-spacing:.04em;}
+  .nowstep .name{font-size:14px;font-weight:800;color:var(--txt);margin-top:1px;}
+  .stepchips{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:7px;}
+  .stepchip{min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--card);padding:7px 8px;font-size:11px;color:var(--txt2);display:flex;align-items:center;gap:7px;}
+  .stepchip .n{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--card2);color:var(--txt3);font-size:10px;font-weight:800;flex-shrink:0;}
+  .stepchip.done{background:var(--green-soft);color:var(--green);border-color:var(--green-border);}
+  .stepchip.done .n{background:var(--green);color:#fff;}
+  .stepchip.cur{border-color:var(--green-border);box-shadow:0 0 0 2px var(--green-soft);}
+  .logitem{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line);} .logitem:first-child{border-top:none;}
+  .lic{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .lic.llamada{background:var(--primary-soft);} .lic.nota{background:var(--violet-soft);} .lic.paso{background:var(--green-soft);}
+  .bar{height:10px;background:var(--track);border-radius:6px;overflow:hidden;} .bar .fill{height:100%;border-radius:6px;background:var(--green);}
+  .prow{display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line);} .prow:first-child{border-top:none;}
+  .inp{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--txt);font-family:inherit;}
+  .empty{padding:26px;text-align:center;color:var(--txt3);}
+  .ccard{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+  .chead{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;flex-wrap:wrap;}
+  .chead .ar{color:var(--txt3);font-size:11px;} .ccard.open .chead .ar{transform:rotate(90deg);}
+  .clines{display:none;padding:2px 16px 12px;flex-direction:column;gap:8px;} .ccard.open .clines{display:flex;}
+  .cline{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;flex-wrap:wrap;}
+  .cinp{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--txt);text-align:right;}
+  .qty{display:inline-block;min-width:28px;padding:2px 9px;border-radius:6px;background:var(--green-soft);color:var(--green);font-weight:700;border:1px solid var(--green-border);}
+  .grow{cursor:pointer;} .grow:hover{background:var(--card2);} .grow .ar{color:var(--txt3);font-size:11px;}
+  td.c,th.c{text-align:center;} td.r,th.r{text-align:right;}
+  .lrow td{background:var(--card2);}
+  .kpi.click{cursor:pointer;transition:border-color .15s,box-shadow .15s;} .kpi.click:hover{border-color:var(--primary);}
+  .kpi.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);}
+  .kpi .bk{font-size:11.5px;color:var(--txt2);margin-top:7px;line-height:1.65;}
+  .kpi .v .tot{font-size:11px;font-weight:500;color:var(--txt3);margin-left:6px;}
+  .search{max-width:340px;}
+  .acell{display:flex;flex-direction:column;gap:4px;align-items:stretch;}
+  .astep{display:flex;justify-content:space-between;align-items:center;gap:4px;width:100%;background:var(--card2);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:10.5px;color:var(--txt2);cursor:pointer;}
+  .astep:hover{border-color:var(--primary);}
+  .asubs{font-size:9.5px;color:var(--txt3);}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto;}
+  .flbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+  .ctabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;}
+  .ctab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt2);padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .ctab.on{color:var(--primary);border-bottom-color:var(--primary);}
+  .i3{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;}
+  .i3 h4{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px;}
+  .irow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .irow span{color:var(--txt3);} .irow b{text-align:right;}
+  @media(max-width:760px){.i3{grid-template-columns:1fr;}}
+  .paso-wrap{display:flex;gap:16px;align-items:flex-start;}
+  .paso-side{width:190px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
+  .paso-prod{padding:11px 14px;border-radius:10px;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:13.5px;font-weight:600;color:var(--txt2);}
+  .paso-prod.on{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .paso-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;}
+  .paso-row{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;}
+  .paso-num{width:26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0;}
+  .paso-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);white-space:nowrap;}
+  @media(max-width:760px){.paso-wrap{flex-direction:column;}.paso-side{width:100%;flex-direction:row;flex-wrap:wrap;}}
+  .asana-kpis{display:grid;grid-template-columns:1.3fr repeat(3,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
+  .asana-kpis .kpi{min-height:86px;}
+  .asana-kpis .main{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);}
+  .kpi .hint{font-size:11.5px;color:var(--txt2);margin-top:6px;line-height:1.45;}
+  .logbox{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:start;margin-bottom:12px;}
+  .logbody{min-height:76px;resize:vertical;text-align:left;}
+  .logmeta{font-size:11px;color:var(--txt3);margin-top:3px;}
+  @media(max-width:900px){.asana-kpis{grid-template-columns:1fr 1fr;}.asana-kpis .main{grid-column:1/-1;}}
+  @media(max-width:720px){.logbox{grid-template-columns:1fr;}.logbox .btn{width:100%;}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+</head>
+<body data-theme="dark">
+  <aside class="side">
+    <div class="brand"><span class="logo">V</span> VentasPro</div>
+    <a class="nav" href="#/panel"><span class="d"></span>Panel General</a>
+    <a class="nav" href="#/clientes"><span class="d"></span>Clientes</a>
+    <a class="nav" href="#/asana"><span class="d"></span>Asana Seg.</a>
+    <a class="nav" href="#/comisiones"><span class="d"></span>Comisiones</a>
+    <a class="nav" href="#/pendientes"><span class="d"></span>Pendientes Tango</a>
+    <a class="nav" href="#/metas"><span class="d"></span>Metas</a>
+    <a class="nav" href="#/historial"><span class="d"></span>Historial</a>
+    <a class="nav" href="#/comparativa"><span class="d"></span>Comparativa</a>
+    <a class="nav" href="#/correos"><span class="d"></span>Correos</a>
+    <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
+    <a class="nav" href="#/import"><span class="d"></span>Import New</a>
+    <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
+    <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
+  </aside>
+  <div class="main">
+    <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo día</span></button></div>
+    <div class="content" id="view"><div class="empty">Cargando…</div></div>
+  </div>
+
+<script>
+const API=''; // mismo origen: funciona en localhost:4000 y en el servidor (sin hardcodear host)
+let token=null, currentUser=null;
+const $=(id)=>document.getElementById(id);
+function tog(){const b=document.body,d=b.getAttribute('data-theme')==='day';b.setAttribute('data-theme',d?'dark':'day');$('tgt').textContent=d?'Modo día':'Modo noche';}
+function money(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function ini(n){return (n||'?').trim().slice(0,2).toUpperCase();}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409)throw new Error(p+' -> '+r.status);return r.json();}
+function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-01';}
+
+// ---------------- VIEWS ----------------
+// ---- Clientes: estado de pantalla (tab + búsqueda + página) ----
+let cliTab='active', cliQ='', cliPage=1;
+const CLI_TABS=[['active','Activos'],['cancelled','Cancelados'],['following','Seguimiento'],['incomplete','Incompletos']];
+const CLI_PILL={active:'green',cancelled:'red',following:'violet',incomplete:'amber'};
+async function reClientes(){ $('view').innerHTML=await viewClientes(); }
+function setCliTab(t){ cliTab=t; cliPage=1; reClientes(); }
+function cliSearch(ev){ if(ev.key==='Enter'){ cliQ=ev.target.value.trim(); cliPage=1; reClientes(); } }
+function cliPageGo(d){ cliPage+=d; reClientes(); }
+function fmtDate(d){ if(!d) return '—'; const x=new Date(d); if(isNaN(x)) return '—'; return x.toLocaleDateString('es-PR',{day:'numeric',month:'numeric',year:'numeric'}); }
+function vencBadge(d){ if(!d) return ''; const days=Math.floor((new Date(d)-new Date())/86400000); if(isNaN(days)) return ''; if(days<0) return `<div class="pill red" style="margin-top:3px;font-size:10px">Vencido hace ${-days} días</div>`; if(days<=60) return `<div class="pill amber" style="margin-top:3px;font-size:10px">Vence en ${days} días</div>`; return ''; }
+
+async function viewClientes(){
+  const d=await api(`/api/clients-real?tab=${cliTab}&q=${encodeURIComponent(cliQ)}`);
+  const st=d.stats||{}, lm=st.line_metrics||{};
+  const counts={active:st.active_count,cancelled:st.cancelled_count,following:st.following_count,incomplete:st.incomplete_count};
+  const card=(t,label)=>{ const m=lm[t]||{}, on=cliTab===t; return `<div class="kpi click${on?' on':''}" onclick="setCliTab('${t}')">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="l">${label}</span><span class="pill ${CLI_PILL[t]}">${counts[t]??0}</span></div>
+    <div class="bk">Móvil <b>${m.mobile_lines||0}</b> · Fijo <b>${m.fixed_lines||0}</b> <span style="color:var(--green)">${money(m.fixed_monthly_value)}</span><br>TV <b>${m.claro_tv_lines||0}</b> · MPLS <b>${m.mpls_lines||0}</b> · Cloud <b>${m.cloud_lines||0}</b> · Inc <b>${m.incomplete_lines||0}</b></div></div>`; };
+  const all=d.clients||[], per=50, pages=Math.max(1,Math.ceil(all.length/per)); if(cliPage>pages)cliPage=pages; const from=(cliPage-1)*per, rows=all.slice(from,from+per);
+  const tr=c=>{ const bans=(c.ban_numbers||'').split(', ').filter(Boolean); const banShow=bans.length?bans[0]+(bans.length>1?` <span style="color:var(--txt3)">(+${bans.length-1})</span>`:''):'—'; const subN=Number(c.subscriber_count||0); const sub=c.primary_subscriber_phone?(c.primary_subscriber_phone+(subN>1?` <span style="color:var(--txt3)">(+${subN-1})</span>`:'')):'—'; const act=Number(c.active_ban_count||0)>0; const nombre=c.name?`<b>${c.name}</b>`:'<b style="color:var(--txt3)">sin nombre</b>'; return `<tr class="click" onclick="abrirCliente('${c.id}')">
+    <td><div class="cli"><span class="av">${ini(c.name||'?')}</span>${nombre}</div></td>
+    <td>${c.phone||c.mobile||c.cellular||'—'}</td>
+    <td style="color:var(--txt2)">${fmtDate(c.last_activity)}</td>
+    <td>${c.primary_service_type||'—'}</td>
+    <td><span class="pill" style="background:var(--card2);color:var(--txt2)">${c.base||'BD propia'}</span></td>
+    <td><span class="pill ${act?'green':'red'}">${act?'Activo':'Cancelado'}</span></td>
+    <td>${c.vendor_name||'<span style="color:var(--txt3)">Sin asignar</span>'}</td>
+    <td>${banShow}</td>
+    <td>${sub}</td>
+    <td>${fmtDate(c.primary_contract_end_date)}${vencBadge(c.primary_contract_end_date)}</td>
+    <td style="text-align:center;color:var(--primary)">→</td></tr>`; };
+  return `<div class="head"><div><h1>Clientes</h1><div class="s">Información de todos los clientes · data REAL de crm_pro</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="btn ghost" onclick="alert('Reportes: próximamente')">📊 Reportes</button>
+      <button class="btn" style="background:var(--violet)" onclick="alert('Generar Oferta IA: próximamente')">✨ Generar Oferta IA</button>
+      <button class="btn ghost" onclick="alert('Exportar: próximamente')">⬇ Exportar</button>
+      <button class="btn" onclick="nuevoCliente()">+ Nuevo cliente</button>
+    </div></div>
+  <div class="kpis">${CLI_TABS.map(t=>card(t[0],t[1])).join('')}
+    <div class="kpi"><div class="l">Total · ${CLI_TABS.find(t=>t[0]===cliTab)[1]}</div><div class="v">${all.length}</div></div></div>
+  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por nombre… (Enter)" value="${cliQ}" onkeydown="cliSearch(event)"></div>
+  <div class="s" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">Mostrando ${all.length?from+1:0}-${Math.min(from+per,all.length)} de ${all.length} · pág ${cliPage}/${pages}
+    <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage>1?'cliPageGo(-1)':''}">Anterior</button>
+    <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage<pages?'cliPageGo(1)':''}">Siguiente</button></div>
+  <div class="card" style="overflow-x:auto"><table style="min-width:1200px"><thead><tr>
+    <th>Empresa</th><th>Celular</th><th>Última actividad</th><th>Tipo BAN</th><th>Base</th><th>Estado</th><th>Vendedor</th><th>Num BAN</th><th>Suscriptor</th><th>Fecha vencimiento</th><th></th>
+  </tr></thead><tbody>${rows.map(tr).join('')||'<tr><td colspan="11" class="empty">Sin clientes en este filtro</td></tr>'}</tbody></table></div>`;
+}
+// ---- Modal de cliente (réplica ClientModal real, 5 tabs) ----
+let cliM=null, cliMTab='info', cliMSub='activas';
+const CLI_TABS_M=[['info','Información del Cliente'],['bans','BANs y Suscriptores'],['hist','Historial de Gestiones'],['comp','Comparativas'],['ventas','Ventas']];
+function cliAct(s){return ['a','activo','active','activa'].includes(String(s||'').toLowerCase());}
+function cliCanc(s){const x=String(s||'').toLowerCase();return x.includes('cancel')||x==='c'||x==='inactivo'||x==='inactive';}
+function cliNoren(s){return String(s||'').toLowerCase().includes('no_renueva');}
+function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
+function cliWIP(l){alert(l+': lo conecto en el próximo paso (copiando del viejo).');}
+function setCliMTab(t){cliMTab=t;renderCli();}
+function setCliMSub(f){cliMSub=f;renderCli();}
+async function enviarSeguimientoCli(id){ try{ const r=await api('/api/asana-real/from-client',{method:'POST',body:{client_id:id}}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo enviar a seguimiento: '+e.message); } }
+async function abrirCliente(id){
+  if(!id){ alert('Cliente sin id'); return; }
+  try{ cliM=await api('/api/clients-real/'+id); }catch(e){ alert('No se pudo abrir el cliente: '+e.message); return; }
+  cliMTab='info'; cliMSub='activas';
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal" id="cliModal" style="max-width:1040px;width:96%"></div></div>`);
+  renderCli();
+}
+function renderCli(){
+  const c=cliM; if(!c||!$('cliModal'))return;
+  const tabbar=CLI_TABS_M.map(t=>`<button class="ctab ${cliMTab===t[0]?'on':''}" onclick="setCliMTab('${t[0]}')">${t[1]}</button>`).join('');
+  const body=cliMTab==='bans'?tabBans(c):cliMTab==='hist'?tabHist(c):cliMTab==='comp'?tabComp(c):cliMTab==='ventas'?tabVentas(c):tabInfo(c);
+  const enSeg=!!c.opportunity_id;
+  const badge=(enSeg?'<span class="pill green">En seguimiento</span>':'<span class="pill" style="background:var(--card2);color:var(--txt3)">No está en seguimiento</span>')+(c.pendiente_validacion?' <span class="pill amber">Cliente nuevo</span>':'');
+  const segBtn=enSeg
+    ? `<button class="btn" style="background:var(--violet)" onclick="cerrarModal();location.hash='#/opp/${c.opportunity_id}'">↗ Ver en Asana</button>`
+    : `<button class="btn green" onclick="enviarSeguimientoCli('${c.id}')">⤴ Enviar a Seguimiento</button>`;
+  $('cliModal').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div><div style="display:flex;align-items:center;gap:10px"><h2 style="font-size:20px">${c.name||'—'}</h2>${badge}</div><div class="s">Gestión completa del cliente</div></div>
+      <div style="display:flex;gap:8px">${segBtn}<button class="btn ghost" style="padding:6px 10px" onclick="cerrarModal()">✕</button></div></div>
+    <div class="ctabs">${tabbar}</div><div style="margin-top:14px">${body}</div>`;
+}
+function tabInfo(c){
+  const row=(l,v)=>`<div class="irow"><span>${l}</span><b>${v||'No registrado'}</b></div>`;
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:16px">
+    <button class="btn ghost" onclick="cliWIP('Enviar Correo')">✉ Enviar Correo</button>
+    <button class="btn" onclick="cliWIP('Editar Cliente')">✎ Editar Cliente</button>
+    <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliWIP('Eliminar Cliente')">🗑 Eliminar Cliente</button></div>
+  <div class="i3">
+    <div><h4>Datos de contacto</h4>${row('Nombre',c.name)}${row('Email',c.email)}${row('Tel. principal',c.phone)}${row('Tel. secundario',c.additional_phone)}${row('Tel. móvil',c.mobile||c.cellular)}</div>
+    <div><h4>Ubicación</h4>${row('Dirección',c.address)}${row('Ciudad',c.city)}${row('Código postal',c.zip_code)}</div>
+    <div><h4>Información comercial</h4>${row('Vendedor',c.vendor_name||'Sin asignar')}</div>
+  </div>`;
+}
+function tabBans(c){
+  const byBan={}; (c.subscribers||[]).forEach(s=>{(byBan[s.ban_number]=byBan[s.ban_number]||[]).push(s);});
+  const cards=(c.bans||[]).map(b=>{
+    const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
+    const sel=cliMSub==='canceladas'?ca:cliMSub==='noren'?nr:a;
+    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:200px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliWIP('Editar suscriptor')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliWIP('No renueva ahora')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliWIP('Cancelar suscriptor')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
+    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="cliWIP('Subir/Pegar (OCR)')">⇪ Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">✎ Editar</button></span></div>
+      <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='noren'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('noren')">No renueva ahora (${nr.length})</button><button class="btn ${cliMSub==='canceladas'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliWIP('Agregar Suscriptor')">+ Agregar Suscriptor</button></div></div>`;
+  }).join('')||'<div class="empty">Sin BANs</div>';
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliWIP('Nuevo BAN')">+ Nuevo BAN</button></div>${cards}`;
+}
+function tabHist(c){
+  const h=(c.historial||[]).map(x=>`<div class="logitem"><span class="lic paso">✅</span><div><div style="font-size:13.5px">${x.note||''}</div><div style="font-size:11.5px;color:var(--txt3)">${x.created_by_username||'—'} · ${x.product_key||''} · ${new Date(x.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin gestiones registradas en Asana todavía.</div>';
+  return `<div class="panel"><h3>Historial de gestiones (Asana)</h3>${h}</div>`;
+}
+function tabVentas(c){
+  const v=(c.ventas||[]).map(x=>`<tr><td>${x.ban_number||'—'}</td><td>${x.phone||'—'}</td><td>${x.mes||'—'}</td><td class="r">${money(x.monthly_value)}</td><td class="r" style="color:var(--green)">${money(x.company_earnings)}</td><td class="r">${money(x.vendor_commission)}</td><td><span class="pill ${x.validation_status==='confirmed'?'green':'amber'}">${x.validation_status||'—'}</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Sin ventas (comisiones) para este cliente.</td></tr>';
+  return `<div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Mes</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comisión$</th><th>Estado</th></tr></thead><tbody>${v}</tbody></table></div>`;
+}
+function tabComp(c){
+  const a=(c.subscribers||[]).filter(s=>cliAct(s.status)); const total=a.reduce((x,s)=>x+Number(s.monthly_value||0),0);
+  const rows=a.map(s=>`<tr><td>${s.ban_number||'—'}</td><td>${s.phone||'—'}</td><td>${s.plan||'—'}</td><td class="r" style="color:var(--green)">${money(s.monthly_value)}</td><td>${cliVenc(s.contract_end_date)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin líneas activas</td></tr>';
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn green" onclick="abrirComparativa('${c.id}')">⇄ Abrir Comparativa (oferta + Excel/PDF)</button></div>
+  <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan actual</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(total)}</td><td></td></tr></tfoot></table></div>`;
+}
+// ---- Comparativa de Planes (completa: oferta + Excel + PDF) ----
+let compCli=null, compOffer=[];
+function cerrarComp(){ const m=$('compBg'); if(m)m.remove(); }
+function compReadOffer(){ compOffer.forEach((r,i)=>{ ['ban','phone','plan','cost','notes'].forEach(f=>{ const el=$('of_'+i+'_'+f); if(el) r[f]=el.value; }); }); }
+function compAddOffer(){ compReadOffer(); compOffer.push({ban:'',phone:'',plan:'',cost:'',notes:''}); renderComp(); }
+function compDelOffer(i){ compReadOffer(); compOffer.splice(i,1); renderComp(); }
+function compTotals(){ compReadOffer(); const act=(compCli.subscribers||[]).filter(s=>cliAct(s.status)); const totalAct=act.reduce((a,s)=>a+Number(s.monthly_value||0),0); const totalOf=compOffer.reduce((a,r)=>a+(parseFloat(r.cost)||0),0); const diff=totalOf-totalAct; if($('compTotOf'))$('compTotOf').textContent=money(totalOf); if($('compDiff'))$('compDiff').textContent=money(diff); return {totalAct,totalOf,diff}; }
+async function abrirComparativa(id){
+  try{ compCli=(cliM&&cliM.id===id)?cliM:await api('/api/clients-real/'+id); }catch(e){ alert('No se pudo abrir: '+e.message); return; }
+  const act=(compCli.subscribers||[]).filter(s=>cliAct(s.status));
+  compOffer=act.map(s=>({ban:s.ban_number||'',phone:s.phone||'',plan:'',cost:'',notes:''}));
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="compBg" style="z-index:120" onclick="if(event.target===this)cerrarComp()"><div class="modal" id="compModal" style="max-width:1100px;width:97%"></div></div>`);
+  renderComp();
+}
+function renderComp(){
+  const c=compCli; if(!c||!$('compModal'))return;
+  const act=(c.subscribers||[]).filter(s=>cliAct(s.status)); const totalAct=act.reduce((a,s)=>a+Number(s.monthly_value||0),0);
+  const actRows=act.map(s=>`<tr><td>${s.ban_number||'—'}</td><td>${s.phone||'—'}</td><td>${s.plan||'—'}</td><td class="r" style="color:var(--green)">${money(s.monthly_value)}</td><td>${cliVenc(s.contract_end_date)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin líneas activas</td></tr>';
+  const ofRows=compOffer.map((r,i)=>`<tr>
+    <td><input class="cinp" style="width:90px;text-align:left" id="of_${i}_ban" value="${r.ban||''}"></td>
+    <td><input class="cinp" style="width:104px;text-align:left" id="of_${i}_phone" value="${r.phone||''}"></td>
+    <td><input class="cinp" style="width:130px;text-align:left" id="of_${i}_plan" value="${r.plan||''}" placeholder="Plan nuevo"></td>
+    <td><input class="cinp" style="width:80px" id="of_${i}_cost" value="${r.cost||''}" placeholder="0" oninput="compTotals()"></td>
+    <td><input class="cinp" style="width:170px;text-align:left" id="of_${i}_notes" value="${r.notes||''}" placeholder="Notas"></td>
+    <td><button class="btn" style="padding:4px 8px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="compDelOffer(${i})">✕</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Agregá líneas a la oferta</td></tr>';
+  const totalOf=compOffer.reduce((a,r)=>a+(parseFloat(r.cost)||0),0);
+  $('compModal').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div><h2 style="font-size:18px">⇄ Comparativa de Planes</h2><div class="s">${c.name||'—'}</div></div>
+      <div style="display:flex;gap:8px"><button class="btn ghost" onclick="compSave()">✓ Marcar Actualizado</button><button class="btn green" onclick="compExcel()">⬇ Excel</button><button class="btn ghost" onclick="generarPropuesta(false)">🌐 HTML</button><button class="btn" style="background:var(--red)" onclick="generarPropuesta(true)">📄 PDF</button><button class="btn ghost" style="padding:6px 10px" onclick="cerrarComp()">✕</button></div></div>
+    <div class="panel"><h3>Plan actual del cliente</h3><div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${actRows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(totalAct)}</td><td></td></tr></tfoot></table></div></div>
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">Oferta propuesta</h3><button class="btn" onclick="compAddOffer()">+ Agregar Línea</button></div>
+      <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan nuevo</th><th class="r">Costo</th><th>Notas</th><th></th></tr></thead><tbody>${ofRows}</tbody></table></div>
+      <div style="display:flex;gap:24px;justify-content:flex-end;margin-top:10px;font-size:14px"><span>Total oferta: <b id="compTotOf" style="color:var(--primary)">${money(totalOf)}</b></span><span>Ahorro/Dif: <b id="compDiff" style="color:var(--green)">${money(totalOf-totalAct)}</b></span></div></div>
+    <div class="panel"><h3>Notas para el PDF</h3><textarea class="inp" id="compNotas" rows="2" placeholder="Observaciones generales…"></textarea></div>`;
+}
+function compExcel(){
+  try{
+    compReadOffer(); if(typeof XLSX==='undefined'){alert('La librería de Excel no cargó (revisá internet y reabrí la página).');return;}
+    const c=compCli, act=(c.subscribers||[]).filter(s=>cliAct(s.status)), t=compTotals();
+    const wsA=XLSX.utils.json_to_sheet(act.map(s=>({BAN:s.ban_number,'Telefono':s.phone,Plan:s.plan,Costo:Number(s.monthly_value||0),Vencimiento:cliVenc(s.contract_end_date)})));
+    const wsO=XLSX.utils.json_to_sheet(compOffer.map(r=>({BAN:r.ban,'Telefono':r.phone,'Plan nuevo':r.plan,Costo:Number(r.cost||0),Notas:r.notes})));
+    const wsR=XLSX.utils.json_to_sheet([{Concepto:'Total actual',Valor:t.totalAct},{Concepto:'Total oferta',Valor:t.totalOf},{Concepto:'Diferencia',Valor:t.diff}]);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,wsA,'Plan Actual'); XLSX.utils.book_append_sheet(wb,wsO,'Oferta'); XLSX.utils.book_append_sheet(wb,wsR,'Resumen');
+    XLSX.writeFile(wb,'Comparativa_'+String(c.name||'cliente').replace(/[^a-z0-9]/gi,'_')+'.xlsx');
+  }catch(e){ alert('Error al generar Excel: '+e.message); }
+}
+function compPDF(){
+  try{
+    compReadOffer();
+    const J=window.jspdf&&window.jspdf.jsPDF; if(!J){alert('La librería de PDF no cargó (revisá internet y reabrí la página).');return;}
+    const c=compCli, act=(c.subscribers||[]).filter(s=>cliAct(s.status)), t=compTotals(), doc=new J();
+    if(typeof doc.autoTable!=='function'){alert('El plugin de tablas del PDF no cargó (autoTable). Reabrí la página con internet.');return;}
+    doc.setFontSize(14); doc.text('Comparativa de Planes - '+String(c.name||''),14,16);
+    doc.autoTable({startY:22,head:[['BAN','Telefono','Plan','Costo','Vencimiento']],body:act.map(s=>[s.ban_number||'',s.phone||'',s.plan||'',money(s.monthly_value),cliVenc(s.contract_end_date)]).concat([['','','TOTAL ACTUAL',money(t.totalAct),'']])});
+    let y=doc.lastAutoTable.finalY+8; doc.text('Oferta propuesta',14,y);
+    doc.autoTable({startY:y+4,head:[['BAN','Telefono','Plan nuevo','Costo','Notas']],body:compOffer.map(r=>[r.ban||'',r.phone||'',r.plan||'',money(r.cost),r.notes||'']).concat([['','','TOTAL OFERTA',money(t.totalOf),''],['','','AHORRO/DIF',money(t.diff),'']])});
+    const notas=$('compNotas')?$('compNotas').value:''; if(notas) doc.text('Notas: '+notas,14,doc.lastAutoTable.finalY+8);
+    doc.save('Comparativa_'+String(c.name||'cliente').replace(/[^a-z0-9]/gi,'_')+'.pdf');
+  }catch(e){ alert('Error al generar PDF: '+e.message); }
+}
+function generarPropuesta(pdf){
+  try{
+    const c=compCli, act=(c.subscribers||[]).filter(s=>cliAct(s.status));
+    const current=act.map(s=>[s.ban_number||'', s.phone||'', s.plan||'', Number(s.monthly_value||0), cliVenc(s.contract_end_date), s.equipment||'']);
+    const proposal=act.map(s=>[s.phone||'', '', '', '']); // oferta pre-llenada con las líneas del cliente (precio/equipo se definen luego)
+    const data={cliente:c.name||'Cliente', current, proposal, pdf:!!pdf};
+    const url='propuesta-template.html#'+encodeURIComponent(JSON.stringify(data));
+    const w=window.open(url,'_blank'); if(!w) alert('Permití las ventanas emergentes para ver la propuesta.');
+  }catch(e){ alert('Error al generar la propuesta: '+e.message); }
+}
+async function compSave(){
+  const t=compTotals(); const notas=$('compNotas')?$('compNotas').value:'';
+  try{ await api('/api/comparativas',{method:'POST',body:{client_id:compCli.id,name:'Comparativa '+String(compCli.name||''),current_total:t.totalAct,offer_total:t.totalOf,lines:compOffer,notes:notas}}); alert('✓ Comparativa guardada'); }catch(e){ alert('No se pudo guardar: '+e.message); }
+}
+async function viewCliente(id){
+  const c=await api('/api/clients-real/'+id);
+  const act=s=>['a','activo','active'].includes(String(s||'').toLowerCase());
+  const lineas=(c.subscribers||[]).map(s=>`<tr><td>${s.phone||'—'}</td><td>${s.plan||'—'}</td><td>${money(s.monthly_value)}</td><td><span class="pill ${act(s.status)?'green':'red'}">${act(s.status)?'Activa':(s.status||'—')}</span></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Sin líneas</td></tr>';
+  return `<div class="crumb"><a href="#/clientes">Clientes</a> / ${c.name||'—'}</div>
+  <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(c.name||'?')}</span><div><h1>${c.name||'—'}</h1><div class="s">${c.vendor_name?('Vendedor: '+c.vendor_name):'Sin vendedor (en el pool)'} · ${c.city||'sin ciudad'}</div></div></div></div>
+  <div class="kpis"><div class="kpi"><div class="l">BANs</div><div class="v">${(c.bans||[]).length}</div></div><div class="kpi"><div class="l">Líneas</div><div class="v">${(c.subscribers||[]).length}</div></div><div class="kpi"><div class="l">Email</div><div class="v" style="font-size:14px">${c.email||'—'}</div></div></div>
+  <div class="panel"><h3>BANs</h3>${(c.bans||[]).map(b=>`<div class="prow"><b>BAN ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${act(b.status)?'green':'red'}">${act(b.status)?'Activo':'Cancelado'}</span></div>`).join('')||'<div class="empty">Sin BANs</div>'}</div>
+  <div class="card"><table><thead><tr><th>Teléfono</th><th>Plan</th><th>Mensualidad</th><th>Estado</th></tr></thead><tbody>${lineas}</tbody></table></div>`;
+}
+// ---- Cliente Voz (dictado del navegador + parser sin IA) ----
+let vozRec=null, vozRecording=false;
+const VOZ_PRODS=[['','(sin producto)'],['fijo_ren','Fijo Ren'],['fijo_new','Fijo New'],['movil_ren','Movil Ren'],['movil_new','Movil New'],['claro_tv','Claro TV'],['cloud','Cloud'],['mpls','MPLS']];
+function parseVoz(t){
+  const low=(t||'').toLowerCase();
+  const digits=((t||'').match(/\d/g)||[]).join('');
+  const pm=digits.match(/(787|939|989)?\d{7}/); const telefono=pm?pm[0]:'';
+  const prodMap=[['fijo ren','fijo_ren'],['fijo renov','fijo_ren'],['fijo new','fijo_new'],['fijo nuev','fijo_new'],['movil ren','movil_ren'],['móvil ren','movil_ren'],['movil renov','movil_ren'],['móvil renov','movil_ren'],['movil new','movil_new'],['móvil new','movil_new'],['movil nuev','movil_new'],['móvil nuev','movil_new'],['claro tv','claro_tv'],['cloud','cloud'],['mpls','mpls']];
+  let product_key=''; for(const[k,v]of prodMap){ if(low.includes(k)){product_key=v;break;} }
+  let empresa=''; const em=t&&t.match(/(?:empresa|cliente|negocio)\s+([a-zA-ZáéíóúñÑ0-9 .&'-]+?)(?:\s+(?:tel[eé]fono|telefono|fijo|m[oó]vil|movil|claro|cloud|mpls|n[uú]mero|quiere|son|de)\b|[,.]|$)/i); if(em)empresa=em[1].trim();
+  let qty=''; const qm=low.match(/(\d+)\s*(l[ií]neas?|m[oó]viles?|fijos?|tv|equipos?|cuentas?)/); if(qm)qty=qm[1];
+  let monto=''; const mm=t&&t.match(/\$\s*([0-9]+(?:[.,][0-9]+)?)/); if(mm)monto=mm[1].replace(',','');
+  return {empresa,telefono,product_key,qty,monto};
+}
+function vozFields(p){
+  if(p.empresa)$('vz_emp').value=p.empresa;
+  if(p.telefono)$('vz_tel').value=p.telefono;
+  if(p.product_key)$('vz_prod').value=p.product_key;
+  if(p.qty)$('vz_qty').value=p.qty;
+  if(p.monto)$('vz_monto').value=p.monto;
+}
+function vozAnalizar(){ vozFields(parseVoz($('vz_nota').value)); }
+function vozToggleRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert('Tu navegador no soporta dictado por voz. Usá Chrome, o escribí la nota a mano.'); return; }
+  if(vozRecording){ try{vozRec.stop();}catch(e){} return; }
+  vozRec=new SR(); vozRec.lang='es-PR'; vozRec.continuous=true; vozRec.interimResults=true;
+  const base=$('vz_nota').value?($('vz_nota').value+' '):'';
+  vozRec.onresult=(e)=>{ let txt=''; for(let i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript; $('vz_nota').value=base+txt; };
+  vozRec.onend=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='🎤 Dictar'; vozAnalizar(); };
+  vozRec.onerror=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='🎤 Dictar'; };
+  vozRec.start(); vozRecording=true; $('vz_mic').textContent='⏹ Detener';
+}
+function cerrarModal(){ const m=$('modalBg'); if(m)m.remove(); if(vozRec){try{vozRec.stop();}catch(e){}} }
+function abrirVoz(){
+  const opts=VOZ_PRODS.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join('');
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="font-size:18px">🎤 Cliente Voz</h2><button class="btn ghost" style="padding:6px 10px" onclick="cerrarModal()">✕</button></div>
+    <div class="s" style="margin-bottom:10px">Dictá: "empresa Ferretería Ponce, teléfono 787 555 1234, 2 móviles nuevas". El sistema entiende y llena los campos — vos corregís y creás.</div>
+    <textarea class="inp" id="vz_nota" rows="3" placeholder="Apretá Dictar y hablá… (o escribí acá)" style="resize:vertical;margin-bottom:8px"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn" id="vz_mic" onclick="vozToggleRec()">🎤 Dictar</button><button class="btn ghost" onclick="vozAnalizar()">🔎 Analizar</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div><div class="flbl">Empresa / Nombre</div><input class="inp" id="vz_emp"></div>
+      <div><div class="flbl">Teléfono</div><input class="inp" id="vz_tel"></div>
+      <div><div class="flbl">Producto</div><select class="inp" id="vz_prod">${opts}</select></div>
+      <div><div class="flbl">Cantidad (líneas)</div><input class="inp" id="vz_qty" type="number" min="0"></div>
+      <div><div class="flbl">Monto $ (fijo)</div><input class="inp" id="vz_monto" type="number" min="0"></div>
+    </div>
+    <button class="btn green" style="width:100%" onclick="vozCrear()">✓ Crear oportunidad</button>
+  </div></div>`);
+}
+async function vozCrear(){
+  const body={empresa:$('vz_emp').value.trim(),telefono:$('vz_tel').value.trim(),product_key:$('vz_prod').value,qty:$('vz_qty').value,monto:$('vz_monto').value,nota:$('vz_nota').value.trim()};
+  if(!body.empresa){ alert('Falta la empresa o nombre del cliente'); return; }
+  try{ const r=await api('/api/asana-real/voz',{method:'POST',body}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo crear: '+e.message); }
+}
+const ASANA_PRODS=[['fijo_ren','Fijo Ren','money','teal'],['fijo_new','Fijo New','money','primary'],['movil_ren','Movil Ren','qty','green'],['movil_new','Movil New','qty','violet'],['claro_tv','Claro TV','qty','amber'],['cloud','Cloud','qty','teal'],['mpls','MPLS','money','red']];
+async function viewAsana(){
+  const data=await api('/api/asana-real');
+  const prodVal=(o,pk,field)=>Number((o.products&&o.products[pk]&&o.products[pk][field])||0);
+  const prodSubs=(o,pk)=>Number((o.products&&o.products[pk]&&o.products[pk].subscriber_count)||0);
+  const totalSubs=data.reduce((a,o)=>a+Number(o.subscriber_count||0),0);
+  const mobileLines=data.reduce((a,o)=>a+prodVal(o,'movil_ren','quantity_value')+prodVal(o,'movil_new','quantity_value'),0);
+  const fixedLines=data.reduce((a,o)=>a+prodSubs(o,'fijo_ren')+prodSubs(o,'fijo_new'),0);
+  const fixedMoney=data.reduce((a,o)=>a+prodVal(o,'fijo_ren','money_value')+prodVal(o,'fijo_new','money_value'),0);
+  const classifiedSubs=data.reduce((a,o)=>a+prodSubs(o,'movil_ren')+prodSubs(o,'movil_new')+prodSubs(o,'fijo_ren')+prodSubs(o,'fijo_new')+prodSubs(o,'claro_tv')+prodSubs(o,'cloud')+prodSubs(o,'mpls'),0);
+  const unclassified=Math.max(0,totalSubs-classifiedSubs);
+  const totLin=mobileLines;
+  const totMon=fixedMoney;
+  const cards=`<div class="kpis">
+    <div class="kpi"><div class="l">Oportunidades abiertas</div><div class="v" style="color:var(--violet)">${data.length}</div></div>
+    <div class="kpi"><div class="l">Líneas en seguimiento</div><div class="v" style="color:var(--teal)">${totLin}</div></div>
+    <div class="kpi"><div class="l">$ en seguimiento</div><div class="v" style="color:var(--green)">${money(totMon)}</div></div>
+    <div class="kpi"><div class="l">Clientes</div><div class="v">${data.length}</div></div></div>`;
+  const asanaSummary=`<div class="asana-kpis">
+    <div class="kpi main"><div class="l">Total en seguimiento</div><div class="v" style="color:var(--primary);font-size:28px">${totalSubs}<span class="tot">líneas</span></div><div class="hint">${data.length} clientes en Asana · ${unclassified} sin clasificar</div></div>
+    <div class="kpi"><div class="l">Líneas móviles</div><div class="v" style="color:var(--green)">${mobileLines}</div><div class="hint">Movil Ren + Movil New</div></div>
+    <div class="kpi"><div class="l">Líneas fijas</div><div class="v" style="color:var(--teal)">${fixedLines}</div><div class="hint">Fijo Ren + Fijo New</div></div>
+    <div class="kpi"><div class="l">Plata fijo</div><div class="v" style="color:var(--amber)">${money(fixedMoney)}</div><div class="hint">Mensualidad fija en seguimiento</div></div>
+  </div>`;
+  const cell=(o,pk,type)=>{
+    const p=o.products&&o.products[pk];
+    const val=p?(type==='money'?Number(p.money_value||0):Number(p.quantity_value||0)):0;
+    const step=p&&p.current_step&&p.current_step.name?p.current_step.name:'Marcar paso';
+    const subs=p?Number(p.subscriber_count||0):0;
+    return `<td class="c"><div class="acell"><input class="cinp" style="width:84px;text-align:right" value="${val}" disabled><button class="astep" title="Abrir pasos" onclick="location.hash='#/opp/${o.id}'">${step} <span style="color:var(--txt3)">…</span></button><div class="asubs">${subs} subs</div></div></td>`;
+  };
+  const row=o=>`<tr>
+    <td><div style="font-weight:700">${o.client_name||'—'}</div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}<div style="font-size:11.5px;color:var(--txt2)">${o.client_phone||'Sin número'}</div><div style="font-size:11px;color:var(--txt3)">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</div></td>
+    <td><span class="pill violet">${o.vendor_name||'Sin asignar'}</span></td>
+    ${ASANA_PRODS.map(p=>cell(o,p[0],p[2])).join('')}
+    <td class="r" style="color:var(--teal);font-weight:700">${Number(o.total_lines||0)}</td>
+    <td class="r" style="color:var(--green);font-weight:700">${money(o.total_money)}</td>
+    <td><button class="btn ghost" style="padding:6px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">💬 Abrir</button></td>
+    <td><div style="display:flex;flex-direction:column;gap:5px"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="abrirCliente('${o.client_id||''}')">👁 Cliente</button><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cerrarOpp('${o.id}')">⤵ Al pool</button></div></td></tr>`;
+  const head=`<tr><th>Cliente</th><th>Vendedor</th>${ASANA_PRODS.map(p=>`<th class="c" style="color:var(--${p[3]})">${p[1]}</th>`).join('')}<th class="r">Total Líneas</th><th class="r">Total $</th><th>Notas</th><th>Acciones</th></tr>`;
+  return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">🎤 Cliente Voz</button></div>
+  ${asanaSummary}
+  <div class="card" style="overflow-x:auto"><table style="min-width:1380px"><thead>${head}</thead><tbody>${data.map(row).join('')||'<tr><td colspan="13" class="empty">Sin oportunidades en seguimiento.</td></tr>'}</tbody></table></div>`;
+}
+async function viewOpp(id){
+  const o=await api('/api/asana-real/'+id);
+  const PN={fijo_ren:'Fijo Ren',fijo_new:'Fijo New',movil_new:'Móvil New',movil_ren:'Móvil Ren',claro_tv:'Claro TV',cloud:'Cloud',mpls:'MPLS'};
+  const groups={};
+  (o.steps||[]).forEach(s=>{const k=s.product_key||'general';(groups[k]=groups[k]||[]).push(s);});
+  const steps=Object.entries(groups).map(([pk,items])=>{
+    const done=items.filter(s=>s.done).length;
+    const cur=items.find(s=>!s.done);
+    const pct=items.length?Math.round(done/items.length*100):0;
+    const chips=items.map((s,i)=>`<div class="stepchip ${s.done?'done':(cur&&s.id===cur.id?'cur':'')}"><span class="n">${s.done?'✓':i+1}</span><span>${esc(s.name)}</span></div>`).join('');
+    return `<div class="flowcard">
+      <div class="flowhead"><span class="pill violet">${PN[pk]||pk}</span><span class="flowtitle">Seguimiento</span><span class="flowcount">${done}/${items.length}</span></div>
+      <div class="flowbar"><span style="width:${pct}%"></span></div>
+      ${cur?`<div class="nowstep"><span class="sdot">${cur.step_order}</span><div style="flex:1"><div class="label">Paso actual</div><div class="name">${esc(cur.name)}</div></div><button class="btn green" style="padding:7px 13px;font-size:12px" onclick="avanzar('${o.id}','${cur.id}')">Completar</button></div>`:`<div class="nowstep"><span class="sdot done">✓</span><div style="flex:1"><div class="label">Producto completo</div><div class="name">Todos los pasos completados</div></div></div>`}
+      <div class="stepchips">${chips}</div>
+    </div>`;
+  }).join('')||'<div class="empty">Sin pasos cargados en esta oportunidad.</div>';
+  const lineas=o.lines.map(l=>`<tr><td><span class="pill violet">${PN[l.product_key]||l.product_key||'—'}</span></td><td>${l.phone||'—'}</td><td class="r">${l.qty}</td><td class="r" style="color:var(--green);font-weight:600">${money(l.amount)}</td><td>${l.target_plan||l.current_plan||'—'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin productos cargados.</td></tr>';
+  const logIcon={llamada:'☎',nota:'✎',paso:'✓'};
+  const logItems=(o.log||[]).map(l=>`<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}</div><div class="logmeta">${esc(l.user_name||'Sistema')} · ${new Date(l.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin llamadas ni notas todavía.</div>';
+  return `<div class="crumb"><a href="#/asana">Asana</a> / Seguimiento</div>
+  <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1>${o.client_name}</h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Cerrar · al pool</button></div></div>
+  <div class="panel"><h3>Caminito de pasos (${o.steps.filter(s=>s.done).length}/${o.steps.length})</h3><div class="flowgrid">${steps}</div></div>
+  <div class="panel"><h3>Llamadas y notas</h3><div class="logbox"><textarea class="inp logbody" id="asanaLogBody" placeholder="Escribe resumen de llamada o nota..."></textarea><button class="btn" onclick="addAsanaLog('${o.id}','llamada')">+ Llamada</button><button class="btn ghost" onclick="addAsanaLog('${o.id}','nota')">+ Nota</button></div>${logItems}</div>
+  <div class="panel"><h3>Productos que estás negociando</h3><table><thead><tr><th>Producto</th><th>Teléfono</th><th class="r">Cant.</th><th class="r">$</th><th>Plan destino</th></tr></thead><tbody>${lineas}</tbody></table></div>`;
+}
+let comMonth=null, comFilter='todos';
+const COM_FILTERS=[['todos','Todos'],['confirmadas','Confirmadas'],['revision','En revisión'],['sync','Esperando sync']];
+async function reComisiones(){ $('view').innerHTML=await viewComisiones(); }
+function setComMonth(m){ comMonth=m; reComisiones(); }
+function setComFilter(f){ comFilter=f; reComisiones(); }
+async function viewComisiones(){
+  const meses=await api('/api/comisiones/meses');
+  const mon=comMonth||(meses[0]&&meses[0].mes)||null;
+  const FIL={todos:()=>true,confirmadas:x=>x.validation_status==='confirmed',revision:x=>x.validation_status==='needs_review',sync:x=>x.validation_status!=='confirmed'&&x.validation_status!=='needs_review'};
+  let rows=await api('/api/comisiones'+(mon?('?month='+mon):''));
+  rows=rows.filter(FIL[comFilter]||FIL.todos);
+  const PN={fijo_ren:'Fijo Ren',fijo_new:'Fijo New',movil_new:'Móvil New',movil_ren:'Móvil Ren',claro_tv:'Claro TV',cloud:'Cloud',mpls:'MPLS'};
+  const COLS=['fijo_ren','fijo_new','movil_new','movil_ren','claro_tv','cloud','mpls'];
+  const n=x=>Number(x||0);
+  const emp=rows.reduce((a,x)=>a+n(x.company_earnings),0);
+  const ven=rows.reduce((a,x)=>a+n(x.vendor_commission),0);
+  const pag=rows.filter(x=>x.paid).reduce((a,x)=>a+n(x.vendor_commission),0);
+  const groups={}; rows.forEach(x=>{(groups[x.empresa]=groups[x.empresa]||[]).push(x);});
+  let body='';
+  Object.entries(groups).forEach(function(ent,gi){
+    const empName=ent[0], lines=ent[1];
+    const counts={}; lines.forEach(l=>counts[l.product_key]=(counts[l.product_key]||0)+1);
+    const mens=lines.reduce((a,l)=>a+n(l.monthly_value),0);
+    const empc=lines.reduce((a,l)=>a+n(l.company_earnings),0);
+    const comc=lines.reduce((a,l)=>a+n(l.vendor_commission),0);
+    let pcells=''; COLS.forEach(k=>{ pcells+='<td class="c">'+(counts[k]?'<span class="qty">'+counts[k]+'</span>':'<span style="color:var(--txt3)">0</span>')+'</td>'; });
+    body+='<tr class="grow" onclick="togg('+gi+')"><td><span class="ar" id="ar'+gi+'">▸</span> <b>'+empName+'</b></td><td style="color:var(--primary)">'+lines[0].vendedor+'</td>'+pcells+'<td class="c">—</td><td class="r">'+money(mens)+'</td><td class="r" style="color:var(--green);font-weight:700">'+money(empc)+'</td><td class="r">'+(comc?money(comc):'—')+'</td><td class="c">—</td><td class="c"><span class="pill green">'+lines.length+'</span></td></tr>';
+    lines.forEach(l=>{
+      body+='<tr class="lrow g'+gi+'" style="display:none"><td colspan="2"><div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:18px"><span class="pill" style="background:var(--card2)">BAN '+(l.ban_number||'—')+'</span><span class="pill" style="background:var(--teal-soft);color:var(--teal)">'+(l.phone||'—')+'</span><span class="pill violet">'+(PN[l.product_key]||l.product_key)+'</span></div></td><td colspan="7"></td><td class="c"></td><td class="r">'+money(l.monthly_value)+'</td><td class="r" style="color:var(--green);font-weight:700">'+money(l.company_earnings)+'</td><td class="c"><input class="cinp" type="number" min="0" step="0.01" style="width:88px" placeholder="0" value="'+(l.vendor_commission!=null?l.vendor_commission:0)+'" onchange="editComR(\''+l.subscriber_id+'\',\''+l.report_month+'\',this.value)"></td><td class="c"></td><td class="c"><button class="btn" style="padding:5px 10px;font-size:11px;'+(l.paid?'background:var(--green)':'background:#e0860c')+'" onclick="payR(\''+l.subscriber_id+'\',\''+l.report_month+'\')">'+(l.paid?'✓ Pagado':'Pagar')+'</button></td></tr>';
+    });
+  });
+  let head='<tr><th>Empresa</th><th>Vendedor</th>'; COLS.forEach(k=>head+='<th class="c">'+PN[k]+'</th>'); head+='<th class="c">Completado</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comisión$</th><th class="c">Bono</th><th class="c">Ventas</th></tr>';
+  return '<div class="head"><div><h1>Comisiones y Ventas</h1><div class="s">'+rows.length+' ventas · '+Object.keys(groups).length+' clientes · data REAL de crm_pro · clic en la empresa para ver líneas</div></div>'
+    +'<select class="inp" style="max-width:170px" onchange="setComMonth(this.value)">'+(meses.length?meses.map(m=>'<option value="'+m.mes+'"'+(m.mes===mon?' selected':'')+'>'+m.mes+' ('+m.n+')</option>').join(''):'<option>sin meses</option>')+'</select></div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+COM_FILTERS.map(f=>'<button class="btn '+(comFilter===f[0]?'':'ghost')+'" style="padding:7px 14px" onclick="setComFilter(\''+f[0]+'\')">'+f[1]+'</button>').join('')+'</div>'
+    +'<div class="kpis"><div class="kpi"><div class="l">Total ventas</div><div class="v" style="color:var(--violet)">'+rows.length+'</div></div><div class="kpi"><div class="l">Ganancia empresa</div><div class="v" style="color:var(--green)">'+money(emp)+'</div></div><div class="kpi"><div class="l">Comisión vendedores</div><div class="v" style="color:var(--primary)">'+money(ven)+'</div></div><div class="kpi"><div class="l">Pagado</div><div class="v" style="color:var(--amber)">'+money(pag)+'</div></div><div class="kpi"><div class="l">Balance pendiente</div><div class="v" style="color:var(--red)">'+money(emp-pag)+'</div></div></div>'
+    +'<div class="card" style="overflow-x:auto"><table style="min-width:1180px"><thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="16" class="empty">Sin comisiones este mes</td></tr>')+'</tbody></table></div>';
+}
+// ---- Metas: grilla editable (negocio + por vendedor de Tango) ----
+let metaMonth=monthStart();
+async function reMetas(){ $('view').innerHTML=await viewMetas(); }
+function setMetaMonth(m){ metaMonth=m; reMetas(); }
+function metaMonthsList(alcance, base){
+  const d=new Date(base), y=d.getFullYear(), m0=d.getMonth(), out=[];
+  if(alcance==='anio'){ for(let m=0;m<12;m++) out.push(y+'-'+String(m+1).padStart(2,'0')+'-01'); }
+  else if(alcance==='dic'){ for(let m=m0;m<12;m++) out.push(y+'-'+String(m+1).padStart(2,'0')+'-01'); }
+  else out.push(base);
+  return out;
+}
+async function guardarMeta(scope, salesperson, rk){
+  const prods=window.__metaProds||[];
+  const sel=$('sc_'+rk); const meses=metaMonthsList(sel?sel.value:'mes', metaMonth);
+  try{
+    for(const p of prods){
+      const inp=$('m_'+rk+'_'+p.key); const qty=Number(inp?inp.value:0)||0;
+      for(const mo of meses){ await api('/api/goals',{method:'POST',body:{scope, salesperson:salesperson||null, product_key:p.key, month:mo, target_qty:qty}}); }
+    }
+    alert('✓ Meta guardada'+(meses.length>1?(' ('+meses.length+' meses)'):''));
+  }catch(e){ alert('No se pudo guardar: '+e.message); }
+}
+async function viewMetas(){
+  const prods=await api('/api/products'); window.__metaProds=prods;
+  const goals=await api('/api/goals?month='+metaMonth);
+  let vendedores=[]; try{ vendedores=await api('/api/vendedores'); }catch(e){}
+  const gmap={}; goals.forEach(g=>{ gmap[g.scope+'|'+(g.salesperson||'')+'|'+g.product_key]=g.target_qty; });
+  const val=(sc,sp,pk)=>{ const v=gmap[sc+'|'+(sp||'')+'|'+pk]; return (v===undefined||v===null)?'':v; };
+  const dinero=(sc,sp)=>prods.reduce((a,p)=>a+(Number(val(sc,sp,p.key))||0)*Number(p.income_value||0),0);
+  const inputs=(sc,sp,rk)=>prods.map(p=>`<td class="c"><input class="cinp" inputmode="numeric" style="width:84px;text-align:center" id="m_${rk}_${p.key}" value="${val(sc,sp,p.key)}" placeholder="0"></td>`).join('');
+  const scopeSel=(rk)=>`<select class="inp" id="sc_${rk}" style="width:140px"><option value="mes">Solo este mes</option><option value="dic">Hasta diciembre</option><option value="anio">Todo el año</option></select>`;
+  const head=`<tr><th>Meta</th>${prods.map(p=>`<th class="c">${p.name}</th>`).join('')}<th class="r">Meta $</th><th>Alcance</th><th></th></tr>`;
+  const negRow=`<tr><td><b>NEGOCIO</b></td>${inputs('negocio',null,'negocio')}<td class="r" style="color:var(--green);font-weight:700">${money(dinero('negocio',null))}</td><td>${scopeSel('negocio')}</td><td><button class="btn green" onclick="guardarMeta('negocio',null,'negocio')">Guardar</button></td></tr>`;
+  const venRows=vendedores.map((v,i)=>{const rk='v'+i; return `<tr><td><div class="cli"><span class="av">${ini(v)}</span><b>${v}</b></div></td>${inputs('vendedor',v,rk)}<td class="r" style="color:var(--green);font-weight:600">${money(dinero('vendedor',v))}</td><td>${scopeSel(rk)}</td><td><button class="btn green" onclick='guardarMeta("vendedor",${JSON.stringify(v)},"${rk}")'>Guardar</button></td></tr>`;}).join('');
+  const yr=new Date(metaMonth).getFullYear();
+  const monOpts=Array.from({length:12},(_,m)=>{const mo=yr+'-'+String(m+1).padStart(2,'0')+'-01';return `<option value="${mo}" ${mo===metaMonth?'selected':''}>${mo}</option>`;}).join('');
+  return `<div class="head"><div><h1>Metas</h1><div class="s">Meta del negocio y por vendedor, por producto · vendedores de Tango</div></div><select class="inp" style="max-width:160px" onchange="setMetaMonth(this.value)">${monOpts}</select></div>
+  <div class="panel"><h3>Meta del negocio</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${negRow}</tbody></table></div></div>
+  <div class="panel"><h3>Meta por vendedor</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${venRows||'<tr><td colspan="11" class="empty">Sin vendedores de Tango todavía (aparecen cuando tienen ventas).</td></tr>'}</tbody></table></div></div>`;
+}
+
+async function viewPanel(){
+  const c=await api('/api/goals/cumplimiento?month='+monthStart());
+  const sales=await api('/api/sales');
+  const byV={}; sales.forEach(s=>{const v=s.vendor_name||'—';byV[v]=(byV[v]||0)+Number(s.company_commission||0);});
+  const rank=Object.entries(byV).sort((a,b)=>b[1]-a[1]);
+  return `<div class="head"><div><h1>Panel General</h1><div class="s">Resumen del negocio</div></div></div>
+  <div class="kpis"><div class="kpi"><div class="l">Cumplimiento</div><div class="v" style="color:var(--green)">${c.pct_total}%</div></div><div class="kpi"><div class="l">Vendido</div><div class="v">${money(c.vendido_total)}</div></div><div class="kpi"><div class="l">Meta</div><div class="v">${money(c.meta_total)}</div></div><div class="kpi"><div class="l">Falta</div><div class="v" style="color:var(--red)">${money(c.falta)}</div></div></div>
+  <div class="grid2"><div class="panel"><h3>🏆 Ranking de vendedores</h3>${rank.map(([v,m],i)=>`<div class="prow"><span style="width:24px;font-weight:800;color:var(--txt3)">${i+1}</span><span class="av">${ini(v)}</span><span style="flex:1;font-weight:600">${v}</span><span style="font-weight:700;color:var(--green)">${money(m)}</span></div>`).join('')||'<div class="empty">Sin ventas</div>'}</div>
+  <div class="panel"><h3>🔔 Alertas</h3><div style="font-size:13px;color:var(--txt2);padding:6px 0">Se llenan con oportunidades atrasadas, vencimientos y pendientes de Tango.</div></div></div>`;
+}
+// ---- Configurar pasos (réplica de "Configurar pasos SOV2") ----
+let pasoSel=null, pasoSteps=[];
+async function rePasos(){ $('view').innerHTML=await viewPasos(); }
+function setPasoSel(k){ pasoSel=k; rePasos(); }
+async function pasoSaveName(id,v){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{name:v}}); }catch(e){ alert('No se pudo guardar el nombre'); } }
+async function pasoToggle(id,a){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{active:a}}); rePasos(); }catch(e){ alert('Error'); } }
+async function pasoDel(id){ if(!confirm('¿Borrar este paso?')) return; try{ await api('/api/step-templates/'+id,{method:'DELETE'}); rePasos(); }catch(e){ alert('No se pudo borrar'); } }
+async function pasoNew(key){ const el=$('newPasoInp'); const n=el&&el.value.trim(); if(!n) return; try{ await api('/api/products/'+key+'/steps',{method:'POST',body:{name:n}}); rePasos(); }catch(e){ alert('No se pudo crear'); } }
+async function pasoMove(idx,dir){ const j=idx+dir; if(j<0||j>=pasoSteps.length) return; const a=pasoSteps[idx],b=pasoSteps[j];
+  try{ await api('/api/step-templates/'+a.id,{method:'PUT',body:{step_order:b.step_order}}); await api('/api/step-templates/'+b.id,{method:'PUT',body:{step_order:a.step_order}}); rePasos(); }catch(e){ alert('No se pudo reordenar'); } }
+async function viewPasos(arg){
+  const prods=await api('/api/products');
+  const key=pasoSel||arg||(prods[0]&&prods[0].key);
+  let steps=[]; try{ steps=await api('/api/products/'+key+'/steps'); }catch(e){}
+  pasoSteps=steps;
+  const side=prods.map(p=>`<div class="paso-prod ${p.key===key?'on':''}" onclick="setPasoSel('${p.key}')">${p.name}</div>`).join('');
+  const rows=steps.map((s,i)=>`<div class="paso-row">
+    <span class="paso-num">${i+1}</span>
+    <input class="inp" style="flex:1" value="${s.name||''}" onchange="pasoSaveName('${s.id}',this.value)">
+    <label class="paso-chk"><input type="checkbox" ${s.active?'checked':''} onchange="pasoToggle('${s.id}',this.checked)"> Activo</label>
+    <button class="btn ghost" style="padding:6px 10px" ${i===0?'disabled':''} onclick="pasoMove(${i},-1)">↑</button>
+    <button class="btn ghost" style="padding:6px 10px" ${i===steps.length-1?'disabled':''} onclick="pasoMove(${i},1)">↓</button>
+    <button class="btn" style="padding:6px 10px;background:var(--red-soft);color:var(--red)" onclick="pasoDel('${s.id}')">🗑</button></div>`).join('');
+  return `<div class="head"><div><h1>Configurar pasos</h1><div class="s">Pasos por producto · no modifica los avances ya hechos en oportunidades</div></div><button class="btn green" onclick="alert('✓ Guardado — los cambios se guardan al instante')">✓ Guardar configuración</button></div>
+  <div class="paso-wrap">
+    <div class="paso-side"><div class="s" style="margin-bottom:2px;letter-spacing:.05em">PRODUCTO</div>${side}</div>
+    <div class="paso-main">
+      ${rows||'<div class="empty">Sin pasos para este producto. Crealos abajo.</div>'}
+      <div class="paso-row" style="border-style:dashed;background:transparent"><input class="inp" id="newPasoInp" style="flex:1" placeholder="Nuevo paso…"><button class="btn green" onclick="pasoNew('${key}')">+ Crear paso</button></div>
+    </div>
+  </div>`;
+}
+async function viewPendientes(){
+  const s=await api('/api/sales'); const pend=s.filter(x=>x.review_reason);
+  return `<div class="head"><div><h1>Pendientes Tango</h1><div class="s">Solo lectura · se corrigen en Tango</div></div></div>
+  <div class="card"><table><thead><tr><th>BAN</th><th>Teléfono</th><th>Vendedor</th><th>Motivo (a corregir en Tango)</th></tr></thead><tbody>${pend.map(x=>`<tr><td>${x.ban_number||'—'}</td><td>${x.phone||'—'}</td><td>${x.vendor_name||'—'}</td><td><span class="pill amber">${x.review_reason}</span></td></tr>`).join('')||'<tr><td colspan="4" class="empty">✓ Todo cuadra — no hay pendientes.</td></tr>'}</tbody></table></div>`;
+}
+async function viewCategorias(){
+  const cats=await api('/api/categories'); const prods=await api('/api/products');
+  return `<div class="head"><div><h1>Categorías</h1><div class="s">Familias de producto</div></div></div>
+  <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
+}
+async function viewHistorial(){
+  const log=await api('/api/audit');
+  return `<div class="head"><div><h1>Historial</h1><div class="s">Bitácora del sistema</div></div></div>
+  <div class="card"><table><thead><tr><th>Cuándo</th><th>Usuario</th><th>Tipo</th><th>Detalle</th></tr></thead><tbody>${log.map(l=>`<tr><td>${new Date(l.created_at).toLocaleString('es')}</td><td>${l.user_name||'—'}</td><td><span class="pill violet">${l.type}</span></td><td>${l.detail||''}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">Sin eventos todavía (se llena con las acciones).</td></tr>'}</tbody></table></div>`;
+}
+async function viewPerfil(){
+  const me=await api('/api/me'); const u=me.user;
+  return `<div class="head"><h1>Mi Perfil</h1></div>
+  <div class="panel" style="max-width:540px"><div class="cli" style="margin-bottom:14px"><span class="av" style="width:54px;height:54px;font-size:18px">${ini(u.nombre)}</span><div><div style="font-size:18px;font-weight:700">${u.nombre}</div><span class="pill violet">${u.rol}</span></div></div>
+  <div class="prow"><span style="color:var(--txt3)">Usuario</span><b style="margin-left:auto">${u.nick}</b></div>
+  <div class="prow"><span style="color:var(--txt3)">Email</span><b style="margin-left:auto">${u.email||'—'}</b></div>
+  <div style="font-size:12px;color:var(--txt2);margin-top:12px">🔗 Tus datos vienen de Tango. Para cambiarlos o la clave, se hace en Tango — el CRM no maneja contraseñas.</div></div>`;
+}
+async function viewComparativa(){
+  const list=await api('/api/comparativas');
+  return `<div class="head"><div><h1>Comparativa de Planes</h1><div class="s">Plan actual vs oferta · se guardan</div></div></div>
+  <div class="card"><table><thead><tr><th>Nombre</th><th>Total actual</th><th>Oferta</th><th>Ahorro</th><th>Cuándo</th></tr></thead><tbody>${list.map(c=>`<tr><td><b>${c.name||'—'}</b></td><td>${money(c.current_total)}</td><td>${money(c.offer_total)}</td><td style="color:var(--green);font-weight:600">${money((c.current_total||0)-(c.offer_total||0))}</td><td>${new Date(c.created_at).toLocaleDateString('es')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin comparativas guardadas todavía.</td></tr>'}</tbody></table></div>`;
+}
+let cfgPasoKey=null;
+async function reConfig(){ $('view').innerHTML=await viewConfig(); }
+function setCfgPaso(k){ cfgPasoKey=k; reConfig(); }
+async function saveProd(id,f,v){ try{ await api('/api/products/'+id,{method:'PUT',body:{[f]: f==='income_value'?Number(v):v}}); }catch(e){ alert('No se pudo guardar el producto'); } }
+async function saveCat(id,f,v){ try{ await api('/api/categories/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar la categoría'); } }
+async function newCat(){ const n=prompt('Nombre de la nueva categoría:'); if(!n||!n.trim()) return; try{ await api('/api/categories',{method:'POST',body:{name:n.trim()}}); reConfig(); }catch(e){ alert('No se pudo crear'); } }
+async function delCat(id){ if(!confirm('¿Borrar esta categoría?')) return; try{ const r=await api('/api/categories/'+id,{method:'DELETE'}); if(r&&r.error){alert(r.error);return;} reConfig(); }catch(e){ alert('No se pudo borrar'); } }
+async function saveStep(id,f,v){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar el paso'); } }
+async function toggleStep(id,a){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{active:a}}); reConfig(); }catch(e){ alert('Error'); } }
+async function delStep(id){ if(!confirm('¿Borrar este paso?')) return; try{ await api('/api/step-templates/'+id,{method:'DELETE'}); reConfig(); }catch(e){ alert('No se pudo borrar'); } }
+async function addStep(key){ const el=$('newStep'); const n=el&&el.value.trim(); if(!n) return; try{ await api('/api/products/'+key+'/steps',{method:'POST',body:{name:n}}); reConfig(); }catch(e){ alert('No se pudo agregar'); } }
+async function viewConfig(){
+  const prods=await api('/api/products');
+  const cats=await api('/api/categories');
+  const pasoKey=cfgPasoKey||(prods[0]&&prods[0].key);
+  let steps=[]; try{ if(pasoKey) steps=await api('/api/products/'+pasoKey+'/steps'); }catch(e){}
+  const catOpts=(sel)=>cats.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.name}</option>`).join('');
+  const prodRow=p=>`<tr>
+    <td><input class="inp" value="${p.name||''}" onchange="saveProd('${p.id}','name',this.value)"></td>
+    <td><select class="inp" onchange="saveProd('${p.id}','category_id',this.value)">${catOpts(p.category_id)}</select></td>
+    <td><select class="inp" onchange="saveProd('${p.id}','kind',this.value)"><option value="dinero" ${p.kind==='dinero'?'selected':''}>dinero</option><option value="cantidad" ${p.kind==='cantidad'?'selected':''}>cantidad</option></select></td>
+    <td><input class="cinp" style="width:110px" value="${Number(p.income_value||0)}" onchange="saveProd('${p.id}','income_value',this.value)"></td></tr>`;
+  const catRow=c=>`<div class="prow">
+    <input class="inp" style="max-width:170px" value="${c.name||''}" onchange="saveCat('${c.id}','name',this.value)">
+    <input class="inp" style="flex:1" placeholder="descripción" value="${c.description||''}" onchange="saveCat('${c.id}','description',this.value)">
+    <span class="pill violet">${prods.filter(p=>p.category_id===c.id).length} prod</span>
+    <button class="btn ghost" style="padding:7px 12px" onclick="delCat('${c.id}')">🗑</button></div>`;
+  const stepRow=(s,i)=>`<div class="prow">
+    <span style="color:var(--txt3);width:18px">${i+1}</span>
+    <input class="inp" style="flex:1" value="${s.name||''}" onchange="saveStep('${s.id}','name',this.value)">
+    <button class="btn ${s.active?'green':'ghost'}" style="padding:7px 12px" onclick="toggleStep('${s.id}',${!s.active})">${s.active?'Activo':'Inactivo'}</button>
+    <button class="btn ghost" style="padding:7px 12px" onclick="delStep('${s.id}')">🗑</button></div>`;
+  return `<div class="head"><div><h1>Configuración</h1><div class="s">Catálogo comercial en un solo lugar · editable: productos, categorías y pasos de seguimiento</div></div></div>
+  <div class="panel"><h3>Productos</h3><table><thead><tr><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Valor de ingreso</th></tr></thead><tbody>${prods.map(prodRow).join('')}</tbody></table></div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Categorías · familias de producto</h3><button class="btn" onclick="newCat()">+ Nueva categoría</button></div>${cats.map(catRow).join('')||'<div class="empty">Sin categorías</div>'}</div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">Asana · pasos por producto</h3><div class="s" style="margin-top:5px">Los pasos de cada producto se editan en su pantalla dedicada.</div></div><button class="btn" onclick="location.hash='#/pasos'">⚙ Configurar pasos →</button></div></div>
+  <div class="panel"><h3>Vendedores y permisos</h3><div style="font-size:13px;color:var(--txt2)">Los vendedores vienen de Tango (login). Los permisos por usuario se arman de cero.</div></div>`;
+}
+function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div class="s">${s}</div></div></div>${c}`;}
+async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comparativas a clientes','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de correos (diseño listo). El envío real se conecta al configurar el servicio de email.</div></div>');}
+async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
+async function viewImport(){return vistaSimple('Importador Nuevo','Actualizar datos desde Excel (mapeo drag-drop)','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Importador con mapeo de columnas (diseño listo). Se conecta el endpoint de carga al definirlo.</div></div>');}
+// ---------------- ACTIONS ----------------
+async function nuevoCliente(){const name=prompt('Nombre del cliente:');if(!name)return;await api('/api/clients',{method:'POST',body:{name}});router();}
+async function enviarSeguimiento(id){const r=await api('/api/clients/'+id+'/seguimiento',{method:'POST',body:{product_key:'fijo_ren'}});if(r.error){alert(r.error);return;}location.hash='#/asana';}
+async function addLog(oid,type){const b=$('logbody').value;if(!b){alert('Escribí algo');return;}await api('/api/opportunities/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
+async function addAsanaLog(oid,type){const el=$('asanaLogBody');const b=el&&el.value.trim();if(!b){alert('Escribe algo');return;}await api('/api/asana-real/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
+async function avanzar(oid,sid){await api('/api/asana-real/'+oid+'/steps/'+sid+'/done',{method:'POST'});router();}
+async function cerrarOpp(oid){if(!confirm('¿Cerrar el seguimiento y devolver el cliente al pool?'))return;await api('/api/asana-real/'+oid+'/close',{method:'POST'});location.hash='#/asana';}
+
+async function editComision(id,v){try{await api('/api/sales/'+id,{method:'PATCH',body:{vendor_commission:v}});}catch(e){alert('No se pudo guardar');}}
+async function pagarLinea(id){await api('/api/sales/'+id+'/pay',{method:'POST'});router();}
+function togg(gi){var ar=document.getElementById('ar'+gi);var open=ar.textContent==='▾';ar.textContent=open?'▸':'▾';document.querySelectorAll('.g'+gi).forEach(function(r){r.style.display=open?'none':'table-row';});}
+async function editComR(sid,m,v){try{await api('/api/comisiones/'+sid+'/'+m,{method:'PATCH',body:{vendor_commission:v}});}catch(e){alert('No se pudo guardar');}}
+async function payR(sid,m){await api('/api/comisiones/'+sid+'/'+m+'/pay',{method:'POST'});router();}
+// ---------------- ROUTER ----------------
+async function router(){
+  const h=(location.hash.slice(1)||'/clientes').split('/').filter(Boolean);
+  const [route,arg]=h;
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('on',n.getAttribute('href')==='#/'+route));
+  $('view').innerHTML='<div class="empty">Cargando…</div>';
+  try{
+    let html='';
+    if(route==='clientes')html=await viewClientes();
+    else if(route==='cliente')html=await viewCliente(arg);
+    else if(route==='asana')html=await viewAsana();
+    else if(route==='opp')html=await viewOpp(arg);
+    else if(route==='comisiones')html=await viewComisiones();
+    else if(route==='metas')html=await viewMetas();
+    else if(route==='panel')html=await viewPanel();
+    else if(route==='pasos')html=await viewPasos(arg);
+    else if(route==='pendientes')html=await viewPendientes();
+    else if(route==='categorias')html=await viewCategorias();
+    else if(route==='historial')html=await viewHistorial();
+    else if(route==='perfil')html=await viewPerfil();
+    else if(route==='comparativa')html=await viewComparativa();
+    else if(route==='config')html=await viewConfig();
+    else if(route==='correos')html=await viewCorreos();
+    else if(route==='campanas')html=await viewCampanas();
+    else if(route==='import')html=await viewImport();
+    else html=await viewClientes();
+    $('view').innerHTML=html;
+  }catch(e){$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
+}
+window.addEventListener('hashchange',router);
+
+// ---------------- SESIÓN / LOGIN (Tango V2) ----------------
+function setSession(t,u){ token=t; currentUser=u; try{localStorage.setItem('vp_token',t);localStorage.setItem('vp_user',JSON.stringify(u||{}));}catch(e){} }
+function clearSession(){ token=null; currentUser=null; try{localStorage.removeItem('vp_token');localStorage.removeItem('vp_user');}catch(e){} }
+function logout(){ clearSession(); showLogin(); }
+function connOk(){ $('conn').className='conn ok'; $('conn').textContent='✓ '+((currentUser&&currentUser.nombre)?currentUser.nombre:'conectado'); }
+function showLogin(msg){
+  if($('loginBg')) return;
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="loginBg" style="z-index:200"><div class="modal" style="max-width:380px">
+    <div class="brand" style="justify-content:center;color:var(--txt);margin-bottom:4px"><span class="logo">V</span> VentasPro</div>
+    <div class="s" style="text-align:center;margin-bottom:16px">Ingresá con tu usuario de Tango</div>
+    <div class="flbl">Usuario</div><input class="inp" id="lg_user" style="margin-bottom:10px">
+    <div class="flbl">Contraseña</div><input class="inp" id="lg_pass" type="password" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="lg_err" style="color:var(--red);font-size:12.5px;min-height:16px;margin-bottom:8px">${msg||''}</div>
+    <button class="btn" style="width:100%" onclick="doLogin()">Entrar con Claro (Tango)</button>
+    <div style="text-align:center;margin:12px 0 6px;color:var(--txt3);font-size:11px">— o para probar en esta PC —</div>
+    <button class="btn ghost" style="width:100%" onclick="devEntrar()">Entrar en modo demo (local)</button>
+    <div class="s" style="text-align:center;margin-top:10px;font-size:11px">El login de Claro funciona en el servidor. En tu PC, Tango bloquea por IP — usá el modo demo.</div>
+  </div></div>`);
+  setTimeout(()=>{var u=$('lg_user');if(u)u.focus();},60);
+}
+async function doLogin(){
+  const usuario=($('lg_user').value||'').trim(), password=$('lg_pass').value||'';
+  if(!usuario||!password){ $('lg_err').textContent='Poné usuario y contraseña'; return; }
+  $('lg_err').textContent='Entrando…';
+  try{
+    const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario,password})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){ $('lg_err').textContent=d.error||'No se pudo entrar'; return; }
+    setSession(d.token,d.user); var bg=$('loginBg'); if(bg)bg.remove(); connOk(); router();
+  }catch(e){ $('lg_err').textContent='No conecta al backend'; }
+}
+async function devEntrar(){
+  try{ const r=await fetch(API+'/api/auth/dev-login',{method:'POST'}); if(!r.ok){$('lg_err').textContent='Modo demo no disponible (producción)';return;} const d=await r.json(); setSession(d.token,d.user); var bg=$('loginBg'); if(bg)bg.remove(); connOk(); router(); }
+  catch(e){ $('lg_err').textContent='Modo demo no disponible'; }
+}
+async function init(){
+  try{ const t=localStorage.getItem('vp_token'); if(t){ token=t; currentUser=JSON.parse(localStorage.getItem('vp_user')||'null'); } }catch(e){}
+  if(!token){ $('conn').textContent='—'; showLogin(); return; }
+  try{ const me=await api('/api/me'); currentUser=me.user; connOk(); router(); }
+  catch(e){ if(e.message!=='401'){ clearSession(); showLogin('Tu sesión venció, entrá de nuevo'); } }
+}
+init();
+</script>
+</body>
+</html>

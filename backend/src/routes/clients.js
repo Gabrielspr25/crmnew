@@ -1,0 +1,61 @@
+// Endpoints de Clientes (lista, ficha completa, crear, actualizar).
+import { Router } from 'express';
+import { query } from '../db.js';
+import { requireAuth } from '../auth.js';
+
+export const clientsRouter = Router();
+
+// GET /api/clients  -> lista con resumen (BANs y líneas activas)
+clientsRouter.get('/', requireAuth, async (_req, res) => {
+  const r = await query(`
+    SELECT c.*,
+      (SELECT count(*) FROM bans b WHERE b.client_id = c.id)::int AS ban_count,
+      (SELECT count(*) FROM subscribers s
+         JOIN bans b ON b.id = s.ban_id
+        WHERE b.client_id = c.id AND s.status = 'activa')::int AS active_lines
+    FROM clients c
+    ORDER BY c.name ASC
+    LIMIT 500`);
+  res.json(r.rows);
+});
+
+// GET /api/clients/:id  -> ficha completa (con BANs y líneas)
+clientsRouter.get('/:id', requireAuth, async (req, res) => {
+  const c = await query('SELECT * FROM clients WHERE id = $1', [req.params.id]);
+  if (!c.rows[0]) return res.status(404).json({ error: 'Cliente no existe' });
+  const bans = await query('SELECT * FROM bans WHERE client_id = $1 ORDER BY ban_number', [req.params.id]);
+  const subs = await query(
+    `SELECT s.* FROM subscribers s JOIN bans b ON b.id = s.ban_id
+      WHERE b.client_id = $1 ORDER BY s.phone`, [req.params.id]);
+  res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows });
+});
+
+// POST /api/clients  -> crear
+clientsRouter.post('/', requireAuth, async (req, res) => {
+  const b = req.body || {};
+  if (!b.name) return res.status(400).json({ error: 'Falta el nombre' });
+  const r = await query(
+    `INSERT INTO clients (name, contact_person, email, phone, phone_secondary, mobile,
+        address, city, zip_code, tax_id, base, salesperson)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+    [b.name, b.contact_person, b.email, b.phone, b.phone_secondary, b.mobile,
+     b.address, b.city, b.zip_code, b.tax_id, b.base, b.salesperson]);
+  res.status(201).json(r.rows[0]);
+});
+
+// PUT /api/clients/:id  -> actualizar (solo los campos enviados)
+clientsRouter.put('/:id', requireAuth, async (req, res) => {
+  const allowed = ['name','contact_person','email','phone','phone_secondary','mobile',
+                   'address','city','zip_code','tax_id','base','salesperson'];
+  const sets = [];
+  const vals = [];
+  for (const k of allowed) {
+    if (k in (req.body || {})) { vals.push(req.body[k]); sets.push(`${k} = $${vals.length}`); }
+  }
+  if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
+  vals.push(req.params.id);
+  const r = await query(
+    `UPDATE clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
+  if (!r.rows[0]) return res.status(404).json({ error: 'Cliente no existe' });
+  res.json(r.rows[0]);
+});
