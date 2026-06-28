@@ -15,6 +15,7 @@ import { miscRouter } from './routes/misc.js';
 import { comisionesRouter } from './routes/comisionesReal.js';
 import { clientsRealRouter } from './routes/clientsReal.js';
 import { asanaRealRouter } from './routes/asanaReal.js';
+import { writeRouter } from './routes/writeRoutes.js';
 
 const app = express();
 app.use(cors());
@@ -52,6 +53,7 @@ app.use('/api', miscRouter);              // comparativas + historial
 app.use('/api', comisionesRouter);        // COMISIONES con data real de crm_pro
 app.use('/api', clientsRealRouter);       // CLIENTES con data real de crm_pro (tarjetas + lista)
 app.use('/api', asanaRealRouter);         // ASANA SEG. con data real de crm_pro (SOV2)
+app.use('/api', writeRouter);             // ESCRITURA real: clientes/BANs/suscriptores
 app.use('/api/sales', salesRouter);       // ventas / comisiones
 
 const PORT = process.env.PORT || 4000;

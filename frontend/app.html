@@ -209,9 +209,39 @@ let cliM=null, cliMTab='info', cliMSub='activas';
 const CLI_TABS_M=[['info','Información del Cliente'],['bans','BANs y Suscriptores'],['hist','Historial de Gestiones'],['comp','Comparativas'],['ventas','Ventas']];
 function cliAct(s){return ['a','activo','active','activa'].includes(String(s||'').toLowerCase());}
 function cliCanc(s){const x=String(s||'').toLowerCase();return x.includes('cancel')||x==='c'||x==='inactivo'||x==='inactive';}
-function cliNoren(s){return String(s||'').toLowerCase().includes('no_renueva');}
+function cliNoren(s){var x=String(s||'').toLowerCase();return x.includes('no_renueva')||x==='suspendido';}
 function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
 function cliWIP(l){alert(l+': lo conecto en el próximo paso (copiando del viejo).');}
+function refreshCli(){ if(cliM&&cliM.id){ api('/api/clients-real/'+cliM.id).then(function(d){cliM=d;renderCli();}).catch(function(){}); } }
+function closeForm(){ var m=$('formBg'); if(m)m.remove(); }
+function openForm(title, fields, onSubmit){
+  var rows=fields.map(function(f,i){ return '<div style="margin-bottom:10px"><div class="flbl">'+f.label+'</div>'+
+    (f.type==='select'
+      ? '<select class="inp" id="ff_'+i+'">'+(f.options||[]).map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(f.value||'')?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
+      : '<input class="inp" id="ff_'+i+'" value="'+(f.value!=null?String(f.value).replace(/"/g,'&quot;'):'')+'" placeholder="'+(f.ph||'')+'">')+'</div>'; }).join('');
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="formBg" style="z-index:210" onclick="if(event.target===this)closeForm()"><div class="modal" style="max-width:430px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">'+title+'</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeForm()">✕</button></div>'+rows+'<div id="ff_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="ff_save">Guardar</button></div></div>');
+  $('ff_save').onclick=async function(){ var vals={}; fields.forEach(function(f,i){ var el=$('ff_'+i); vals[f.key]=el?el.value:''; }); try{ await onSubmit(vals); closeForm(); }catch(e){ $('ff_err').textContent=(e&&e.message)||'Error'; } };
+}
+async function cliEditar(){ var c=cliM; openForm('Editar cliente',[
+  {key:'name',label:'Nombre',value:c.name},{key:'email',label:'Email',value:c.email},
+  {key:'phone',label:'Tel. principal',value:c.phone},{key:'additional_phone',label:'Tel. secundario',value:c.additional_phone},
+  {key:'mobile',label:'Tel. móvil',value:c.mobile||c.cellular},{key:'address',label:'Dirección',value:c.address},
+  {key:'city',label:'Ciudad',value:c.city},{key:'zip_code',label:'Código postal',value:c.zip_code}
+], async function(v){ await api('/api/clients-real/'+c.id,{method:'PUT',body:v}); refreshCli(); }); }
+async function cliEliminar(){ var c=cliM; if(!confirm('¿Eliminar el cliente "'+(c.name||'')+'" con todos sus BANs/líneas? No se puede deshacer.'))return; try{ await api('/api/clients-real/'+c.id,{method:'DELETE'}); cerrarModal(); reClientes(); }catch(e){ alert('No se pudo eliminar: '+e.message); } }
+async function cliNuevoBan(){ openForm('Nuevo BAN',[
+  {key:'number',label:'Número de BAN (9 dígitos)',ph:'757963289'},
+  {key:'account_type',label:'Tipo',type:'select',options:[['FIJO','FIJO'],['MOVIL','MOVIL'],['CONVERGENTE','CONVERGENTE'],['PYMES','PYMES']],value:'FIJO'}
+], async function(v){ await api('/api/clients-real/'+cliM.id+'/bans',{method:'POST',body:v}); refreshCli(); }); }
+async function cliAddSub(banId){ openForm('Agregar suscriptor',[
+  {key:'phone',label:'Teléfono (10 dígitos)',ph:'7875551234'},{key:'plan',label:'Plan'},
+  {key:'monthly_value',label:'Mensualidad $'},
+  {key:'line_kind',label:'Tipo',type:'select',options:[['','—'],['movil','Móvil'],['fijo','Fijo']],value:''}
+], async function(v){ await api('/api/bans-real/'+banId+'/subscribers',{method:'POST',body:v}); refreshCli(); }); }
+async function cliEditSub(id,plan,monthly){ openForm('Editar suscriptor',[
+  {key:'plan',label:'Plan',value:plan},{key:'monthly_value',label:'Mensualidad $',value:monthly}
+], async function(v){ await api('/api/subscribers-real/'+id,{method:'PUT',body:v}); refreshCli(); }); }
+async function cliSubStatus(id,status,label){ if(!confirm('¿'+label+' este suscriptor?'))return; try{ await api('/api/subscribers-real/'+id,{method:'PUT',body:{status:status}}); refreshCli(); }catch(e){ alert('No se pudo: '+e.message); } }
 function setCliMTab(t){cliMTab=t;renderCli();}
 function setCliMSub(f){cliMSub=f;renderCli();}
 async function enviarSeguimientoCli(id){ try{ const r=await api('/api/asana-real/from-client',{method:'POST',body:{client_id:id}}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo enviar a seguimiento: '+e.message); } }
@@ -240,8 +270,8 @@ function tabInfo(c){
   const row=(l,v)=>`<div class="irow"><span>${l}</span><b>${v||'No registrado'}</b></div>`;
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:16px">
     <button class="btn ghost" onclick="cliWIP('Enviar Correo')">✉ Enviar Correo</button>
-    <button class="btn" onclick="cliWIP('Editar Cliente')">✎ Editar Cliente</button>
-    <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliWIP('Eliminar Cliente')">🗑 Eliminar Cliente</button></div>
+    <button class="btn" onclick="cliEditar()">✎ Editar Cliente</button>
+    <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliEliminar()">🗑 Eliminar Cliente</button></div>
   <div class="i3">
     <div><h4>Datos de contacto</h4>${row('Nombre',c.name)}${row('Email',c.email)}${row('Tel. principal',c.phone)}${row('Tel. secundario',c.additional_phone)}${row('Tel. móvil',c.mobile||c.cellular)}</div>
     <div><h4>Ubicación</h4>${row('Dirección',c.address)}${row('Ciudad',c.city)}${row('Código postal',c.zip_code)}</div>
@@ -253,11 +283,11 @@ function tabBans(c){
   const cards=(c.bans||[]).map(b=>{
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
     const sel=cliMSub==='canceladas'?ca:cliMSub==='noren'?nr:a;
-    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:200px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliWIP('Editar suscriptor')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliWIP('No renueva ahora')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliWIP('Cancelar suscriptor')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
+    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:200px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}','${(s.plan||'').replace(/'/g,'')}',${Number(s.monthly_value)||0})">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
     return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="cliWIP('Subir/Pegar (OCR)')">⇪ Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">✎ Editar</button></span></div>
-      <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='noren'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('noren')">No renueva ahora (${nr.length})</button><button class="btn ${cliMSub==='canceladas'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliWIP('Agregar Suscriptor')">+ Agregar Suscriptor</button></div></div>`;
+      <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='noren'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('noren')">No renueva ahora (${nr.length})</button><button class="btn ${cliMSub==='canceladas'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
-  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliWIP('Nuevo BAN')">+ Nuevo BAN</button></div>${cards}`;
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
 }
 function tabHist(c){
   const h=(c.historial||[]).map(x=>`<div class="logitem"><span class="lic paso">✅</span><div><div style="font-size:13.5px">${x.note||''}</div><div style="font-size:11.5px;color:var(--txt3)">${x.created_by_username||'—'} · ${x.product_key||''} · ${new Date(x.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin gestiones registradas en Asana todavía.</div>';
