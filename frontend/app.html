@@ -783,10 +783,15 @@ async function devEntrar(){
   catch(e){ $('lg_err').textContent='Modo demo no disponible'; }
 }
 async function init(){
-  try{ const t=localStorage.getItem('vp_token'); if(t){ token=t; currentUser=JSON.parse(localStorage.getItem('vp_user')||'null'); } }catch(e){}
-  if(!token){ $('conn').textContent='—'; showLogin(); return; }
-  try{ const me=await api('/api/me'); currentUser=me.user; connOk(); router(); }
-  catch(e){ if(e.message!=='401'){ clearSession(); showLogin('Tu sesión venció, entrá de nuevo'); } }
+  // Login DESACTIVADO por ahora (hasta deploy): entra solo en local con dev-login.
+  // En prod (sin dev-login) este intento falla -> ahí sí aparece el login de Claro.
+  let t=null,u=null; try{ t=localStorage.getItem('vp_token'); u=JSON.parse(localStorage.getItem('vp_user')||'null'); }catch(e){}
+  if(t){ token=t; currentUser=u;
+    try{ const me=await fetch(API+'/api/me',{headers:{Authorization:'Bearer '+t}}); if(me.ok){ currentUser=(await me.json()).user; connOk(); router(); return; } }catch(e){}
+    clearSession();
+  }
+  try{ const r=await fetch(API+'/api/auth/dev-login',{method:'POST'}); if(r.ok){ const d=await r.json(); setSession(d.token,d.user); connOk(); router(); return; } }catch(e){}
+  $('conn').textContent='—'; showLogin();
 }
 init();
 </script>
