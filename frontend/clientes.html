@@ -34,6 +34,49 @@
   .av{width:34px;height:34px;border-radius:10px;background:var(--violet-soft);color:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
   .pill{font-size:11px;font-weight:600;padding:3px 11px;border-radius:999px;color:var(--green);background:var(--green-soft);}
   .empty{padding:30px;text-align:center;color:var(--txt3);}
+
+  /* BOTÓN DE MAPAS */
+  .mapsbtn{background:var(--violet-soft);color:var(--violet);border:1px solid var(--violet-soft);border-radius:11px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;}
+  .mapsbtn:hover{background:var(--violet);color:#fff;}
+
+  /* MODAL STYLES */
+  .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal-card{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:16px;width:90%;max-width:800px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,0.15);overflow:hidden;}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--card2);}
+  .modal-title{font-size:17px;font-weight:700;font-family:Outfit,sans-serif;}
+  .modal-close{background:none;border:none;color:var(--txt2);font-size:24px;cursor:pointer;line-height:1;}
+  .modal-close:hover{color:var(--red);}
+  .modal-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:15px;flex:1;}
+  
+  /* Búsqueda en el modal */
+  .search-form{display:flex;gap:10px;flex-wrap:wrap;}
+  .search-input-group{flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px;}
+  .search-input-group label{font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;}
+  .search-input-group input, .search-input-group select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13.5px;outline:none;}
+  .search-input-group input:focus, .search-input-group select:focus{border-color:var(--primary);}
+  .search-btn{background:var(--primary);color:#fff;border:none;border-radius:9px;padding:0 20px;font-size:13.5px;font-weight:600;cursor:pointer;height:40px;margin-top:auto;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .search-btn:disabled{opacity:0.6;cursor:not-allowed;}
+  
+  /* Resultados en el modal */
+  .results-container{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card2);max-height:350px;overflow-y:auto;}
+  .results-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .results-table th{background:var(--card);position:sticky;top:0;z-index:2;text-align:left;color:var(--txt3);font-weight:500;font-size:11px;text-transform:uppercase;padding:12px 14px;}
+  .results-table td{padding:12px 14px;border-top:1px solid var(--line);color:var(--txt2);}
+  .results-table tbody tr:hover{background:rgba(0,0,0,0.02);}
+  body[data-theme="dark"] .results-table tbody tr:hover{background:rgba(255,255,255,0.02);}
+  
+  .modal-footer{padding:16px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:10px;background:var(--card2);}
+  .cancel-btn{background:none;border:1px solid var(--line);color:var(--txt2);border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .cancel-btn:hover{background:var(--card);color:var(--txt);}
+  .import-btn{background:var(--green);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .import-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  
+  /* Status alert */
+  .status-message{font-size:12.5px;padding:10px 14px;border-radius:8px;display:none;margin-bottom:5px;font-weight:500;}
+  .status-message.info{display:block;background:var(--primary-soft);color:var(--primary);}
+  .status-message.success{display:block;background:var(--green-soft);color:var(--green);}
+  .status-message.error{display:block;background:rgba(220,38,38,0.1);color:var(--red);}
 </style>
 </head>
 <body data-theme="day">
@@ -53,13 +96,85 @@
     <div class="content">
       <div class="head">
         <div><h1>Clientes</h1><div class="s">Datos en vivo desde el backend nuevo (puerto 4000) 🔌</div></div>
-        <button class="newbtn" onclick="addClient()">+ Nuevo cliente</button>
+        <div style="display:flex; gap:10px;">
+          <button class="mapsbtn" onclick="openMapsModal()">🔍 Importar desde Google Maps</button>
+          <button class="newbtn" onclick="addClient()">+ Nuevo cliente</button>
+        </div>
       </div>
       <div class="tablecard">
         <table>
           <thead><tr><th>Empresa</th><th>Vendedor</th><th>Ciudad</th><th>BANs</th><th>Líneas activas</th></tr></thead>
           <tbody id="rows"><tr><td colspan="5" class="empty">Cargando…</td></tr></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE GOOGLE MAPS -->
+  <div class="modal-overlay" id="maps-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🔍 Importar desde Google Maps</h2>
+        <button class="modal-close" onclick="closeMapsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="status-message" id="modal-status"></div>
+        <div class="search-form">
+          <div class="search-input-group">
+            <label for="maps-query">¿Qué tipo de negocio buscas?</label>
+            <input type="text" id="maps-query" placeholder="Ej: Ferretería, Médico, Panadería, Restaurante..." autocomplete="off">
+          </div>
+          <div class="search-input-group">
+            <label for="maps-location">Municipio / Localidad</label>
+            <select id="maps-location">
+              <option value="All">Todo Puerto Rico (Búsqueda Cruzada)</option>
+              <option value="San Juan">San Juan</option>
+              <option value="Bayamón">Bayamón</option>
+              <option value="Carolina">Carolina</option>
+              <option value="Ponce">Ponce</option>
+              <option value="Caguas">Caguas</option>
+              <option value="Guaynabo">Guaynabo</option>
+              <option value="Mayagüez">Mayagüez</option>
+              <option value="Arecibo">Arecibo</option>
+              <option value="Trujillo Alto">Trujillo Alto</option>
+              <option value="Toa Baja">Toa Baja</option>
+              <option value="Toa Alta">Toa Alta</option>
+              <option value="Humacao">Humacao</option>
+              <option value="Fajardo">Fajardo</option>
+              <option value="Aguadilla">Aguadilla</option>
+            </select>
+          </div>
+          <button class="search-btn" id="maps-search-btn" onclick="searchInMaps()">
+            Buscar
+          </button>
+        </div>
+        
+        <div class="results-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-results" onclick="toggleSelectAllResults(this)"></th>
+                <th>Nombre</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Ciudad</th>
+              </tr>
+            </thead>
+            <tbody id="maps-results-rows">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--txt3); padding: 30px;">
+                  Realiza una búsqueda para ver los negocios disponibles en Google Maps.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" onclick="closeMapsModal()">Cancelar</button>
+        <button class="import-btn" id="maps-import-btn" onclick="importSelectedPlaces()" disabled>
+          Importar Seleccionados (<span id="selected-count">0</span>)
+        </button>
       </div>
     </div>
   </div>
@@ -101,6 +216,168 @@
     await fetch(API+'/api/clients',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({name})});
     load();
   }
+
+  // LÓGICA DE GOOGLE MAPS API INTEGRATION
+  let currentSearchResults = [];
+
+  function openMapsModal() {
+    document.getElementById('maps-modal').classList.add('open');
+    document.getElementById('maps-query').focus();
+    
+    // Limpiar estado e inputs del modal
+    document.getElementById('maps-query').value = '';
+    document.getElementById('maps-location').value = 'All';
+    document.getElementById('modal-status').className = 'status-message';
+    document.getElementById('modal-status').style.display = 'none';
+    document.getElementById('maps-results-rows').innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; color: var(--txt3); padding: 30px;">
+          Realiza una búsqueda para ver los negocios disponibles en Google Maps.
+        </td>
+      </tr>
+    `;
+    document.getElementById('select-all-results').checked = false;
+    document.getElementById('maps-import-btn').disabled = true;
+    document.getElementById('selected-count').textContent = '0';
+    currentSearchResults = [];
+  }
+
+  function closeMapsModal() {
+    document.getElementById('maps-modal').classList.remove('open');
+  }
+
+  function toggleSelectAllResults(master) {
+    const checkboxes = document.querySelectorAll('.place-checkbox');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+    updateSelectedCount();
+  }
+
+  function updateSelectedCount() {
+    const selected = document.querySelectorAll('.place-checkbox:checked').length;
+    document.getElementById('selected-count').textContent = selected;
+    document.getElementById('maps-import-btn').disabled = selected === 0;
+  }
+
+  async function searchInMaps() {
+    const queryVal = document.getElementById('maps-query').value.trim();
+    const locVal = document.getElementById('maps-location').value;
+    const statusDiv = document.getElementById('modal-status');
+    const searchBtn = document.getElementById('maps-search-btn');
+
+    if (!queryVal) {
+      statusDiv.textContent = 'Por favor escribe un término de búsqueda.';
+      statusDiv.className = 'status-message error';
+      statusDiv.style.display = 'block';
+      return;
+    }
+
+    statusDiv.textContent = 'Buscando en Google Maps...';
+    statusDiv.className = 'status-message info';
+    statusDiv.style.display = 'block';
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Buscando...';
+
+    const tbody = document.getElementById('maps-results-rows');
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--txt2);">Buscando negocios en Google Maps...</td></tr>`;
+
+    try {
+      const url = `${API}/api/places/search?query=${encodeURIComponent(queryVal)}&location=${encodeURIComponent(locVal)}`;
+      const res = await fetch(url, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      
+      currentSearchResults = await res.json();
+      
+      if (currentSearchResults.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--txt3); padding: 30px;">No se encontraron resultados. Intenta con otros términos.</td></tr>`;
+        statusDiv.style.display = 'none';
+      } else {
+        tbody.innerHTML = currentSearchResults.map((place, index) => `
+          <tr>
+            <td style="text-align: center;">
+              <input type="checkbox" class="place-checkbox" data-index="${index}" onclick="updateSelectedCount()">
+            </td>
+            <td><b>${place.name}</b></td>
+            <td>${place.address}</td>
+            <td>${place.phone || '<span style="color:var(--txt3)">— sin teléfono</span>'}</td>
+            <td>${place.city}</td>
+          </tr>
+        `).join('');
+        statusDiv.textContent = `Búsqueda completada. Se encontraron ${currentSearchResults.length} negocios.`;
+        statusDiv.className = 'status-message success';
+      }
+      
+      document.getElementById('select-all-results').checked = false;
+      updateSelectedCount();
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--red); padding: 30px;">Error al conectar con la API. Verifica que la clave de Google Maps esté configurada.</td></tr>`;
+      statusDiv.textContent = 'Ocurrió un error al buscar negocios.';
+      statusDiv.className = 'status-message error';
+    } finally {
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Buscar';
+    }
+  }
+
+  async function importSelectedPlaces() {
+    const selectedCheckboxes = document.querySelectorAll('.place-checkbox:checked');
+    const selectedPlaces = Array.from(selectedCheckboxes).map(cb => {
+      const idx = parseInt(cb.getAttribute('data-index'));
+      return currentSearchResults[idx];
+    });
+
+    const statusDiv = document.getElementById('modal-status');
+    const importBtn = document.getElementById('maps-import-btn');
+
+    statusDiv.textContent = 'Importando negocios seleccionados...';
+    statusDiv.className = 'status-message info';
+    statusDiv.style.display = 'block';
+    importBtn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/api/places/import`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ clients: selectedPlaces })
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const result = await res.json();
+      
+      statusDiv.textContent = `¡Importación exitosa! ${result.importedCount} clientes añadidos. ${result.skippedCount > 0 ? `Se omitieron ${result.skippedCount} duplicados.` : ''}`;
+      statusDiv.className = 'status-message success';
+      
+      // Recargar lista principal del CRM
+      load();
+      
+      // Desmarcar todo
+      document.querySelectorAll('.place-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('select-all-results').checked = false;
+      updateSelectedCount();
+      
+      // Cerrar modal automáticamente después de 1.5 segundos
+      setTimeout(() => {
+        closeMapsModal();
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      statusDiv.textContent = 'Ocurrió un error al importar los clientes.';
+      statusDiv.className = 'status-message error';
+      importBtn.disabled = false;
+    }
+  }
+
   init();
 </script>
 </body>

@@ -16,6 +16,9 @@ import { comisionesRouter } from './routes/comisionesReal.js';
 import { clientsRealRouter } from './routes/clientsReal.js';
 import { asanaRealRouter } from './routes/asanaReal.js';
 import { writeRouter } from './routes/writeRoutes.js';
+import { ocrRouter } from './routes/ocrRoutes.js';
+import { placesRouter } from './routes/places.js';
+
 
 const app = express();
 app.use(cors());
@@ -54,7 +57,10 @@ app.use('/api', comisionesRouter);        // COMISIONES con data real de crm_pro
 app.use('/api', clientsRealRouter);       // CLIENTES con data real de crm_pro (tarjetas + lista)
 app.use('/api', asanaRealRouter);         // ASANA SEG. con data real de crm_pro (SOV2)
 app.use('/api', writeRouter);             // ESCRITURA real: clientes/BANs/suscriptores
+app.use('/api', ocrRouter);               // OCR: subir/pegar imagen -> suscriptores
 app.use('/api/sales', salesRouter);       // ventas / comisiones
+app.use('/api/places', placesRouter);     // búsqueda de Google Places
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`[ventaspro-nuevo] backend en :${PORT}`));
