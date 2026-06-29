@@ -808,8 +808,8 @@ async function viewCorreos(){
     <div class="flbl">Asunto</div><input class="inp" id="coSubj" placeholder="Asunto del correo" style="margin-bottom:10px">
     <div class="flbl">Mensaje</div><textarea class="inp" id="coBody" style="width:100%;min-height:200px" placeholder="Escribí el mensaje…"></textarea>
     <div id="coCount" class="s" style="margin:8px 0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">📧 Abrir en Outlook (BCC)</button><button class="btn ghost" onclick="coSMTP()">Enviar por servidor (SMTP)</button></div>
-    <div class="s" style="margin-top:8px;color:var(--txt3)">Outlook no necesita configuración. El envío por servidor requiere credenciales SMTP en el server.</div></div></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coCopiar()">📋 Copiar correos (CCO)</button><button class="btn" style="background:var(--violet)" onclick="coWeb()">✉️ Outlook Web</button><button class="btn ghost" onclick="coOutlook()">📧 Outlook escritorio</button><button class="btn ghost" onclick="coSMTP()">Enviar por servidor (SMTP)</button></div>
+    <div class="s" style="margin-top:8px;color:var(--txt3)">Si Outlook no abre solo: <b>Copiar correos</b> → abrí tu correo → pegá en <b>CCO</b>. "Outlook Web" abre office.com y copia los destinatarios.</div></div></div>`;
 }
 async function coInit(){
   try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
@@ -844,21 +844,27 @@ function coOutlook(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var subj=encodeURIComponent(($('coSubj')&&$('coSubj').value)||'');
   var body=encodeURIComponent((($('coBody')&&$('coBody').value)||'')+CO_FIRMA);
-  var bcc=[...coSel].join(',');
-  var url='mailto:?bcc='+encodeURIComponent(bcc)+'&subject='+subj+'&body='+body;
-  if(url.length>1990){ alert('Demasiados destinatarios para Outlook de una vez ('+coSel.size+'). Mandá en lotes más chicos o usá envío por servidor.'); return; }
-  // método confiable: click en un <a> real
-  var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
-  document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 200);
-  // diagnóstico por si no hay app de correo por defecto
-  setTimeout(function(){ if(confirm('Si NO se abrió tu correo, copio los '+coSel.size+' destinatarios al portapapeles para pegarlos a mano. ¿Copiar?')){ coCopiar(); } }, 900);
+  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(','))+'&subject='+subj+'&body='+body;
+  if(url.length>1990){ alert('Demasiados destinatarios para el Outlook de escritorio ('+coSel.size+'). Usá "Copiar correos" + "Outlook Web", o lotes más chicos.'); return; }
+  window.location.href=url; // dispara el cliente de correo de escritorio si está como predeterminado
 }
-function coCopiar(){
+// Outlook Web: copia los destinatarios al portapapeles y abre office.com a redactar
+function coWeb(){
+  if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
+  var subj=encodeURIComponent(($('coSubj')&&$('coSubj').value)||'');
+  var body=encodeURIComponent((($('coBody')&&$('coBody').value)||'')+CO_FIRMA);
+  coCopiar(true);
+  window.open('https://outlook.office.com/mail/deeplink/compose?subject='+subj+'&body='+body,'_blank','noopener');
+  setTimeout(function(){ alert('✓ '+coSel.size+' correos copiados.\nEn la ventana de Outlook Web: abrí CCO y pegá (Ctrl+V) los destinatarios.'); }, 300);
+}
+function coCopiar(silent){
+  if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var txt=[...coSel].join('; ');
-  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ alert('✓ '+coSel.size+' correos copiados (separados por ;). Pegalos en el campo CCO de tu correo.'); }, function(){ coCopiarFallback(txt); }); }
-  else coCopiarFallback(txt);
+  var ok=function(){ if(!silent) alert('✓ '+coSel.size+' correos copiados (separados por ;). Pegalos en el campo CCO de tu correo.'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok, function(){ coCopiarFallback(txt,silent); }); }
+  else coCopiarFallback(txt,silent);
 }
-function coCopiarFallback(txt){ var t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); try{document.execCommand('copy');alert('✓ Correos copiados');}catch(e){prompt('Copiá los correos:',txt);} t.remove(); }
+function coCopiarFallback(txt,silent){ var t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); try{document.execCommand('copy');if(!silent)alert('✓ Correos copiados');}catch(e){prompt('Copiá los correos:',txt);} t.remove(); }
 async function coSMTP(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var subj=($('coSubj')&&$('coSubj').value)||''; var body=($('coBody')&&$('coBody').value)||'';
