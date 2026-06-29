@@ -734,7 +734,47 @@ async function viewConfig(){
 function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div class="s">${s}</div></div></div>${c}`;}
 async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comparativas a clientes','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de correos (diseño listo). El envío real se conecta al configurar el servicio de email.</div></div>');}
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
-async function viewImport(){return vistaSimple('Importador Nuevo','Actualizar datos desde Excel (mapeo drag-drop)','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Importador con mapeo de columnas (diseño listo). Se conecta el endpoint de carga al definirlo.</div></div>');}
+let impHeaders=[], impRows=[], impMap={};
+const IMP_FIELDS=[['empresa','Empresa / Cliente'],['ban','BAN (9 díg)'],['phone','Teléfono (10 díg)'],['plan','Plan'],['monthly_value','Mensualidad $'],['contract_end_date','Vencimiento'],['status','Estado'],['account_type','Tipo BAN']];
+async function viewImport(){
+  return `<div class="head"><div><h1>Importador</h1><div class="s">Actualización masiva desde Excel · el archivo manda (actualiza/crea)</div></div></div>
+  <div class="panel"><h3>1) Subí el Excel</h3><input type="file" id="impFile" accept=".xlsx,.xls,.csv" class="inp" onchange="impParse()"><div class="s" style="margin-top:6px">Se lee en tu navegador. Después mapeás columnas y aplicás.</div></div>
+  <div id="impStep2"></div>`;
+}
+function impParse(){
+  var f=$('impFile').files[0]; if(!f)return;
+  if(typeof XLSX==='undefined'){ alert('La librería de Excel no cargó (revisá internet).'); return; }
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!data.length){ $('impStep2').innerHTML='<div class="empty">El Excel está vacío</div>'; return; }
+      impHeaders=data[0].map(function(h){return String(h||'').trim();});
+      impRows=data.slice(1).filter(function(r){return r.some(function(c){return String(c||'').trim();});});
+      impMap={}; IMP_FIELDS.forEach(function(fd){ var idx=impHeaders.findIndex(function(h){var hl=h.toLowerCase();return hl.includes(fd[0])||(fd[0]==='phone'&&/tel|cel|n[uú]mero/.test(hl))||(fd[0]==='empresa'&&/empresa|cliente|nombre/.test(hl))||(fd[0]==='ban'&&/ban/.test(hl))||(fd[0]==='monthly_value'&&/mensual|costo|precio|\$/.test(hl))||(fd[0]==='contract_end_date'&&/venc|fecha/.test(hl))||(fd[0]==='plan'&&/plan/.test(hl))||(fd[0]==='status'&&/estado|status/.test(hl));}); impMap[fd[0]]=idx; });
+      renderImpStep2();
+    }catch(err){ $('impStep2').innerHTML='<div class="empty">No se pudo leer: '+err.message+'</div>'; }
+  };
+  rd.readAsArrayBuffer(f);
+}
+function renderImpStep2(){
+  var opts=function(sel){ return '<option value="-1">— ninguna —</option>'+impHeaders.map(function(h,i){return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+(h||('col '+(i+1)))+'</option>';}).join(''); };
+  var maprows=IMP_FIELDS.map(function(fd){ return '<div class="irow"><span>'+fd[1]+'</span><select class="inp" style="max-width:240px" onchange="impMap[\''+fd[0]+'\']=Number(this.value)">'+opts(impMap[fd[0]])+'</select></div>'; }).join('');
+  var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; return '<td>'+(ix>=0?(r[ix]||''):'')+'</td>'; }).join('')+'</tr>'; }).join('');
+  $('impStep2').innerHTML='<div class="panel"><h3>2) Mapeá las columnas</h3>'+maprows+'</div>'
+    +'<div class="panel"><h3>3) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:760px"><thead><tr>'+IMP_FIELDS.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
+    +'<button class="btn green" style="width:100%;margin-top:14px" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div>';
+}
+async function impAplicar(){
+  if(!impRows.length){ alert('Subí un Excel primero'); return; }
+  if(!confirm('¿Aplicar a '+impRows.length+' filas? El archivo actualiza/crea registros reales.'))return;
+  var rows=impRows.map(function(r){ var o={}; IMP_FIELDS.forEach(function(fd){ var ix=impMap[fd[0]]; o[fd[0]]=ix>=0?r[ix]:''; }); return o; });
+  try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:rows}});
+    alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):'')); }
+  catch(e){ alert('No se pudo importar: '+e.message); }
+}
 // ---------------- ACTIONS ----------------
 async function nuevoCliente(){const name=prompt('Nombre del cliente:');if(!name)return;await api('/api/clients',{method:'POST',body:{name}});router();}
 async function enviarSeguimiento(id){const r=await api('/api/clients/'+id+'/seguimiento',{method:'POST',body:{product_key:'fijo_ren'}});if(r.error){alert(r.error);return;}location.hash='#/asana';}
