@@ -624,10 +624,9 @@ async function guardarMeta(scope, salesperson, rk){
     alert('✓ Meta guardada'+(meses.length>1?(' ('+meses.length+' meses)'):''));
   }catch(e){ alert('No se pudo guardar: '+e.message); }
 }
-async function viewMetas(){
-  const prods=await api('/api/products'); window.__metaProds=prods;
-  const goals=await api('/api/goals?month='+metaMonth);
-  let vendedores=[]; try{ vendedores=await api('/api/vendedores'); }catch(e){}
+// Grilla editable de metas (negocio + por vendedor), reutilizable en /metas y en Configuración
+function metasPanelsHtml(prods, goals, vendedores){
+  window.__metaProds=prods;
   const gmap={}; goals.forEach(g=>{ gmap[g.scope+'|'+(g.salesperson||'')+'|'+g.product_key]=g.target_qty; });
   const val=(sc,sp,pk)=>{ const v=gmap[sc+'|'+(sp||'')+'|'+pk]; return (v===undefined||v===null)?'':v; };
   const dinero=(sc,sp)=>prods.reduce((a,p)=>a+(Number(val(sc,sp,p.key))||0)*Number(p.income_value||0),0);
@@ -636,11 +635,20 @@ async function viewMetas(){
   const head=`<tr><th>Meta</th>${prods.map(p=>`<th class="c">${p.name}</th>`).join('')}<th class="r">Meta $</th><th>Alcance</th><th></th></tr>`;
   const negRow=`<tr><td><b>NEGOCIO</b></td>${inputs('negocio',null,'negocio')}<td class="r" style="color:var(--green);font-weight:700">${money(dinero('negocio',null))}</td><td>${scopeSel('negocio')}</td><td><button class="btn green" onclick="guardarMeta('negocio',null,'negocio')">Guardar</button></td></tr>`;
   const venRows=vendedores.map((v,i)=>{const rk='v'+i; return `<tr><td><div class="cli"><span class="av">${ini(v)}</span><b>${v}</b></div></td>${inputs('vendedor',v,rk)}<td class="r" style="color:var(--green);font-weight:600">${money(dinero('vendedor',v))}</td><td>${scopeSel(rk)}</td><td><button class="btn green" onclick='guardarMeta("vendedor",${JSON.stringify(v)},"${rk}")'>Guardar</button></td></tr>`;}).join('');
+  return `<div class="panel"><h3>Meta del negocio</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${negRow}</tbody></table></div></div>
+  <div class="panel"><h3>Meta por vendedor</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${venRows||'<tr><td colspan="11" class="empty">Sin vendedores de Tango todavía (aparecen cuando tienen ventas).</td></tr>'}</tbody></table></div></div>`;
+}
+function metaMonthSelect(handler){
   const yr=new Date(metaMonth).getFullYear();
   const monOpts=Array.from({length:12},(_,m)=>{const mo=yr+'-'+String(m+1).padStart(2,'0')+'-01';return `<option value="${mo}" ${mo===metaMonth?'selected':''}>${mo}</option>`;}).join('');
-  return `<div class="head"><div><h1>Metas</h1><div class="s">Meta del negocio y por vendedor, por producto · vendedores de Tango</div></div><select class="inp" style="max-width:160px" onchange="setMetaMonth(this.value)">${monOpts}</select></div>
-  <div class="panel"><h3>Meta del negocio</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${negRow}</tbody></table></div></div>
-  <div class="panel"><h3>Meta por vendedor</h3><div style="overflow-x:auto"><table style="min-width:920px"><thead>${head}</thead><tbody>${venRows||'<tr><td colspan="11" class="empty">Sin vendedores de Tango todavía (aparecen cuando tienen ventas).</td></tr>'}</tbody></table></div></div>`;
+  return `<select class="inp" style="max-width:160px" onchange="${handler}(this.value)">${monOpts}</select>`;
+}
+async function viewMetas(){
+  const prods=await api('/api/products');
+  const goals=await api('/api/goals?month='+metaMonth);
+  let vendedores=[]; try{ vendedores=await api('/api/vendedores'); }catch(e){}
+  return `<div class="head"><div><h1>Metas</h1><div class="s">Meta del negocio y por vendedor, por producto · vendedores de Tango</div></div>${metaMonthSelect('setMetaMonth')}</div>`
+  +metasPanelsHtml(prods,goals,vendedores);
 }
 
 async function viewPanel(){
@@ -714,21 +722,22 @@ async function viewComparativa(){
   <div class="card"><table><thead><tr><th>Nombre</th><th>Total actual</th><th>Oferta</th><th>Ahorro</th><th>Cuándo</th></tr></thead><tbody>${list.map(c=>`<tr><td><b>${c.name||'—'}</b></td><td>${money(c.current_total)}</td><td>${money(c.offer_total)}</td><td style="color:var(--green);font-weight:600">${money((c.current_total||0)-(c.offer_total||0))}</td><td>${new Date(c.created_at).toLocaleDateString('es')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin comparativas guardadas todavía.</td></tr>'}</tbody></table></div>`;
 }
 let cfgPasoKey=null;
-async function reConfig(){ $('view').innerHTML=await viewConfig(); }
-function setCfgPaso(k){ cfgPasoKey=k; reConfig(); }
-async function saveProd(id,f,v){ try{ await api('/api/products/'+id,{method:'PUT',body:{[f]: f==='income_value'?Number(v):v}}); }catch(e){ alert('No se pudo guardar el producto'); } }
-async function saveCat(id,f,v){ try{ await api('/api/categories/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar la categoría'); } }
-async function newCat(){ const n=prompt('Nombre de la nueva categoría:'); if(!n||!n.trim()) return; try{ await api('/api/categories',{method:'POST',body:{name:n.trim()}}); reConfig(); }catch(e){ alert('No se pudo crear'); } }
-async function delCat(id){ if(!confirm('¿Borrar esta categoría?')) return; try{ const r=await api('/api/categories/'+id,{method:'DELETE'}); if(r&&r.error){alert(r.error);return;} reConfig(); }catch(e){ alert('No se pudo borrar'); } }
-async function saveStep(id,f,v){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar el paso'); } }
-async function toggleStep(id,a){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{active:a}}); reConfig(); }catch(e){ alert('Error'); } }
-async function delStep(id){ if(!confirm('¿Borrar este paso?')) return; try{ await api('/api/step-templates/'+id,{method:'DELETE'}); reConfig(); }catch(e){ alert('No se pudo borrar'); } }
-async function addStep(key){ const el=$('newStep'); const n=el&&el.value.trim(); if(!n) return; try{ await api('/api/products/'+key+'/steps',{method:'POST',body:{name:n}}); reConfig(); }catch(e){ alert('No se pudo agregar'); } }
-async function viewConfig(){
+let cfgTab='prodcat';
+async function reConfig(){ $('view').innerHTML=await viewConfig(); cfgRenderBody(); }
+function cfgSetTab(t){ cfgTab=t; reConfig(); }
+async function cfgRenderBody(){ if(cfgTab==='metas') return renderCfgMetas(); return renderCfgProdCat(); }
+function setCfgMetaMonth(m){ metaMonth=m; renderCfgMetas(); }
+async function renderCfgMetas(){
+  const b=$('cfgBody'); if(!b)return;
+  const prods=await api('/api/products');
+  const goals=await api('/api/goals?month='+metaMonth);
+  let vendedores=[]; try{ vendedores=await api('/api/vendedores'); }catch(e){}
+  b.innerHTML='<div class="panel" style="display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0">Metas</h3><div class="s" style="margin-top:4px">Meta del negocio y por vendedor, por producto · vendedores de Tango</div></div>'+metaMonthSelect('setCfgMetaMonth')+'</div>'+metasPanelsHtml(prods,goals,vendedores);
+}
+async function renderCfgProdCat(){
+  const b=$('cfgBody'); if(!b)return;
   const prods=await api('/api/products');
   const cats=await api('/api/categories');
-  const pasoKey=cfgPasoKey||(prods[0]&&prods[0].key);
-  let steps=[]; try{ if(pasoKey) steps=await api('/api/products/'+pasoKey+'/steps'); }catch(e){}
   const catOpts=(sel)=>cats.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${c.name}</option>`).join('');
   const prodRow=p=>`<tr>
     <td><input class="inp" value="${p.name||''}" onchange="saveProd('${p.id}','name',this.value)"></td>
@@ -740,16 +749,25 @@ async function viewConfig(){
     <input class="inp" style="flex:1" placeholder="descripción" value="${c.description||''}" onchange="saveCat('${c.id}','description',this.value)">
     <span class="pill violet">${prods.filter(p=>p.category_id===c.id).length} prod</span>
     <button class="btn ghost" style="padding:7px 12px" onclick="delCat('${c.id}')">🗑</button></div>`;
-  const stepRow=(s,i)=>`<div class="prow">
-    <span style="color:var(--txt3);width:18px">${i+1}</span>
-    <input class="inp" style="flex:1" value="${s.name||''}" onchange="saveStep('${s.id}','name',this.value)">
-    <button class="btn ${s.active?'green':'ghost'}" style="padding:7px 12px" onclick="toggleStep('${s.id}',${!s.active})">${s.active?'Activo':'Inactivo'}</button>
-    <button class="btn ghost" style="padding:7px 12px" onclick="delStep('${s.id}')">🗑</button></div>`;
-  return `<div class="head"><div><h1>Configuración</h1><div class="s">Catálogo comercial en un solo lugar · editable: productos, categorías y pasos de seguimiento</div></div></div>
-  <div class="panel"><h3>Productos</h3><table><thead><tr><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Valor de ingreso</th></tr></thead><tbody>${prods.map(prodRow).join('')}</tbody></table></div>
+  b.innerHTML=`<div class="panel"><h3>Productos</h3><table><thead><tr><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Valor de ingreso</th></tr></thead><tbody>${prods.map(prodRow).join('')}</tbody></table></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Categorías · familias de producto</h3><button class="btn" onclick="newCat()">+ Nueva categoría</button></div>${cats.map(catRow).join('')||'<div class="empty">Sin categorías</div>'}</div>
-  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">Asana · pasos por producto</h3><div class="s" style="margin-top:5px">Los pasos de cada producto se editan en su pantalla dedicada.</div></div><button class="btn" onclick="location.hash='#/pasos'">⚙ Configurar pasos →</button></div></div>
-  <div class="panel"><h3>Vendedores y permisos</h3><div style="font-size:13px;color:var(--txt2)">Los vendedores vienen de Tango (login). Los permisos por usuario se arman de cero.</div></div>`;
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">Asana · pasos por producto</h3><div class="s" style="margin-top:5px">Los pasos de cada producto se editan en su pantalla dedicada.</div></div><button class="btn" onclick="location.hash='#/pasos'">⚙ Configurar pasos →</button></div></div>`;
+}
+function setCfgPaso(k){ cfgPasoKey=k; reConfig(); }
+async function saveProd(id,f,v){ try{ await api('/api/products/'+id,{method:'PUT',body:{[f]: f==='income_value'?Number(v):v}}); }catch(e){ alert('No se pudo guardar el producto'); } }
+async function saveCat(id,f,v){ try{ await api('/api/categories/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar la categoría'); } }
+async function newCat(){ const n=prompt('Nombre de la nueva categoría:'); if(!n||!n.trim()) return; try{ await api('/api/categories',{method:'POST',body:{name:n.trim()}}); reConfig(); }catch(e){ alert('No se pudo crear'); } }
+async function delCat(id){ if(!confirm('¿Borrar esta categoría?')) return; try{ const r=await api('/api/categories/'+id,{method:'DELETE'}); if(r&&r.error){alert(r.error);return;} reConfig(); }catch(e){ alert('No se pudo borrar'); } }
+async function saveStep(id,f,v){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{[f]:v}}); }catch(e){ alert('No se pudo guardar el paso'); } }
+async function toggleStep(id,a){ try{ await api('/api/step-templates/'+id,{method:'PUT',body:{active:a}}); reConfig(); }catch(e){ alert('Error'); } }
+async function delStep(id){ if(!confirm('¿Borrar este paso?')) return; try{ await api('/api/step-templates/'+id,{method:'DELETE'}); reConfig(); }catch(e){ alert('No se pudo borrar'); } }
+async function addStep(key){ const el=$('newStep'); const n=el&&el.value.trim(); if(!n) return; try{ await api('/api/products/'+key+'/steps',{method:'POST',body:{name:n}}); reConfig(); }catch(e){ alert('No se pudo agregar'); } }
+async function viewConfig(){
+  const tabs=[['prodcat','Productos y Categorías'],['metas','Metas']]
+    .map(t=>`<button class="btn ${cfgTab===t[0]?'':'ghost'}" onclick="cfgSetTab('${t[0]}')">${t[1]}</button>`).join('');
+  return `<div class="head"><div><h1>Configuración</h1><div class="s">Catálogo comercial y metas, agrupados por módulo</div></div></div>
+  <div class="panel" style="display:flex;gap:8px">${tabs}</div>
+  <div id="cfgBody"><div class="s">Cargando…</div></div>`;
 }
 function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div class="s">${s}</div></div></div>${c}`;}
 async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comparativas a clientes','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de correos (diseño listo). El envío real se conecta al configurar el servicio de email.</div></div>');}
@@ -1067,6 +1085,7 @@ async function router(){
     if(route==='import')impInitDrop();
     if(route==='ofertas')ofRenderBody();
     if(route==='prospeccion')prInit();
+    if(route==='config')cfgRenderBody();
   }catch(e){$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
 }
 window.addEventListener('hashchange',router);
