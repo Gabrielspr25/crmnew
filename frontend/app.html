@@ -854,10 +854,120 @@ async function eqApply(){
   }catch(e){ alert('No se pudo aplicar: '+e.message); }
 }
 
-// ----- PLANES (en construcción) -----
+// ----- PLANES (Constructor de Ofertas + CRUD de módulos) -----
+let plPagina='fijos', plPreview=null;
+const PL_PAGS=[['fijos','📞 Fijos'],['moviles','📱 Móviles'],['inalambrico','📡 Inalámbrico/IoT']];
+function plSetPagina(p){ plPagina=p; plPreview=null; ofRenderPlanes(); }
 async function ofRenderPlanes(){
   var b=$('ofBody'); if(!b)return;
-  b.innerHTML='<div class="panel"><div class="s" style="color:var(--txt2)">Admin de Planes — lo construyo a continuación (gestión de módulos por página + carga de PDF/Excel de planes).</div></div>';
+  var subtabs=PL_PAGS.map(function(p){return `<button class="btn ${plPagina===p[0]?'':'ghost'}" onclick="plSetPagina('${p[0]}')">${p[1]}</button>`;}).join('');
+  b.innerHTML=`<div class="panel" style="display:flex;gap:8px">${subtabs}</div>
+  <div class="panel"><h3>🤖 Constructor de Ofertas — actualizar desde documento</h3>
+    <div class="s" style="margin-bottom:8px">Subí el documento oficial (PDF: listado de planes fijos o boletín inalámbrico). Se detecta el tipo, se compara con lo publicado y se muestran los cambios <b>antes</b> de aplicar.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><input type="file" id="plDoc" accept=".pdf,.xlsx,.xls" class="inp" style="flex:1;min-width:240px"><button class="btn" onclick="plAnalizar()">🔎 Analizar documento</button></div>
+    <div id="plPreview"></div></div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Módulos · ${plPagina}</h3><div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofRenderPlanes()">↻ Recargar</button><button class="btn" onclick="plNuevoForm()">+ Nuevo módulo</button></div></div><div id="plNew"></div><div id="plList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>`;
+  plLoadModulos();
+}
+async function plLoadModulos(){
+  var el=$('plList'); if(!el)return;
+  try{
+    var r=await api('/api/planes-modulos/admin/all');
+    var mods=((r&&r.modulos)||[]).filter(function(m){return m.pagina===plPagina;});
+    if(!mods.length){ el.innerHTML='<div class="empty">Sin módulos en esta página. Creá uno o subí un documento.</div>'; return; }
+    el.innerHTML=mods.map(plModCard).join('');
+  }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
+}
+function plModCard(m){
+  var cont=''; try{ cont=esc(JSON.stringify(m.contenido||{},null,2)); }catch(e){ cont=''; }
+  return `<div class="card" style="padding:14px;margin-bottom:10px">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+      <span class="pill ${m.activo?'green':'red'}">${m.activo?'Activo':'Inactivo'}</span>
+      <b style="flex:1">${esc(m.titulo||'')}</b>
+      <span class="s">${esc(m.seccion_key||'')} · ${esc(m.tipo||'')}</span></div>
+    <div class="impgrid">
+      <div><div class="flbl">Título</div><input class="inp" id="pl_t_${m.id}" value="${esc(m.titulo||'')}"></div>
+      <div><div class="flbl">Subtítulo</div><input class="inp" id="pl_s_${m.id}" value="${esc(m.subtitulo||'')}"></div>
+      <div><div class="flbl">Descripción</div><input class="inp" id="pl_d_${m.id}" value="${esc(m.descripcion||'')}"></div>
+      <div><div class="flbl">Orden</div><input class="inp" id="pl_o_${m.id}" value="${Number(m.orden||0)}"></div></div>
+    <details style="margin-top:8px"><summary class="s" style="cursor:pointer">Contenido (JSON)</summary><textarea class="inp" id="pl_c_${m.id}" style="width:100%;min-height:140px;font-family:monospace;font-size:12px;margin-top:6px">${cont}</textarea></details>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+      <button class="btn green" onclick="plGuardar(${m.id})">💾 Guardar</button>
+      <button class="btn ghost" onclick="plToggle(${m.id},${!m.activo})">${m.activo?'Desactivar':'Activar'}</button>
+      <span style="flex:1"></span>
+      <input type="file" id="pl_pdf_${m.id}" accept=".pdf" class="inp" style="max-width:200px">
+      <button class="btn" onclick="plUploadPdf(${m.id})">⬆️ Subir PDF</button>
+      <span class="s" id="pl_pdfst_${m.id}"></span></div></div>`;
+}
+async function plGuardar(id){
+  var body={ titulo:$('pl_t_'+id).value, subtitulo:$('pl_s_'+id).value, descripcion:$('pl_d_'+id).value, orden:Number($('pl_o_'+id).value)||0 };
+  var ct=$('pl_c_'+id); if(ct){ try{ body.contenido=JSON.parse(ct.value); }catch(e){ alert('El Contenido no es JSON válido'); return; } }
+  try{ var r=await api('/api/planes-modulos/'+id,{method:'PUT',body:body}); if(r&&r.error){alert(r.error);return;} alert('✓ Guardado'); plLoadModulos(); }
+  catch(e){ alert('No se pudo guardar: '+e.message); }
+}
+async function plToggle(id,activo){ try{ await api('/api/planes-modulos/'+id,{method:'PUT',body:{activo:activo}}); plLoadModulos(); }catch(e){ alert('Error: '+e.message); } }
+async function plUploadPdf(id){
+  var f=$('pl_pdf_'+id); if(!f||!f.files.length){ alert('Elegí un PDF'); return; }
+  var st=$('pl_pdfst_'+id); if(st)st.textContent='procesando…';
+  var fd=new FormData(); fd.append('pdf',f.files[0]);
+  try{ var r=await apiForm('/api/planes-modulos/'+id+'/upload-pdf',fd);
+    if(!r.ok){ if(st)st.textContent=''; alert((r.warning?'⚠ ':'Error: ')+(r.error||'')); return; }
+    if(st)st.textContent='✓ '+r.secciones+' secciones'; alert('PDF importado ✓'); plLoadModulos();
+  }catch(e){ if(st)st.textContent=''; alert('No se pudo: '+e.message); }
+}
+function plNuevoForm(){
+  var el=$('plNew'); if(!el)return;
+  if(el.innerHTML){ el.innerHTML=''; return; }
+  el.innerHTML=`<div class="card" style="padding:14px;margin:10px 0;border-color:var(--primary)">
+    <h3 style="margin:0 0 10px">Nuevo módulo · ${plPagina}</h3>
+    <div class="impgrid">
+      <div><div class="flbl">Clave (seccion_key)</div><input class="inp" id="nf_key" placeholder="ej. planes-residenciales"></div>
+      <div><div class="flbl">Título</div><input class="inp" id="nf_tit"></div>
+      <div><div class="flbl">Subtítulo</div><input class="inp" id="nf_sub"></div>
+      <div><div class="flbl">Orden</div><input class="inp" id="nf_ord" value="0"></div>
+      <div><div class="flbl">Tipo</div><select class="inp" id="nf_tipo"><option value="tabla">tabla</option><option value="multilinea">multilinea</option><option value="inalambrico">inalambrico</option><option value="iot">iot</option></select></div></div>
+    <div style="margin-top:8px"><div class="flbl">Contenido (JSON)</div><textarea class="inp" id="nf_cont" style="width:100%;min-height:120px;font-family:monospace;font-size:12px">{"filas":[]}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn green" onclick="plCrear()">✓ Crear</button><button class="btn ghost" onclick="plNuevoForm()">Cancelar</button></div></div>`;
+}
+async function plCrear(){
+  var key=$('nf_key').value.trim(), tit=$('nf_tit').value.trim();
+  if(!key||!tit){ alert('Clave y título son obligatorios'); return; }
+  var cont; try{ cont=JSON.parse($('nf_cont').value||'{}'); }catch(e){ alert('El Contenido no es JSON válido'); return; }
+  var body={ pagina:plPagina, seccion_key:key, titulo:tit, subtitulo:$('nf_sub').value.trim()||null, orden:Number($('nf_ord').value)||0, tipo:$('nf_tipo').value, contenido:cont };
+  try{ var r=await api('/api/planes-modulos',{method:'POST',body:body}); if(r&&r.error){alert(r.error);return;} alert('✓ Módulo creado'); plNuevoForm(); plLoadModulos(); }
+  catch(e){ if((''+e.message).includes('409')){alert('Ya existe un módulo con esa clave en esta página');}else alert('No se pudo crear: '+e.message); }
+}
+async function plAnalizar(){
+  var f=$('plDoc'); if(!f||!f.files.length){ alert('Elegí un documento (PDF)'); return; }
+  $('plPreview').innerHTML='<div class="s" style="margin-top:10px">Analizando…</div>';
+  var fd=new FormData(); fd.append('documento',f.files[0]);
+  try{
+    var r=await apiForm('/api/planes-modulos/preview',fd);
+    if(!r.ok){ $('plPreview').innerHTML='<div class="empty">'+(r.error||'No se pudo analizar')+'</div>'; return; }
+    plPreview=r; plRenderPreview(r);
+  }catch(e){ $('plPreview').innerHTML='<div class="empty">Error: '+e.message+'</div>'; }
+}
+function plRenderPreview(r){
+  var filas=(r.resumen||[]).map(function(s){
+    if(s.estado) return `<div class="irow"><span>${esc(s.seccion||'')}</span><b style="color:var(--amber)">${esc(s.estado)}</b></div>`;
+    return `<div class="irow"><span>${esc(s.seccion||'')}</span><b><span class="pill green">+${s.nuevos||0}</span> <span class="pill amber">~${s.modificados||0}</span> <span class="pill red">-${s.ausentes||0}</span> <span class="s">(${s.sin_cambio||0} sin cambio)</span></b></div>`;
+  }).join('');
+  var totalCambios=(r.resumen||[]).reduce(function(a,s){return a+(s.nuevos||0)+(s.modificados||0)+(s.ausentes||0);},0);
+  var aplicable=(r.resumen||[]).some(function(s){return s.modulo_id;});
+  $('plPreview').innerHTML=`<div class="card" style="padding:12px;margin-top:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b>${esc(r.archivo||'')}</b><span class="pill violet">${esc(r.tipo_detectado||'')} · ${esc(r.pagina||'')}</span></div>
+    <div style="margin:8px 0">${filas||'<div class="s">Sin secciones</div>'}</div>
+    <div class="s">${totalCambios} cambios. Se guarda snapshot antes de aplicar; las filas ausentes se retiran del portal.</div>
+    ${aplicable?`<button class="btn green" style="margin-top:10px" onclick="plAplicar('${r.preview_id}')">✓ Aplicar cambios</button>`:`<div class="s" style="color:var(--amber);margin-top:8px">No hay módulo en el portal para aplicar (creá el módulo primero, o usá Subir PDF por módulo).</div>`}</div>`;
+}
+async function plAplicar(previewId){
+  if(!confirm('¿Aplicar los cambios al portal? Se guarda un snapshot del estado actual.'))return;
+  try{
+    var res=await fetch(API+'/api/planes-modulos/apply/'+previewId,{method:'POST',headers:{Authorization:'Bearer '+token}});
+    var d=await res.json();
+    if(!d.ok){ alert('Error al aplicar: '+(d.error||res.status)); return; }
+    alert('✓ Cambios aplicados al portal'); plPreview=null; $('plPreview').innerHTML=''; plLoadModulos();
+  }catch(e){ alert('No se pudo aplicar: '+e.message); }
 }
 
 // ---------------- PROSPECCIÓN (Google Places) ----------------

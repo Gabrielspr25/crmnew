@@ -19,6 +19,7 @@ import { writeRouter } from './routes/writeRoutes.js';
 import { ocrRouter } from './routes/ocrRoutes.js';
 import { importRouter } from './routes/importRoutes.js';
 import { equiposRouter } from './routes/equiposRoutes.js';
+import { planesRouter } from './routes/planesRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { placesRouter } from './routes/places.js';
 
@@ -63,6 +64,7 @@ app.use('/api', writeRouter);             // ESCRITURA real: clientes/BANs/suscr
 app.use('/api', ocrRouter);               // OCR: subir/pegar imagen -> suscriptores
 app.use('/api', importRouter);            // Importador: actualización masiva desde Excel
 app.use('/api', equiposRouter);           // Admin de Equipos: lista de precios PYMES/CORP
+app.use('/api/planes-modulos', planesRouter); // Admin de Planes: CRUD + constructor de ofertas (PDF)
 app.use('/api', prospectosRouter);        // Prospección masiva Google Places -> public.prospectos
 app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
