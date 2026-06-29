@@ -151,10 +151,11 @@
     <a class="nav" href="#/comparativa"><span class="d"></span>Comparativa</a>
     <a class="nav" href="#/correos"><span class="d"></span>Correos</a>
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
-    <a class="nav" href="#/ofertas"><span class="d"></span>Ofertas (admin)</a>
+    <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
+    <a class="nav" href="https://ofertas.ss-group.cloud/movil.html" target="_blank" rel="noopener"><span class="d"></span>Ofertas Web ↗</a>
   </aside>
   <div class="main">
     <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo día</span></button></div>
@@ -755,7 +756,7 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
-const PORTAL_OFERTAS_URL='';   // se completa con la URL del portal deployado
+const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/movil.html';   // portal de ofertas deployado
 let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
 async function viewOfertas(){
   var portalBtn = PORTAL_OFERTAS_URL
