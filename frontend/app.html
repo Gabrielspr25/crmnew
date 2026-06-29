@@ -820,8 +820,18 @@ function coOutlook(){
   var bcc=[...coSel].join(',');
   var url='mailto:?bcc='+encodeURIComponent(bcc)+'&subject='+subj+'&body='+body;
   if(url.length>1990){ alert('Demasiados destinatarios para Outlook de una vez ('+coSel.size+'). Mandá en lotes más chicos o usá envío por servidor.'); return; }
-  window.location.href=url;
+  // método confiable: click en un <a> real
+  var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); }, 200);
+  // diagnóstico por si no hay app de correo por defecto
+  setTimeout(function(){ if(confirm('Si NO se abrió tu correo, copio los '+coSel.size+' destinatarios al portapapeles para pegarlos a mano. ¿Copiar?')){ coCopiar(); } }, 900);
 }
+function coCopiar(){
+  var txt=[...coSel].join('; ');
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ alert('✓ '+coSel.size+' correos copiados (separados por ;). Pegalos en el campo CCO de tu correo.'); }, function(){ coCopiarFallback(txt); }); }
+  else coCopiarFallback(txt);
+}
+function coCopiarFallback(txt){ var t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); try{document.execCommand('copy');alert('✓ Correos copiados');}catch(e){prompt('Copiá los correos:',txt);} t.remove(); }
 async function coSMTP(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var subj=($('coSubj')&&$('coSubj').value)||''; var body=($('coBody')&&$('coBody').value)||'';
