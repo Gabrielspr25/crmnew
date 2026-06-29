@@ -751,8 +751,29 @@ function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div cla
 async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comparativas a clientes','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de correos (diseño listo). El envío real se conecta al configurar el servicio de email.</div></div>');}
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
 let impHeaders=[], impRows=[], impMap={};
-const IMP_FIELDS=[['empresa','Empresa / Cliente'],['ban','BAN (9 díg)'],['phone','Teléfono (10 díg)'],['plan','Plan'],['monthly_value','Mensualidad $'],['contract_end_date','Vencimiento'],['status','Estado'],['account_type','Tipo BAN']];
-function impAutoDetect(hl,key){return hl.includes(key)||(key==='phone'&&/tel|cel|n[uú]mero/.test(hl))||(key==='empresa'&&/empresa|cliente|nombre|raz[oó]n/.test(hl))||(key==='ban'&&/ban|cuenta/.test(hl))||(key==='monthly_value'&&/mensual|costo|precio|valor|\$/.test(hl))||(key==='contract_end_date'&&/venc|fecha/.test(hl))||(key==='plan'&&/plan/.test(hl))||(key==='status'&&/estado|status/.test(hl))||(key==='account_type'&&/tipo/.test(hl));}
+// [clave, etiqueta, grupo]  grupos: cli=Cliente, ban=BAN, sub=Suscriptor
+const IMP_FIELDS=[
+  ['name','Empresa / Cliente','cli'],['company','Empresa (razón social)','cli'],['email','Email','cli'],
+  ['phone','Teléfono principal','cli'],['mobile','Celular','cli'],['additional_phone','Tel. adicional','cli'],
+  ['address','Dirección','cli'],['city','Ciudad','cli'],['zip_code','Código postal','cli'],
+  ['contact_person','Contacto','cli'],['source','Base / Origen','cli'],['tax_id','RUC / Tax ID','cli'],['cli_notes','Notas cliente','cli'],
+  ['ban','BAN (9 díg)','ban'],['account_type','Tipo BAN','ban'],['ban_status','Estado BAN','ban'],
+  ['sub_phone','Teléfono línea (10 díg)','sub'],['subscriber_name','Nombre suscriptor','sub'],['plan','Plan','sub'],
+  ['monthly_value','Mensualidad $','sub'],['contract_end_date','Vencimiento','sub'],['status','Estado línea','sub'],
+  ['equipment','Equipo','sub'],['imei','IMEI','sub'],['sub_notes','Notas línea','sub']
+];
+const IMP_GROUPS=[['cli','Cliente'],['ban','BAN'],['sub','Suscriptor']];
+const IMP_DETECT={
+  name:/^nombre|^cliente|raz[oó]n/, company:/empresa|negocio/, email:/email|correo|e-?mail/,
+  phone:/principal|^tel[eé]fono$|^tel\b/, mobile:/celular|m[oó]vil|\bcel\b/, additional_phone:/adicional|secundario|otro/,
+  address:/direcci|domicilio/, city:/ciudad|localidad/, zip_code:/postal|\bzip\b|\bcp\b/,
+  contact_person:/contacto|persona/, source:/\bbase\b|origen|fuente/, tax_id:/ruc|tax|rfc|\bnit\b|cuit|c[eé]dula/,
+  cli_notes:/nota/, ban:/\bban\b|cuenta/, account_type:/tipo/, ban_status:/estado.*ban|ban.*estado/,
+  sub_phone:/suscriptor.*(tel|n[uú]m)|tel.*l[ií]nea|l[ií]nea.*tel/, subscriber_name:/suscriptor|usuario/, plan:/plan/,
+  monthly_value:/mensual|costo|valor|precio|importe|\$/, contract_end_date:/venc|fecha/, status:/estado|status/,
+  equipment:/equipo|terminal|modelo/, imei:/imei/, sub_notes:/nota.*l[ií]nea/
+};
+function impAutoDetect(hl,key){ var re=IMP_DETECT[key]; return re?re.test(hl):false; }
 async function viewImport(){
   return `<div class="head"><div><h1>Importador</h1><div class="s">Actualización masiva desde Excel · arrastrá el archivo y mapeá columnas · el archivo manda (actualiza/crea)</div></div></div>
   <div class="panel"><h3>1) Soltá el Excel</h3>
@@ -780,7 +801,7 @@ function impHandleFile(f){
       if(!data.length){ $('impStep2').innerHTML='<div class="empty">El Excel está vacío</div>'; return; }
       impHeaders=data[0].map(function(h){return String(h||'').trim();});
       impRows=data.slice(1).filter(function(r){return r.some(function(c){return String(c||'').trim();});});
-      impMap={}; IMP_FIELDS.forEach(function(fd){ var idx=impHeaders.findIndex(function(h){return impAutoDetect(h.toLowerCase(),fd[0]);}); if(idx>=0)impMap[fd[0]]=idx; });
+      impMap={}; var taken={}; IMP_FIELDS.forEach(function(fd){ var idx=-1; for(var i=0;i<impHeaders.length;i++){ if(!taken[i]&&impAutoDetect(impHeaders[i].toLowerCase(),fd[0])){ idx=i; break; } } if(idx>=0){ impMap[fd[0]]=idx; taken[idx]=1; } });
       $('impDrop').innerHTML='<span class="dz-ico">📄</span><b>'+f.name+'</b><div class="s" style="margin-top:4px">'+impRows.length+' filas · '+impHeaders.length+' columnas · clic para cambiar</div>';
       renderImpStep2();
     }catch(err){ $('impStep2').innerHTML='<div class="empty">No se pudo leer: '+err.message+'</div>'; }
@@ -791,19 +812,34 @@ function impHandleFile(f){
 function impDragCol(e,ix){ e.dataTransfer.setData('text/plain',String(ix)); e.dataTransfer.effectAllowed='copy'; }
 function impDropCol(e,key){ e.preventDefault(); var ix=Number(e.dataTransfer.getData('text/plain')); if(!isNaN(ix)){ for(var k in impMap){if(impMap[k]===ix)delete impMap[k];} impMap[key]=ix; renderImpStep2(); } }
 function impClearSlot(key){ delete impMap[key]; renderImpStep2(); }
+function impColChip(i,used){ return '<span class="impcol'+(used?' used':'')+'" draggable="true" ondragstart="impDragCol(event,'+i+')">'+(impHeaders[i]||('col '+(i+1)))+'</span>'; }
+function impSlot(fd){ var ix=impMap[fd[0]]; var has=ix>=0&&ix!=null;
+  return '<div class="impslot'+(has?' has':'')+'" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="this.classList.remove(\'over\');impDropCol(event,\''+fd[0]+'\')">'
+    +'<span class="sl-field">'+fd[1]+'</span>'
+    +(has?'<span class="sl-val">'+(impHeaders[ix]||('col '+(ix+1)))+' <span class="sl-x" title="quitar" onclick="impClearSlot(\''+fd[0]+'\')">✕</span></span>':'<span class="s" style="color:var(--txt3)">arrastrá una columna</span>')
+    +'</div>'; }
 function renderImpStep2(){
   var used={}; Object.keys(impMap).forEach(function(k){used[impMap[k]]=1;});
-  var cols=impHeaders.map(function(h,i){ return '<span class="impcol'+(used[i]?' used':'')+'" draggable="true" ondragstart="impDragCol(event,'+i+')">'+(h||('col '+(i+1)))+'</span>'; }).join('');
-  var slots=IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; var has=ix>=0&&ix!=null;
-    return '<div class="impslot'+(has?' has':'')+'" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="this.classList.remove(\'over\');impDropCol(event,\''+fd[0]+'\')">'
-      +'<span class="sl-field">'+fd[1]+'</span>'
-      +(has?'<span class="sl-val">'+(impHeaders[ix]||('col '+(ix+1)))+' <span class="sl-x" title="quitar" onclick="impClearSlot(\''+fd[0]+'\')">✕</span></span>':'<span class="s" style="color:var(--txt3)">arrastrá una columna</span>')
-      +'</div>'; }).join('');
-  var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; return '<td>'+(ix>=0&&ix!=null?(r[ix]||''):'')+'</td>'; }).join('')+'</tr>'; }).join('');
-  $('impStep2').innerHTML='<div class="panel"><h3>2) Arrastrá cada columna del Excel a su campo</h3>'
-    +'<div class="s" style="margin-bottom:6px">Columnas del archivo:</div><div class="impcols">'+cols+'</div>'
-    +'<div class="impgrid" style="margin-top:12px">'+slots+'</div></div>'
-    +'<div class="panel"><h3>3) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:760px"><thead><tr>'+IMP_FIELDS.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
+  // 1) TODAS las columnas del archivo, en una fila
+  var cols=impHeaders.map(function(h,i){ return impColChip(i,used[i]); }).join('');
+  // 2) campos destino agrupados Cliente / BAN / Suscriptor
+  var groups=IMP_GROUPS.map(function(g){
+    var slots=IMP_FIELDS.filter(function(fd){return fd[2]===g[0];}).map(impSlot).join('');
+    return '<div class="s" style="margin:14px 0 6px;color:var(--txt2);font-weight:700;letter-spacing:.3px;text-transform:uppercase;font-size:11px">'+g[1]+'</div><div class="impgrid">'+slots+'</div>';
+  }).join('');
+  // 3) columnas que NO se mapearon (abajo)
+  var sinAsignar=impHeaders.map(function(h,i){ return used[i]?'':impColChip(i,false); }).filter(Boolean).join('');
+  var sinPanel=sinAsignar
+    ? '<div class="panel" style="border-color:var(--amber-border)"><h3 style="color:var(--amber)">⚠ Columnas sin asignar</h3><div class="s" style="margin-bottom:8px">Estas columnas del archivo no se reconocieron. Arrastralas al campo que corresponda; las que dejes acá se ignoran.</div><div class="impcols">'+sinAsignar+'</div></div>'
+    : '<div class="panel" style="border-color:var(--green-border)"><div class="s" style="color:var(--green)">✓ Todas las columnas del archivo quedaron asignadas.</div></div>';
+  // vista previa: solo campos mapeados
+  var mapped=IMP_FIELDS.filter(function(fd){var ix=impMap[fd[0]];return ix>=0&&ix!=null;});
+  var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+mapped.map(function(fd){ return '<td>'+(r[impMap[fd[0]]]||'')+'</td>'; }).join('')+'</tr>'; }).join('');
+  $('impStep2').innerHTML='<div class="panel"><h3>2) Asigná las columnas (auto-detectadas; arrastrá para corregir)</h3>'
+    +'<div class="s" style="margin-bottom:6px">Columnas del archivo (las usadas se ven apagadas):</div><div class="impcols">'+cols+'</div>'
+    +groups+'</div>'
+    +sinPanel
+    +'<div class="panel"><h3>4) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:'+(mapped.length*120)+'px"><thead><tr>'+mapped.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
     +'<div id="impMatch" style="margin-top:12px"></div>'
     +'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" style="flex:1" onclick="impVerificar()">🔎 Verificar con la BD</button><button class="btn green" style="flex:2" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div></div>';
 }
@@ -825,7 +861,7 @@ async function impAplicar(){
   if(!impRows.length){ alert('Soltá un Excel primero'); return; }
   if(!confirm('¿Aplicar a '+impRows.length+' filas? El archivo actualiza/crea registros reales.'))return;
   try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:impMappedRows()}});
-    alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):'')); }
+    alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• Clientes actualizados: '+(res.clientes_actualizados||0)+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):'')); }
   catch(e){ alert('No se pudo importar: '+e.message); }
 }
 // ---------------- ACTIONS ----------------
