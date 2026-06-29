@@ -23,7 +23,7 @@ import { placesRouter } from './routes/places.js';
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Servir el frontend (app.html, propuesta-template.html, etc.) -> http://localhost:4000
 const __dir = path.dirname(fileURLToPath(import.meta.url));
