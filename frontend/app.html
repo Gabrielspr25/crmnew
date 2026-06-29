@@ -151,6 +151,7 @@
     <a class="nav" href="#/comparativa"><span class="d"></span>Comparativa</a>
     <a class="nav" href="#/correos"><span class="d"></span>Correos</a>
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
+    <a class="nav" href="#/ofertas"><span class="d"></span>Ofertas (admin)</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
@@ -169,6 +170,7 @@ function money(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractio
 function ini(n){return (n||'?').trim().slice(0,2).toUpperCase();}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409)throw new Error(p+' -> '+r.status);return r.json();}
+async function apiForm(p,formData){const r=await fetch(API+p,{method:'POST',headers:{Authorization:'Bearer '+token},body:formData});if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}return r.json();}
 function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-01';}
 
 // ---------------- VIEWS ----------------
@@ -750,6 +752,93 @@ async function viewConfig(){
 function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div class="s">${s}</div></div></div>${c}`;}
 async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comparativas a clientes','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de correos (diseño listo). El envío real se conecta al configurar el servicio de email.</div></div>');}
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
+
+// ---------------- OFERTAS (ADMIN) ----------------
+// El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
+const PORTAL_OFERTAS_URL='';   // se completa con la URL del portal deployado
+let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
+async function viewOfertas(){
+  var portalBtn = PORTAL_OFERTAS_URL
+    ? `<a class="btn" style="background:var(--violet)" href="${PORTAL_OFERTAS_URL}" target="_blank" rel="noopener">🛒 Abrir portal de ofertas</a>`
+    : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal de ofertas. Se conecta al deployar.')">🛒 Abrir portal de ofertas</button>`;
+  var tabs = ['equipos','planes'].map(function(t){ return `<button class="btn ${ofTab===t?'':'ghost'}" onclick="ofSetTab('${t}')">${t==='equipos'?'Equipos':'Planes'}</button>`; }).join('');
+  return `<div class="head"><div><h1>Ofertas · Admin</h1><div class="s">Cargás acá los datos que muestra el portal de ofertas a los clientes</div></div>${portalBtn}</div>
+  <div class="panel" style="display:flex;gap:8px">${tabs}</div>
+  <div id="ofBody"></div>`;
+}
+function ofSetTab(t){ ofTab=t; reOfertas(); }
+async function reOfertas(){ $('view').innerHTML=await viewOfertas(); ofRenderBody(); }
+async function ofRenderBody(){
+  if(ofTab==='equipos') return ofRenderEquipos();
+  if(ofTab==='planes') return ofRenderPlanes();
+}
+
+// ----- EQUIPOS -----
+async function ofRenderEquipos(){
+  var b=$('ofBody'); if(!b)return;
+  b.innerHTML='<div class="panel"><h3>Subir lista de precios (Excel)</h3>'
+    +'<div class="dropzone" id="eqDrop" onclick="$(\'eqFile\').click()"><span class="dz-ico">⬇</span><b>Arrastrá el Excel de equipos</b><div class="s" style="margin-top:4px">4 tabs: celulares, módems/tablets, pospago, accesorios · .xlsx</div></div>'
+    +'<input type="file" id="eqFile" accept=".xlsx,.xls" style="display:none" onchange="eqPreview(this.files[0])">'
+    +'<div id="eqPrev"></div></div>'
+    +'<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Lista vigente</h3><input class="inp" id="eqSearch" placeholder="Buscar modelo o item code…" style="max-width:280px" oninput="eqLoadList()"></div><div id="eqList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>';
+  // drop handlers
+  var dz=$('eqDrop');
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over');});});
+  dz.addEventListener('drop',function(e){var f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)eqPreview(f);});
+  eqLoadList();
+}
+async function eqLoadList(){
+  var el=$('eqList'); if(!el)return;
+  var s=($('eqSearch')&&$('eqSearch').value.trim())||'';
+  try{
+    var r=await api('/api/equipos-lista'+(s?('?search='+encodeURIComponent(s)):''));
+    var rows=(r&&r.data)||[];
+    if(!rows.length){ el.innerHTML='<div class="empty">'+(s?'Sin resultados':'No hay equipos cargados todavía. Subí el Excel arriba.')+'</div>'; return; }
+    var body=rows.slice(0,200).map(function(e){
+      var mens=(e.mensualidades||[]).map(function(m){return m.meses+'m $'+m.monto;}).join(' · ');
+      return '<tr><td><b>'+(e.modelo||'')+'</b><div class="s">'+(e.item_code||'')+(e.sap_code?(' · SAP '+e.sap_code):'')+'</div></td>'
+        +'<td><span class="pill violet">'+(e.marca||'')+'</span></td><td>'+(e.categoria||'')+'</td>'
+        +'<td>'+(e.precio_regular!=null?('$'+e.precio_regular):'—')+'</td>'
+        +'<td class="s">'+(mens||(e.pospago_precios?'pospago':'—'))+'</td></tr>';
+    }).join('');
+    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' equipos vigentes'+(rows.length>200?' (mostrando 200)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Precio reg.</th><th>Mensualidades</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
+}
+async function eqPreview(f){
+  if(!f)return;
+  $('eqPrev').innerHTML='<div class="s" style="margin-top:10px">Analizando '+f.name+'…</div>';
+  var fd=new FormData(); fd.append('file',f);
+  try{
+    var r=await apiForm('/api/equipos-lista/preview',fd);
+    if(!r.ok){ $('eqPrev').innerHTML='<div class="empty">'+(r.error||'No se pudo leer')+'</div>'; return; }
+    ofEquiposPreview=f; var cats=r.resumen.por_categoria||{};
+    var chips=Object.keys(cats).map(function(k){return '<span class="pill violet">'+k+': '+cats[k]+'</span>';}).join(' ');
+    $('eqPrev').innerHTML='<div class="card" style="margin-top:10px;padding:12px"><b style="font-size:13px">'+f.name+'</b>'
+      +'<div class="s" style="margin:6px 0">Tabs: '+(r.sheetNames||[]).join(', ')+'</div>'
+      +'<div style="margin:8px 0">'+chips+'</div>'
+      +'<div class="irow"><span>Total equipos detectados</span><b>'+r.resumen.total+'</b></div>'
+      +'<div style="display:flex;gap:10px;margin-top:12px"><input class="inp" id="eqNotas" placeholder="Notas / vigencia (opcional)" style="flex:1"><button class="btn green" onclick="eqApply()">Aplicar lista ('+r.resumen.total+')</button></div></div>';
+  }catch(e){ $('eqPrev').innerHTML='<div class="empty">No se pudo leer: '+e.message+'</div>'; }
+}
+async function eqApply(){
+  if(!ofEquiposPreview){ alert('Subí el Excel primero'); return; }
+  if(!confirm('Esto reemplaza la lista vigente por la del Excel. ¿Continuar?'))return;
+  var fd=new FormData(); fd.append('file',ofEquiposPreview);
+  var notas=$('eqNotas')&&$('eqNotas').value.trim(); if(notas)fd.append('notas',notas);
+  $('eqPrev').innerHTML='<div class="s" style="margin-top:10px">Aplicando…</div>';
+  try{
+    var r=await apiForm('/api/equipos-lista/upload',fd);
+    if(!r.ok){ alert('Error: '+(r.error||'')); return; }
+    alert('✓ '+r.message); ofEquiposPreview=null; ofRenderEquipos();
+  }catch(e){ alert('No se pudo aplicar: '+e.message); }
+}
+
+// ----- PLANES (en construcción) -----
+async function ofRenderPlanes(){
+  var b=$('ofBody'); if(!b)return;
+  b.innerHTML='<div class="panel"><div class="s" style="color:var(--txt2)">Admin de Planes — lo construyo a continuación (gestión de módulos por página + carga de PDF/Excel de planes).</div></div>';
+}
 let impHeaders=[], impRows=[], impMap={};
 // [clave, etiqueta, grupo]  grupos: cli=Cliente, ban=BAN, sub=Suscriptor
 const IMP_FIELDS=[
@@ -902,9 +991,11 @@ async function router(){
     else if(route==='correos')html=await viewCorreos();
     else if(route==='campanas')html=await viewCampanas();
     else if(route==='import')html=await viewImport();
+    else if(route==='ofertas')html=await viewOfertas();
     else html=await viewClientes();
     $('view').innerHTML=html;
     if(route==='import')impInitDrop();
+    if(route==='ofertas')ofRenderBody();
   }catch(e){$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
 }
 window.addEventListener('hashchange',router);

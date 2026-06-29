@@ -18,6 +18,7 @@ import { asanaRealRouter } from './routes/asanaReal.js';
 import { writeRouter } from './routes/writeRoutes.js';
 import { ocrRouter } from './routes/ocrRoutes.js';
 import { importRouter } from './routes/importRoutes.js';
+import { equiposRouter } from './routes/equiposRoutes.js';
 import { placesRouter } from './routes/places.js';
 
 
@@ -60,6 +61,7 @@ app.use('/api', asanaRealRouter);         // ASANA SEG. con data real de crm_pro
 app.use('/api', writeRouter);             // ESCRITURA real: clientes/BANs/suscriptores
 app.use('/api', ocrRouter);               // OCR: subir/pegar imagen -> suscriptores
 app.use('/api', importRouter);            // Importador: actualización masiva desde Excel
+app.use('/api', equiposRouter);           // Admin de Equipos: lista de precios PYMES/CORP
 app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
 
