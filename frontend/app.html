@@ -875,21 +875,31 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
 const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/movil.html';   // portal de ofertas deployado
+const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
 let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
 async function viewOfertas(){
   var portalBtn = PORTAL_OFERTAS_URL
     ? `<a class="btn" style="background:var(--violet)" href="${PORTAL_OFERTAS_URL}" target="_blank" rel="noopener">🛒 Abrir portal de ofertas</a>`
-    : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal de ofertas. Se conecta al deployar.')">🛒 Abrir portal de ofertas</button>`;
-  var tabs = ['equipos','planes'].map(function(t){ return `<button class="btn ${ofTab===t?'':'ghost'}" onclick="ofSetTab('${t}')">${t==='equipos'?'Equipos':'Planes'}</button>`; }).join('');
-  return `<div class="head"><div><h1>Ofertas · Admin</h1><div class="s">Cargás acá los datos que muestra el portal de ofertas a los clientes</div></div>${portalBtn}</div>
-  <div class="panel" style="display:flex;gap:8px">${tabs}</div>
+    : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal.')">🛒 Abrir portal de ofertas</button>`;
+  var tabs = OF_TABS.map(function(t){ return `<button class="btn ${ofTab===t[0]?'':'ghost'}" onclick="ofSetTab('${t[0]}')">${t[1]}</button>`; }).join('');
+  return `<div class="head"><div><h1>Admin Ofertas</h1><div class="s">Gestión de listas de precios y planes publicados en el portal</div></div>
+    <div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofSetTab('ofertas')">Subir ofertas</button><button class="btn ghost" onclick="ofSetTab('equipos')">Subir lista de precios</button>${portalBtn}</div></div>
+  <div class="panel" style="display:flex;gap:8px;flex-wrap:wrap">${tabs}</div>
   <div id="ofBody"></div>`;
 }
 function ofSetTab(t){ ofTab=t; reOfertas(); }
 async function reOfertas(){ $('view').innerHTML=await viewOfertas(); ofRenderBody(); }
 async function ofRenderBody(){
   if(ofTab==='equipos') return ofRenderEquipos();
-  if(ofTab==='planes') return ofRenderPlanes();
+  if(ofTab==='ofertas') return ofRenderOfertasTienda();
+  return ofRenderPlanesPagina(ofTab); // fijos | moviles | inalambrico
+}
+// Tab "Ofertas" (Excel móviles) = lo maneja el programador
+async function ofRenderOfertasTienda(){
+  var b=$('ofBody'); if(!b)return;
+  b.innerHTML='<div class="panel"><h3>🛍 Ofertas (Excel móviles)</h3>'
+    +'<div class="s" style="color:var(--txt2)">El parser del boletín de ofertas móviles (financiamiento) lo maneja tu programador. '
+    +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
 }
 
 // ----- EQUIPOS -----
@@ -953,19 +963,17 @@ async function eqApply(){
   }catch(e){ alert('No se pudo aplicar: '+e.message); }
 }
 
-// ----- PLANES (Constructor de Ofertas + CRUD de módulos) -----
+// ----- PLANES (Constructor de Ofertas + CRUD de módulos), por página -----
 let plPagina='fijos', plPreview=null;
-const PL_PAGS=[['fijos','📞 Fijos'],['moviles','📱 Móviles'],['inalambrico','📡 Inalámbrico/IoT']];
-function plSetPagina(p){ plPagina=p; plPreview=null; ofRenderPlanes(); }
-async function ofRenderPlanes(){
+const PL_LABEL={fijos:'Planes Fijos',moviles:'Planes Móviles',inalambrico:'Inalámbrico / IT'};
+async function ofRenderPlanesPagina(pagina){
+  plPagina=pagina; plPreview=null;
   var b=$('ofBody'); if(!b)return;
-  var subtabs=PL_PAGS.map(function(p){return `<button class="btn ${plPagina===p[0]?'':'ghost'}" onclick="plSetPagina('${p[0]}')">${p[1]}</button>`;}).join('');
-  b.innerHTML=`<div class="panel" style="display:flex;gap:8px">${subtabs}</div>
-  <div class="panel"><h3>🤖 Constructor de Ofertas — actualizar desde documento</h3>
+  b.innerHTML=`<div class="panel"><h3>🤖 Constructor de Ofertas — ${PL_LABEL[pagina]||pagina}</h3>
     <div class="s" style="margin-bottom:8px">Subí el documento oficial (PDF: listado de planes fijos o boletín inalámbrico). Se detecta el tipo, se compara con lo publicado y se muestran los cambios <b>antes</b> de aplicar.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><input type="file" id="plDoc" accept=".pdf,.xlsx,.xls" class="inp" style="flex:1;min-width:240px"><button class="btn" onclick="plAnalizar()">🔎 Analizar documento</button></div>
     <div id="plPreview"></div></div>
-  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Módulos · ${plPagina}</h3><div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofRenderPlanes()">↻ Recargar</button><button class="btn" onclick="plNuevoForm()">+ Nuevo módulo</button></div></div><div id="plNew"></div><div id="plList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>`;
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Módulos publicados</h3><div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofRenderPlanesPagina('${pagina}')">↻ Recargar</button><button class="btn" onclick="plNuevoForm()">+ Nuevo módulo</button></div></div><div id="plNew"></div><div id="plList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>`;
   plLoadModulos();
 }
 async function plLoadModulos(){
