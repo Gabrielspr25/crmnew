@@ -96,7 +96,7 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 
 - `GET /api/health` → `{ ok: true }`.
 - **Login con Tango** (usuario real) entra; el botón de demo NO debe aparecer (`DEV_LOGIN=0`).
-- Cada módulo carga data real: Clientes, Asana Seg., Comisiones, Metas, Configuración (tabs), Importador, OCR, Admin Ofertas (Equipos + Planes), Correos, Prospección.
+- Cada módulo carga data real: Clientes, Asana Seg., Comisiones, Vendedores, Metas, Configuración (tabs), Importador, OCR, Admin Ofertas (Equipos + Planes), Correos, Prospección.
 - Admin Planes: subir un PDF de boletín → Analizar muestra diff → Aplicar publica (verificar `GET /api/planes-modulos/:pagina`).
 - Correos: lista clientes con email; "Abrir en Outlook" arma el correo.
 
@@ -104,7 +104,9 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 
 ## 7. Pendientes / NO incluidos en este deploy
 
-- **Campañas, Vendedores, Permisos** → módulos del viejo aún no replicados (se hacen luego).
+- **Campañas** → módulo pesado del viejo (wizard, tablas `email_campaigns/recipients/attachments/tracking`, adjuntos, seguimiento de aperturas) y **depende de SMTP**. No se replicó (no se puede ni probar sin SMTP). Pendiente.
+- **Permisos** → usuarios y permisos por rol (necesita infra de auth/roles). Pendiente.
+- **Vendedores** → ✅ replicado (lista de Tango con ventas/vendido/comisión por mes).
 - **Correos por servidor (SMTP)** → requiere credenciales SMTP. Mientras tanto: Outlook (mailto).
 - **Prospección** → motor a decidir (Google de pago vs OpenStreetMap gratis). Requiere `GOOGLE_PLACES_API_KEY` + "Places API (New)" habilitada y la IP del server permitida.
 - **Parser de ofertas Excel (móviles)** y mejoras del scraper → a cargo del programador.

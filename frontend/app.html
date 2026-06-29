@@ -145,6 +145,7 @@
     <a class="nav" href="#/clientes"><span class="d"></span>Clientes</a>
     <a class="nav" href="#/asana"><span class="d"></span>Asana Seg.</a>
     <a class="nav" href="#/comisiones"><span class="d"></span>Comisiones</a>
+    <a class="nav" href="#/vendedores"><span class="d"></span>Vendedores</a>
     <a class="nav" href="#/pendientes"><span class="d"></span>Pendientes Tango</a>
     <a class="nav" href="#/metas"><span class="d"></span>Metas</a>
     <a class="nav" href="#/historial"><span class="d"></span>Historial</a>
@@ -770,6 +771,32 @@ async function viewConfig(){
   <div id="cfgBody"><div class="s">Cargando…</div></div>`;
 }
 function vistaSimple(t,s,c){return `<div class="head"><div><h1>${t}</h1><div class="s">${s}</div></div></div>${c}`;}
+// ---------------- VENDEDORES ----------------
+let venMonth=monthStart();
+function setVenMonth(m){ venMonth=m; reVendedores(); }
+async function reVendedores(){ $('view').innerHTML=await viewVendedores(); }
+async function viewVendedores(){
+  let vlist=[]; try{ vlist=await api('/api/vendedores'); }catch(e){}
+  let sales=[]; try{ sales=await api('/api/sales'); }catch(e){}
+  const ym=venMonth.slice(0,7);
+  const agg={}; vlist.forEach(function(v){ agg[v]={ventas:0,vendido:0,comision:0}; });
+  sales.filter(function(s){ return String(s.sale_date||'').slice(0,7)===ym; }).forEach(function(s){
+    const v=s.vendor_name||'—'; if(!agg[v]) agg[v]={ventas:0,vendido:0,comision:0};
+    agg[v].ventas++; agg[v].vendido+=Number(s.monthly_value||0); agg[v].comision+=Number(s.vendor_commission||0);
+  });
+  const rows=Object.entries(agg).sort(function(a,b){ return b[1].vendido-a[1].vendido; });
+  const totV=rows.reduce(function(a,r){return a+r[1].vendido;},0);
+  const totC=rows.reduce(function(a,r){return a+r[1].comision;},0);
+  const yr=new Date(venMonth).getFullYear();
+  const monOpts=Array.from({length:12},function(_,m){const mo=yr+'-'+String(m+1).padStart(2,'0')+'-01';return `<option value="${mo}" ${mo===venMonth?'selected':''}>${mo}</option>`;}).join('');
+  const body=rows.map(function(r,i){ const v=r[0],d=r[1];
+    return `<tr><td class="c" style="color:var(--txt3);font-weight:800">${i+1}</td><td><div class="cli"><span class="av">${ini(v)}</span><b>${esc(v)}</b></div></td><td class="c"><span class="qty">${d.ventas}</span></td><td class="r">${money(d.vendido)}</td><td class="r" style="color:var(--green);font-weight:700">${money(d.comision)}</td></tr>`;
+  }).join('');
+  return `<div class="head"><div><h1>Vendedores</h1><div class="s">Vendedores de Tango · ventas, vendido y comisión por mes · regla: vienen de Tango</div></div><select class="inp" style="max-width:160px" onchange="setVenMonth(this.value)">${monOpts}</select></div>
+  <div class="kpis"><div class="kpi"><div class="l">Vendedores</div><div class="v">${vlist.length}</div></div><div class="kpi"><div class="l">Vendido (mes)</div><div class="v">${money(totV)}</div></div><div class="kpi"><div class="l">Comisión vendedor (mes)</div><div class="v" style="color:var(--green)">${money(totC)}</div></div></div>
+  <div class="card"><table><thead><tr><th class="c">#</th><th>Vendedor</th><th class="c">Ventas</th><th class="r">Vendido</th><th class="r">Comisión vend.</th></tr></thead><tbody>${body||'<tr><td colspan="5" class="empty">Sin ventas de vendedores este mes.</td></tr>'}</tbody></table></div>`;
+}
+
 // ---------------- CORREOS ----------------
 let coClientes=[], coSel=new Set(), coTab='activo';
 const CO_FIRMA='\n\n—\nEquipo Claro Negocios';
@@ -1248,6 +1275,7 @@ async function router(){
     else if(route==='asana')html=await viewAsana();
     else if(route==='opp')html=await viewOpp(arg);
     else if(route==='comisiones')html=await viewComisiones();
+    else if(route==='vendedores')html=await viewVendedores();
     else if(route==='metas')html=await viewMetas();
     else if(route==='panel')html=await viewPanel();
     else if(route==='pasos')html=await viewPasos(arg);
