@@ -15,6 +15,23 @@ function normStatus(s) {
   return null;
 }
 
+// POST /api/import/preview -> compara las filas con la BD (sin escribir): cuántas actualizan vs crean
+importRouter.post('/import/preview', requireAuth, async (req, res) => {
+  const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
+  const out = { total: rows.length, sub_update: 0, sub_new: 0, ban_match: 0, ban_new: 0, cli_match: 0, cli_new: 0, sin_dato: 0 };
+  const c = await pool.connect();
+  try {
+    for (const r of rows) {
+      const empresa = String(r.empresa || '').trim(), ban = dig(r.ban), phone = dig(r.phone);
+      if (empresa) { const f = await c.query(`SELECT 1 FROM public.clients WHERE name ILIKE $1 LIMIT 1`, [empresa]); f.rows[0] ? out.cli_match++ : out.cli_new++; }
+      if (ban.length === 9) { const f = await c.query(`SELECT 1 FROM public.bans WHERE number=$1 LIMIT 1`, [ban]); f.rows[0] ? out.ban_match++ : out.ban_new++; }
+      if (phone.length === 10) { const f = await c.query(`SELECT 1 FROM public.subscribers WHERE phone_number=$1 LIMIT 1`, [phone]); f.rows[0] ? out.sub_update++ : out.sub_new++; }
+      if (!empresa && ban.length !== 9 && phone.length !== 10) out.sin_dato++;
+    }
+    res.json(out);
+  } catch (e) { res.status(500).json({ error: e.message }); } finally { c.release(); }
+});
+
 // POST /api/import/apply { rows:[{empresa,ban,phone,plan,monthly_value,contract_end_date,status,account_type}] }
 importRouter.post('/import/apply', requireAuth, async (req, res) => {
   const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];

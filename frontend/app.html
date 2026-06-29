@@ -97,7 +97,23 @@
   .i3 h4{font-size:12px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px;}
   .irow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
   .irow span{color:var(--txt3);} .irow b{text-align:right;}
-  @media(max-width:760px){.i3{grid-template-columns:1fr;}}
+  .dropzone{border:2px dashed var(--line);border-radius:14px;padding:34px 18px;text-align:center;color:var(--txt2);cursor:pointer;transition:.15s;}
+  .dropzone:hover{border-color:var(--primary);}
+  .dropzone.over{border-color:var(--primary);background:var(--primary-soft);color:var(--primary);}
+  .dropzone .dz-ico{font-size:30px;display:block;margin-bottom:8px;}
+  .impcols{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 2px;}
+  .impcol{background:var(--violet-soft);color:var(--violet);border:1px solid var(--violet);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:grab;user-select:none;}
+  .impcol.used{opacity:.42;}
+  .impcol:active{cursor:grabbing;}
+  .impslot{border:1.5px dashed var(--line);border-radius:10px;padding:0 12px;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:.12s;}
+  .impslot.over{border-color:var(--primary);background:var(--primary-soft);}
+  .impslot.has{border-style:solid;border-color:var(--green-border);background:var(--green-soft);}
+  .impslot .sl-field{font-size:13px;color:var(--txt2);font-weight:600;}
+  .impslot.has .sl-field{color:var(--txt);}
+  .impslot .sl-val{font-size:12px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:8px;}
+  .impslot .sl-x{cursor:pointer;color:var(--txt3);font-weight:700;}
+  .impgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:760px){.i3{grid-template-columns:1fr;} .impgrid{grid-template-columns:1fr;}}
   .paso-wrap{display:flex;gap:16px;align-items:flex-start;}
   .paso-side{width:190px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
   .paso-prod{padding:11px 14px;border-radius:10px;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:13.5px;font-weight:600;color:var(--txt2);}
@@ -736,14 +752,25 @@ async function viewCorreos(){return vistaSimple('Correos','Enviar ofertas y comp
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
 let impHeaders=[], impRows=[], impMap={};
 const IMP_FIELDS=[['empresa','Empresa / Cliente'],['ban','BAN (9 díg)'],['phone','Teléfono (10 díg)'],['plan','Plan'],['monthly_value','Mensualidad $'],['contract_end_date','Vencimiento'],['status','Estado'],['account_type','Tipo BAN']];
+function impAutoDetect(hl,key){return hl.includes(key)||(key==='phone'&&/tel|cel|n[uú]mero/.test(hl))||(key==='empresa'&&/empresa|cliente|nombre|raz[oó]n/.test(hl))||(key==='ban'&&/ban|cuenta/.test(hl))||(key==='monthly_value'&&/mensual|costo|precio|valor|\$/.test(hl))||(key==='contract_end_date'&&/venc|fecha/.test(hl))||(key==='plan'&&/plan/.test(hl))||(key==='status'&&/estado|status/.test(hl))||(key==='account_type'&&/tipo/.test(hl));}
 async function viewImport(){
-  return `<div class="head"><div><h1>Importador</h1><div class="s">Actualización masiva desde Excel · el archivo manda (actualiza/crea)</div></div></div>
-  <div class="panel"><h3>1) Subí el Excel</h3><input type="file" id="impFile" accept=".xlsx,.xls,.csv" class="inp" onchange="impParse()"><div class="s" style="margin-top:6px">Se lee en tu navegador. Después mapeás columnas y aplicás.</div></div>
+  return `<div class="head"><div><h1>Importador</h1><div class="s">Actualización masiva desde Excel · arrastrá el archivo y mapeá columnas · el archivo manda (actualiza/crea)</div></div></div>
+  <div class="panel"><h3>1) Soltá el Excel</h3>
+    <div class="dropzone" id="impDrop" onclick="$('impFile').click()"><span class="dz-ico">⬇</span><b>Arrastrá tu Excel acá</b><div class="s" style="margin-top:4px">o hacé clic para elegir · .xlsx .xls .csv · se lee en tu navegador</div></div>
+    <input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="impHandleFile(this.files[0])">
+  </div>
   <div id="impStep2"></div>`;
 }
-function impParse(){
-  var f=$('impFile').files[0]; if(!f)return;
+function impInitDrop(){
+  var dz=$('impDrop'); if(!dz)return;
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over');});});
+  dz.addEventListener('drop',function(e){var f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)impHandleFile(f);});
+}
+function impHandleFile(f){
+  if(!f)return;
   if(typeof XLSX==='undefined'){ alert('La librería de Excel no cargó (revisá internet).'); return; }
+  $('impDrop').innerHTML='<span class="dz-ico">📄</span><b>'+f.name+'</b><div class="s" style="margin-top:4px">leyendo…</div>';
   var rd=new FileReader();
   rd.onload=function(e){
     try{
@@ -753,25 +780,51 @@ function impParse(){
       if(!data.length){ $('impStep2').innerHTML='<div class="empty">El Excel está vacío</div>'; return; }
       impHeaders=data[0].map(function(h){return String(h||'').trim();});
       impRows=data.slice(1).filter(function(r){return r.some(function(c){return String(c||'').trim();});});
-      impMap={}; IMP_FIELDS.forEach(function(fd){ var idx=impHeaders.findIndex(function(h){var hl=h.toLowerCase();return hl.includes(fd[0])||(fd[0]==='phone'&&/tel|cel|n[uú]mero/.test(hl))||(fd[0]==='empresa'&&/empresa|cliente|nombre/.test(hl))||(fd[0]==='ban'&&/ban/.test(hl))||(fd[0]==='monthly_value'&&/mensual|costo|precio|\$/.test(hl))||(fd[0]==='contract_end_date'&&/venc|fecha/.test(hl))||(fd[0]==='plan'&&/plan/.test(hl))||(fd[0]==='status'&&/estado|status/.test(hl));}); impMap[fd[0]]=idx; });
+      impMap={}; IMP_FIELDS.forEach(function(fd){ var idx=impHeaders.findIndex(function(h){return impAutoDetect(h.toLowerCase(),fd[0]);}); if(idx>=0)impMap[fd[0]]=idx; });
+      $('impDrop').innerHTML='<span class="dz-ico">📄</span><b>'+f.name+'</b><div class="s" style="margin-top:4px">'+impRows.length+' filas · '+impHeaders.length+' columnas · clic para cambiar</div>';
       renderImpStep2();
     }catch(err){ $('impStep2').innerHTML='<div class="empty">No se pudo leer: '+err.message+'</div>'; }
   };
   rd.readAsArrayBuffer(f);
 }
+// drag de columnas
+function impDragCol(e,ix){ e.dataTransfer.setData('text/plain',String(ix)); e.dataTransfer.effectAllowed='copy'; }
+function impDropCol(e,key){ e.preventDefault(); var ix=Number(e.dataTransfer.getData('text/plain')); if(!isNaN(ix)){ for(var k in impMap){if(impMap[k]===ix)delete impMap[k];} impMap[key]=ix; renderImpStep2(); } }
+function impClearSlot(key){ delete impMap[key]; renderImpStep2(); }
 function renderImpStep2(){
-  var opts=function(sel){ return '<option value="-1">— ninguna —</option>'+impHeaders.map(function(h,i){return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+(h||('col '+(i+1)))+'</option>';}).join(''); };
-  var maprows=IMP_FIELDS.map(function(fd){ return '<div class="irow"><span>'+fd[1]+'</span><select class="inp" style="max-width:240px" onchange="impMap[\''+fd[0]+'\']=Number(this.value)">'+opts(impMap[fd[0]])+'</select></div>'; }).join('');
-  var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; return '<td>'+(ix>=0?(r[ix]||''):'')+'</td>'; }).join('')+'</tr>'; }).join('');
-  $('impStep2').innerHTML='<div class="panel"><h3>2) Mapeá las columnas</h3>'+maprows+'</div>'
+  var used={}; Object.keys(impMap).forEach(function(k){used[impMap[k]]=1;});
+  var cols=impHeaders.map(function(h,i){ return '<span class="impcol'+(used[i]?' used':'')+'" draggable="true" ondragstart="impDragCol(event,'+i+')">'+(h||('col '+(i+1)))+'</span>'; }).join('');
+  var slots=IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; var has=ix>=0&&ix!=null;
+    return '<div class="impslot'+(has?' has':'')+'" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="this.classList.remove(\'over\');impDropCol(event,\''+fd[0]+'\')">'
+      +'<span class="sl-field">'+fd[1]+'</span>'
+      +(has?'<span class="sl-val">'+(impHeaders[ix]||('col '+(ix+1)))+' <span class="sl-x" title="quitar" onclick="impClearSlot(\''+fd[0]+'\')">✕</span></span>':'<span class="s" style="color:var(--txt3)">arrastrá una columna</span>')
+      +'</div>'; }).join('');
+  var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+IMP_FIELDS.map(function(fd){ var ix=impMap[fd[0]]; return '<td>'+(ix>=0&&ix!=null?(r[ix]||''):'')+'</td>'; }).join('')+'</tr>'; }).join('');
+  $('impStep2').innerHTML='<div class="panel"><h3>2) Arrastrá cada columna del Excel a su campo</h3>'
+    +'<div class="s" style="margin-bottom:6px">Columnas del archivo:</div><div class="impcols">'+cols+'</div>'
+    +'<div class="impgrid" style="margin-top:12px">'+slots+'</div></div>'
     +'<div class="panel"><h3>3) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:760px"><thead><tr>'+IMP_FIELDS.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
-    +'<button class="btn green" style="width:100%;margin-top:14px" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div>';
+    +'<div id="impMatch" style="margin-top:12px"></div>'
+    +'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" style="flex:1" onclick="impVerificar()">🔎 Verificar con la BD</button><button class="btn green" style="flex:2" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div></div>';
+}
+function impMappedRows(){ return impRows.map(function(r){ var o={}; IMP_FIELDS.forEach(function(fd){ var ix=impMap[fd[0]]; o[fd[0]]=(ix>=0&&ix!=null)?r[ix]:''; }); return o; }); }
+async function impVerificar(){
+  if(!impRows.length){ alert('Soltá un Excel primero'); return; }
+  $('impMatch').innerHTML='<div class="s">Comparando con la base…</div>';
+  try{ var m=await api('/api/import/preview',{method:'POST',body:{rows:impMappedRows()}});
+    $('impMatch').innerHTML='<div class="card" style="padding:12px"><b style="font-size:13px">Comparación con la BD</b>'
+      +'<div class="irow"><span>Suscriptores que se ACTUALIZAN (ya existen)</span><b style="color:var(--green)">'+m.sub_update+'</b></div>'
+      +'<div class="irow"><span>Suscriptores NUEVOS</span><b style="color:var(--violet)">'+m.sub_new+'</b></div>'
+      +'<div class="irow"><span>BANs existentes / nuevos</span><b>'+m.ban_match+' / '+m.ban_new+'</b></div>'
+      +'<div class="irow"><span>Clientes existentes / nuevos</span><b>'+m.cli_match+' / '+m.cli_new+'</b></div>'
+      +(m.sin_dato?'<div class="irow"><span>Filas sin BAN/teléfono/empresa (se omiten)</span><b style="color:var(--amber)">'+m.sin_dato+'</b></div>':'')
+      +'</div>';
+  }catch(e){ $('impMatch').innerHTML='<div class="empty">No se pudo verificar: '+e.message+'</div>'; }
 }
 async function impAplicar(){
-  if(!impRows.length){ alert('Subí un Excel primero'); return; }
+  if(!impRows.length){ alert('Soltá un Excel primero'); return; }
   if(!confirm('¿Aplicar a '+impRows.length+' filas? El archivo actualiza/crea registros reales.'))return;
-  var rows=impRows.map(function(r){ var o={}; IMP_FIELDS.forEach(function(fd){ var ix=impMap[fd[0]]; o[fd[0]]=ix>=0?r[ix]:''; }); return o; });
-  try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:rows}});
+  try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:impMappedRows()}});
     alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):'')); }
   catch(e){ alert('No se pudo importar: '+e.message); }
 }
@@ -815,6 +868,7 @@ async function router(){
     else if(route==='import')html=await viewImport();
     else html=await viewClientes();
     $('view').innerHTML=html;
+    if(route==='import')impInitDrop();
   }catch(e){$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
 }
 window.addEventListener('hashchange',router);
