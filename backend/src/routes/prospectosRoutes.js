@@ -60,7 +60,8 @@ async function fetchPlaces(textQuery, pageToken) {
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': 'nextPageToken,places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.location,places.websiteUri,places.addressComponents,places.types,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus',
+      // Básico (nivel Enterprise por el teléfono): nombre, dirección, ciudad, rubro, teléfono. Sin web/rating para no encarecer.
+      'X-Goog-FieldMask': 'nextPageToken,places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.addressComponents,places.types',
     },
     body: JSON.stringify(body),
   });
@@ -116,18 +117,15 @@ async function upsertProspecto(c, p, rubro) {
   const { city, zip } = compAddr(p);
   const r = await c.query(
     `INSERT INTO public.prospectos
-      (google_id, name, address, city, zip_code, phone, website, rubro, google_types, rating, user_ratings_total, latitude, longitude, google_maps_uri, business_status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      (google_id, name, address, city, zip_code, phone, rubro, google_types)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
      ON CONFLICT (google_id) DO UPDATE SET
        phone=COALESCE(EXCLUDED.phone, public.prospectos.phone),
-       website=COALESCE(EXCLUDED.website, public.prospectos.website),
-       rating=EXCLUDED.rating, user_ratings_total=EXCLUDED.user_ratings_total,
-       business_status=EXCLUDED.business_status, updated_at=NOW()
-     RETURNING (xmax = 0) AS inserted, id, website, redes`,
+       address=COALESCE(EXCLUDED.address, public.prospectos.address),
+       city=COALESCE(EXCLUDED.city, public.prospectos.city), updated_at=NOW()
+     RETURNING (xmax = 0) AS inserted, id`,
     [p.id, p.displayName?.text || 'Sin nombre', p.formattedAddress || '', city, zip,
-     p.nationalPhoneNumber || null, p.websiteUri || null, rubro, p.types || null,
-     p.rating || null, p.userRatingCount || null, p.location?.latitude || null, p.location?.longitude || null,
-     p.googleMapsUri || null, p.businessStatus || null]);
+     p.nationalPhoneNumber || null, rubro, p.types || null]);
   return r.rows[0];
 }
 
@@ -148,13 +146,7 @@ async function runHarvest(rubros, municipios, maxPages) {
               if (!p.id) continue;
               job.found++;
               const row = await upsertProspecto(c, p, rubro);
-              if (row.inserted) {
-                job.saved++;
-                if (row.website) {
-                  const redes = await scrapeRedes(row.website);
-                  if (redes) { await c.query(`UPDATE public.prospectos SET redes=$1 WHERE id=$2`, [JSON.stringify(redes), row.id]); job.redes_found++; }
-                }
-              }
+              if (row.inserted) job.saved++;
             }
             pageToken = nextPageToken; pages++;
             if (pageToken) await sleep(1200); // dar tiempo al pageToken

@@ -857,7 +857,7 @@ function prRenderCtrl(){
   var el=$('prCtrl'); if(!el)return; var m=prMeta||{};
   el.innerHTML='<div class="kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'
     +'<div class="kpi"><div class="l">Prospectos</div><div class="v">'+(m.total||0)+'</div></div>'
-    +'<div class="kpi"><div class="l">Con redes</div><div class="v" style="color:var(--violet)">'+(m.con_redes||0)+'</div></div>'
+    +'<div class="kpi"><div class="l">Mapeados</div><div class="v" style="color:var(--green)">'+(m.mapeados||0)+'</div></div>'
     +'<div class="kpi"><div class="l">Rubros</div><div class="v">'+(m.total_rubros||0)+'</div></div>'
     +'<div class="kpi"><div class="l">Municipios</div><div class="v">'+(m.total_municipios||0)+'</div></div></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" onclick="prStart(\'prueba\')">⚡ Prueba rápida (5 rubros · San Juan)</button>'
@@ -885,7 +885,7 @@ async function prPollStatus(now){
       pe.innerHTML='<div class="panel" style="border-color:'+(j.running?'var(--primary)':'var(--green-border)')+'">'
         +'<div style="display:flex;justify-content:space-between"><b>'+(j.running?('Barriendo… '+j.rubro+' · '+j.municipio):'Barrido finalizado')+'</b><span class="s">'+j.combos_done+'/'+j.total_combos+' ('+pct+'%)</span></div>'
         +'<div style="height:8px;background:var(--track);border-radius:4px;margin:8px 0"><div style="height:100%;width:'+pct+'%;background:var(--primary);border-radius:4px;transition:.3s"></div></div>'
-        +'<div class="s">Encontrados: <b>'+j.found+'</b> · Nuevos guardados: <b style="color:var(--green)">'+j.saved+'</b> · Con redes: <b style="color:var(--violet)">'+j.redes_found+'</b> · Consultas: '+j.queries+' · Errores: '+j.errors+'</div>'
+        +'<div class="s">Encontrados: <b>'+j.found+'</b> · Nuevos guardados: <b style="color:var(--green)">'+j.saved+'</b> · Consultas: '+j.queries+' · Errores: '+j.errors+'</div>'
         +(j.last_error?'<div class="s" style="color:var(--red);margin-top:4px">Último error: '+esc(j.last_error)+'</div>':'')+'</div>';
     } else { pe.innerHTML=''; }
     if(j.running){ prPoll=setTimeout(function(){prPollStatus();},2500); }
@@ -903,12 +903,9 @@ async function prLoadList(){
     var body=rows.map(function(p){
       return '<tr><td><b>'+esc(p.name||'')+'</b><div class="s">'+esc(p.address||'')+'</div></td>'
         +'<td>'+esc(p.city||'')+'</td><td><span class="pill">'+esc(p.rubro||'')+'</span></td>'
-        +'<td>'+esc(p.phone||'—')+'</td>'
-        +'<td>'+(p.website?'<a href="'+p.website+'" target="_blank" rel="noopener">web ↗</a>':'—')+'</td>'
-        +'<td>'+prRedes(p.redes)+'</td>'
-        +'<td>'+(p.rating!=null?(p.rating+'★'):'—')+'</td></tr>';
+        +'<td>'+esc(p.phone||'—')+'</td></tr>';
     }).join('');
-    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' prospectos'+(rows.length>=500?' (mostrando 500)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:840px"><thead><tr><th>Negocio</th><th>Ciudad</th><th>Rubro</th><th>Teléfono</th><th>Web</th><th>Redes</th><th>Rating</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' prospectos'+(rows.length>=500?' (mostrando 500)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:560px"><thead><tr><th>Negocio</th><th>Ciudad</th><th>Rubro</th><th>Teléfono</th></tr></thead><tbody>'+body+'</tbody></table></div>';
   }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
 }
 let impHeaders=[], impRows=[], impMap={};
