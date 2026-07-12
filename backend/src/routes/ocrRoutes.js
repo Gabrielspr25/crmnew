@@ -28,7 +28,7 @@ ocrRouter.post('/subscribers/extract-image', requireAuth, upload.single('file'),
       try { const tt = await ocrImageBuffer(buf); const tp = parseLocalOcrText(tt); if (tp.rows.length > 0) parsed = tp; } catch (e) {}
     }
     const rows = parsed.rows.map((r) => ({ subscriber: r.subscriber, type: r.type, status: r.status, pricePlan: r.pricePlan }));
-    res.json({ ok: true, engine, rows, text: rowsToClipboardText(rows), warnings: parsed.warnings, ocr_warnings });
+    res.json({ ok: true, engine, ban_number: parsed.banNumber || null, rows, text: rowsToClipboardText(rows), warnings: parsed.warnings, ocr_warnings });
   } catch (e) {
     console.error('[ocr extract-image]', e.message);
     res.status(500).json({ error: e.message });

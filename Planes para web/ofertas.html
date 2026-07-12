@@ -1,0 +1,1060 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business - Constructor de Ofertas (PYMES 9-22 jun)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
+.topbar{background:#c81e28;border-bottom:2px solid #ffb703;padding:13px 24px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:50}
+.brand{font-size:21px;font-weight:950;color:#e2d8c8;letter-spacing:.02em}.brand small{display:block;font-size:12px;font-weight:650;color:rgba(255,255,255,.82);letter-spacing:0;margin-top:1px}
+.search{margin-left:auto;display:flex;align-items:center;gap:10px;background:#171b22;border:1px solid #6ee7f9;border-radius:8px;padding:9px 13px;width:min(430px,44vw)}
+.search span{font-size:16px}.search input{width:100%;background:transparent;border:0;outline:0;color:#e2d8c8;font-size:14px}.search input::placeholder{color:rgba(255,255,255,.72)}
+.nav{display:flex;gap:4px;overflow:auto;background:#151821;border-bottom:1px solid rgba(110,231,249,.24);padding:0 24px}.nav a{color:#b9c7d6;text-decoration:none;padding:12px 14px;font-size:13px;font-weight:750;border-bottom:2px solid transparent;white-space:nowrap}.nav a.active{color:#7dd3fc;border-bottom-color:#67e8f9}
+.wrap{max-width:1540px;margin:0 auto;padding:22px 24px 48px;background:#0b0d12}.hero{margin-bottom:16px}.hero h1{font-size:28px;color:#e2d8c8}.hero p{margin-top:6px;color:#b5aa9c;font-size:14px}
+.builder{display:grid;grid-template-columns:360px minmax(0,1fr);gap:18px;align-items:start}
+.panel{background:#171b22;border:1px solid rgba(45,212,191,.60);border-radius:10px;box-shadow:0 0 0 1px rgba(139,92,246,.18),0 18px 34px rgba(0,0,0,.30)}
+.panel:nth-child(2){border-color:rgba(139,92,246,.55)}
+.panel-head{padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.34)}
+.panel-head h2{font-size:17px;color:#e2d8c8}
+.panel-head p{margin-top:3px;color:#b5aa9c;font-size:12px}
+.panel-head-row{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.panel-head-copy{min-width:0;flex:1}
+.panel-head-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.panel-head-actions .chip{padding:7px 10px;font-size:11px}
+.filters{padding:14px 16px;display:grid;gap:16px}
+.step-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#67e8f9;margin-bottom:8px;font-weight:850}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid rgba(45,212,191,.42);background:#1b202a;color:#cec4b7;border-radius:8px;padding:9px 11px;font-size:12px;font-weight:850;cursor:pointer}
+.chip:hover{color:#eadfce;background:#252b36;border-color:#34d399}
+.chip.active{background:#073b33;border-color:#2dd4bf;color:#c9f7ec;box-shadow:0 0 0 2px rgba(56,189,248,.15)}
+.filter-search{display:flex;align-items:center;gap:9px;border:1px solid rgba(56,189,248,.28);background:#171b22;border-radius:10px;padding:10px 12px}.filter-search input{width:100%;border:0;outline:0;background:transparent;color:#e2d8c8;font-size:14px}.filter-search input::placeholder{color:#7f91ad}
+.device-list{padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:8px;max-height:380px;overflow:auto;border-bottom:1px solid rgba(45,212,191,.24)}
+.device-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;border:1px solid rgba(45,212,191,.28);background:#1b202a;border-radius:8px;padding:10px;cursor:pointer}
+.device-row:hover{border-color:#34d399}.device-row.active{border-color:#5ee6a8;background:#162a24}
+.phone-icon{width:34px;height:44px;border:2px solid rgba(56,189,248,.65);border-radius:8px;background:linear-gradient(180deg,#18233d,#0f172a)}
+.device-name{font-size:13px;font-weight:950;color:#e2d8c8}.device-meta{margin-top:3px;color:#b5aa9c;font-size:11px;line-height:1.3}
+.device-meta-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}
+.device-offers-btn{border:1px solid rgba(56,189,248,.35);background:#0f172a;color:#a5f3fc;border-radius:8px;padding:6px 8px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap}
+.device-offers-btn:hover{border-color:#67e8f9;background:#15243a}
+.empty{border:1px dashed rgba(45,212,191,.36);border-radius:10px;padding:22px;text-align:center;color:#b5aa9c}
+.selected-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:16px;border-bottom:1px solid rgba(45,212,191,.34)}.selected-title h2{font-size:20px;color:#e2d8c8}.selected-title p{margin-top:3px;color:#b5aa9c;font-size:12px}
+.price-tag{background:#062e22;border:1px solid rgba(52,211,153,.28);color:#5ee6a8;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:950;white-space:nowrap}
+.selected-offer-chip{display:inline-flex;align-items:center;gap:8px;margin-top:8px;border:1px solid rgba(56,189,248,.35);background:#0f172a;color:#c9f7ec;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900}
+.selected-offer-clear{border:0;background:transparent;color:#fca5a5;font-size:11px;font-weight:900;cursor:pointer}
+.offer-list{padding:14px;display:grid;gap:12px}
+.offer-card{border:1px solid rgba(255,255,255,.1);background:#111a30;border-radius:10px;overflow:hidden}
+.offer-card.is-focused{border-color:#67e8f9;box-shadow:0 0 0 1px rgba(103,232,249,.22)}
+.offer-card:nth-child(2n){border-color:rgba(139,92,246,.50)}.offer-card:nth-child(3n){border-color:rgba(34,211,238,.50)}
+.offer-main{padding:14px;background:linear-gradient(135deg,#1e2631,#171d25)}
+.offer-main-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.offer-main-copy{min-width:0;flex:1}
+.offer-kicker{font-size:10px;font-weight:950;letter-spacing:.05em;color:#9cc8ff;text-transform:uppercase}
+.offer-title{margin-top:5px;font-size:17px;font-weight:950;color:#e2d8c8}
+.offer-top-actions{display:grid;gap:8px;justify-items:end;min-width:150px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badge{background:rgba(255,255,255,.11);border:1px solid rgba(45,212,191,.28);border-radius:999px;padding:4px 8px;font-size:11px;font-weight:850;color:#d6cfc4}
+.badge.good{background:rgba(22,163,74,.16);color:#86efac}.badge.warn{background:rgba(217,119,6,.16);color:#fcd34d}.badge.info{background:rgba(34,211,238,.14);color:#a5f3fc}
+.offer-note{margin-top:10px;color:#b5aa9c;font-size:12px;line-height:1.4}
+.details{padding:13px 14px;display:grid;gap:12px}
+.detail h3{font-size:12px;color:#facc15;margin-bottom:7px}
+.detail-table{width:100%;border-collapse:collapse}
+.detail-table th,.detail-table td{padding:8px 10px;border:1px solid rgba(45,212,191,.24);font-size:12px;text-align:left}
+.detail-table th{width:50%;color:#e6d8b8;background:rgba(34,211,238,.07)}.detail-table td{color:#d6cfc4}
+.codes{display:flex;flex-wrap:wrap;gap:8px}
+.code-pill{border:1px solid rgba(45,212,191,.34);background:#0f172a;border-radius:8px;padding:6px 9px;font-size:12px;font-weight:850;color:#c9f7ec}
+.offer-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid rgba(45,212,191,.2);background:#121722}
+.qty-box{display:flex;align-items:center;border:1px solid rgba(56,189,248,.35);border-radius:9px;overflow:hidden}
+.qty-btn{border:0;background:#1d4ed8;color:#fff;width:34px;height:34px;font-size:20px;font-weight:900;cursor:pointer}
+.qty-value{min-width:36px;text-align:center;font-size:14px;font-weight:900;color:#e2d8c8}
+.add-btn{border:1px solid rgba(34,197,94,.4);background:#14532d;color:#d1fae5;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:900;cursor:pointer}
+.add-btn:hover{background:#166534}
+.proposal-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(460px,540px);gap:16px;padding:16px;border-top:1px solid rgba(45,212,191,.24);background:#10141c}
+.proposal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.proposal-head h3{font-size:19px;color:#e2d8c8}
+.proposal-head p{font-size:12px;color:#b5aa9c;margin-top:4px}
+.proposal-badge{padding:8px 10px;border-radius:999px;border:1px solid rgba(45,212,191,.3);background:#062e22;color:#86efac;font-size:12px;font-weight:900;white-space:nowrap}
+.stepper{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.step-chip{border:1px solid rgba(45,212,191,.28);background:#171b22;color:#b5aa9c;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:900;cursor:pointer}
+.step-chip.active{background:#0b3c39;color:#d1fae5;border-color:#2dd4bf}
+.step-chip.done{border-color:rgba(34,197,94,.45);color:#bbf7d0}
+.wizard-card{border:1px solid rgba(45,212,191,.24);background:#171b22;border-radius:10px;padding:14px;display:grid;gap:12px}
+.wizard-title{font-size:16px;font-weight:900;color:#e2d8c8}
+.wizard-help{font-size:12px;color:#b5aa9c}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:grid;gap:6px}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#67e8f9;font-weight:850}
+.field input,.field textarea,.field select{width:100%;background:#0f172a;border:1px solid rgba(56,189,248,.24);border-radius:8px;color:#e2d8c8;padding:10px 11px;font-size:13px;outline:0}
+.field textarea{min-height:96px;resize:vertical}
+.field.span-2{grid-column:1 / -1}
+.wizard-actions{display:flex;justify-content:space-between;gap:12px}
+.nav-btn{border:1px solid rgba(56,189,248,.28);background:#1b202a;color:#d6cfc4;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:900;cursor:pointer}
+.nav-btn.primary{background:#14532d;border-color:rgba(34,197,94,.45);color:#d1fae5}
+.nav-btn[disabled]{opacity:.45;cursor:not-allowed}
+.equip-table,.mini-table{width:100%;border-collapse:collapse}
+.equip-table th,.equip-table td,.mini-table th,.mini-table td{border:1px solid rgba(45,212,191,.22);padding:8px 8px;font-size:12px;text-align:left;vertical-align:top}
+.equip-table th,.mini-table th{background:#131926;color:#e6d8b8}
+.equip-table input,.equip-table textarea,.mini-table input{width:100%;background:#0f172a;border:1px solid rgba(56,189,248,.18);border-radius:6px;color:#e2d8c8;padding:7px 8px;font-size:12px}
+.equip-table textarea{min-height:58px}
+.row-tools{display:flex;gap:6px;justify-content:flex-end}
+.tiny-btn{border:1px solid rgba(239,68,68,.35);background:#3f1316;color:#fecaca;border-radius:7px;padding:6px 8px;font-size:11px;font-weight:900;cursor:pointer}
+.preview-card{position:sticky;top:84px;border:1px solid rgba(139,92,246,.35);background:#171b22;border-radius:10px;padding:14px;display:grid;gap:12px}
+.preview-title{font-size:16px;font-weight:900;color:#e2d8c8}
+.proposal-page{background:#fbf8f1;color:#26211c;border-radius:10px;padding:18px 16px;border:1px solid rgba(15,23,42,.12);box-shadow:0 12px 28px rgba(0,0,0,.22)}
+.proposal-page.page-one{display:grid;gap:12px}
+.proposal-page.page-two{display:grid;gap:18px;margin-top:14px}
+.proposal-doc-top{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:start}
+.proposal-claro-badge{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 35%,#ffb3a9 0,#f87171 25%,#dc2626 55%,#b91c1c 100%);color:#fff4e6;font-size:18px;font-weight:950;box-shadow:inset 0 -6px 12px rgba(0,0,0,.18)}
+.proposal-page .proposal-date-box{justify-self:start;background:#dff2e2;border:2px solid #16a34a;border-radius:8px;padding:6px 12px}
+.proposal-page .proposal-date-box .label{display:block;font-size:10px;color:#15803d;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.proposal-page .proposal-date-box .value{display:block;font-size:15px;font-weight:900;color:#1f2937}
+.proposal-client-box{border:3px solid #f97316;background:#fff2e8;padding:10px 12px;display:grid;gap:4px}
+.proposal-client-name{font-size:18px;font-weight:950;color:#2c2118;text-transform:uppercase}
+.proposal-client-contacts,.proposal-client-ban{font-size:14px;font-weight:800;color:#3b2b20}
+.proposal-intro{font-size:13px;line-height:1.45;color:#31261d}
+.proposal-section-title{font-size:14px;font-weight:950;color:#dc2626}
+.proposal-pdf-table{width:100%;border-collapse:collapse;background:#dff0dc}
+.proposal-pdf-table th,.proposal-pdf-table td{border:1px solid #7c8d77;padding:6px 8px;font-size:12px;color:#27231d;vertical-align:top}
+.proposal-pdf-table th{font-weight:900;background:#cfe7ca}
+.proposal-contract-table td:last-child,.proposal-plan-table td:last-child,.proposal-plan-table th:last-child{text-align:center}
+.proposal-plan-description{line-height:1.35;white-space:pre-line}
+.proposal-highlight-note{font-size:11px;line-height:1.35;color:#2e261f}
+.proposal-highlight-note strong{font-weight:950}
+.proposal-highlight-band{background:#fff16f;padding:2px 4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.proposal-equipment-title{font-size:14px;font-weight:950;color:#dc2626}
+.proposal-equipment-table th{text-align:center}
+.proposal-equipment-table td{text-align:center}
+.proposal-equipment-table td:first-child{text-align:left}
+.proposal-insurance-title{font-size:14px;font-weight:950;color:#dc2626}
+.proposal-copy-block p{font-size:12px;line-height:1.45;color:#2d261f;margin-bottom:12px}
+.proposal-signatures{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:end}
+.proposal-sign-box{display:grid;gap:6px}
+.proposal-sign-frame{border:2px solid #16a34a;background:#dff0dc;padding:10px 12px;min-height:98px;display:grid;align-content:end}
+.proposal-sign-frame.client{border-color:#f97316;background:#fff2e8}
+.proposal-sign-line{border-top:1px solid rgba(38,33,28,.4);padding-top:6px}
+.proposal-sign-name{font-size:13px;font-weight:900;color:#2d261f}
+.proposal-sign-role{font-size:11px;line-height:1.35;color:#2d261f}
+.proposal-sign-date{border:2px solid #f97316;background:#fff2e8;padding:8px 12px;justify-self:end;min-width:200px;text-align:center}
+.proposal-sign-date .date-value{font-size:13px;font-weight:900;color:#2d261f}
+.proposal-sign-date .date-label{font-size:11px;color:#4b3b31}
+.proposal-legal-box{background:#dff0dc;border:2px solid #22c55e;padding:10px 12px}
+.proposal-legal-box .legal-title{font-size:12px;font-weight:950;font-style:italic;color:#1f1a15;margin-bottom:4px}
+.proposal-legal-box p{font-size:12px;line-height:1.45;color:#1f1a15}
+.proposal-notes-box{background:#dff0dc;border:2px solid #22c55e;padding:8px 10px;display:grid;gap:4px}
+.proposal-notes-box p{font-size:11px;line-height:1.35;color:#1f1a15}
+.proposal-promo-line{font-size:12px;font-weight:950;color:#dc2626;text-transform:uppercase}
+.proposal-ivu-lines{display:grid;gap:2px}
+.proposal-ivu-lines div{font-size:12px;font-weight:900;color:#dc2626}
+.helper-note{font-size:11px;color:#b5aa9c}
+.hidden{display:none!important}
+.modal-backdrop{position:fixed;inset:0;background:rgba(3,7,18,.75);display:flex;align-items:center;justify-content:center;padding:24px;z-index:120}
+.modal-card{width:min(760px,100%);max-height:min(80vh,900px);overflow:auto;background:#171b22;border:1px solid rgba(103,232,249,.35);border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 18px 14px;border-bottom:1px solid rgba(45,212,191,.24)}
+.modal-head h3{font-size:18px;color:#e2d8c8}
+.modal-head p{margin-top:4px;color:#b5aa9c;font-size:12px}
+.modal-close{border:1px solid rgba(239,68,68,.3);background:#331317;color:#fecaca;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;cursor:pointer}
+.modal-list{padding:16px;display:grid;gap:10px}
+.modal-offer{border:1px solid rgba(45,212,191,.26);background:#111a30;border-radius:10px;padding:14px;display:grid;gap:10px}
+.modal-offer-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.modal-offer-title{font-size:15px;font-weight:950;color:#e2d8c8}
+.modal-offer-note{font-size:12px;line-height:1.45;color:#b5aa9c}
+.modal-select-btn{border:1px solid rgba(34,197,94,.45);background:#14532d;color:#d1fae5;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+.modal-select-btn:hover{background:#166534}
+@media(max-width:1024px){.builder{grid-template-columns:1fr}}
+@media(max-width:1200px){.proposal-shell{grid-template-columns:1fr}.preview-card{position:static}.proposal-page{padding:14px 12px}.proposal-doc-top{grid-template-columns:74px minmax(0,1fr)}.proposal-claro-badge{width:64px;height:64px;font-size:14px}.proposal-signatures{grid-template-columns:1fr}.proposal-sign-date{justify-self:start}}
+@media(max-width:720px){.topbar{align-items:flex-start;flex-direction:column}.search{width:100%;margin-left:0}.wrap{padding:16px 14px 34px}.form-grid{grid-template-columns:1fr}.device-list{grid-template-columns:1fr}.offer-main-row{flex-direction:column}.offer-top-actions{justify-items:start;min-width:0}.panel-head-row{flex-direction:column}.panel-head-actions{justify-content:flex-start}.device-meta-row{flex-direction:column;align-items:flex-start}.modal-offer-top{flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">CLARO<small>Constructor de Ofertas - PYMES (9-22 jun 2026)</small></div>
+  <div class="search"><span>&#128269;</span><input id="searchInput" type="text" placeholder="Buscar equipo o modelo..."></div>
+</header>
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html">Lista de Equipos</a>
+  <a href="servicios.html">Servicios</a>
+  <a href="oferta-const.html">Oferta const.</a>
+  <a href="ofertas.html" class="active">Ofertas</a>
+</nav>
+<main class="wrap">
+  <section class="hero">
+    <h1>Constructor de Ofertas</h1>
+    <p>Logica del boletin PYMES 9-22 junio 2026. Primero el evento del cliente, luego el plan y el beneficio. El trade-in se decide solo: lineas nuevas nunca lo requieren.</p>
+  </section>
+  <section class="builder">
+    <aside class="panel">
+      <div class="panel-head"><h2>Filtros</h2><p>Configura el escenario del cliente.</p></div>
+      <div class="filters">
+        <div>
+          <span class="step-label">Paso 1 €” Tipo de cliente</span>
+          <div class="chips" data-group="evento">
+            <button class="chip active" data-val="nueva">Linea nueva / Portabilidad</button>
+            <button class="chip" data-val="renovacion">Renovacion</button>
+          </div>
+        </div>
+        <div>
+          <span class="step-label">Paso 2 €” Tipo de plan</span>
+          <div class="chips" data-group="tipo">
+            <button class="chip active" data-val="individual">Individual</button>
+            <button class="chip" data-val="multilinea">Multilinea Business Red</button>
+          </div>
+          <div id="planIndBlock" style="margin-top:10px">
+            <div class="chips" data-group="planInd">
+              <button class="chip" data-val="20">$20</button>
+              <button class="chip" data-val="35">$35</button>
+              <button class="chip" data-val="40">$40</button>
+              <button class="chip" data-val="45">$45</button>
+              <button class="chip" data-val="50">$50</button>
+              <button class="chip" data-val="60">$60</button>
+              <button class="chip active" data-val="75">$75+</button>
+              <button class="chip" data-val="95">$95+</button>
+            </div>
+          </div>
+          <div id="planMultiBlock" style="margin-top:10px;display:none">
+            <div class="chips" data-group="planMulti">
+              <button class="chip" data-val="plus">Plus ($65)</button>
+              <button class="chip" data-val="extreme">Extreme ($75)</button>
+              <button class="chip active" data-val="supreme">Supreme ($95)</button>
+              <button class="chip" data-val="sinfronteras">Sin Fronteras ($100)</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="step-label">Paso 3 €” Tipo de oferta</span>
+          <div class="chips" data-group="beneficio">
+            <button class="chip active" data-val="todos">Todos</button>
+            <button class="chip" data-val="gratis">Equipo gratis</button>
+            <button class="chip" data-val="50pct">50% descuento</button>
+            <button class="chip" data-val="credito">Credito</button>
+          </div>
+        </div>
+        <div>
+          <span class="step-label">Buscar</span>
+          <label class="filter-search"><span>&#128269;</span><input id="panelSearchInput" type="text" placeholder="Buscar modelo..."></label>
+        </div>
+      </div>
+    </aside>
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-head-row">
+          <div class="panel-head-copy">
+            <h2>Equipos elegibles</h2>
+            <p id="modelCount">Segun los filtros del boletin.</p>
+          </div>
+          <div class="panel-head-actions chips" data-group="marca" id="headerBrandFilters">
+            <button class="chip active" data-val="">Todas</button>
+            <button class="chip" data-val="Samsung">Samsung</button>
+            <button class="chip" data-val="Apple">iPhone / Apple</button>
+            <button class="chip" data-val="Motorola">Motorola</button>
+          </div>
+        </div>
+      </div>
+      <div class="device-list" id="deviceList"></div>
+      <div class="selected-title">
+        <div><h2 id="selectedName">Selecciona un equipo</h2><p id="selectedMeta">Veras las ofertas disponibles para ese equipo.</p></div>
+        <div class="price-tag" id="selectedPrice">Regular $0.00</div>
+      </div>
+      <div class="offer-list" id="offerList"></div>
+      <div class="proposal-shell">
+        <section>
+          <div class="proposal-head">
+            <div>
+              <h3>Paso a paso de propuesta</h3>
+              <p>Trae lo que exista del CRM y deja todo editable. Empieza agregando equipos desde las ofertas de arriba.</p>
+            </div>
+            <div class="proposal-badge" id="proposalBadge">0 equipo(s) en borrador</div>
+          </div>
+          <div class="stepper" id="proposalStepper"></div>
+          <div class="wizard-card">
+            <div class="wizard-title" id="wizardTitle">Paso 1 - Cliente</div>
+            <div class="wizard-help" id="wizardHelp">Fecha, nombre del cliente, BAN y contactos.</div>
+            <div id="wizardBody"></div>
+            <div class="wizard-actions">
+              <button class="nav-btn" id="prevStepBtn">Atras</button>
+              <button class="nav-btn primary" id="nextStepBtn">Siguiente</button>
+            </div>
+          </div>
+        </section>
+        <aside class="preview-card">
+          <div class="preview-title">Preview de propuesta</div>
+          <div id="proposalPreview"></div>
+        </aside>
+      </div>
+    </section>
+  </section>
+</main>
+
+<div class="modal-backdrop hidden" id="offerChooserModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3 id="offerChooserTitle">Escoger oferta</h3>
+        <p id="offerChooserMeta">Selecciona cu¡l oferta quieres revisar para este equipo.</p>
+      </div>
+      <button class="modal-close" type="button" id="closeOfferChooser">Cerrar</button>
+    </div>
+    <div class="modal-list" id="offerChooserList"></div>
+  </div>
+</div>
+
+<script src="ofertas-data.js?v=2026070311"></script>
+<script src="ofertas-logic.js?v=2026070311"></script>
+<script>
+const L = window.OfertasLogic;
+const PROPOSAL_STEPS = [
+  { id:'cliente', title:'Paso 1 - Cliente', help:'Fecha, nombre del cliente, BAN y contactos.' },
+  { id:'contrato', title:'Paso 2 - Contrato', help:'Termino de contrato editable.' },
+  { id:'plan', title:'Paso 3 - Plan de servicio mensual', help:'Nombre, descripcion, cargo, debito directo, lineas e impuestos.' },
+  { id:'equipos', title:'Paso 4 - Equipos', help:'Agrupa por modelo. Edita cantidad, pago por unidad, precio regular y oferta.' },
+  { id:'seguro', title:'Paso 5 - Seguro y notas', help:'Tabla de seguro, pago de IVU, promo, notas y firmas.' }
+];
+const state = { evento:'nueva', tipo:'individual', planInd:75, planMulti:'supreme', beneficio:'todos', marca:'', buscar:'', selected:'', selectedOfferId:'', modalEquipoKey:'', qtyByOffer:{}, proposalStep:0 };
+const proposal = {
+  fecha_propuesta: new Date().toISOString().slice(0, 10),
+  cliente_nombre: '',
+  ban: '',
+  contactos_cliente: '',
+  termino_contrato: '30 meses',
+  plan_nombre: '',
+  plan_resumen_derecha: '',
+  plan_descripcion: '',
+  cantidad_lineas_resumen: '',
+  cargo_mensual: '',
+  descuento_debito_directo: 'Descuento de $10 por linea con debito directo',
+  cantidad_lineas_contratadas: '',
+  impuestos_detalle: 'Cargo Impuesto IVU 11.5% | Fondo Servicio Universal | Impuestos en roaming USA | Cargo 9-1-1',
+  pago_ivu_total: '',
+  creditos_nota: 'Creditos comienzan en la 2da factura. El cliente paga el 1er plazo del equipo y en la 2da factura se realiza el credito del plazo pagado.',
+  ivu_nota: 'IVU de los equipos se cobrara en la proxima factura basado en el precio regular de cada equipo.',
+  promocion_valida: 'PROMOCION VALIDA',
+  firma_vendedor: 'Gabriel Sanchez',
+  cargo_vendedor: 'Agente de Ventas SS Group',
+  firma_cliente: '',
+  fecha_firma_cliente: '',
+  nota_legal: 'El cliente debe iniciar las primeras paginas y firmar la ultima pagina, e incluir la fecha al lado de su firma. En la primera factura se colocaran los cargos del IVU de cada equipo.',
+  insuranceRows: [
+    { rango:'$0 - $200.00', deducible:'$20.00', prima:'$7.99', cantidad:'N/A' },
+    { rango:'$200.01 - $400', deducible:'$50.00', prima:'$7.99', cantidad:'N/A' },
+    { rango:'$400.01 - $700', deducible:'$100.00', prima:'$13.99', cantidad:'N/A' },
+    { rango:'$700.01 - $1,400', deducible:'$199.00', prima:'$13.99', cantidad:'N/A' },
+    { rango:'$1,400.01 en adelante', deducible:'$299.00', prima:'$13.99', cantidad:'N/A' }
+  ],
+  equipos: []
+};
+const $ = id => document.getElementById(id);
+const money = v => Number.isFinite(Number(v)) ? `$${Number(v).toFixed(2)}` : '€”';
+const proposalNum = v => {
+  const n = Number(String(v ?? '').replace(/[$,]/g, '').trim());
+  return Number.isFinite(n) ? n : 0;
+};
+const escapeHtml = v => String(v ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
+
+function currentPlanLabel(){
+  if(state.tipo === 'individual') return `Plan Individual $${state.planInd}${state.planInd >= 75 ? '+' : ''}`;
+  return `Business Red ${L.PLAN_MULTILINEA_LABEL[state.planMulti] || state.planMulti}`;
+}
+
+function currentPlanRightLabel(){
+  return state.tipo === 'individual' ? '1 linea' : 'Hasta 10 lineas';
+}
+
+function syncAutoField(fieldName, nextValue, autoKey){
+  const lastAutoKey = `_lastAuto_${autoKey}`;
+  const currentValue = proposal[fieldName];
+  const lastAutoValue = proposal[lastAutoKey];
+  if(currentValue === '' || currentValue == null || currentValue === lastAutoValue){
+    proposal[fieldName] = nextValue;
+    proposal[lastAutoKey] = nextValue;
+  }
+}
+
+function defaultOfertaLabel(oferta){
+  if(oferta.beneficio === 'gratis') return 'Equipo Gratis';
+  if(oferta.beneficio === '50pct') return '50% Descuento';
+  if(oferta.beneficio === 'credito') return `Credito $${proposalNum(oferta.credito).toFixed(0)}`;
+  return 'Oferta';
+}
+
+function offerShortLabel(oferta){
+  if(oferta.beneficio === 'gratis') return 'Equipo gratis';
+  if(oferta.beneficio === '50pct') return '50% descuento';
+  if(oferta.beneficio === 'credito') return `Credito $${proposalNum(oferta.credito).toFixed(0)}`;
+  return 'Oferta';
+}
+
+function unitPaymentForOffer(oferta, regular){
+  const tabla = L.calcularTablaComercial(oferta, regular);
+  if(!tabla) return 0;
+  if(tabla.tipo === 'gratis') return 0;
+  if(tabla.tipo === '50pct') return tabla.precioFinal / (oferta.plazos?.[0] || 30);
+  if(tabla.tipo === 'credito') return tabla.precioFinal / (oferta.plazos?.[0] || 30);
+  return 0;
+}
+
+function syncProposalDefaults(){
+  syncAutoField('plan_nombre', currentPlanLabel(), 'planNombre');
+  syncAutoField('plan_resumen_derecha', currentPlanRightLabel(), 'planResumenDerecha');
+  syncAutoField('cantidad_lineas_resumen', state.tipo === 'individual' ? '1 linea' : '', 'cantidadLineasResumen');
+  syncAutoField('cantidad_lineas_contratadas', state.tipo === 'individual' ? '1' : '', 'cantidadLineasContratadas');
+}
+
+function refreshProposalIvu(){
+  const totalRegular = proposal.equipos.reduce((sum, item) => sum + (proposalNum(item.precio_regular) * (Number(item.cantidad) || 0)), 0);
+  if(!proposal.pago_ivu_total || proposal.pago_ivu_total === proposal._lastAutoIvu){
+    proposal._lastAutoIvu = (totalRegular * 0.115).toFixed(2);
+    proposal.pago_ivu_total = proposal._lastAutoIvu;
+  } else {
+    proposal._lastAutoIvu = (totalRegular * 0.115).toFixed(2);
+  }
+  return { totalRegular, ivu: totalRegular * 0.115 };
+}
+
+function addProposalItem(equipo, oferta){
+  syncProposalDefaults();
+  const qty = Math.max(1, Number(state.qtyByOffer[oferta.id] || 1));
+  const offerLabel = defaultOfertaLabel(oferta);
+  const payment = unitPaymentForOffer(oferta, equipo.precio);
+  const existing = proposal.equipos.find(item =>
+    item.modelo === equipo.modelo &&
+    item.oferta === offerLabel &&
+    proposalNum(item.precio_regular) === proposalNum(equipo.precio) &&
+    proposalNum(item.pago_por_unidad) === Number(payment.toFixed(2))
+  );
+  if(existing){
+    existing.cantidad = Number(existing.cantidad || 0) + qty;
+  } else {
+    proposal.equipos.push({
+      modelo: equipo.modelo,
+      cantidad: qty,
+      pago_por_unidad: payment.toFixed(2),
+      precio_regular: Number(equipo.precio).toFixed(2),
+      oferta: offerLabel
+    });
+  }
+  if(!proposal.plan_descripcion){
+    proposal.plan_descripcion = oferta.nota || '';
+  }
+  refreshProposalIvu();
+  renderProposal();
+}
+
+function equiposActuales(){ return L.getEquiposFiltrados(state); }
+function ofertasDe(equipo){
+  const aplicables = new Set(L.getOfertasAplicables(state).map(o => o.id));
+  return (equipo.ofertaIds || [])
+    .filter(id => aplicables.has(id))
+    .map(id => (window.OFERTAS_DATA || []).find(o => o.id === id))
+    .filter(Boolean);
+}
+function equipoSeleccionado(list){ return list.find(e => e.key === state.selected) || null; }
+function ofertaSeleccionada(eq){
+  if(!eq || !state.selectedOfferId) return null;
+  return ofertasDe(eq).find(o => o.id === state.selectedOfferId) || null;
+}
+
+function setActive(group, val){
+  document.querySelectorAll(`[data-group="${group}"] .chip`).forEach(c => {
+    c.classList.toggle('active', c.dataset.val === String(val));
+  });
+}
+
+function openOfferChooser(eq){
+  state.modalEquipoKey = eq?.key || '';
+  renderOfferChooser();
+  $('offerChooserModal').classList.remove('hidden');
+  $('offerChooserModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeOfferChooser(){
+  state.modalEquipoKey = '';
+  $('offerChooserModal').classList.add('hidden');
+  $('offerChooserModal').setAttribute('aria-hidden', 'true');
+}
+
+function chooseOffer(eqKey, offerId){
+  state.selected = eqKey;
+  state.selectedOfferId = offerId;
+  closeOfferChooser();
+  render();
+}
+
+function clearChosenOffer(){
+  state.selectedOfferId = '';
+  render();
+}
+
+function renderOfferChooser(){
+  const eq = equiposActuales().find(item => item.key === state.modalEquipoKey);
+  const ofertas = eq ? ofertasDe(eq) : [];
+  $('offerChooserTitle').textContent = eq ? `${eq.modelo} - escoger oferta` : 'Escoger oferta';
+  $('offerChooserMeta').textContent = eq ? `${ofertas.length} oferta(s) disponibles para este equipo.` : 'Selecciona cu¡l oferta quieres revisar para este equipo.';
+  $('offerChooserList').innerHTML = ofertas.length ? ofertas.map(oferta => {
+    const ti = L.requiresTradein(oferta, state.evento);
+    const badges = [
+      `<span class="badge good">${offerShortLabel(oferta)}</span>`,
+      `<span class="badge">${oferta.plazos.join('/')} plazos</span>`,
+      ti ? '<span class="badge warn">Requiere trade-in</span>' : '<span class="badge">Sin trade-in</span>',
+      oferta.lineaLimit ? `<span class="badge">Hasta ${oferta.lineaLimit} linea(s)</span>` : ''
+    ].filter(Boolean).join('');
+    return `<article class="modal-offer">
+      <div class="modal-offer-top">
+        <div>
+          <div class="offer-kicker">${offerShortLabel(oferta)}</div>
+          <div class="modal-offer-title">${oferta.titulo}</div>
+        </div>
+        <button class="modal-select-btn" type="button" data-choose-offer="${oferta.id}" data-choose-eq="${eq.key}">Escoger esta oferta</button>
+      </div>
+      <div class="badges">${badges}</div>
+      ${oferta.nota ? `<div class="modal-offer-note">${oferta.nota}</div>` : ''}
+    </article>`;
+  }).join('') : '<div class="empty">Este equipo no tiene ofertas disponibles para los filtros actuales.</div>';
+}
+
+function tablaComercialHtml(oferta, precio){
+  const t = L.calcularTablaComercial(oferta, precio);
+  if(!t) return '';
+  const rows = [['Equipo', oferta._modelo || ''], ['Precio regular', money(t.precioRegular)]];
+  if(t.tipo === 'gratis'){
+    rows.push(['Descuento aplicado', money(t.precioRegular)], ['Precio final', money(0)]);
+  } else if(t.tipo === '50pct'){
+    rows.push(['Descuento (50%)', money(t.descuento)], ['Precio final', money(t.precioFinal)], ['Mensual (30 plazos)', money(t.mensual30)]);
+  } else if(t.tipo === 'credito'){
+    rows.push([`Credito de hasta`, money(t.credito)], ['Precio final', money(t.precioFinal)]);
+    Object.keys(t.plazos).forEach(p => {
+      rows.push([`Mensual ${p} plazos`, `${money(t.plazos[p].mensual)}  (credito ${money(t.plazos[p].creditoMensual)}/mes)`]);
+    });
+  }
+  const foot = t.nota ? `<div class="offer-note">${t.nota}</div>` : '';
+  return `<div class="detail"><h3>Tabla comercial</h3><table class="detail-table"><tbody>${rows.map(([k,v])=>`<tr><th>${k}</th><td>${v}</td></tr>`).join('')}</tbody></table>${foot}</div>`;
+}
+
+function renderTipoBlocks(){
+  $('planIndBlock').style.display = state.tipo === 'individual' ? 'block' : 'none';
+  $('planMultiBlock').style.display = state.tipo === 'multilinea' ? 'block' : 'none';
+  syncProposalDefaults();
+}
+
+function renderDevices(){
+  const list = equiposActuales();
+  if(!state.selected || !list.some(e => e.key === state.selected)) {
+    state.selected = list[0]?.key || '';
+    state.selectedOfferId = '';
+  }
+  const selectedEq = list.find(e => e.key === state.selected);
+  if(state.selectedOfferId && selectedEq){
+    const validOfferIds = new Set(ofertasDe(selectedEq).map(o => o.id));
+    if(!validOfferIds.has(state.selectedOfferId)) state.selectedOfferId = '';
+  }
+  $('modelCount').textContent = list.length ? `${list.length} equipos encontrados. Escoge uno para ver sus ofertas.` : 'No hay equipos para estos filtros.';
+  if(!list.length){ $('deviceList').innerHTML = '<div class="empty">No hay equipos para estos filtros.</div>'; return; }
+  $('deviceList').innerHTML = list.map(e => {
+    const totalOffers = ofertasDe(e).length;
+    return `
+    <button class="device-row ${e.key === state.selected ? 'active' : ''}" data-key="${e.key}">
+      <div class="phone-icon"></div>
+      <div>
+        <div class="device-name">${e.modelo}</div>
+        <div class="device-meta">${e.marca} ? Regular ${money(e.precio)}<br><span class="device-meta-row"><span>${totalOffers} oferta(s) disponible(s)</span>${totalOffers > 1 ? `<span class="device-offers-btn" data-open-offers="${e.key}">Ver ofertas</span>` : ''}</span></div>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function renderOffers(){
+  const list = equiposActuales();
+  const eq = equipoSeleccionado(list);
+  if(!eq){
+    $('selectedName').textContent = 'Selecciona un equipo';
+    $('selectedMeta').textContent = 'Veras las ofertas disponibles para ese equipo.';
+    $('selectedPrice').textContent = 'Regular $0.00';
+    $('offerList').innerHTML = '<div class="empty">Filtra y elige un equipo para empezar.</div>';
+    return;
+  }
+  const allOffers = ofertasDe(eq);
+  const focusedOffer = ofertaSeleccionada(eq);
+  const ofertas = focusedOffer ? allOffers.filter(o => o.id === focusedOffer.id) : allOffers;
+  $('selectedName').textContent = eq.modelo;
+  $('selectedMeta').innerHTML = `${eq.marca} ? ${allOffers.length} oferta(s) segun el boletin.${focusedOffer ? ` <span class="selected-offer-chip">Viendo: ${offerShortLabel(focusedOffer)} <button class="selected-offer-clear" type="button" id="clearChosenOfferBtn">Ver todas</button></span>` : ''}`;
+  $('selectedPrice').textContent = `Regular ${money(eq.precio)}`;
+  $('offerList').innerHTML = ofertas.length ? ofertas.map(oferta => {
+    oferta._modelo = eq.modelo;
+    const ti = L.requiresTradein(oferta, state.evento);
+    const qty = Math.max(1, Number(state.qtyByOffer[oferta.id] || 1));
+    const badges = [
+      `<span class="badge good">${offerShortLabel(oferta)}</span>`,
+      `<span class="badge">${oferta.plazos.join('/')} plazos</span>`,
+      ti ? '<span class="badge warn">Requiere trade-in</span>' : '<span class="badge">Sin trade-in</span>',
+      oferta.bonoStreaming ? '<span class="badge info">Bono streaming</span>' : '',
+      oferta.lineaLimit ? `<span class="badge">Hasta ${oferta.lineaLimit} linea(s)</span>` : ''
+    ].filter(Boolean).join('');
+    const codes = `<div class="codes"><span class="code-pill">UP: ${oferta.pricecodes.up}</span><span class="code-pill">FI: ${oferta.pricecodes.fi}</span></div>`;
+    return `<article class="offer-card ${state.selectedOfferId === oferta.id ? 'is-focused' : ''}">
+      <div class="offer-main">
+        <div class="offer-main-row">
+          <div class="offer-main-copy">
+            <div class="offer-kicker">${oferta.beneficio === 'credito' ? 'Credito' : oferta.beneficio === '50pct' ? 'Descuento' : 'Gratis'}</div>
+            <div class="offer-title">${oferta.titulo}</div>
+          </div>
+          <div class="offer-top-actions">
+            <div class="qty-box" data-offer-id="${oferta.id}">
+              <button class="qty-btn" type="button" data-action="minus">-</button>
+              <div class="qty-value">${qty}</div>
+              <button class="qty-btn" type="button" data-action="plus">+</button>
+            </div>
+            <button class="add-btn" type="button" data-add-offer="${oferta.id}" data-equipo-key="${eq.key}">Agregar a propuesta</button>
+          </div>
+        </div>
+        <div class="badges">${badges}</div>
+        ${oferta.nota ? `<div class="offer-note">${oferta.nota}</div>` : ''}
+      </div>
+      <div class="details">
+        <div class="detail"><h3>Price codes</h3>${codes}</div>
+        ${tablaComercialHtml(oferta, eq.precio)}
+      </div>
+    </article>`;
+  }).join('') : '<div class="empty">Este equipo no tiene ofertas para estos filtros.</div>';
+}
+
+function renderProposalStepper(){
+  $('proposalStepper').innerHTML = PROPOSAL_STEPS.map((step, index) => {
+    const cls = index === state.proposalStep ? 'step-chip active' : index < state.proposalStep ? 'step-chip done' : 'step-chip';
+    return `<button class="${cls}" type="button" data-step-index="${index}">${step.title}</button>`;
+  }).join('');
+}
+
+function field(label, name, value, opts = {}){
+  const type = opts.type || 'text';
+  const span = opts.span2 ? ' span-2' : '';
+  if(type === 'textarea'){
+    return `<div class="field${span}"><label>${label}</label><textarea data-proposal-field="${name}">${escapeHtml(value)}</textarea></div>`;
+  }
+  return `<div class="field${span}"><label>${label}</label><input type="${type}" value="${escapeHtml(value)}" data-proposal-field="${name}"></div>`;
+}
+
+function renderWizardBody(){
+  const step = PROPOSAL_STEPS[state.proposalStep];
+  $('wizardTitle').textContent = step.title;
+  $('wizardHelp').textContent = step.help;
+  let html = '';
+  if(step.id === 'cliente'){
+    html = `<div class="form-grid">
+      ${field('Fecha propuesta', 'fecha_propuesta', proposal.fecha_propuesta, { type:'date' })}
+      ${field('Numero de BAN', 'ban', proposal.ban)}
+      ${field('Nombre del cliente', 'cliente_nombre', proposal.cliente_nombre, { span2:true })}
+      ${field('Contactos del cliente', 'contactos_cliente', proposal.contactos_cliente, { span2:true, type:'textarea' })}
+    </div>`;
+  } else if(step.id === 'contrato'){
+    html = `<div class="form-grid">
+      ${field('Termino de contrato', 'termino_contrato', proposal.termino_contrato, { span2:true })}
+      <div class="helper-note">Se quito la palabra "nuevas" y la fila de cantidad de paquetes. Este bloque queda solo con el termino editable.</div>
+    </div>`;
+  } else if(step.id === 'plan'){
+    html = `<div class="form-grid">
+      ${field('Servicio de cada Plan multil­nea', 'plan_nombre', proposal.plan_nombre)}
+      ${field('Descripci³n', 'plan_resumen_derecha', proposal.plan_resumen_derecha)}
+      ${field('Descripci³n del plan', 'plan_descripcion', proposal.plan_descripcion, { span2:true, type:'textarea' })}
+      ${field('Cantidad de l­neas resumen', 'cantidad_lineas_resumen', proposal.cantidad_lineas_resumen)}
+      ${field('Cargo Mensual por tarifa', 'cargo_mensual', proposal.cargo_mensual)}
+      ${field('Descuento debito directo', 'descuento_debito_directo', proposal.descuento_debito_directo, { span2:true })}
+      ${field('Cantidad de l­neas', 'cantidad_lineas_contratadas', proposal.cantidad_lineas_contratadas)}
+      ${field('PAGO DE IVU: $', 'pago_ivu_total', proposal.pago_ivu_total)}
+      ${field('Detalle de impuestos', 'impuestos_detalle', proposal.impuestos_detalle, { span2:true, type:'textarea' })}
+    </div>`;
+  } else if(step.id === 'equipos'){
+    html = `
+      <table class="equip-table">
+        <thead>
+          <tr><th>Modelo</th><th>Cantidad</th><th>Pago por unidad</th><th>Precio regular</th><th>Oferta</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${proposal.equipos.length ? proposal.equipos.map((item, index) => `
+            <tr>
+              <td><input data-eq-field="modelo" data-eq-index="${index}" value="${escapeHtml(item.modelo)}"></td>
+              <td><input data-eq-field="cantidad" data-eq-index="${index}" type="number" min="1" value="${escapeHtml(item.cantidad)}"></td>
+              <td><input data-eq-field="pago_por_unidad" data-eq-index="${index}" value="${escapeHtml(item.pago_por_unidad)}"></td>
+              <td><input data-eq-field="precio_regular" data-eq-index="${index}" value="${escapeHtml(item.precio_regular)}"></td>
+              <td><input data-eq-field="oferta" data-eq-index="${index}" value="${escapeHtml(item.oferta)}"></td>
+              <td><div class="row-tools"><button class="tiny-btn" type="button" data-remove-eq="${index}">Quitar</button></div></td>
+            </tr>`).join('') : `<tr><td colspan="6">Todavia no has agregado equipos desde las ofertas.</td></tr>`}
+        </tbody>
+      </table>
+      <div class="helper-note">Si repites el mismo modelo con la misma oferta, el sistema lo agrupa en una sola fila.</div>`;
+  } else if(step.id === 'seguro'){
+    html = `
+      <table class="mini-table">
+        <thead><tr><th>Costo del equipo</th><th>Deducible por unidad</th><th>Prima mensual</th><th>Cantidad</th></tr></thead>
+        <tbody>
+          ${proposal.insuranceRows.map((row, index) => `
+            <tr>
+              <td><input data-ins-field="rango" data-ins-index="${index}" value="${escapeHtml(row.rango)}"></td>
+              <td><input data-ins-field="deducible" data-ins-index="${index}" value="${escapeHtml(row.deducible)}"></td>
+              <td><input data-ins-field="prima" data-ins-index="${index}" value="${escapeHtml(row.prima)}"></td>
+              <td><input data-ins-field="cantidad" data-ins-index="${index}" value="${escapeHtml(row.cantidad)}"></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="form-grid">
+        ${field('Creditos / facturacion', 'creditos_nota', proposal.creditos_nota, { span2:true, type:'textarea' })}
+        ${field('Nota IVU', 'ivu_nota', proposal.ivu_nota, { span2:true, type:'textarea' })}
+        ${field('Promocion valida', 'promocion_valida', proposal.promocion_valida)}
+        ${field('Firma vendedor', 'firma_vendedor', proposal.firma_vendedor)}
+        ${field('Cargo vendedor', 'cargo_vendedor', proposal.cargo_vendedor)}
+        ${field('Firma cliente', 'firma_cliente', proposal.firma_cliente)}
+        ${field('Fecha firma cliente', 'fecha_firma_cliente', proposal.fecha_firma_cliente, { type:'date' })}
+        ${field('Nota legal final', 'nota_legal', proposal.nota_legal, { span2:true, type:'textarea' })}
+      </div>`;
+  }
+  $('wizardBody').innerHTML = html;
+  $('prevStepBtn').disabled = state.proposalStep === 0;
+  $('nextStepBtn').textContent = state.proposalStep === PROPOSAL_STEPS.length - 1 ? 'Listo' : 'Siguiente';
+}
+
+function proposalTaxRows(){
+  return String(proposal.impuestos_detalle || '')
+    .split('|')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function proposalIvuLines(){
+  if(!proposal.equipos.length) return '<div>PRECIO DE IVU: sin equipos seleccionados</div>';
+  return proposal.equipos.map(item => {
+    const regular = proposalNum(item.precio_regular);
+    const qty = Number(item.cantidad) || 0;
+    const totalIvu = (regular * qty * 0.115).toFixed(2);
+    return `<div>PRECIO DE IVU: ${escapeHtml(item.modelo)} x${qty} ${money(totalIvu)}</div>`;
+  }).join('');
+}
+
+function proposalFinalNotesHtml(){
+  return `
+    <p>Le ofrecemos productos y servicios que le ayudar¡n a aumentar la productividad y eficiencia de su empresa con la cobertura de la red m¡s poderosa. Adem¡s, somos el ºnico proveedor que incluye llamadas ilimitadas a todo hogar y negocio con l­nea telef³nica de PRT. Le adjuntamos documento con los T©rminos y Condiciones de nuestros planes de servicio.</p>
+    <p>De tener alguna pregunta, puede comunicarse al 787-319-0909, o a trav©s del correo electr³nico gabriel.sanchez@claropr.com</p>
+    <p>Mientras sus necesidades cambian, nos complacemos en ayudarle a evaluar esas necesidades y ofrecerle los planes y servicios que le ser¡n de mayor beneficio. Puede conocer m¡s acerca de los servicios que tenemos disponibles en Claro Puerto Rico accediendo a nuestra p¡gina de Internet: <strong>www.clarotodo.com</strong></p>
+    <p>Gracias por su patrocinio, cordialmente,</p>
+  `;
+}
+
+function renderProposalPreview(){
+  const totals = refreshProposalIvu();
+  const taxRows = proposalTaxRows();
+  const lineasResumen = escapeHtml(proposal.cantidad_lineas_contratadas || proposal.cantidad_lineas_resumen || (state.tipo === 'individual' ? '1' : ''));
+  $('proposalBadge').textContent = `${proposal.equipos.reduce((sum, item) => sum + Number(item.cantidad || 0), 0)} equipo(s) en borrador`;
+  $('proposalPreview').innerHTML = `
+    <article class="proposal-page page-one">
+      <div class="proposal-doc-top">
+        <div class="proposal-claro-badge">Claro</div>
+        <div>
+          <div class="proposal-date-box">
+            <span class="label">Fecha propuesta</span>
+            <span class="value">${escapeHtml(proposal.fecha_propuesta || '')}</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="proposal-client-box">
+        <div class="proposal-client-name">${escapeHtml(proposal.cliente_nombre || 'CLIENTE SIN DEFINIR')}</div>
+        <div class="proposal-client-contacts">${escapeHtml(proposal.contactos_cliente || 'Contactos pendientes')}</div>
+        <div class="proposal-client-ban">BAN: ${escapeHtml(proposal.ban || 'PENDIENTE')}</div>
+      </section>
+
+      <p class="proposal-intro">
+        Gracias por poner su confianza en <strong>Claro</strong> y por elegirnos su principal proveedor de comunicaci³n
+        inal¡mbrica. Claro es la compa±­a de celulares m¡s grande de las Am©ricas, por lo que nos complace poner ante
+        su consideraci³n la siguiente propuesta.
+      </p>
+
+      <table class="proposal-pdf-table proposal-contract-table">
+        <tbody>
+          <tr>
+            <td>Esta propuesta se adjuntar¡ al contrato firmado, que es a un t©rmino de:</td>
+            <td>${escapeHtml(proposal.termino_contrato || '')}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="proposal-section-title">Plan de Servicio de Voz Mensual</div>
+      <table class="proposal-pdf-table proposal-plan-table">
+        <thead>
+          <tr>
+             <th>Servicio de cada Plan multil­nea</th>
+            <th>Descripci³n</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${escapeHtml(proposal.plan_nombre || '')}</td>
+            <td>${escapeHtml(proposal.plan_resumen_derecha || '')}</td>
+          </tr>
+          <tr>
+            <td class="proposal-plan-description">${escapeHtml(proposal.plan_descripcion || '')}</td>
+            <td>${lineasResumen} LINEAS</td>
+          </tr>
+          <tr>
+            <td>Cargo Mensual por tarifa</td>
+            <td>${escapeHtml(proposal.cargo_mensual || '')}</td>
+          </tr>
+          <tr>
+            <td>Cantidad de l­neas</td>
+            <td>${lineasResumen}</td>
+          </tr>
+          ${taxRows.map((tax, index) => `
+          <tr>
+            <td>${escapeHtml(tax)}</td>
+            <td>${index === 0 ? '11.5%' : 'Aplican segºn servicio'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="proposal-highlight-note">
+        <strong>NOTA&gt;&gt;</strong> Todo servicio que no est© contemplado dentro del paquete seleccionado tendr¡ costo adicional.<br>
+        <span class="proposal-highlight-band">${escapeHtml(proposal.descuento_debito_directo || '')}</span>
+      </div>
+
+      <div class="proposal-equipment-title">Equipos</div>
+      <table class="proposal-pdf-table proposal-equipment-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th>Cantidad</th>
+            <th>Pago por unidad</th>
+            <th>Precio Regular</th>
+            <th>Oferta</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${proposal.equipos.length ? proposal.equipos.map(item => `
+            <tr>
+              <td>${escapeHtml(item.modelo)}</td>
+              <td>${escapeHtml(item.cantidad)}</td>
+              <td>${money(item.pago_por_unidad)}</td>
+              <td>${money(item.precio_regular)}</td>
+              <td>${escapeHtml(item.oferta)}</td>
+            </tr>`).join('') : `<tr><td colspan="5">Sin equipos todav­a.</td></tr>`}
+        </tbody>
+      </table>
+
+      <section class="proposal-notes-box">
+        <p><strong>${escapeHtml(proposal.creditos_nota || '')}</strong></p>
+        <p><strong>${escapeHtml(proposal.ivu_nota || '')}</strong></p>
+        <div class="proposal-promo-line">${escapeHtml(proposal.promocion_valida || '')}</div>
+        <div class="proposal-ivu-lines">${proposalIvuLines()}</div>
+        <p><strong>PAGO DE IVU:</strong> ${money(proposal.pago_ivu_total || totals.ivu)}</p>
+      </section>
+    </article>
+
+    <article class="proposal-page page-two">
+      <div class="proposal-insurance-title">Seguro de equipos a escoger:</div>
+      <table class="proposal-pdf-table">
+        <thead>
+          <tr>
+            <th>Costo del Equipo</th>
+            <th>Deducible por unidad</th>
+            <th>Prima por unidad Mensual</th>
+            <th>Cantidad de unidades</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${proposal.insuranceRows.map(row => `
+            <tr>
+              <td>${escapeHtml(row.rango)}</td>
+              <td>${escapeHtml(row.deducible)}</td>
+              <td>${escapeHtml(row.prima)}</td>
+              <td>${escapeHtml(row.cantidad)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <section class="proposal-copy-block">
+        ${proposalFinalNotesHtml()}
+      </section>
+
+      <section class="proposal-signatures">
+        <div class="proposal-sign-box">
+          <div class="proposal-sign-frame">
+            <div class="proposal-sign-line">
+              <div class="proposal-sign-name">${escapeHtml(proposal.firma_vendedor || '')}</div>
+              <div class="proposal-sign-role">${escapeHtml(proposal.firma_vendedor || '')}</div>
+              <div class="proposal-sign-role">Corporate and retail account Director</div>
+              <div class="proposal-sign-role">${escapeHtml(proposal.cargo_vendedor || '')}</div>
+            </div>
+          </div>
+          <div class="helper-note">Firma vendedor</div>
+        </div>
+
+        <div class="proposal-sign-box">
+          <div class="proposal-sign-frame client">
+            <div class="proposal-sign-line">
+              <div class="proposal-sign-name">${escapeHtml(proposal.firma_cliente || proposal.cliente_nombre || '')}</div>
+              <div class="proposal-sign-role">Persona autorizada</div>
+            </div>
+          </div>
+          <div class="proposal-sign-date">
+            <div class="date-value">${escapeHtml(proposal.fecha_firma_cliente || '')}</div>
+            <div class="date-label">Fecha</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="proposal-legal-box">
+        <div class="legal-title">Nota importante:</div>
+        <p>${escapeHtml(proposal.nota_legal || '')}</p>
+      </section>
+    </article>`;
+}
+
+function renderProposal(){
+  renderProposalStepper();
+  renderWizardBody();
+  renderProposalPreview();
+}
+
+function render(){ renderTipoBlocks(); renderDevices(); renderOffers(); renderProposal(); }
+
+// Delegacion de clicks en los grupos de chips
+document.querySelectorAll('[data-group]').forEach(group => {
+  group.addEventListener('click', e => {
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    const key = group.dataset.group;
+    const val = btn.dataset.val;
+    state[key] = (key === 'planInd') ? Number(val) : val;
+    setActive(key, val);
+    state.selected = '';
+    render();
+  });
+});
+
+// Seleccion de equipo
+$('deviceList').addEventListener('click', e => {
+  const openBtn = e.target.closest('[data-open-offers]');
+  if(openBtn){
+    e.stopPropagation();
+    const eq = equiposActuales().find(item => item.key === openBtn.dataset.openOffers);
+    if(eq) openOfferChooser(eq);
+    return;
+  }
+  const row = e.target.closest('.device-row');
+  if(!row) return;
+  const eq = equiposActuales().find(item => item.key === row.dataset.key);
+  if(!eq) return;
+  const offers = ofertasDe(eq);
+  if(offers.length > 1){
+    openOfferChooser(eq);
+    return;
+  }
+  state.selected = row.dataset.key;
+  state.selectedOfferId = offers[0]?.id || '';
+  render();
+});
+
+$('offerList').addEventListener('click', e => {
+  if(e.target.closest('#clearChosenOfferBtn')){
+    clearChosenOffer();
+    return;
+  }
+  const addBtn = e.target.closest('[data-add-offer]');
+  const qtyBtn = e.target.closest('.qty-btn');
+  if(qtyBtn){
+    const box = qtyBtn.closest('.qty-box');
+    const offerId = box?.dataset.offerId;
+    if(!offerId) return;
+    const current = Math.max(1, Number(state.qtyByOffer[offerId] || 1));
+    state.qtyByOffer[offerId] = qtyBtn.dataset.action === 'plus' ? current + 1 : Math.max(1, current - 1);
+    renderOffers();
+    return;
+  }
+  if(!addBtn) return;
+  const eq = equipoSeleccionado(equiposActuales());
+  const oferta = (window.OFERTAS_DATA || []).find(o => o.id === addBtn.dataset.addOffer);
+  if(!eq || !oferta) return;
+  addProposalItem(eq, oferta);
+  state.proposalStep = Math.max(state.proposalStep, 2);
+});
+
+$('offerChooserList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-choose-offer]');
+  if(!btn) return;
+  chooseOffer(btn.dataset.chooseEq, btn.dataset.chooseOffer);
+});
+
+$('closeOfferChooser').addEventListener('click', closeOfferChooser);
+$('offerChooserModal').addEventListener('click', e => {
+  if(e.target === $('offerChooserModal')) closeOfferChooser();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && !$('offerChooserModal').classList.contains('hidden')) closeOfferChooser();
+});
+
+// Buscador
+function onSearch(v){ state.buscar = v; $('searchInput').value = v; $('panelSearchInput').value = v; state.selected = ''; render(); }
+$('searchInput').addEventListener('input', e => onSearch(e.target.value));
+$('panelSearchInput').addEventListener('input', e => onSearch(e.target.value));
+
+$('proposalStepper').addEventListener('click', e => {
+  const btn = e.target.closest('[data-step-index]');
+  if(!btn) return;
+  state.proposalStep = Number(btn.dataset.stepIndex) || 0;
+  renderProposal();
+});
+
+$('prevStepBtn').addEventListener('click', () => {
+  state.proposalStep = Math.max(0, state.proposalStep - 1);
+  renderProposal();
+});
+
+$('nextStepBtn').addEventListener('click', () => {
+  state.proposalStep = Math.min(PROPOSAL_STEPS.length - 1, state.proposalStep + 1);
+  renderProposal();
+});
+
+$('wizardBody').addEventListener('input', e => {
+  const fieldEl = e.target.closest('[data-proposal-field]');
+  if(fieldEl){
+    proposal[fieldEl.dataset.proposalField] = fieldEl.value;
+    renderProposalPreview();
+    return;
+  }
+  const eqField = e.target.closest('[data-eq-field]');
+  if(eqField){
+    const idx = Number(eqField.dataset.eqIndex);
+    if(!Number.isNaN(idx) && proposal.equipos[idx]){
+      proposal.equipos[idx][eqField.dataset.eqField] = eqField.value;
+      refreshProposalIvu();
+      renderProposalPreview();
+    }
+    return;
+  }
+  const insField = e.target.closest('[data-ins-field]');
+  if(insField){
+    const idx = Number(insField.dataset.insIndex);
+    if(!Number.isNaN(idx) && proposal.insuranceRows[idx]){
+      proposal.insuranceRows[idx][insField.dataset.insField] = insField.value;
+      renderProposalPreview();
+    }
+  }
+});
+
+$('wizardBody').addEventListener('click', e => {
+  const removeBtn = e.target.closest('[data-remove-eq]');
+  if(!removeBtn) return;
+  const idx = Number(removeBtn.dataset.removeEq);
+  if(Number.isNaN(idx)) return;
+  proposal.equipos.splice(idx, 1);
+  refreshProposalIvu();
+  renderProposal();
+});
+
+render();
+</script>
+</body>
+</html>
+
+
+
+

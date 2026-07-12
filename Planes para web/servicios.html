@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business - Servicios y Features</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);min-height:100vh;color:#e2e8f0}
+.header{background:rgba(220,38,38,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.brand-logo{font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff}
+.brand-text{flex:1}.brand-title{font-size:15px;font-weight:800;color:#fff}.brand-sub{color:rgba(255,255,255,.82);font-size:12px;margin-top:1px}
+.nav{background:rgba(15,23,42,.7);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.06);padding:0 24px;display:flex;gap:4px;overflow-x:auto}
+.nav a{color:rgba(255,255,255,.62);font-size:13px;font-weight:600;padding:11px 14px;border-bottom:2px solid transparent;text-decoration:none;white-space:nowrap;transition:color .2s,border-color .2s}
+.nav a:hover{color:#fff}.nav a.active{color:#38bdf8;border-bottom-color:#38bdf8}
+.container{max-width:1120px;margin:0 auto;padding:24px}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.hero h1{font-size:26px;line-height:1.08;color:#fff;margin-bottom:6px}.hero p{font-size:13px;color:rgba(226,232,240,.68);max-width:680px;line-height:1.55}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.16);white-space:nowrap}
+.pill.amber{color:#fbbf24;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3)}
+.pill.red{color:#f87171;background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3)}
+.pill.blue{color:#38bdf8;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3)}
+.panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:16px;color:#fff;margin-bottom:4px}.muted{font-size:12px;color:rgba(226,232,240,.62);line-height:1.5}
+.alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:12px}
+.alert-card{background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px}
+.alert-card.red{border-color:rgba(248,113,113,.35)}.alert-card.amber{border-color:rgba(251,191,36,.35)}
+.alert-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.alert-card b{font-size:13px;color:#fff}
+.doc-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px;margin-bottom:14px}
+.doc-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.doc-head h3{font-size:18px;color:#fff;margin-bottom:4px}
+.notes{margin:10px 0 14px 18px;color:rgba(226,232,240,.68);font-size:12px;line-height:1.55}
+.sheet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px}
+.sheet-btn{text-align:left;border:1px solid rgba(56,189,248,.22);background:rgba(56,189,248,.07);color:#e2e8f0;border-radius:10px;padding:11px;cursor:pointer;min-height:70px}
+.sheet-btn:hover{background:rgba(56,189,248,.13);border-color:rgba(56,189,248,.4)}
+.sheet-btn b{display:block;font-size:13px;color:#fff;margin-bottom:4px}.sheet-btn span{display:block;font-size:11.5px;color:rgba(226,232,240,.58);line-height:1.35}
+.insurance-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;background:rgba(255,255,255,.03);overflow:hidden;border-radius:10px}
+.insurance-table th,.insurance-table td{border:1px solid rgba(255,255,255,.12);padding:9px 10px;text-align:center}
+.insurance-table th{background:rgba(255,255,255,.1);color:#fff;font-weight:900}.insurance-table td:first-child{text-align:left;font-weight:700;color:#fff}
+.insurance-table input[type="number"]{width:92px;background:#0f172a;border:1px solid rgba(56,189,248,.28);border-radius:8px;color:#fff;padding:7px 8px;text-align:center;font-weight:800}
+.insurance-table input[type="checkbox"]{width:18px;height:18px;accent-color:#38bdf8}
+.soc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;background:rgba(255,255,255,.03);overflow:hidden;border-radius:10px}
+.soc-table th,.soc-table td{border:1px solid rgba(255,255,255,.12);padding:10px;text-align:left}
+.soc-table th{background:#d40000;color:#fff;font-weight:900;text-transform:uppercase}
+.soc-table td:last-child{font-weight:900;color:#86efac;white-space:nowrap}
+.soc-table-caption{font-size:12px;color:rgba(226,232,240,.62);line-height:1.5;margin-top:6px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,.78);display:none;align-items:center;justify-content:center;z-index:500;padding:18px}
+.modal-backdrop.show{display:flex}.modal{width:min(980px,100%);max-height:92vh;overflow:auto;background:#101827;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;background:#d40000;color:#fff;padding:15px 18px}.modal-title{font-size:15px;font-weight:900}.modal-close{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer}
+.modal-body{padding:16px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;text-decoration:none;color:#fff;background:#2563eb}
+.btn.green{background:#15803d}.btn.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.image-frame{background:#fff;border-radius:10px;padding:8px;overflow:auto}.image-frame img{display:block;width:100%;height:auto}
+@media(max-width:640px){.header{align-items:flex-start}.container{padding:14px}.hero{display:block}.hero h1{font-size:22px}.doc-head{display:block}.nav{padding:0 12px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand-logo">CLARO</div>
+  <div class="brand-text">
+    <div class="brand-title">Servicios y Features</div>
+    <div class="brand-sub">PYMES / Corporativo - Material descargable</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html">Lista de Equipos</a>
+  <a href="servicios.html" class="active">Servicios</a>
+  <a href="oferta-const.html">Oferta const.</a>
+  <a href="ofertas.html">Ofertas</a>
+</nav>
+
+<main class="container">
+  <section class="hero">
+    <div>
+      <h1>Servicios descargables</h1>
+      <p>Hojas oficiales para consultar, ense±ar al cliente y descargar como imagen. Las alertas muestran boletines vencidos o sin fecha final para revisi³n del admin.</p>
+    </div>
+    <span class="pill blue" id="docCount">0 documentos</span>
+  </section>
+
+  <section class="panel">
+    <h2>Alertas de vigencia</h2>
+    <div class="muted">Revisar antes de usar en propuestas si el bolet­n est¡ vencido o no indica fecha final.</div>
+    <div class="alerts" id="alerts"></div>
+  </section>
+
+  <section id="docs"></section>
+  <section id="socs"></section>
+</main>
+
+<div class="modal-backdrop" id="sheetModal" onclick="backdropClose(event)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modalTitle">Hoja</div>
+        <div class="muted" id="modalMeta" style="color:rgba(255,255,255,.82)"></div>
+      </div>
+      <button class="modal-close" type="button" onclick="closeSheetModal()" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="muted" id="modalDesc"></div>
+      <div class="actions">
+        <button class="btn green" type="button" onclick="downloadCurrentSheet()">Descargar imagen</button>
+        <a class="btn ghost" id="openImage" href="#" target="_blank" rel="noopener">Abrir imagen</a>
+      </div>
+      <div class="image-frame"><img id="modalImage" src="" alt=""></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVICIOS=[
+  {id:'rescate-residencia-6m',titulo:'6 meses gratis Claro Rescate / Claro Residencia',archivo:'Featires oerta.pdf',vigencia:'Desde el 5 de noviembre de 2025',estado:'Sin fecha final indicada',estadoClass:'amber',soloResumen:true,
+   resumen:'Oferta para clientes 2 Play/3 Play que activen Claro Rescate o Claro Residencia con Internet + Telefonia. Descuento automatico en meses intercalados.',
+   notas:['Aplica a planes Internet + Telefonia 100, 300, 600 y 1,000 megas.','Descuento en meses 2, 4, 6, 8, 10 y 12.','Requiere revision manual porque el boletin no indica fecha final.'],
+   hojas:[
+    {n:1,titulo:'Portada de boletin',img:'servicios/features-oferta-p01.png',desc:'Boletin Oferta 6 meses Gratis Claro Rescate & Claro Residencia.'},
+    {n:2,titulo:'Descripcion de oferta',img:'servicios/features-oferta-p02.png',desc:'Mecanica de seis meses gratis intercalados y combinaciones de servicio.'},
+    {n:3,titulo:'Clientes que aplican',img:'servicios/features-oferta-p03.png',desc:'Reglas para clientes nuevos, existentes y exclusiones.'},
+    {n:4,titulo:'Precios combinados',img:'servicios/features-oferta-p04.png',desc:'Precios Internet + Telefonia con Claro Rescate o Claro Residencia.'},
+    {n:5,titulo:'SOC y alpha codes',img:'servicios/features-oferta-p05.png',desc:'Codigos de planes y servicios aplicables.'},
+    {n:6,titulo:'Ordenes nuevas',img:'servicios/features-oferta-p06.png',desc:'Proceso para emitir ordenes nuevas por COPS.'},
+    {n:7,titulo:'Ordenes existentes',img:'servicios/features-oferta-p07.png',desc:'Proceso OSADIA/AS para clientes existentes.'},
+    {n:8,titulo:'Publicidad',img:'servicios/features-oferta-p08.png',desc:'Material visual de la oferta.'},
+    {n:9,titulo:'Terminos y condiciones',img:'servicios/features-oferta-p09.png',desc:'Condiciones oficiales: account type, planes, descuento SIF y cubierta.'}
+   ]},
+  {id:'features-servicios-2022',titulo:'Cubiertas de servicios Features',archivo:'Features.pdf',vigencia:'1 al 31 de julio de 2022',estado:'Vencida',estadoClass:'red',soloTitulos:true,
+   resumen:'Hojas de referencia de servicios descargables para vendedor. Este boletin esta vencido y debe quedar como alerta hasta reemplazarlo por uno vigente.',
+   notas:['Claro Residencia.','Claro Rescate.','Advantage.','Asistencia Legal.'],
+   hojas:[
+    {n:9,titulo:'Claro Residencia',img:'servicios/features-p09.png',desc:'Detalle de cubierta residencial.'},
+    {n:10,titulo:'Claro Rescate',img:'servicios/features-p10.png',desc:'Detalle de cubierta para vehiculos.'},
+    {n:11,titulo:'Claro Rescate continuacion',img:'servicios/features-p11.png',desc:'Continuacion de condiciones de cubierta.'},
+    {n:12,titulo:'Advantage',img:'servicios/features-p12.png',desc:'Advantage.'},
+    {n:13,titulo:'Asistencia Legal',img:'servicios/features-p13.png',desc:'Asistencia legal.'}
+   ]}
+];
+const SEGUROS_EQUIPOS=[
+  {rango:'$0 - $200.00',deducible:'$20.00',prima:'$7.99'},
+  {rango:'$200.01 - $400',deducible:'$50.00',prima:'$7.99'},
+  {rango:'$400.01 - $700',deducible:'$100.00',prima:'$13.99'},
+  {rango:'$700.01 - $1,400',deducible:'$199.00',prima:'$13.99'},
+  {rango:'$1,400.01 en adelante',deducible:'$299.00',prima:'$13.99'}
+];
+const SERVICIOS_SOCS=[
+  {descripcion:'Claro Rescate',socMovil:'RESCATEM',socFijo:'RESCATEF / A821',renta:5.99},
+  {descripcion:'Claro Residencia',socMovil:'RESIDEM',socFijo:'RESIDEF / A826',renta:4.50},
+  {descripcion:'Claro Residencia y Rescate',socMovil:'RESRECM',socFijo:'RESRECF / A831',renta:7.99},
+  {descripcion:'Claro Advantage',socMovil:'ADVANM',socFijo:'ADVANF / A840',renta:5.99},
+  {descripcion:'Claro Advantage y Residencia',socMovil:'ADVRESM',socFijo:'ADVRESF / A843',renta:8.99},
+  {descripcion:'Claro Advantage, Residencia y Rescate',socMovil:'ADVANTRM',socFijo:'ADVANTRF / A846',renta:11.99},
+  {descripcion:'Claro Asistencia Legal',socMovil:'LEGALM',socFijo:'LEGALF / A851',renta:9.99}
+];
+let currentSheet=null;
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function money(n){return '$'+Number(n||0).toFixed(2);}
+function render(){
+  document.getElementById('docCount').textContent=SERVICIOS.length+' documentos';
+  document.getElementById('alerts').innerHTML=SERVICIOS.filter(d=>d.estado!=='Vigente').map(d=>`
+    <div class="alert-card ${d.estadoClass}">
+      <div class="alert-top"><b>${esc(d.titulo)}</b><span class="pill ${d.estadoClass}">${esc(d.estado)}</span></div>
+      <div class="muted" style="margin-top:7px">${esc(d.vigencia)}</div>
+    </div>`).join('');
+  document.getElementById('docs').innerHTML=SERVICIOS.map(d=>`
+    <article class="doc-card">
+      <div class="doc-head">
+        <div><h3>${esc(d.titulo)}</h3><div class="muted">${esc(d.archivo)} · ${esc(d.vigencia)}</div></div>
+        <span class="pill ${d.estadoClass}">${esc(d.estado)}</span>
+      </div>
+      <p class="muted" style="margin-top:10px">${esc(d.resumen)}</p>
+      ${d.soloResumen?'':`${d.soloTitulos?'':`<ul class="notes">${d.notas.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`}
+      <div class="sheet-grid">${d.hojas.map(h=>`
+        <button class="sheet-btn" type="button" onclick="openSheet('${d.id}',${h.n})">
+          <b>${esc(h.titulo)}</b>${d.soloTitulos?'':`<span>${esc(h.desc)}</span>`}
+        </button>`).join('')}</div>`}
+    </article>`).join('');
+  document.getElementById('socs').innerHTML=renderSocsServicios()+renderSeguroEquipos();
+}
+function renderSocsServicios(){
+  return `<article class="doc-card">
+    <div class="doc-head">
+      <div><h3>SOCS Y CODIGOS DE EMISION</h3><div class="muted">Servicios individuales y combinados oficiales para sumar a la propuesta.</div></div>
+      <span class="pill blue">Precios oficiales</span>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto">
+      <table class="soc-table">
+        <thead><tr><th>Descripcion</th><th>SOC movil</th><th>Alphacode / SOC fijo</th><th>Renta mensual</th></tr></thead>
+        <tbody>${SERVICIOS_SOCS.map(s=>`<tr><td>${esc(s.descripcion)}</td><td>${esc(s.socMovil)}</td><td>${esc(s.socFijo)}</td><td>${money(s.renta)}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <div class="soc-table-caption">Estos son cargos de servicios. No usar aqui precios de paquetes de Internet + Telefonia.</div>
+  </article>`;
+}
+function renderSeguroEquipos(){
+  return `<article class="doc-card">
+    <div class="doc-head">
+      <div><h3>Seguro de equipos a escoger</h3><div class="muted">Selecciona el rango que aplique y edita la cantidad de unidades desde 0.</div></div>
+      <span class="pill blue">Opcional</span>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto">
+      <table class="insurance-table">
+        <thead><tr><th>Escoger</th><th>Costo del Equipo</th><th>Deducible por unidad</th><th>Prima por unidad mensual</th><th>Cantidad de unidades</th></tr></thead>
+        <tbody>${SEGUROS_EQUIPOS.map((s,i)=>`<tr>
+          <td><input type="checkbox" id="seg_${i}" aria-label="Escoger seguro ${esc(s.rango)}"></td>
+          <td>${esc(s.rango)}</td><td>${esc(s.deducible)}</td><td>${esc(s.prima)}</td>
+          <td><input type="number" min="0" step="1" value="0" inputmode="numeric" aria-label="Cantidad de unidades ${esc(s.rango)}"></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  </article>`;
+}
+function findSheet(docId,n){
+  const doc=SERVICIOS.find(d=>d.id===docId);
+  if(!doc)return null;
+  const hoja=doc.hojas.find(h=>Number(h.n)===Number(n));
+  return hoja?{doc,hoja}:null;
+}
+function openSheet(docId,n){
+  currentSheet=findSheet(docId,n);
+  if(!currentSheet)return;
+  const {doc,hoja}=currentSheet;
+  document.getElementById('modalTitle').textContent=doc.titulo+' · '+hoja.titulo;
+  document.getElementById('modalMeta').textContent=hoja.titulo+' · '+doc.vigencia+' · '+doc.estado;
+  document.getElementById('modalDesc').textContent=hoja.desc;
+  document.getElementById('modalImage').src=hoja.img;
+  document.getElementById('modalImage').alt=hoja.titulo;
+  document.getElementById('openImage').href=hoja.img;
+  document.getElementById('sheetModal').classList.add('show');
+}
+function closeSheetModal(){document.getElementById('sheetModal').classList.remove('show');}
+function backdropClose(e){if(e.target.id==='sheetModal')closeSheetModal();}
+function downloadCurrentSheet(){
+  if(!currentSheet)return;
+  const a=document.createElement('a');
+  a.href=currentSheet.hoja.img;
+  a.download=currentSheet.doc.id+'-hoja-'+currentSheet.hoja.n+'.png';
+  document.body.appendChild(a);a.click();a.remove();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheetModal();});
+render();
+</script>
+</body>
+</html>
+
+
+
+

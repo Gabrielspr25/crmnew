@@ -6,6 +6,7 @@ import multer from 'multer';
 import XLSX from 'xlsx';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { buscarYDescargarImagenEquipo } from '../services/equiposImagenesService.js';
 
 export const equiposRouter = Router();
 const upload = multer({
@@ -155,6 +156,32 @@ equiposRouter.get('/equipos-lista', requireAuth, async (req, res) => {
 equiposRouter.get('/equipos-lista/uploads', requireAuth, async (_req, res) => {
   try { const r = await pool.query(`SELECT * FROM public.equipos_uploads ORDER BY fecha_subida DESC LIMIT 20`); res.json({ ok: true, data: r.rows }); }
   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// POST /api/equipos-lista/:id/foto/buscar — busca en sitios oficiales y guarda copia local
+equiposRouter.post('/equipos-lista/:id/foto/buscar', requireAuth, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ ok: false, error: 'ID inválido.' });
+    const r = await pool.query(`SELECT id, item_code, modelo, marca FROM public.equipos_lista WHERE id=$1 LIMIT 1`, [id]);
+    if (!r.rows.length) return res.status(404).json({ ok: false, error: 'Equipo no encontrado.' });
+    const found = await buscarYDescargarImagenEquipo(r.rows[0]);
+    await pool.query(
+      `UPDATE public.equipos_lista
+       SET image_url=$1, image_source_url=$2, image_status='ok', image_updated_at=NOW(), actualizado_en=NOW()
+       WHERE id=$3`,
+      [found.image_url, found.image_source_url, id]
+    );
+    res.json({ ok: true, equipo_id: id, ...found });
+  } catch (e) {
+    try {
+      await pool.query(
+        `UPDATE public.equipos_lista SET image_status='error', image_updated_at=NOW() WHERE id=$1`,
+        [Number(req.params.id) || 0]
+      );
+    } catch {}
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // POST /api/equipos-lista/preview — parsear sin guardar

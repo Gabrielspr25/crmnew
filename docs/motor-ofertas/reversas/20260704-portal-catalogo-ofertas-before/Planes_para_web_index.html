@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business — Planes Fijos PYMES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);
+  min-height:100vh;
+  color:#e2e8f0;
+}
+
+/* ── HEADER ── */
+.header{
+  background:rgba(220,38,38,0.9);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  padding:14px 24px;
+  display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:100;
+}
+.brand-logo{font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff}
+.brand-text{flex:1}
+.brand-title{font-size:15px;font-weight:700;color:#fff}
+.brand-sub{color:rgba(255,255,255,0.8);font-size:12px;margin-top:1px}
+.header-search{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:8px;padding:8px 14px;
+}
+.header-search input{
+  background:none;border:none;outline:none;
+  color:#fff;font-size:14px;width:200px;
+}
+.header-search input::placeholder{color:rgba(255,255,255,0.6)}
+.search-icon{color:rgba(255,255,255,0.7);flex-shrink:0}
+
+/* ── NAV ── */
+.nav{
+  background:rgba(15,23,42,0.7);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:0 24px;
+  display:flex;gap:4px;overflow-x:auto;
+}
+.nav a{
+  color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;
+  padding:11px 14px;
+  border-bottom:2px solid transparent;
+  text-decoration:none;white-space:nowrap;
+  transition:color .2s,border-color .2s;
+}
+.nav a:hover{color:#fff}
+.nav a.active{color:#38bdf8;border-bottom-color:#38bdf8}
+
+/* ── FILTERS ── */
+.filters{
+  padding:12px 24px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.filter-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.7);
+  font-size:12px;font-weight:500;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.filter-btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+.filter-btn.active{
+  background:rgba(56,189,248,0.2);
+  border-color:rgba(56,189,248,0.5);color:#38bdf8;
+}
+.filters-right{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.4)}
+
+/* ── MAIN ── */
+.container{max-width:1600px;margin:0 auto;padding:24px}
+
+/* ── SECTION CARD ── */
+.section-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  margin-bottom:20px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.section-card:hover{border-color:rgba(255,255,255,0.14)}
+.section-card[data-activo="false"]{opacity:0.4}
+
+.section-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:18px 22px 14px;
+  cursor:pointer;
+  user-select:none;
+}
+.section-header:hover{background:rgba(255,255,255,0.02)}
+.section-info{flex:1}
+.section-title{font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:3px}
+.section-sub{font-size:12px;color:#38bdf8;font-weight:500}
+.section-desc{font-size:12px;color:rgba(255,255,255,0.45);margin-top:4px}
+.section-meta{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:16px}
+.boletin-badge{
+  font-size:10px;color:rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;padding:2px 8px;
+  max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.toggle-arrow{color:rgba(255,255,255,0.4);font-size:12px;transition:transform .2s}
+.section-card.collapsed .toggle-arrow{transform:rotate(-90deg)}
+
+.section-body{padding:0 22px 18px}
+.section-card.collapsed .section-body{display:none}
+
+/* ── TABLE ── */
+.table-wrap{width:100%;overflow-x:auto}
+.plan-table{width:100%;border-collapse:collapse;font-size:13px}
+.plan-table th{
+  text-align:left;padding:9px 12px;
+  color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.05em;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  white-space:nowrap;
+}
+.plan-table td{
+  padding:9px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  color:#e2e8f0;
+  vertical-align:middle;
+}
+.plan-table td.num,.plan-table th.num{text-align:right;white-space:nowrap}
+.plan-table td.desc{min-width:260px}
+.plan-table td.code-cell{white-space:nowrap}
+.plan-table tr:last-child td{border-bottom:none}
+.plan-table tr:hover td{background:rgba(255,255,255,0.03)}
+.plan-table tr.hidden{display:none}
+
+code{
+  font-family:monospace;font-size:11px;
+  background:rgba(56,189,248,0.1);
+  color:#7dd3fc;padding:2px 6px;border-radius:4px;
+}
+.precio{font-weight:700;color:#4ade80;white-space:nowrap}
+.precio-zero{font-weight:700;color:rgba(255,255,255,0.3)}
+
+.badge{
+  display:inline-block;font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:12px;white-space:nowrap;
+}
+.badge-cobre{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)}
+.badge-gpon{background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
+.badge-vradgpon{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
+
+/* ── EMPTY / ERROR ── */
+.state-card{
+  text-align:center;padding:60px 20px;
+  color:rgba(255,255,255,0.4);
+}
+.state-icon{font-size:48px;margin-bottom:12px}
+.state-title{font-size:16px;font-weight:600;margin-bottom:6px;color:rgba(255,255,255,0.6)}
+.state-sub{font-size:13px}
+
+/* ── VIGENCIA BADGE ── */
+.vigencia-badge{
+  display:inline-block;font-size:10px;
+  background:rgba(250,204,21,0.1);
+  color:#facc15;border:1px solid rgba(250,204,21,0.2);
+  border-radius:20px;padding:2px 8px;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .header{flex-wrap:wrap}
+  .header-search{width:100%}
+  .header-search input{width:100%}
+  .container{padding:12px}
+  .section-header{padding:14px 14px 10px}
+  .section-body{padding:0 14px 14px}
+  .plan-table{font-size:11px}
+  .plan-table th,.plan-table td{padding:7px 8px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand-logo">CLARO</div>
+  <div class="brand-text">
+    <div class="brand-title">Planes Fijos — Estructura de Negocios</div>
+    <div class="brand-sub">PYMES / Corporativo · Puerto Rico</div>
+  </div>
+  <div class="header-search">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar código, plan, precio...">
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="index.html" class="active">📞 Planes Fijos</a>
+  <a href="movil.html">📱 Planes Móviles</a>
+  <a href="banda-ancha.html">📡 Inalámbrico / IoT</a>
+  <a href="equipos.html">📋 Lista de Equipos</a>
+  <a href="servicios.html">🧾 Servicios</a>
+  <a href="oferta-const.html">🧩 Oferta const.</a>
+  <a href="ofertas.html">🏷️ Ofertas</a>
+</nav>
+
+<div class="filters" id="filtersBar">
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Todos</button>
+  <!-- Filtros por sección se generan dinámicamente -->
+  <span class="filters-right" id="countLabel"></span>
+</div>
+
+<div class="container" id="mainContainer">
+  <div class="state-card">
+    <div class="state-icon">⏳</div>
+    <div class="state-title">Cargando planes...</div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '';  // mismo origen (proxy nginx → :3001)
+let allModulos = [];
+let activeFilter = 'all';
+
+// ── Fetch planes ──────────────────────────────────────────────────────────
+async function loadPlanes() {
+  try {
+    const r = await fetch(`${API_BASE}/api/planes-modulos/fijos`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    allModulos = data.modulos || [];
+    buildFilters();
+    render();
+  } catch(e) {
+    document.getElementById('mainContainer').innerHTML = `
+      <div class="state-card">
+        <div class="state-icon">⚠️</div>
+        <div class="state-title">Error al cargar</div>
+        <div class="state-sub">${e.message}</div>
+      </div>`;
+  }
+}
+
+// ── Build section filter buttons ──────────────────────────────────────────
+function buildFilters() {
+  const bar = document.getElementById('filtersBar');
+  // Remove old dynamic buttons (keep "Todos")
+  bar.querySelectorAll('[data-filter]:not([data-filter="all"])').forEach(b => b.remove());
+  const refSpan = bar.querySelector('.filters-right');
+
+  allModulos.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = m.seccion_key;
+    btn.textContent = m.titulo;
+    btn.onclick = () => setFilter(m.seccion_key, btn);
+    bar.insertBefore(btn, refSpan);
+  });
+}
+
+function setFilter(key, btn) {
+  activeFilter = key;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function render() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const container = document.getElementById('mainContainer');
+
+  let visible = allModulos.filter(m => activeFilter === 'all' || m.seccion_key === activeFilter);
+  container.innerHTML = '';
+
+  let totalRows = 0;
+
+  visible.forEach(m => {
+    const rows = m.contenido?.filas || [];
+    const filteredRows = q ? rows.filter(r =>
+      Object.values(r).some(v => String(v).toLowerCase().includes(q))
+    ) : rows;
+
+    totalRows += filteredRows.length;
+    const card = buildSectionCard(m, filteredRows, q);
+    container.appendChild(card);
+  });
+
+  if (!visible.length) {
+    container.innerHTML = `<div class="state-card"><div class="state-icon">🔍</div>
+      <div class="state-title">Sin resultados</div>
+      <div class="state-sub">Intenta con otro filtro o búsqueda</div></div>`;
+  }
+
+  document.getElementById('countLabel').textContent = `${totalRows} registros`;
+}
+
+function buildSectionCard(m, filteredRows, q) {
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.dataset.activo = m.activo;
+
+  // Vigencia
+  let vigBadge = '';
+  if (m.vigencia_desde || m.vigencia_hasta) {
+    const desde = m.vigencia_desde ? m.vigencia_desde.slice(0,10) : '';
+    const hasta = m.vigencia_hasta ? m.vigencia_hasta.slice(0,10) : '';
+    vigBadge = `<span class="vigencia-badge">📅 ${desde}${hasta ? ' → '+hasta : ''}</span>`;
+  }
+
+  const cols = m.contenido?.columnas || ['Código','Descripción','Alfa Code','Tecnología','Precio'];
+
+  card.innerHTML = `
+    <div class="section-header" onclick="this.closest('.section-card').classList.toggle('collapsed')">
+      <div class="section-info">
+        <div class="section-title">${m.titulo}</div>
+        ${m.subtitulo ? `<div class="section-sub">${m.subtitulo}</div>` : ''}
+        ${m.descripcion ? `<div class="section-desc">${m.descripcion}</div>` : ''}
+      </div>
+      <div class="section-meta">
+        ${vigBadge}
+        ${m.boletin_ref ? `<span class="boletin-badge" title="${m.boletin_ref}">📄 Boletín</span>` : ''}
+        <span class="toggle-arrow">▼</span>
+      </div>
+    </div>
+    <div class="section-body">
+      ${buildTable(cols, filteredRows, q)}
+    </div>`;
+  return card;
+}
+
+function buildTable(cols, rows, q) {
+  if (!rows.length) {
+    return `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px">Sin resultados para esta búsqueda</div>`;
+  }
+
+  // Columnas fijas base
+  const BASE_KEYS = ['codigo','descripcion','precio','alfa_code','tecnologia'];
+  const BASE_COLS = ['Código','Descripción','Precio','Alfa Code','Tecnología'];
+
+  const colText = (cols || []).join('|').toLowerCase();
+  // Respetar columnas publicadas aunque una seccion tenga solo guiones.
+  const hasMin  = colText.includes('minuto') || rows.some(r => r.minuto_adicional != null);
+  const hasInst = colText.includes('inst.') || rows.some(r => r.instalacion);
+  const hasAct  = colText.includes('act.') || rows.some(r => r.activacion);
+  const hasPen  = colText.includes('penalidad') || rows.some(r => r.penalidad != null);
+
+  const allKeys = [...BASE_KEYS];
+  const allCols = [...BASE_COLS];
+  if (hasMin)  { allKeys.push('minuto_adicional'); allCols.push('Minuto Adicional'); }
+  if (hasInst) { allKeys.push('inst_0m','inst_12m','inst_24m'); allCols.push('Inst. 0M','Inst. 12M','Inst. 24M'); }
+  if (hasAct)  { allKeys.push('act_0m','act_12m','act_24m');  allCols.push('Act. 0M','Act. 12M','Act. 24M'); }
+  if (hasPen)  { allKeys.push('penalidad'); allCols.push('Penalidad'); }
+
+  const numericKeys = new Set(['precio','minuto_adicional','inst_0m','inst_12m','inst_24m','act_0m','act_12m','act_24m','penalidad']);
+  const headers = allCols.map((c, i) => `<th class="${numericKeys.has(allKeys[i]) ? 'num' : ''}">${c}</th>`).join('');
+
+  const fmt = v => {
+    if (v == null || v === '') return '<span style="color:rgba(255,255,255,0.2)">—</span>';
+    if (v === 'OTC') return '<span style="color:#f59e0b">OTC</span>';
+    const n = Number(v);
+    if (!isNaN(n)) return n === 0 ? '<span style="color:rgba(255,255,255,0.35)">$0.00</span>' : `<span style="color:#4ade80">$${n.toFixed(2)}</span>`;
+    return String(v);
+  };
+
+  const trs = rows.map(r => {
+    const inst = r.instalacion || {};
+    const act  = r.activacion  || {};
+    const cells = allKeys.map(k => {
+      if (k === 'codigo')    return `<td class="code-cell"><code>${highlight(String(r.codigo||''),q)}</code></td>`;
+      if (k === 'descripcion') return `<td class="desc">${highlight(String(r.descripcion || ''), q)}</td>`;
+      if (k === 'precio') {
+        const val = r.precio;
+        const cls = val === 0 || val === '0' ? 'precio-zero' : 'precio';
+        const display = val === 0 ? 'Gratis' : (String(val).endsWith('%') ? val : `$${Number(val).toFixed(2)}`);
+        return `<td class="num"><span class="${cls}">${display}</span></td>`;
+      }
+      if (k === 'tecnologia') return `<td>${techBadge(r.tecnologia||'')}</td>`;
+      if (k === 'minuto_adicional') return `<td class="num">${fmt(r.minuto_adicional)}</td>`;
+      if (k === 'inst_0m')  return `<td class="num">${fmt(inst['0m'])}</td>`;
+      if (k === 'inst_12m') return `<td class="num">${fmt(inst['12m'])}</td>`;
+      if (k === 'inst_24m') return `<td class="num">${fmt(inst['24m'])}</td>`;
+      if (k === 'act_0m')   return `<td class="num">${fmt(act['0m'])}</td>`;
+      if (k === 'act_12m')  return `<td class="num">${fmt(act['12m'])}</td>`;
+      if (k === 'act_24m')  return `<td class="num">${fmt(act['24m'])}</td>`;
+      if (k === 'penalidad') return `<td class="num">${fmt(r.penalidad)}</td>`;
+      const val = r[k];
+      return `<td>${highlight(String(val ?? ''), q)}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  return `<div class="table-wrap"><table class="plan-table"><thead><tr>${headers}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+function techBadge(val) {
+  const v = String(val).toUpperCase();
+  if (v.includes('GPON') && v.includes('VRAD')) return `<span class="badge badge-vradgpon">${val}</span>`;
+  if (v.includes('GPON')) return `<span class="badge badge-gpon">${val}</span>`;
+  return `<span class="badge badge-cobre">${val}</span>`;
+}
+
+function highlight(str, q) {
+  if (!q) return str;
+  const idx = str.toLowerCase().indexOf(q);
+  if (idx === -1) return str;
+  return str.slice(0,idx) + `<mark style="background:#fbbf2440;color:#fbbf24;border-radius:2px">`
+    + str.slice(idx, idx+q.length) + '</mark>' + str.slice(idx+q.length);
+}
+
+// ── Events ────────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', () => render());
+
+// ── Init ──────────────────────────────────────────────────────────────────
+loadPlanes();
+</script>
+</body>
+</html>

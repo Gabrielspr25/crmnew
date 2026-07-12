@@ -130,6 +130,12 @@ async function ensureOpportunityWorkflowSteps(c, opportunityId) {
     for (const [index, step] of templateSteps.entries()) {
       const nameKey = cleanText(step.name).toLowerCase();
       if (!nameKey || existingNames.has(nameKey)) continue;
+      const nextOrder = await c.query(
+        `SELECT COALESCE(MAX(step_order),0)+1 AS n
+           FROM opportunity_steps
+          WHERE opportunity_id = $1`,
+        [opportunityId]
+      );
       await c.query(
         `INSERT INTO opportunity_steps (
            id, opportunity_id, product_key, step_order, name, status, source, created_at, updated_at
@@ -138,7 +144,7 @@ async function ensureOpportunityWorkflowSteps(c, opportunityId) {
           randomUUID(),
           opportunityId,
           productKey,
-          Number(step.step_order || index + 1),
+          Number(nextOrder.rows[0]?.n || step.step_order || index + 1),
           step.name,
           existingNames.size === 0 && index === 0 ? 'en_progreso' : 'pendiente',
         ]
@@ -156,8 +162,12 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
       SELECT o.id, o.client_id, o.status, o.title,
         ${CLIENT_NAME} AS client_name,
         c.pendiente_validacion AS client_pending_validation,
-        COALESCE(c.phone, c.mobile, c.cellular) AS client_phone,
+        COALESCE(c.phone, c.cellular) AS client_phone,
         (SELECT count(*) FROM bans b WHERE b.client_id = o.client_id)::int AS ban_count,
+        (SELECT string_agg(DISTINCT b.ban_number::text, ', ' ORDER BY b.ban_number::text)
+           FROM bans b
+          WHERE b.client_id = o.client_id
+            AND NULLIF(TRIM(b.ban_number::text),'') IS NOT NULL) AS ban_numbers,
         (SELECT count(*) FROM subscribers s JOIN bans b ON b.id = s.ban_id WHERE b.client_id = o.client_id)::int AS subscriber_count,
         COALESCE(sp.name,'Sin asignar') AS vendor_name,
         COALESCE((SELECT json_object_agg(t.pk, t.jb) FROM (

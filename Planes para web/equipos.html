@@ -1,0 +1,535 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business — Lista de Equipos PYMES</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);
+  min-height:100vh;
+  color:#e2e8f0;
+}
+
+/* ── HEADER ── */
+.header{
+  background:rgba(220,38,38,0.9);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  padding:14px 24px;
+  display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:100;
+}
+.brand-logo{font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff}
+.brand-sub{color:rgba(255,255,255,0.8);font-size:13px;margin-top:1px}
+.header-search{
+  margin-left:auto;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:8px;padding:8px 14px;
+}
+.header-search input{
+  background:none;border:none;outline:none;
+  color:#fff;font-size:14px;width:220px;
+}
+.header-search input::placeholder{color:rgba(255,255,255,0.6)}
+
+/* ── NAV ── */
+.nav{
+  background:rgba(15,23,42,0.7);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:0 24px;
+  display:flex;gap:4px;overflow-x:auto;
+}
+.nav a{
+  color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;
+  padding:11px 14px;
+  border-bottom:2px solid transparent;
+  text-decoration:none;white-space:nowrap;
+  transition:color .2s,border-color .2s;
+}
+.nav a:hover{color:#fff}
+.nav a.active{color:#38bdf8;border-bottom-color:#38bdf8}
+
+/* ── FILTROS ── */
+.filters{
+  padding:16px 24px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.filter-group{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  width:100%;
+}
+.filter-label{
+  min-width:70px;
+  color:rgba(255,255,255,0.45);
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.filter-search{
+  flex:1;min-width:280px;
+  display:flex;align-items:center;gap:9px;
+  border:1px solid rgba(56,189,248,0.28);
+  background:rgba(15,23,42,0.72);
+  border-radius:12px;
+  padding:10px 12px;
+}
+.filter-search input{
+  width:100%;border:0;outline:0;background:transparent;
+  color:#f8fafc;font-size:14px;
+}
+.filter-search input::placeholder{color:rgba(226,232,240,0.48)}
+.filter-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.7);
+  font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .2s;
+  white-space:nowrap;
+}
+.filter-btn:hover{background:rgba(255,255,255,0.1);color:#fff}
+.filter-btn.active{
+  background:rgba(56,189,248,0.2);
+  border-color:rgba(56,189,248,0.5);
+  color:#38bdf8;
+}
+.filter-count{
+  margin-left:auto;
+  font-size:12px;color:rgba(255,255,255,0.4);
+  padding:0 8px;
+}
+
+/* ── CONTAINER ── */
+.container{max-width:1400px;margin:0 auto;padding:0 24px 40px}
+
+/* ── SECCIÓN ── */
+.section{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:16px;
+  margin-bottom:20px;
+  overflow:hidden;
+}
+.section-header{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 20px;
+  background:rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  cursor:pointer;user-select:none;
+}
+.section-header h2{font-size:15px;font-weight:700;color:#f1f5f9;flex:1}
+.section-header .count{
+  background:rgba(56,189,248,0.15);
+  color:#38bdf8;
+  font-size:11px;font-weight:700;
+  padding:2px 9px;border-radius:99px;
+}
+.section-icon{font-size:18px}
+.toggle-icon{color:rgba(255,255,255,0.4);font-size:12px;transition:transform .2s}
+.section.collapsed .toggle-icon{transform:rotate(-90deg)}
+.section.collapsed .section-body{display:none}
+
+/* ── TABLA ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  background:rgba(0,0,0,0.2);
+  padding:10px 14px;
+  text-align:left;
+  color:#64748b;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.5px;
+  white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.03)}
+td{padding:10px 14px;vertical-align:middle}
+
+.code{font-family:monospace;font-size:12px;color:#94a3b8}
+.sap{font-size:10px;color:#475569;margin-top:2px}
+.modelo-name{font-weight:600;color:#f1f5f9;font-size:13px}
+.fuera{font-size:10px;color:#ef4444;margin-top:2px}
+.equipo-img{width:56px;height:56px;object-fit:contain;background:#fff;border-radius:9px;padding:4px;display:block}
+.equipo-img-empty{width:56px;height:56px;border-radius:9px;border:1px dashed rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#64748b;font-size:11px}
+
+.marca-badge{
+  display:inline-block;padding:3px 10px;border-radius:6px;
+  font-size:11px;font-weight:600;
+}
+.marca-samsung{background:rgba(20,110,255,0.2);color:#60a5fa}
+.marca-apple{background:rgba(200,200,200,0.15);color:#cbd5e1}
+.marca-motorola{background:rgba(255,100,0,0.2);color:#fb923c}
+.marca-jbl{background:rgba(255,200,0,0.2);color:#fcd34d}
+.marca-beats{background:rgba(220,38,38,0.2);color:#f87171}
+.marca-otro{background:rgba(100,116,139,0.2);color:#94a3b8}
+
+.price{font-weight:700;color:#f1f5f9;white-space:nowrap}
+.price-gratis{color:#22c55e;font-weight:700}
+.price-na{color:#334155}
+
+.mens-val{color:#f1f5f9}
+.mens-na{color:#334155}
+
+/* ── POSPAGO PLAN SELECTOR ── */
+.plan-selector{
+  display:flex;align-items:center;gap:8px;padding:12px 20px;
+  background:rgba(0,0,0,0.15);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  flex-wrap:wrap;
+}
+.plan-selector label{font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.plan-btn{
+  padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);color:#94a3b8;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.plan-btn:hover{background:rgba(56,189,248,0.1);color:#38bdf8;border-color:rgba(56,189,248,0.3)}
+.plan-btn.active{background:rgba(56,189,248,0.2);border-color:rgba(56,189,248,0.4);color:#38bdf8}
+
+/* ── LOADING / ERROR ── */
+.loading{text-align:center;padding:80px 20px;color:#475569}
+.loading p{margin-top:12px;font-size:14px}
+.error-box{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+  border-radius:12px;padding:24px;margin:20px 0;
+  color:#fca5a5;text-align:center;
+}
+.no-results{text-align:center;padding:60px 20px;color:#475569;font-size:14px}
+
+footer{
+  text-align:center;padding:24px;
+  font-size:12px;color:#334155;
+  border-top:1px solid rgba(255,255,255,0.04);
+  margin-top:20px;
+}
+
+/* Tema oscuro vivo, sin texto blanco puro */
+html{font-size:100%}
+body{
+  font-size:16px;
+  background:#0b0d12;
+  color:#d6cfc4;
+  border:3px solid #10b981;
+  border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1;
+}
+.header{
+  background:#c81e28;
+  border-bottom:2px solid #ffb703;
+}
+.brand-logo,.brand-sub,.header-search input,.nav a:hover,
+.section-header h2,.modelo-name,.price,.mens-val{
+  color:#e2d8c8;
+}
+.header-search,.filter-search{
+  background:#171b22;
+  border-color:#6ee7f9;
+}
+.nav,.filters{
+  background:#151821;
+  border-bottom:1px solid rgba(110,231,249,.24);
+}
+.filter-label,.filter-count,thead th,.code,.sap,footer{
+  color:#a99f92;
+}
+.filter-btn{
+  background:#1b202a;
+  color:#cec4b7;
+  border-color:rgba(45,212,191,.42);
+}
+.filter-btn:hover{
+  background:#252b36;
+  color:#eadfce;
+  border-color:#34d399;
+}
+.filter-btn.active{
+  background:#073b33;
+  border-color:#2dd4bf;
+  color:#c9f7ec;
+}
+.section{
+  background:#171b22;
+  border:1px solid rgba(45,212,191,.62);
+  box-shadow:0 0 0 1px rgba(139,92,246,.18),0 18px 34px rgba(0,0,0,.28);
+}
+.section:nth-child(2n){border-color:rgba(139,92,246,.55)}
+.section:nth-child(3n){border-color:rgba(34,211,238,.55)}
+.section-header{
+  background:#1f2530;
+  border-bottom-color:rgba(45,212,191,.34);
+}
+thead th{
+  background:#12161d;
+  border-bottom:1px solid rgba(45,212,191,.42);
+}
+tbody tr{
+  border:1px solid rgba(45,212,191,.20);
+}
+tbody tr:hover{background:#202734;border-color:rgba(45,212,191,.55)}
+.no-results,.loading{color:#9fb0c3}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="brand-logo">CLARO</div>
+    <div class="brand-sub">Lista de Equipos — PYMES / Corporativo</div>
+  </div>
+  <div class="header-search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar equipo, marca, codigo...">
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html" class="active">Lista de Equipos</a>
+  <a href="servicios.html">Servicios</a>
+  <a href="oferta-const.html">Oferta const.</a>
+  <a href="ofertas.html">Ofertas</a>
+</nav>
+
+<div class="filters">
+  <div class="filter-group">
+    <span class="filter-label">Buscar</span>
+    <label class="filter-search">
+      <span>🔎</span>
+      <input type="text" id="filterSearchInput" placeholder="Buscar por modelo, marca, codigo o SAP...">
+    </label>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Categoria</span>
+    <button class="filter-btn category-filter active" data-filter="all">Todos</button>
+    <button class="filter-btn category-filter" data-filter="celular">Celulares</button>
+    <button class="filter-btn category-filter" data-filter="modem">Modems & MiFi</button>
+    <button class="filter-btn category-filter" data-filter="tablet">Tablets & iPads</button>
+    <button class="filter-btn category-filter" data-filter="pospago">Pospago 2 Anos</button>
+    <button class="filter-btn category-filter" data-filter="accesorio">Accesorios</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Marca</span>
+    <button class="filter-btn brand-filter active" data-brand="all">Todas</button>
+    <button class="filter-btn brand-filter" data-brand="samsung">Samsung</button>
+    <button class="filter-btn brand-filter" data-brand="apple">iPhone / Apple</button>
+    <button class="filter-btn brand-filter" data-brand="motorola">Motorola</button>
+    <button class="filter-btn brand-filter" data-brand="jbl">JBL</button>
+    <button class="filter-btn brand-filter" data-brand="beats">Beats</button>
+    <button class="filter-btn brand-filter" data-brand="otro">Otros</button>
+  </div>
+  <span class="filter-count" id="filterCount"></span>
+</div>
+
+<div class="container" id="container">
+  <div class="loading">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" style="animation:spin 1s linear infinite"><style>@keyframes spin{to{transform:rotate(360deg)}}</style><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    <p>Cargando lista de equipos...</p>
+  </div>
+</div>
+
+<footer>Claro Puerto Rico — Lista de Equipos PYMES / Corporativo &middot; Herramienta interna para vendedores</footer>
+
+<script>
+const API = '/api/equipos-lista';
+
+let allEquipos = [];
+let activeCategory = 'all';
+let activeBrand = 'all';
+let activePlan = 0;
+let searchText = '';
+
+const PLANES = [0,9.99,14.99,19.99,29.99,39.99,49.99,59.99,69.99,79.99,99.99];
+const PLAN_LABELS = {0:'Sin Contrato',9.99:'$9.99',14.99:'$14.99',19.99:'$19.99',29.99:'$29.99',39.99:'$39.99',49.99:'$49.99',59.99:'$59.99',69.99:'$69.99',79.99:'$79.99',99.99:'$99.99'};
+
+const CAT_CONFIG = {
+  celular:   {label:'Celulares',       icon:'📱', cols:[20,24,30,36]},
+  modem:     {label:'Módems & MiFi',   icon:'📡', cols:[12,24,30,36]},
+  tablet:    {label:'Tablets & iPads', icon:'📟', cols:[12,24,30,36]},
+  pospago:   {label:'Pospago 2 Años',  icon:'📋', cols:null},
+  accesorio: {label:'Accesorios',      icon:'🎧', cols:[3,6,12,24]},
+};
+const CAT_ORDER = ['celular','modem','tablet','pospago','accesorio'];
+
+function money(v){
+  if(v===null||v===undefined) return '<span class="price-na">—</span>';
+  const n=Number(v);
+  if(!isFinite(n)) return '<span class="price-na">—</span>';
+  if(n===0) return '<span class="price-gratis">GRATIS</span>';
+  return `$${n.toFixed(2)}`;
+}
+
+function marcaBadge(m){
+  const cls=['samsung','apple','motorola','jbl','beats'].includes(m)?`marca-${m}`:'marca-otro';
+  return `<span class="marca-badge ${cls}">${m.charAt(0).toUpperCase()+m.slice(1)}</span>`;
+}
+
+function equipoImg(e){
+  return e.image_url ? `<img class="equipo-img" src="${e.image_url}" alt="${(e.modelo||'').replace(/"/g,'&quot;')}">` : '<div class="equipo-img-empty">Sin foto</div>';
+}
+
+function parseArr(v){
+  if(Array.isArray(v)) return v;
+  try{return JSON.parse(v)||[];}catch{return [];}
+}
+
+function getFiltered(){
+  return allEquipos.filter(e=>{
+    const cat=e.categoria||'';
+    const mar=e.marca||'';
+    if(activeCategory!=='all'&&cat!==activeCategory) return false;
+    if(activeBrand!=='all'){
+      if(activeBrand==='otro'){
+        if(['samsung','apple','motorola','jbl','beats'].includes(mar)) return false;
+      }else if(mar!==activeBrand) return false;
+    }
+    if(!searchText) return true;
+    return (e.modelo||'').toLowerCase().includes(searchText)||(e.item_code||'').toLowerCase().includes(searchText)||(e.marca||'').toLowerCase().includes(searchText);
+  });
+}
+
+function renderMensCols(e, cols){
+  const mens=parseArr(e.mensualidades);
+  const byM={};mens.forEach(m=>{byM[Number(m.meses)]=m.monto;});
+  return cols.map(c=>{
+    const v=byM[c];
+    return `<td class="price">${v!=null?money(v):'<span class="price-na">N/A</span>'}</td>`;
+  }).join('');
+}
+
+function renderCatSection(cat, items){
+  const conf=CAT_CONFIG[cat]||{label:cat,icon:'📦',cols:[12,24]};
+  const cols=conf.cols;
+  const heads=cols.map(c=>`<th>${c}m</th>`).join('');
+  const rows=items.map(e=>`<tr>
+    <td>${equipoImg(e)}</td>
+    <td><div class="code">${e.item_code}</div>${e.sap_code?`<div class="sap">SAP ${e.sap_code}</div>`:''}</td>
+    <td><div class="modelo-name">${(e.modelo||'').replace(/\*/g,'').trim()}</div>${e.fuera_portafolio?'<div class="fuera">Fuera de portafolio</div>':''}</td>
+    <td>${marcaBadge(e.marca||'otro')}</td>
+    <td class="price">${money(e.precio_regular)}</td>
+    ${renderMensCols(e,cols)}
+  </tr>`).join('');
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Foto</th><th>Código</th><th>Equipo</th><th>Marca</th><th>Precio</th>${heads}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function renderPospago(items){
+  const plan=activePlan;
+  const btns=PLANES.map(p=>`<button class="plan-btn${p===plan?' active':''}" onclick="setPlan(${p})">${PLAN_LABELS[p]}</button>`).join('');
+  const rows=items.map(e=>{
+    const pp=parseArr(e.pospago_precios);
+    const byP={};pp.forEach(p=>{byP[Number(p.plan)]=p.monto;});
+    return `<tr>
+      <td>${equipoImg(e)}</td>
+      <td><div class="code">${e.item_code}</div>${e.sap_code?`<div class="sap">SAP ${e.sap_code}</div>`:''}</td>
+      <td><div class="modelo-name">${(e.modelo||'').replace(/\*/g,'').trim()}</div></td>
+      <td>${marcaBadge(e.marca||'otro')}</td>
+      <td class="price">${money(e.precio_regular)}</td>
+      <td class="price" style="font-size:15px">${byP[plan]!=null?money(byP[plan]):'<span class="price-na">—</span>'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="plan-selector"><label>Plan:</label>${btns}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Foto</th><th>Código</th><th>Equipo</th><th>Marca</th><th>Sin Contrato</th><th>Con Plan</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function buildSection(cat, items){
+  const conf=CAT_CONFIG[cat]||{label:cat,icon:'📦'};
+  const body=cat==='pospago'?renderPospago(items):renderCatSection(cat,items);
+  return `<div class="section" id="sec-${cat}">
+    <div class="section-header" onclick="toggleSec('${cat}')">
+      <span class="section-icon">${conf.icon}</span>
+      <h2>${conf.label}</h2>
+      <span class="count">${items.length}</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="section-body">${body}</div>
+  </div>`;
+}
+
+function renderAll(){
+  const filtered=getFiltered();
+  document.getElementById('filterCount').textContent=`${filtered.length} equipo${filtered.length!==1?'s':''}`;
+  const container=document.getElementById('container');
+  if(!filtered.length){container.innerHTML='<div class="no-results">No se encontraron equipos con ese filtro o búsqueda.</div>';return;}
+  const groups={};
+  filtered.forEach(e=>{const c=e.categoria||'otro';if(!groups[c])groups[c]=[];groups[c].push(e);});
+  container.innerHTML=CAT_ORDER.filter(c=>groups[c]?.length).map(c=>buildSection(c,groups[c])).join('');
+}
+
+function toggleSec(cat){
+  const s=document.getElementById(`sec-${cat}`);
+  if(s) s.classList.toggle('collapsed');
+}
+
+function setPlan(p){
+  activePlan=Number(p);
+  const items=getFiltered().filter(e=>e.categoria==='pospago');
+  const sec=document.getElementById('sec-pospago');
+  if(sec) sec.querySelector('.section-body').innerHTML=renderPospago(items);
+}
+
+async function loadEquipos(){
+  try{
+    const res=await fetch(API);
+    const json=await res.json();
+    if(!res.ok||json.ok===false) throw new Error(json.error||'Error al cargar');
+    allEquipos=Array.isArray(json.data)?json.data:[];
+    renderAll();
+  }catch(err){
+    document.getElementById('container').innerHTML=`<div class="error-box"><p>No se pudo cargar la lista de equipos.</p><p style="margin-top:8px;font-size:12px;opacity:.7">${err.message}</p></div>`;
+    document.getElementById('filterCount').textContent='';
+  }
+}
+
+document.querySelectorAll('.category-filter').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.category-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCategory=btn.dataset.filter;
+    renderAll();
+  });
+});
+
+document.querySelectorAll('.brand-filter').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.brand-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeBrand=btn.dataset.brand;
+    renderAll();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input',e=>{
+  searchText=e.target.value.toLowerCase().trim();
+  document.getElementById('filterSearchInput').value=e.target.value;
+  renderAll();
+});
+
+document.getElementById('filterSearchInput').addEventListener('input',e=>{
+  searchText=e.target.value.toLowerCase().trim();
+  document.getElementById('searchInput').value=e.target.value;
+  renderAll();
+});
+
+loadEquipos();
+</script>
+</body>
+</html>
+
+
+
+
+

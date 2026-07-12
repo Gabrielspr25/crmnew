@@ -14,14 +14,14 @@ export const clientsRealRouter = Router();
 
 // ---- Definiciones de cada "tarjeta" (copiadas del sistema viejo, ya validadas) ----
 const VALID_CLIENT_NAME_SQL = `(c.name IS NOT NULL AND c.name <> '' AND c.name <> 'NULL')`;
-// "En seguimiento" visual = follow_up_prospects activo + cliente valido + BAN.
+// "En seguimiento" visual = oportunidad activa en Asana/SOV2.
 const ACTIVE_FOLLOW_UP_EXISTS_SQL = `
   EXISTS (
     SELECT 1
-    FROM follow_up_prospects f
-    WHERE f.client_id = c.id
-      AND f.completed_date IS NULL
-      AND COALESCE(f.is_active::text, 'true') IN ('true', '1', 't')
+    FROM sales_opportunities so
+    WHERE so.client_id = c.id
+      AND so.archived_at IS NULL
+      AND COALESCE(LOWER(so.status),'activa') = 'activa'
   )`;
 const ACTIVE_CLIENT_RELATION_SQL = `
   EXISTS (SELECT 1 FROM bans b
@@ -36,10 +36,7 @@ const PYMES_CLIENT_SQL = `
           AND LOWER(COALESCE(b.account_type,'')) LIKE '%pyme%')`;
 const INCOMPLETE_CLIENT_SQL = `((c.name IS NULL OR c.name='' OR c.name='NULL') OR (${PYMES_CLIENT_SQL}))`;
 const ACTIVE_CLIENT_SQL = `(${VALID_CLIENT_NAME_SQL} AND ${ACTIVE_CLIENT_RELATION_SQL} AND NOT (${ACTIVE_FOLLOW_UP_EXISTS_SQL}))`;
-const FOLLOWING_CLIENT_SQL = `(
-  COALESCE(NULLIF(TRIM(c.name),''), NULLIF(TRIM(c.business_name),'')) IS NOT NULL
-  AND ${ACTIVE_FOLLOW_UP_EXISTS_SQL}
-  AND EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id))`;
+const FOLLOWING_CLIENT_SQL = `(${ACTIVE_FOLLOW_UP_EXISTS_SQL})`;
 const CANCELLED_CLIENT_SQL = `(
   ${VALID_CLIENT_NAME_SQL}
   AND EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
@@ -91,7 +88,9 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
     await conn.query('SET LOCAL search_path TO public'); // leer tablas REALES
 
     const clients = await conn.query(
-      `SELECT c.id, c.name, c.business_name, c.company, c.phone, c.mobile, c.cellular,
+      `SELECT c.id, c.name, c.business_name, c.business_name AS company,
+              c.owner_name, c.contact_person,
+              c.phone, c.cellular AS mobile, c.cellular,
               c.city, c.source AS base, c.created_at, c.salesperson_id,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id) AS ban_count,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id AND COALESCE(LOWER(b.status::text),'') IN ('a','activo','active')) AS active_ban_count,
@@ -122,10 +121,10 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
          JOIN subscribers s_metric ON s_metric.ban_id = b_metric.id
          WHERE ${ACTIVE_SUB_STATUS('s_metric')})
        SELECT
-        (SELECT COUNT(l.subscriber_id)::int FROM scoped_lines l JOIN clients c ON c.id=l.client_id WHERE ${ACTIVE_CLIENT_SQL})    AS active_count,
-        (SELECT COUNT(l.subscriber_id)::int FROM scoped_lines l JOIN clients c ON c.id=l.client_id WHERE ${CANCELLED_CLIENT_SQL}) AS cancelled_count,
-        (SELECT COUNT(l.subscriber_id)::int FROM scoped_lines l JOIN clients c ON c.id=l.client_id WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
-        (SELECT COUNT(l.subscriber_id)::int FROM scoped_lines l JOIN clients c ON c.id=l.client_id WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL}) AS active_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${CANCELLED_CLIENT_SQL}) AS cancelled_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
         json_build_object(
           'active',     ${lineMetricJson(ACTIVE_CLIENT_SQL)},
           'cancelled',  ${lineMetricJson(CANCELLED_CLIENT_SQL)},
@@ -150,9 +149,10 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
     await conn.query('BEGIN');
     await conn.query('SET LOCAL search_path TO public');
     const c = await conn.query(
-      `SELECT c.id, c.name, c.business_name, c.company, c.email,
-              c.phone, c.additional_phone, c.mobile, c.cellular,
-              c.address, c.city, c.zip_code, c.source AS base, c.created_at,
+      `SELECT c.id, c.name, c.business_name, c.business_name AS company, c.email,
+              c.owner_name, c.contact_person,
+              c.phone, c.additional_phone, c.cellular AS mobile, c.cellular,
+              c.address, c.city, c.zip_code, c.tax_id, c.source AS base, c.created_at,
               c.pendiente_validacion, c.salesperson_id, sp.name AS vendor_name,
               (SELECT so.id FROM sales_opportunities so
                  WHERE so.client_id = c.id AND so.archived_at IS NULL
@@ -161,13 +161,32 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
         WHERE c.id = $1`, [req.params.id]);
     if (!c.rows[0]) { await conn.query('ROLLBACK'); return res.status(404).json({ error: 'Cliente no existe' }); }
     const bans = await conn.query(
-      `SELECT id, ban_number, account_type, status FROM bans WHERE client_id = $1 ORDER BY ban_number`, [req.params.id]);
+      `SELECT id, ban_number, account_type, status, credit_class, activation_date, source
+         FROM bans WHERE client_id = $1 ORDER BY ban_number`, [req.params.id]);
     const subs = await conn.query(
       `SELECT s.id, s.phone, s.plan, s.monthly_value, s.status, s.line_kind, s.line_type,
-              s.contract_end_date, s.equipment, b.ban_number, b.id AS ban_id
+              s.activation_date, s.contract_start_date, s.contract_term, s.remaining_payments, s.contract_end_date,
+              s.cancel_reason, s.tango_ventaid, s.equipment, s.product_type, s.price_code, s.item_id, s.payments_made,
+              b.ban_number, b.id AS ban_id
          FROM subscribers s JOIN bans b ON b.id = s.ban_id
         WHERE b.client_id = $1 ORDER BY b.ban_number, s.phone`, [req.params.id]);
-    // Ventas del cliente = sus comisiones (Tango)
+    let ventasTango = { rows: [] };
+    const salesTable = await conn.query(`
+      SELECT COALESCE(
+        to_regclass('ventaspro_nuevo.sales')::text,
+        to_regclass('public.sales')::text
+      ) AS table_name`);
+    if (salesTable.rows[0]?.table_name) {
+      ventasTango = await conn.query(
+        `SELECT id, tango_venta_id, ban_number, phone, product_key, ventatipo_nombre,
+                monthly_value, company_commission, vendor_commission, vendor_name,
+                sale_date, synced, paid, paid_at, paid_by, review_reason, created_at
+           FROM ${salesTable.rows[0].table_name}
+          WHERE client_id = $1
+             OR ban_number IN (SELECT ban_number FROM bans WHERE client_id = $1)
+          ORDER BY sale_date DESC NULLS LAST, created_at DESC`, [req.params.id]);
+    }
+    // Comisiones del cliente = subscriber_reports sincronizados/validados desde Tango
     const ventas = await conn.query(
       `SELECT b.ban_number, s.phone, to_char(sr.report_month,'YYYY-MM') AS mes,
               s.monthly_value, sr.company_earnings, sr.vendor_commission, sr.validation_status
@@ -188,8 +207,22 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
           ORDER BY n.created_at DESC`, [req.params.id]);
       historial = h.rows;
     }
+    let comparativas = { rows: [] };
+    const comparativasTable = await conn.query(`
+      SELECT COALESCE(
+        to_regclass('ventaspro_nuevo.comparativas')::text,
+        to_regclass('public.comparativas')::text
+      ) AS table_name`);
+    if (comparativasTable.rows[0]?.table_name) {
+      comparativas = await conn.query(
+        `SELECT id, client_id, name, current_total, offer_total, created_by, created_at
+           FROM ${comparativasTable.rows[0].table_name}
+          WHERE client_id = $1
+          ORDER BY created_at DESC
+          LIMIT 50`, [req.params.id]);
+    }
     await conn.query('COMMIT');
-    res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows, ventas: ventas.rows, historial });
+    res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows, ventas: ventas.rows, ventas_tango: ventasTango.rows, historial, comparativas: comparativas.rows });
   } catch (e) {
     try { await conn.query('ROLLBACK'); } catch {}
     console.error('[clients-real/:id]', e.message);

@@ -1,0 +1,404 @@
+LISTADO PLANES ESTRUCTURA DE NEGOCIOS VIGENTE @2024
+REV. 02.26.2024
+Minuto 
+Adicional      0 MESES     12 MESES    24 MESES     0 MESES     12 MESES    24 MESES
+A862         BUS 500 MED BMS LP                                                                              $19.99              B500BMSLP          COBRE/VRAD         $0.03            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A863         BUS 500 MED BMS LADD                                                                        $19.99              B500BMSAD         COBRE/VRAD         $0.03             $60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A864         BUS 500 MED BML LP                                                                              $19.99              B500BMLLP          COBRE/VRAD         $0.03            $130.00         $65.00           $0.00                -                     -                     -                 $200.00
+A865         BUS 500 MED BML LADD                                                                         $19.99              B500BMLAD          COBRE/VRAD         $0.03             $65.00          $32.50           $0.00                -                     -                     -                 $200.00
+A866         GPON BUS 500 MED BMS LP                                                                   $19.99             GB500BMSLP                GPON                $0.03            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A867         GPON BUS 500 MED BMS LADD                                                             $19.99             GB500BMSAD               GPON                $0.03             $60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A868         GPON BUS 500 MED BML LP                                                                   $19.99             GB500BMLLP                GPON                $0.03            $130.00         $65.00           $0.00                -                     -                     -                $200.00
+A869         GPON BUS 500 MED BML LADD                                                             $19.99             GB500BMLAD               GPON                $0.03             $65.00          $32.50           $0.00                -                     -                     - 
+$200.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+7200         BUS PR ILIM BMS LP                                                                                 $29.99               BPRBMSLP           COBRE/VRAD          PR - ILIM
+US - $0.03
+$120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+7203         BUS PR ILIM BML LP                                                                                 $29.99                BPRBMLLP           COBRE/VRAD          PR - ILIM
+US - $0.03
+$130.00         $65.00           $0.00                -                     -                     -                 $200.00
+6991         PR ILIMITADO L. ADD BMS                                                                      $24.99               PRBMSADD           COBRE/VRAD          PR - ILIM
+US - $0.03
+$60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+6992         PR ILIMITADO L. ADD BML                                                                       $24.99               PRBMLADD           COBRE/VRAD          PR - ILIM
+US - $0.03
+$65.00          $32.50           $0.00                -                     -                     -                 $200.00
+6644         BUS LD US ILIMITADO  (POR LíNEA)                                                                                  $5.00               USAUNLBUS         COBRE/VRAD          ILIM                 -                     -                     -                     -                     -                     -                       - 
+A147         GPON BUS PR ILIM LP BMS                                                                      $29.99             G-BPRBMSLP                GPON                PR - ILIM
+US - $0.03
+$120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A148         GPON BUS PR ILIM LP BML                                                                      $29.99             G-BPRBMLLP                GPON                PR - ILIM
+US - $0.03
+$130.00         $65.00           $0.00            $0.00            $0.00            $0.00            $200.00
+A149         GPON BUS PR ILIM ADD BMS                                                                  $24.99             G-BPRADBMS               GPON                PR - ILIM
+US - $0.03
+$60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A150         GPON BUS PR ILIM ADD BML                                                                  $24.99             G-BPRADBML               GPON                PR - ILIM
+US - $0.03
+$65.00          $32.50           $0.00            $0.00            $0.00            $0.00            $200.00
+A151         GPON BUS LD US ILIMITADO  (POR LíNEA)                                                                  $5.00              G-BLDUSUNL                GPON                 ILIM                 -                     -                     -                     -                     -                     -                       - 
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+A801         BUS TELE ENTRY SERV (BMS ONLY)                                                        $19.99                 BTENTRY             COBRE/VRAD
+ILIM/BLQ US
+$120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A802         GPON BUS TELE ENTRY SERV (BMS ONLY)                                            $19.99               G-BTENTRY                 GPON
+ILIM/BLQ US
+$120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $200.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+A734         BUS REMOTE CALL FWD PR NUM 6M (6 MESES)                                 $24.99                 BRCFPR6             COBRE/VRAD
+ILIM/BLQ US
+ -                     -                $0.00                -                     -                     -                  $50.00
+A735         BUS REMOTE CALL FWD PR NUM 3M (3 MESES)                                 $24.99                 BRCFPR3             COBRE/VRAD
+ILIM/BLQ US
+ -               $25.00               -                     -                     -                     -                  $50.00
+A736         BUS REMOTE CALL FWD PR NUM NC (0 MESES)                                 $24.99                 BRCFPR0             COBRE/VRAD
+ILIM/BLQ US
+$50.00               -                     -                     -                     -                     -                  $50.00
+A761         GPON BUS REMOTE CALL FWD PR NUM 6M (6 MESES)                               $24.99               G-BRCFPR6                 GPON
+ILIM/BLQ US
+ -                     -                $0.00                -                     -                     -                  $50.00
+A762         GPON BUS REMOTE CALL FWD PR NUM 3M (3 MESES)                               $24.99               G-BRCFPR3                 GPON
+ILIM/BLQ US
+ -               $25.00               -                     -                     -                     -                  $50.00
+A763         GPON BUS REMOTE CALL FWD PR NUM NC (0 MESES)                                $24.99               G-BRCFPR0                 GPON
+ILIM/BLQ US
+$50.00               -                     -                     -                     -                     -                  $50.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+A737         BUS REMOTE CALL FWD US NUM 6M (6 MESES)                                $29.99                 BRCFUS6             COBRE/VRAD           ILIM                   -                     -                $0.00                -                     -                     -                  $50.00
+A738         BUS REMOTE CALL FWD US NUM 3M (3 MESES)                                $29.99                 BRCFUS3             COBRE/VRAD           ILIM                   -               $25.00               -                     -                     -                     -                  $50.00
+A739         BUS REMOTE CALL FWD US NUM NC (0 MESES)                                 $29.99                 BRCFUS0             COBRE/VRAD           ILIM              $50.00               -                     -                     -                     -                     -                  $50.00
+A798         GPON BUS REMOTE CALL FWD US NUM 6M (6 MESES)                               $29.99               G-BRCFUS6                 GPON                 ILIM                   -                     -                $0.00                -                     -                     -                  $50.00
+A799         GPON BUS REMOTE CALL FWD US NUM 3M (3 MESES)                               $29.99               G-BRCFUS3                 GPON                 ILIM                   -               $25.00               -                     -                     -                     -                  $50.00
+A800         GPON BUS REMOTE CALL FWD US NUM NC (0 MESES)                                $29.99               G-BRCFUS0                 GPON                 ILIM              $50.00               -                     -                     -                     -                     -                  $50.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+6995         PQT 5 PR/US ILIMITADO LP BMS                                                           $149.99              5PRUSBMS           COBRE/VRAD           ILIM            $360.00        $180.00          $0.00          $200.00        $100.00          $0.00            $200.00
+6996         PQT 5 PR/US ILIMITADO LP BML                                                           $149.99              5PRUSBML           COBRE/VRAD           ILIM            $390.00        $195.00          $0.00                -                     -                     -                 $200.00
+6999         PR/US ILIMITADO L. ADIC PQT BMS                                                        $0.00               ADPRUSBMS          COBRE/VRAD           ILIM               $0.00            $0.00            $0.00                -                     -                     -                 $200.00
+7033         PR/US ILIMITADO L. ADIC PQT BML                                                        $0.00               ADPRUSBML          COBRE/VRAD           ILIM               $0.00            $0.00            $0.00                -                     -                     -                 $200.00
+A152         GPON BUS PR/US ILIM PQT 5 BMS                                                        $149.99            G-BMS5PRUS                GPON                 ILIM            $360.00        $180.00          $0.00          $200.00        $100.00          $0.00            $200.00
+A153         GPON BUS PR/US ILIM PQT 5 BML                                                        $149.99            G-BML5PRUS                GPON                 ILIM            $390.00        $195.00          $0.00            $0.00            $0.00            $0.00            $200.00
+A154         GPON BUS PR/US ILIM PQT ADD BMS                                                    $0.00              G-BMSADPQT               GPON                 ILIM               $0.00            $0.00            $0.00            $0.00            $0.00            $0.00            $200.00
+A155         GPON BUS PR/US ILIM PQT ADD BML                                                    $0.00              G-BMLADPQT               GPON                 ILIM               $0.00            $0.00            $0.00            $0.00            $0.00            $0.00            $200.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+A870         BUS PRUS ILIM + 5M/1M                                                                         $29.99                 BPRU5M             COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A871         BUS PRUS ILIM + 8M/1M                                                                         $32.99                 BPRU8M             COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A872         BUS PRUS ILIM + 10M/1M                                                                       $35.99                BPRU10M            COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A873         BUS PRUS ILIM + 16M/1M                                                                       $38.99                BPRU16M            COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A874         BUS PRUS ILIM + 20M/1M -  COBRE                                                            $44.99               BPRU20M1           COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A875         BUS PRUS ILIM + 20M/3M -  VRAD                                                              $44.99               BPRU20M3           COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A876         BUS PRUS ILIM + 30M/3M                                                                       $47.99                BPRU30M            COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A877         BUS PRUS ILIM + 50M/5M                                                                       $49.99                BPRU50M            COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+A878         BUS PRUS ILIM + 100M/15M ( 2L) BUNDLE                                         $79.99                         -                    COBRE/VRAD           ILIM            $120 p/l        $60 p/l           $0.00           $40 p/l         $20 p/l           $0.00
+$260+$200 p/l
+A878         BUS PRUS ILIM + 100M/15M                                                                  $54.99               BPRU100M           COBRE/VRAD           ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00            $260.00
+GPON
+COBRE/VRAD
+Activación (Jack)
+Penalidad
+Código                                  Planes Ilimitado PR - Telefonía                                    Precio                Alfa Code              Tecnología
+Instalación
+Código                                      Planes Medidos - Telefonía                                       Precio                Alfa Code              Tecnología
+Instalación
+ Activación (Jack)
+Penalidad
+Tecnología
+Instalación                                          Activación (Jack)
+Penalidad
+Código                     Planes Tele Entry Service Ilimitado  - Telefonía                     Precio                Alfa Code              Tecnología
+Instalación                                          Activación (Jack)
+Penalidad
+Código                       Planes  Ilimitado PR/US + Internet  - 2 PLAY                        Precio                Alfa Code              Tecnología
+Instalación                                          Activación (Jack)
+Penalidad
+Código                          Planes PQT Ilimitado  PR/US  - Telefonía                           Precio                Alfa Code              Tecnología
+Instalación                                          Activación (Jack)
+Penalidad
+COBRE/VRAD
+COBRE/VRAD
+GPON
+COBRE/VRAD
+GPON
+COBRE/VRAD
+GPON
+COBRE/VRAD
+GPON
+COBRE/VRAD
+GPON
+Código               Planes Remote Call Forward US Ilimitado  - Telefonía                Precio                Alfa Code              Tecnología
+Instalación                                          Activación (Jack)
+Penalidad
+Código               Planes Remote Call Forward PR Ilimitado  - Telefonía                Precio                Alfa Code
+----------------Page (0) Break----------------
+Minuto 
+Adicional      0 MESES     12 MESES    24 MESES     0 MESES     12 MESES    24 MESES
+7107         BUS 2PLAY PR/US ILIM ADD BMS                                                           $25.00               B2PBMSAD           COBRE/VRAD           ILIM              $60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+7108         BUS 2PLAY PR/US ILIM ADD BML                                                           $25.00               B2PBMLAD           COBRE/VRAD           ILIM              $65.00          $32.50           $0.00                -                     -                     -                 $200.00
+A879         GPON BUS PRUS ILIM + 30MB                                                                $47.99              G-BPRU30M                GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A880         GPON BUS PRUS ILIM + 50MB                                                                $49.99              G-BPRU50M                GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A881         GPON BUS PRUS ILIM + 100MB ( 2L) BUNDLE                                    $79.99                         -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A881         GPON BUS PRUS ILIM + 100MB                                                              $54.99             G-BPRU100M               GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A882         GPON BUS PRUS ILIM + 150MB ( 2L) BUNDLE                                    $89.99                         -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A882         GPON BUS PRUS ILIM +  150MB                                                             $64.99             G-BPRU150M               GPON                 ILIM            $120.00        $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A883         GPON BUS PRUS ILIM + 200MB ( 3L) BUNDLE                                   $117.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A883         GPON BUS PRUS ILIM + 200MB                                                              $67.99             G-BPRU200M               GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A884         GPON BUS PRUS ILIM + 300MB ( 3L) BUNDLE                                   $124.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A884         GPON BUS PRUS ILIM +  300MB                                                             $74.99             G-BPRU300M               GPON                 ILIM            $120.00        $60.00          $40.00          $40.00           $0.00            $0.00           $260.00
+A885         GPON BUS PRUS ILIM + 350MB ( 3L) BUNDLE                                   $149.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A885         GPON BUS PRUS ILIM + 350MB                                                              $99.99             G-BPRU350M               GPON                 ILIM            $120.00         $60.00          $40.00          $40.00           $0.00            $0.00           $260.00
+A886         GPON BUS PRUS ILIM + 450MB ( 4L) BUNDLE                                   $179.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A886         GPON BUS PRUS ILIM +  450MB                                                            $104.99           G-BPRU450M               GPON                 ILIM            $120.00        $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A887         GPON BUS PRUS ILIM + 500MB ( 4L) BUNDLE                                   $249.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A887         GPON BUS PRUS ILIM + 500MB                                                             $174.99            G-BPRU500M               GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A888         GPON BUS PRUS ILIM + 650MB ( 4L) BUNDLE                                   $259.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A888         GPON BUS PRUS ILIM +  650MB                                                            $184.99           G-BPRU650M               GPON                 ILIM            $120.00        $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+A889         GPON BUS PRUS ILIM + 1GB ( 4L) BUNDLE                                         $274.99                       -                           GPON                 ILIM          $120.00 p/l    $60.00 p/l        $0.00        $40.00 p/l    $20.00 p/l        $0.00
+$260+$200 p/l
+A889         GPON BUS PRUS ILIM + 1GB                                                                  $199.99             G-BPRU1GB                 GPON                 ILIM            $120.00         $60.00           $0.00           $40.00          $20.00           $0.00           $260.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+A169         GPON BUS 2PLAY PR/US ILIM ADD BMS                                             $25.00             G-BMSADD2P               GPON                 ILIM              $60.00          $30.00           $0.00           $40.00          $20.00           $0.00            $200.00
+A170         GPON BUS 2PLAY PR/US ILIM ADD BML                                              $25.00             G-BMLADD2P               GPON                 ILIM              $65.00          $32.50           $0.00                -                     -                     -                 $200.00
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+PY2ULE       Clarotv+  ULTRA ESENCIAL (21c)                                                             $15.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+PY2ESE       Clarotv+  ESENCIAL (29c)                                                                          $19.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+IP2ESTE       Clarotv+  ESENCIAL +TODO ESPAÑOL (68c)                                           $26.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+IP2BASC2     Clarotv+  BASIC (76c)                                                                                 $55.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+IP2BASC3     Clarotv+  BASIC+ (98c)                                                                              $60.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+PY2SIG       Clarotv+  SIGNATURE (147c)                                                                    $70.99                        - 
+COBRE/VRAD/GPON
+ -                     -                     -                     -               $40.00           $0.00            $0.00
+$200.00 PRORRATEADO
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+REAKNG      REALITY KING                                                                                             $24.99                        -                     VRAD/GPON               -                     -                     -                     -                     -                     -                     -                       - 
+IPLYB         PLAYBOY TV                                                                                                $19.99                        -                     VRAD/GPON               -                     -                     -                     -                     -                     -                     -                       - 
+0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+40942H       1er STB GRATIS CONTRATO 24 MESES                                                    $0.00                   2YROFF
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                     -                 $40.00
+40942H       1er STB GRATIS CONTRATO 12 MESES                                                    $0.00                   1YROFF
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                     -                 $40.00
+40942H       1er STB GRATIS SIN CONTRATO Y CON PENALIDAD                             $40.00                  STBOFF
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                     -                 $40.00
+40942H       STB FULL PRICE CLIENTES CON CONTRATO                                           $40.00                    CASH
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                     -                       - 
+40942H       STB FULL PRICE CLIENTES SIN CONTRATO                                             $40.00                 NOCONT
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                     -                       - 
+40942H       STB FINANCIADO 24 MESES CLIENTES CON CONTRATO                      $40.00                  FINA24
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                     -                $1.67
+Restante de $40.00
+40942H       STB FINANCIADO 12 MESES CLIENTES CON CONTRATO                      $40.00                  FINA12
+COBRE/VRAD/GPON
+7008557              -                     -                     -                     -                $3.33                - 
+Restante de $40.00
+80105H       DONGLE 4K - FULL PRICE CLIENTES CON/SIN CONTRATO                   $30.00                    CASH
+COBRE/VRAD/GPON
+7009940              -                     -                     -                     -                     -                     -                       - 
+80105H       DONGLE 4K - FINANCIADO 24M CLIENTES C/CONTRATO                    $30.00                  FINA24
+COBRE/VRAD/GPON
+7009940              -                     -                     -                     -                     -                $1.25
+Restante de $30.00
+80105H       DONGLE 4K - FINANCIADO 12M CLIENTES C/CONTRATO                    $30.00                  FINA12
+COBRE/VRAD/GPON
+7009940              -                     -                     -                     -                $2.50                - 
+Restante de $30.00
+40941H       1er CONTROL REMOTO GRATIS                                                                $0.00                     CERO
+COBRE/VRAD/GPON
+7008624              -                     -                     -                     -                     -                     -                   $6.00
+40941H       2do CONTROL REMOTO EN ADELANTE (REEMPLAZO)                         $6.00                     CASH
+COBRE/VRAD/GPON
+7008624              -                     -                     -                     -                     -                     -                       - 
+NPVR250     Cloud DVR (250GB) -  1 POR CUENTA, NO POR TV                                       $5.00                 NPVR250
+COBRE/VRAD/GPON
+ -                     -                     -                     -                     -                     -                     -                       - 
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+7448         INCREMENTO UPLOAD  1 Mb                                                                   $5.00                 INTUP1M            COBRE/VRAD              -                     -                    -                     -                     -                     -                     -                       - 
+3241         3 VERTICAL PACK: CID,  3WCALL, TRANSF                                               $5.00               3VERTPACK           COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+2266         CONTRATO DE MANTENIMIENTO                                                            $5.00               BIWMCFTJK          COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+3256         CONTRATO DE MANTENIMIENTO GRATIS                                              $0.00            CONTMANOFF        COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+3229         200 MINUTOS LARGA DISTANCIA  A US                                                  $4.99              LDUS200PCK         COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+3228         HUNTING FEE (AL PILOTO)                                                                        $9.99               HUNTINFEE          COBRE/VRAD              -               $30.00          $30.00          $30.00               -                     -                     -                       - 
+6955         BUS VOICE MAIL                                                                                         $4.99                   BVMAIL              COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9924         VOICE MAIL MAX DSL PLUS COMBO                                                       $0.00                VMBUNDLE          COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+3240         LLAMADAS GRATIS DE FIJO  A MOVIL CLARO                                         $5.00                   FIX2CEL              COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+1186         PLAN MUNDIAL- LDI
+ (NUEVAS TARIFAS CON/SIN CONTRATO)
+$0.00                 MUNDIAL            COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+1187         PLAN WORLDWIDE -LDI 
+(PLANES SIN CONTRATO)
+$0.99              WORLDWIDE         COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+5494         BONO PORTABILIDAD                                                                              -$5.00             BONOPORTIN
+COBRE/VRAD/GPON
+ -                     -                     -                     -                    -                     -                     -                       - 
+7751         BONO PORTABILIDAD PQT 5                                                                  -$25.00           BONOPORT25
+COBRE/VRAD/GPON
+ -                     -                     -                     -                    -                     -                     -                       - 
+7336         AFFINITY 8% PYMES (2016) - 
+4Mb en adelante
+-8%                 AFNTY8BUS          COBRE/VRAD              -                     -                     -                     -                    -                     -                     -                       - 
+9063         PENALIDAD DOWNGRADE INTERNET                                                      OTC-             PENALDOWNG        COBRE/VRAD              -               $40.00          $40.00          $40.00               -                     -                     -                       - 
+Código
+Lineas Adicionales para  Bundles 
+(Bajo los Planes 2Play Ilimitado PR/US)
+Precio                Alfa Code              Tecnología
+Instalación                                         Activación (Jack)
+Penalidad
+GPON
+Código
+Lineas Adicionales para Bundles 
+(Bajo los Planes 2Play Ilimitado PR/US)
+Precio                Alfa Code              Tecnología
+Activación                                         Instalación (Jack)
+Penalidad
+Código                               Complementos Televisión - 1 PLAY                               Precio                Alfa Code
+Equipo
+Penalidad
+Producto TV:  Clarotv+ Negocios
+Código                                       Planes Televisión - 1 PLAY                                       Precio                Alfa Code              Tecnología
+Instalación
+Tecnología
+Activación                                              Instalación
+Penalidad
+Código 
+/ Item 
+Code
+Decodificadores (STB)  Clarotv+ - Televisión                       Precio            Price Code SIF          Tecnología
+Activación                              Equipo - Mensual Financiado
+PenalidadSAP ID
+Instalación
+Penalidad
+COBRE/VRAD
+Código                                  Valores Agregados   - Telefonía                                   Precio                Alfa Code              Tecnología
+Activación
+----------------Page (1) Break----------------
+7242         GPON BUS 3 VERTICAL PACK                                                                    $5.00               G-BPK3VERT                GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7243         GPON BUS LINE MAINTENANCE                                                              $5.00              G-BLNEMANT               GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7244         GPON BUS LINE MAINTENANCE OFF                                                      $0.00              G-BMANTOFF               GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7245         GPON BUS 200 MNTS LD US                                                                     $4.99               G-BLDUS200                GPON                     -                     -                     -                     -                     -                     -                     -                       - 
+7246         GPON BUS HUNTING                                                                                 $9.99              G-BHUNTING                GPON                    -               $30.00          $30.00          $30.00               -                     -                     -                       - 
+7141         GPON BUS VOICE MAIL                                                                             $4.99                 G-BVMAIL                   GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7142         GPON BUS FREE VOICE MAIL                                                                    $0.00                G-BVMFREE                 GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+1186         PLAN MUNDIAL- LDI
+ (NUEVAS TARIFAS CON/SIN CONTRATO)
+$0.00                 MUNDIAL
+COBRE/VRAD/GPON
+ -                     -                     -                     -                    -                     -                     -                       - 
+7247         GPON BUS AFFINITY 8%                                                                           ($0.08)              G-BAFFNITY                 GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7268         GPON BUS INTERNET DOWNGRADE PENALTY                                        OTC              G-BINTDOWN               GPON                    -               $40.00          $40.00          $40.00               -                     -                     -                       - 
+Minuto 
+Adicional      0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES
+2633         5 Verticales Línea  BMS
+ (SÓLO LÍNEAS ILIMITADAS)
+$0.00                                               COBRE/VRAD             -                     -                     -                     -                     -                     -                     -                       - 
+Código incluye:
+9925                                                   CALLER ID BY NAME & NUMBER                                                $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9927                                                                 CALL FORWARD                                                               $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9938                                                                 3 WAY CALLING                                                               $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9926                                                                  CALL WAITING                                                                 $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+3337                                                        ANONYMOUS REJECTION                                                       $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+2635         4 Verticales Línea  BML
+ (SÓLO LÍNEAS ILIMITADAS)
+$0.00                                               COBRE/VRAD             -                     -                     -                     -                     -                     -                     -                       - 
+Código incluye:
+9925                                                   CALLER ID BY NAME & NUMBER                                                $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9927                                                                 CALL FORWARD                                                               $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+9938                                                                 3 WAY CALLING                                                               $0.00
+ -                    COBRE/VRAD              -                     -                     -                     -                     -                     -                     -                       - 
+3337                                                        ANONYMOUS REJECTION                                                       $0.00
+ -                  COBRE/VRAD                -                     -                     -                     -                     -                     -                     -                       - 
+7240         5 Verticales Línea  BMS
+ (SÓLO LÍNEAS ILIMITADAS)
+$0.00              G-BMS5VERT                GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+ Código incluye:
+9925                                                   CALLER ID BY NAME & NUMBER                                                $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+9927                                                                 CALL FORWARD                                                               $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+9938                                                                 3 WAY CALLING                                                               $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+9926                                                                  CALL WAITING                                                                 $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+3337                                                        ANONYMOUS REJECTION                                                       $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+7241         4 Verticales Línea  BML
+ (SÓLO LÍNEAS ILIMITADAS)
+$0.00              G-BML4VERT                GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+Código incluye:
+9925                                                   CALLER ID BY NAME & NUMBER                                                $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+9927                                                                 CALL FORWARD                                                               $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+9938                                                                 3 WAY CALLING                                                               $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+3337                                                        ANONYMOUS REJECTION                                                       $0.00
+ -                           GPON                    -                     -                     -                     -                     -                     -                     -                       - 
+Código                        OSADIA  Términos de Contrato  - Telefonía                     Descuento             Término               Tecnología
+Minuto Adic.
+0 MESES      12 MESES    24 MESES     0 MESES      12 MESES    24 MESES      Penalidad
+EN BLANCO
+NO CONTRATO                                                                                         0% Desc                       - 
+COBRE/VRAD/GPON
+ - 
+0% Desc               0% Desc               0% Desc               0% Desc               0% Desc               0% Desc
+ - 
+3254         CONTRATO DE 1 AÑO                                                                            50% Desc         1YCONTRATO
+COBRE/VRAD/GPON
+ - 
+50% Desc             50% Desc             50% Desc             50% Desc             50% Desc             50% Desc
+ - 
+3255         CONTRATO DE 2 AÑOS                                                                         100% Desc        2YCONTRATO
+COBRE/VRAD/GPON
+ - 
+100% Desc           100% Desc           100% Desc           100% Desc           100% Desc           100% Desc
+ - 
+Activación                                               Instalación
+Penalidad
+COBRE/VRAD
+GPON
+GPON
+Código                       Códigos de Emisión de Órdenes - Telefonía                         Precio                Alfa Code              Tecnología
+----------------Page (2) Break----------------

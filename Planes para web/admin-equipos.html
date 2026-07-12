@@ -1,0 +1,532 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin €” Lista de Precios Equipos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    min-height: 100vh;
+    color: #e2e8f0;
+  }
+
+  .header {
+    background: rgba(220,38,38,0.9);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .header .logo { font-size: 22px; font-weight: 900; letter-spacing: -1px; color: #fff; }
+  .header .subtitle { color: rgba(255,255,255,0.8); font-size: 13px; }
+
+  .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+
+  /* LOGIN */
+  #loginSection {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 400px;
+    margin: 80px auto;
+  }
+  #loginSection h2 { font-size: 20px; margin-bottom: 24px; color: #f1f5f9; }
+
+  /* CARDS */
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .card h3 { font-size: 16px; font-weight: 600; color: #38bdf8; margin-bottom: 18px; }
+
+  /* FORM ELEMENTS */
+  label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+  input[type="text"], input[type="password"], input[type="date"], textarea, select {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    color: #f1f5f9;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, textarea:focus { border-color: #38bdf8; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary   { background: #38bdf8; color: #0f172a; }
+  .btn-success   { background: #22c55e; color: #fff; }
+  .btn-danger    { background: #ef4444; color: #fff; }
+  .btn-ghost     { background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12); }
+  .btn:disabled  { opacity: .4; cursor: not-allowed; }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed rgba(56,189,248,0.4);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    margin-bottom: 20px;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: #38bdf8;
+    background: rgba(56,189,248,0.06);
+  }
+  .upload-zone .icon { font-size: 36px; margin-bottom: 10px; }
+  .upload-zone p { color: #94a3b8; font-size: 14px; }
+  .upload-zone strong { color: #38bdf8; }
+  #fileInput { display: none; }
+
+  /* PROGRESS */
+  .progress-wrap { margin: 12px 0; }
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    border-radius: 99px;
+    transition: width .4s;
+  }
+
+  /* PREVIEW TABLE */
+  .preview-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: #38bdf8; }
+  .stat-card .lbl { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  .preview-table-wrap { overflow-x: auto; max-height: 360px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: rgba(255,255,255,0.08); padding: 9px 12px; text-align: left; color: #94a3b8; font-weight: 600; position: sticky; top: 0; }
+  td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-celular    { background:rgba(56,189,248,.2);  color:#38bdf8; }
+  .badge-modem      { background:rgba(245,158,11,.2);  color:#f59e0b; }
+  .badge-tablet     { background:rgba(168,85,247,.2);  color:#c084fc; }
+  .badge-pospago    { background:rgba(34,197,94,.2);   color:#22c55e; }
+  .badge-accesorio  { background:rgba(244,114,182,.2); color:#f472b6; }
+  .badge-fuera      { background:rgba(239,68,68,.2);   color:#ef4444; }
+
+  /* HISTORIAL */
+  .history-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+  .history-row:last-child { border-bottom: none; }
+  .history-date { color: #64748b; font-size: 12px; }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+  .alert-success { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); color: #86efac; }
+  .alert-error   { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.3);  color: #fca5a5; }
+  .alert-info    { background: rgba(56,189,248,.15); border: 1px solid rgba(56,189,248,.3); color: #7dd3fc; }
+
+  .hidden { display: none !important; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">CLARO</div>
+    <div class="subtitle">Admin €” Lista de Precios Equipos</div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+    <span id="userBadge" class="hidden" style="font-size:13px;color:rgba(255,255,255,0.7);"></span>
+    <button class="btn btn-ghost hidden" id="logoutBtn" onclick="logout()" style="padding:7px 14px;font-size:13px;">Salir</button>
+  </div>
+</div>
+
+<!-- ••••••••••• LOGIN ••••••••••• -->
+<div id="loginSection">
+  <h2>ðŸ” Acceso Admin</h2>
+  <div id="loginAlert"></div>
+  <label>Usuario</label>
+  <input type="text" id="loginUser" placeholder="tu usuario" autocomplete="username">
+  <label>Contrase±a</label>
+  <input type="password" id="loginPass" placeholder="€¢€¢€¢€¢€¢€¢€¢€¢" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+  <button class="btn btn-primary" style="width:100%;" onclick="doLogin()" id="loginBtn">
+    Entrar
+  </button>
+</div>
+
+<!-- ••••••••••• PANEL ADMIN ••••••••••• -->
+<div id="adminPanel" class="hidden container">
+
+  <!-- UPLOAD NUEVA LISTA -->
+  <div class="card">
+    <h3>ðŸ“¤ Subir Nueva Lista de Precios</h3>
+
+    <div id="uploadAlert"></div>
+
+    <div class="row2">
+      <div>
+        <label>Vigencia desde</label>
+        <input type="date" id="vigDesde">
+      </div>
+      <div>
+        <label>Vigencia hasta</label>
+        <input type="date" id="vigHasta">
+      </div>
+    </div>
+
+    <label>Notas (opcional)</label>
+    <textarea id="notasUpload" rows="2" placeholder="ej: Lista mayo-julio 2026 PYMES/CORP"></textarea>
+
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <div class="icon">ðŸ“Š</div>
+      <p>Arrastra el Excel aqu­ o <strong>haz clic para seleccionar</strong></p>
+      <p style="margin-top:6px;font-size:12px;">Acepta: .xlsx · .xls · M¡x 20MB</p>
+      <p id="fileNameLabel" style="margin-top:10px;color:#38bdf8;font-weight:600;font-size:14px;"></p>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+
+    <div class="progress-wrap hidden" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <p style="font-size:12px;color:#64748b;margin-top:6px;" id="progressLabel">Procesando€¦</p>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+      <button class="btn btn-ghost" id="previewBtn" onclick="doPreview()" disabled>
+        ðŸ” Ver Preview
+      </button>
+      <button class="btn btn-success" id="uploadBtn" onclick="doUpload()" disabled>
+        œ… Aplicar Lista
+      </button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="card hidden" id="previewSection">
+    <h3>ðŸ” Preview €” Sin cambios aplicados aºn</h3>
+    <div class="preview-stats" id="previewStats"></div>
+    <div class="preview-table-wrap">
+      <table id="previewTable">
+        <thead>
+          <tr>
+            <th>C³digo</th>
+            <th>Modelo</th>
+            <th>Marca</th>
+            <th>Categor­a</th>
+            <th>Precio</th>
+            <th>Mensualidades / Planes</th>
+          </tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="card" id="historialCard">
+    <h3>ðŸ• Historial de Uploads</h3>
+    <div id="historialBody">
+      <p style="color:#64748b;font-size:13px;">Cargando€¦</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ”€”€”€ Config ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+const API = 'https://crmp.ss-group.cloud';  // auth Tango + admin de equipos viven en el CRM
+let token = localStorage.getItem('eq_admin_token') || null;
+let currentUser = null;
+let selectedFile = null;
+let previewData = null;
+
+// ”€”€”€ Auth ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  if (!username || !password) return showAlert('loginAlert', 'Completa usuario y contraseña.', 'error');
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Entrando€¦';
+
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: username, username, password }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || data.message || 'Credenciales incorrectas.');
+    token = data.token || data.accessToken;
+    currentUser = data.user || null;
+    localStorage.setItem('eq_admin_token', token);
+    localStorage.setItem('eq_admin_user', JSON.stringify(currentUser || { nick: username }));
+    showAdminPanel(currentUser?.nombre || currentUser?.nick || username);
+  } catch (e) {
+    showAlert('loginAlert', e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('eq_admin_token');
+  localStorage.removeItem('eq_admin_user');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('adminPanel').classList.add('hidden');
+  document.getElementById('userBadge').classList.add('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+}
+
+function showAdminPanel(username) {
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('hidden');
+  document.getElementById('userBadge').textContent = `ðŸ‘¤ ${username}`;
+  document.getElementById('userBadge').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  loadHistorial();
+}
+
+// Auto-login si hay token guardado
+(async () => {
+  if (!token) return;
+  try {
+    const r = await fetch(`${API}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
+    if (r.ok) {
+      const me = await r.json();
+      currentUser = me.user || me || null;
+      localStorage.setItem('eq_admin_user', JSON.stringify(currentUser || {}));
+      showAdminPanel(currentUser?.nombre || currentUser?.nick || currentUser?.username || 'Admin');
+    } else { token = null; localStorage.removeItem('eq_admin_token'); }
+  } catch { token = null; }
+})();
+
+// ”€”€”€ File handling ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+function handleFileSelect(e) {
+  setFile(e.target.files[0]);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  setFile(e.dataTransfer.files[0]);
+}
+function setFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  document.getElementById('fileNameLabel').textContent = `ðŸ“„ ${file.name}`;
+  document.getElementById('previewBtn').disabled = false;
+  document.getElementById('uploadBtn').disabled = false;
+  document.getElementById('previewSection').classList.add('hidden');
+  clearAlert('uploadAlert');
+}
+
+// ”€”€”€ Preview ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+async function doPreview() {
+  if (!selectedFile) return;
+  setProgress(10, 'Enviando archivo€¦');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    setProgress(40, 'Parseando Excel€¦');
+    const r = await fetch(`${API}/api/equipos-lista/preview`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    });
+    setProgress(90, 'Generando preview€¦');
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    previewData = data;
+    renderPreview(data);
+    setProgress(100, 'œ… Listo');
+    setTimeout(hideProgress, 1200);
+  } catch (e) {
+    hideProgress();
+    showAlert('uploadAlert', `Error: ${e.message}`, 'error');
+  }
+}
+
+function renderPreview(data) {
+  const { resumen, items } = data;
+  const sec = document.getElementById('previewSection');
+  sec.classList.remove('hidden');
+
+  // Stats
+  const statsEl = document.getElementById('previewStats');
+  const cats = { celular:'ðŸ“± Celulares', modem:'ðŸ“¡ M³dems', tablet:'ðŸ“Ÿ Tablets', pospago:'ðŸ“‹ Pospago', accesorio:'ðŸŽ§ Accesorios' };
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="num">${resumen.total}</div><div class="lbl">Total ­tems</div></div>
+    ${Object.entries(resumen.por_categoria).map(([cat,n]) =>
+      `<div class="stat-card"><div class="num">${n}</div><div class="lbl">${cats[cat]||cat}</div></div>`
+    ).join('')}
+  `;
+
+  // Table (first 100 rows)
+  const tbody = document.getElementById('previewBody');
+  tbody.innerHTML = items.slice(0, 100).map(item => {
+    const mens = (item.mensualidades||[]).map(m=>`${m.meses}m/$${m.monto}`).join(' · ');
+    const pos  = (item.pospago_precios||[]).filter(p=>p.monto>0).slice(0,3).map(p=>`$${p.plan_precio}†’$${p.monto}`).join(' ');
+    const fuera = item.fuera_portafolio ? '<span class="badge badge-fuera">Fuera</span> ' : '';
+    return `<tr>
+      <td><code style="font-size:12px;color:#94a3b8">${item.item_code}</code></td>
+      <td>${fuera}${item.modelo.replace(/\*/g,'').trim()}</td>
+      <td>${item.marca}</td>
+      <td><span class="badge badge-${item.categoria}">${item.categoria}</span></td>
+      <td>${item.precio_regular ? '$'+item.precio_regular : '€”'}</td>
+      <td style="font-size:11px;color:#64748b">${mens||pos||'€”'}</td>
+    </tr>`;
+  }).join('');
+  if (items.length > 100) {
+    tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:#64748b;padding:14px;">
+      €¦ y ${items.length - 100} ­tems m¡s. El upload incluye todos.
+    </td></tr>`;
+  }
+}
+
+// ”€”€”€ Upload ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+async function doUpload() {
+  if (!selectedFile) return;
+  if (!confirm(`¿Confirmas actualizar la lista de precios con "${selectedFile.name}"?\n\nEsto reemplazar¡ todos los precios actuales en la DB.`)) return;
+
+  setProgress(10, 'Subiendo archivo€¦');
+  document.getElementById('uploadBtn').disabled = true;
+
+  try {
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    fd.append('vigencia_inicio', document.getElementById('vigDesde').value);
+    fd.append('vigencia_fin',    document.getElementById('vigHasta').value);
+    fd.append('notas',           document.getElementById('notasUpload').value);
+
+    setProgress(50, 'Procesando y guardando en DB€¦');
+    const r = await fetch(`${API}/api/equipos-lista/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+
+    setProgress(100, 'œ… Lista aplicada');
+    setTimeout(hideProgress, 1000);
+    showAlert('uploadAlert',
+      `œ… ${data.message} €” Upload ID: ${data.upload_id}`, 'success');
+    document.getElementById('uploadBtn').disabled = false;
+    loadHistorial();
+    // Limpiar selecci³n
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileNameLabel').textContent = '';
+    document.getElementById('previewBtn').disabled = true;
+    document.getElementById('uploadBtn').disabled = true;
+  } catch (e) {
+    hideProgress();
+    showAlert('uploadAlert', `Error: ${e.message}`, 'error');
+    document.getElementById('uploadBtn').disabled = false;
+  }
+}
+
+// ”€”€”€ Historial ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+async function loadHistorial() {
+  try {
+    const r = await fetch(`${API}/api/equipos-lista/uploads`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    const el = document.getElementById('historialBody');
+    if (!data.data?.length) {
+      el.innerHTML = '<p style="color:#64748b;font-size:13px;">Sin uploads aºn.</p>';
+      return;
+    }
+    el.innerHTML = data.data.map(u => `
+      <div class="history-row">
+        <div>
+          <strong style="font-size:13px;">${u.nombre_archivo}</strong>
+          <div class="history-date">
+            Subido por <b>${u.subido_por}</b> · ${new Date(u.fecha_subida).toLocaleString('es-PR')}
+            ${u.vigencia_inicio ? ` · Vigencia: ${u.vigencia_inicio} al ${u.vigencia_fin||'?'}` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:18px;font-weight:700;color:#38bdf8;">${u.total_items}</span>
+          <div style="font-size:11px;color:#64748b;">­tems</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('historialBody').innerHTML =
+      `<p style="color:#ef4444;font-size:13px;">Error cargando historial.</p>`;
+  }
+}
+
+// ”€”€”€ Helpers ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+function showAlert(id, msg, type) {
+  document.getElementById(id).innerHTML =
+    `<div class="alert alert-${type}">${msg}</div>`;
+}
+function clearAlert(id) {
+  document.getElementById(id).innerHTML = '';
+}
+function setProgress(pct, label) {
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = label;
+}
+function hideProgress() {
+  document.getElementById('progressWrap').classList.add('hidden');
+}
+</script>
+</body>
+</html>
+
+

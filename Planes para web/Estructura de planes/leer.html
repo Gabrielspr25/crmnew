@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>XLSX Reader</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head><body>
+<pre id="out" style="font-size:11px;white-space:pre-wrap"></pre>
+<script>
+fetch('Lista de Precios 28 de mayo al 31 de julio de 2026-PYM-CORP.xlsx')
+  .then(r => r.arrayBuffer())
+  .then(buf => {
+    const wb = XLSX.read(buf, {type:'array'});
+    const result = {sheetNames: wb.SheetNames, data: {}};
+    wb.SheetNames.forEach(n => {
+      result.data[n] = XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, defval:''});
+    });
+    window._xlsx = result;
+    document.getElementById('out').textContent = JSON.stringify(result);
+    document.title = 'DONE';
+  })
+  .catch(e => { document.getElementById('out').textContent = 'ERROR: ' + e; document.title = 'ERR'; });
+</script>
+</body></html>

@@ -188,6 +188,22 @@ function rowsToClipboardText(rows) {
   return [header, ...lines].join('\n').trim();
 }
 
+function extractBanFromOcrText(text) {
+  const raw = String(text || '');
+  const patterns = [
+    /\bBAN\s*[-#:]*\s*(\d[\d\s-]{7,}\d)\b/i,
+    /\bSubscriber\s+list\s+for\s+BAN\s*[-#:]*\s*(\d[\d\s-]{7,}\d)\b/i,
+    /\bfor\s+BAN\s*[-#:]*\s*(\d[\d\s-]{7,}\d)\b/i
+  ];
+  for (const pattern of patterns) {
+    const match = raw.match(pattern);
+    if (!match) continue;
+    const digits = String(match[1] || '').replace(/\D/g, '');
+    if (digits.length === 9) return digits;
+  }
+  return null;
+}
+
 function normalizePhoneDigits(digits) {
   const d = String(digits || '').replace(/\D/g, '');
   if (d.length === 10) return d;
@@ -319,7 +335,7 @@ function parseLocalOcrText(text) {
     warnings.push('No se detectaron telefonos de 10 digitos. Sube imagen mas nitida o recortada a la tabla.');
   }
 
-  return { rows, warnings, lineCount: lines.length };
+  return { rows, warnings, lineCount: lines.length, banNumber: extractBanFromOcrText(text) };
 }
 
 async function ocrImageBuffer(buffer) {
@@ -366,4 +382,4 @@ async function extractTextForSync(buffer) {
   const text = await ocrImageBuffer(buffer);
   return { text, engine: 'tesseract', ocr_warnings: ocrWarnings };
 }
-export { extractTextForSync, parseLocalOcrText, rowsToClipboardText, ocrImageBuffer };
+export { extractTextForSync, parseLocalOcrText, rowsToClipboardText, ocrImageBuffer, extractBanFromOcrText };

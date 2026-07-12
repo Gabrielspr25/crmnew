@@ -1,0 +1,944 @@
+FILE: C:\Users\Gabriel\Dropbox\Boletines Vigentes PYMES\20 AL 3 DE JULIO 2026\Tabla Ofertas Financiamiento 20 de junio al 3 de julio de 2026- PYMES.xlsx
+SHEETS: ['Ofertas con desc plan $35-$85', 'Ofertas Equipos en Portafolio', 'Ofertas Equipos en Li', 'Ofertas Planes y Bonos', 'Planes de Lista', 'PLANES PROMOCIONALES']
+
+[Ofertas con desc plan $35-$85 R1] 130 | 250 | 0.5
+[Ofertas con desc plan $35-$85 R2] OFERTAS DE EQUIPOS EN PORTAFOLIO 20 DE JUNIO AL 3 DE JULIO DE 2026- APLICA A CANAL PYMES
+UPDATE PLUS Y FINANCIAMIENTO
+[Ofertas con desc plan $35-$85 R3] NUEVOS DESCUENTOS!!! OFERTAS CON $130, $250 Y 50% DE DESCUENTO EN PLAN DE $35, $40 Y $50
+[Ofertas con desc plan $35-$85 R4] Manufacturero | Modelo | Precio Regular | Plan de $35 | Plan de $40 | Plan de $50 | -Business Credit Limit
+-Business Regular
+-Business Wireline Small | 'TERMINOS Y CONDICIONES
+a. Aplica a Líneas nuevas con y sin Portabilidad y renovaciones.
+b. Disponible en Update Plus o Financiamiento
+c. ESTA OFERTA SE LE OTORGARA A LOS CLIENTES COMO UN CREDITO MENSUAL EN SU CUENTA. EL CREDITO DEPENDERA DEL PLAZO QUE SELECCIONE EL CLIENTE  24 o  30. (EJEMPLO: $130 / 24 PLAZOS = $5.42 CREDITO MENSUAL). SI EL CLIENTE SE ACOGE A OTRO PLAZO LOS $130 SE DIVIDIRAN POR EL PLAZO SELECCIONADO.
+d. Descuento de $130 para Smartphones aplica en plan individual de $35, y a planes multilíneas Business Red Plus, Business Red Extreme, Business Red Supreme y Business Red Sin Fronteras. 
+e. Descuento de $250 para Smartphones aplica en plan individual de $35 y a planes multilíneas Business Red Plus, Business Red Extreme, Business Red Supreme y Business Red Sin Fronteras.
+f. Descuento de $250 para Smartphones aplica en plan individual de $40 y a planes multilíneas Business Red Plus, Business Red Extreme, Business Red Supreme y Business Red Sin Fronteras.
+f. Descuento de 50% para Smartphones aplica en plan individual de $50 y a planes multilíneas Business  Red Supreme y Business Red Sin Fronteras.
+f. Oferta aplica a solo a plazos de  24 y  30 en Update o Financiamiento. 
+g. Aplica para Bono de Streaming si es un cliente convergente, tiene un pago de equipo de 30 plazos o mas y cumple con los requisitos del bono
+h. No requiere pago inicial ni Trade In  
+
+- Los Price codes a utilizar para el descuento de $130 son:
+Update Plus- U13024, U13030
+Financiamiento- F13024, F13030   
+- Los Price codes a utilizar para el descuento de $250 son:
+Update Plus- U25024, U25030
+Financiamiento- F25024, F25030
+ - Los Price codes a utilizar para el descuento de 50% son:
+Update Plus- U50%30
+Financiamiento- F50%30
+[Ofertas con desc plan $35-$85 R5] Descuento $130 | Pago a 24 meses | Pago a 30 meses | Descuento $250 | Pago a 24 meses | Pago a 30 meses | Descuento 50% | Pago a 30 meses
+[Ofertas con desc plan $35-$85 R6] Motorola | Moto G Play 2024 | 129.99 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35
+[Ofertas con desc plan $35-$85 R7] Samaung | A07 | 119.99 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35
+[Ofertas con desc plan $35-$85 R8] Samsung | Galaxy A17 | 199.99 | 69.99000000000001 | 2.9162500000000002 | 2.333 | no aplica porque ya es gratis desde $40 | no aplica porque ya es gratis desde $40
+[Ofertas con desc plan $35-$85 R9] Motorola | MOTO G 2025 5G | 149.99 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35
+[Ofertas con desc plan $35-$85 R10] Samsung | Galaxy A26* | 259.99 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35 | no aplica porque ya es gratis desde $35
+[Ofertas con desc plan $35-$85 R11] Motorola | Moto G Power 2025 5G | 279.99 | 149.99 | 6.249583333333334 | 4.999666666666667 | no aplica porque ya es gratis desde $45 | no aplica porque ya es gratis desde $45
+[Ofertas con desc plan $35-$85 R12] Samsung | Galaxy A37 | 349.99 | 219.99 | 9.16625 | 7.333 | no aplica porque ya es gratis desde $45 | no aplica porque ya es gratis desde $45
+[Ofertas con desc plan $35-$85 R13] Motorola | Moto Edge 2025 | 429.99 | 299.99 | 12.499583333333334 | 9.999666666666666 | 179.99 | 7.499583333333334 | 5.999666666666667 | no aplica porque ya es gratis desde $50
+[Ofertas con desc plan $35-$85 R14] Samsung | Galaxy S25 Fe | 589.99 | 459.99 | 19.16625 | 15.333 | 339.99 | 14.16625 | 11.333 | no aplica porque ya es gratis desde $50
+[Ofertas con desc plan $35-$85 R15] MOTOROLA | RAZR 2025 | 649.99 | 519.99 | 21.66625 | 17.333000000000002 | 399.99 | 16.66625 | 13.333 | 324.995 | 10.833166666666667
+[Ofertas con desc plan $35-$85 R16] SAMSUNG | SAMSUNG GALAXY S26 256GB | 839.99 | 709.99 | 29.582916666666666 | 23.666333333333334 | 589.99 | 24.582916666666666 | 19.666333333333334 | 419.995 | 13.999833333333333
+[Ofertas con desc plan $35-$85 R17] Samsung | GALAXY S26 PLUS 256GB | 1089.99 | 959.99 | 39.999583333333334 | 31.999666666666666 | 839.99 | 34.999583333333334 | 27.999666666666666 | 544.995 | 18.1665
+[Ofertas con desc plan $35-$85 R18] iPhone | iPhone 17e | 599.99 | 469.99 | 19.582916666666666 | 15.666333333333334 | 349.99 | 14.582916666666668 | 11.666333333333334 | no aplica porque ya es gratis desde $50
+[Ofertas con desc plan $35-$85 R19] Samsung | GALAXY S26 ULTRA 256GB | 1199.99 | 1069.99 | 44.58291666666667 | 35.666333333333334 | 949.99 | 39.58291666666667 | 31.666333333333334 | 599.995 | 19.999833333333335
+[Ofertas con desc plan $35-$85 R20] Samsung | Z Flip 7 | 799.99 | 669.99 | 27.91625 | 22.333000000000002 | 549.99 | 22.91625 | 18.333000000000002 | 399.995 | 13.333166666666667
+[Ofertas con desc plan $35-$85 R21] Apple | iPhone 17 256GB | 829.99 | 699.99 | 29.16625 | 23.333000000000002 | 579.99 | 24.16625 | 19.333000000000002 | 414.995 | 13.833166666666667
+[Ofertas con desc plan $35-$85 R22] Apple | iPhone Air 256GB | 799.99 | 669.99 | 27.91625 | 22.333000000000002 | 549.99 | 22.91625 | 18.333000000000002 | 399.995 | 13.333166666666667
+[Ofertas con desc plan $35-$85 R23] Apple | iPhone 17 Pro 256GB | 1099.99 | 969.99 | 40.41625 | 32.333 | 849.99 | 35.41625 | 28.333000000000002 | 549.995 | 18.333166666666667
+[Ofertas con desc plan $35-$85 R24] Apple | iPhone Air 512GB | 999.99 | 869.99 | 36.249583333333334 | 28.999666666666666 | 749.99 | 31.249583333333334 | 24.999666666666666 | 499.995 | 16.6665
+[Ofertas con desc plan $35-$85 R25] Apple | iPhone 17 Pro Max  256GB | 1199.99 | 1069.99 | 44.58291666666667 | 35.666333333333334 | 949.99 | 39.58291666666667 | 31.666333333333334 | 599.995 | 19.999833333333335
+[Ofertas con desc plan $35-$85 R26] Apple | iPhone 17 Pro 512GB | 1299.99 | 1169.99 | 48.749583333333334 | 38.99966666666667 | 1049.99 | 43.749583333333334 | 34.99966666666667 | 649.995 | 21.6665
+[Ofertas con desc plan $35-$85 R27] Apple | iPhone 17 Pro Max 512GB | 1399.99 | 1269.99 | 52.91625 | 42.333 | 1149.99 | 47.91625 | 38.333 | 699.995 | 23.333166666666667
+[Ofertas con desc plan $35-$85 R28] Samsung | Z Fold 7 | 1899.99 | 1769.99 | 73.74958333333333 | 58.99966666666667 | 1649.99 | 68.74958333333333 | 54.99966666666667 | 949.995 | 31.6665
+[Ofertas con desc plan $35-$85 R29] Precio Regular Nuevo | Nuevo precio regular:
+Motorola G Play 2024- $129.99
+[Ofertas con desc plan $35-$85 R30] CANAL DIRECTO:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Complimiento con Legales y Terminos y Condiciones COM: LIH - 2020 - 826
+[Ofertas con desc plan $35-$85 R31] CANAL INDIRECTO - AGENTES:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Boletín B-VI-2020-001 Escenarios de Facturación al Agente por NO cumplir con los procesos establecidos.
+[Ofertas Equipos en Portafolio R1] CLARO25= | OFERTAS DE EQUIPOS EN PORTAFOLIO DEL 20 DE JUNIO AL 3 DE JULIO DE 2026
+UPDATE PLUS Y FINANCIAMIENTO  - PYMES
+[Ofertas Equipos en Portafolio R2] OFERTAS DE EQUIPOS PLANES $20 A $50
+[Ofertas Equipos en Portafolio R3] OFERTA | PLANES QUE APLICAN | EQUIPOS QUE APLICAN
+(Si alguno) | Account types que aplican | BONOS QUE APLICAN DE ACUERDO A LA REGLA DE CADA UNO | RESUMEN TÉRMINOS Y CONDICIONES
+[Ofertas Equipos en Portafolio R4] Equipos GRATIS
+NO REQUIERE TRADE IN
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES | Plan de $35 | NUEVO! MOTOROLA MOTO G PLAY 2024
+SAMSUNG GALAXY A26*
+SAMSUNG GALAXY A07
+MOTO G 2025 5G | PYMES | -NO Aplica  - Bono de Streaming . | - Aplica a portabilidades, líneas nuevas y renovaciones.                                               
+- Oferta solo le aplicara a cuatro (4) líneas por ban en planes Business RED desde la 1 hasta 4.
+- Oferta solo aplica a 24 plazos en Update Plus o Financiamiento.
+-El crédito aplica a partir del primer mes de facturación.- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- No Apilca Bono de Streaming 
+Los Price Code a usar son:
+Update Plus- SWCH24
+Financiamiento - FIUP24
+[Ofertas Equipos en Portafolio R6] Equipo GRATIS
+
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Plan de $40 | SAMSUNG GALAXY A17 | PYMES | - Aplica  - Bono de Streaming. | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Oferta solo le aplicara a cuatro (4) líneas por ban en planes Business RED desde la 1 hasta 4.
+- Oferta solo aplica a 30 plazos en Update Plus o Financiamiento.
+-El crédito aplica a partir del primer mes de facturación.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                         - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los pricecodes a utilizar son:
+Update Plus- SWCH30
+Financiamiento- FIUP30
+[Ofertas Equipos en Portafolio R7] Equipo GRATIS
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Plan de $45 | SAMSUNG GALAXY A37
+Moto G Power 2025 5G | PYMES | - Aplica  - Bono de Streaming. | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Oferta solo le aplicara a cuatro (4) líneas por ban en planes Business RED desde la 1 hasta 4.
+- Oferta solo aplica a 30 plazos en Update Plus o Financiamiento.
+-El crédito aplica a partir del primer mes de facturación.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                         - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los pricecodes a utilizar son:
+Update Plus- SWCH30
+Financiamiento- FIUP30
+[Ofertas Equipos en Portafolio R8] Equipo GRATIS
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes desde $50 | IPHONE 17e
+MOTOROLA MOTO EDGE 2025
+SAMSUNG GALAXY S25 FE | PYMES | - Aplica  - Bono de Streaming. | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Oferta solo le aplicara a cuatro (4) líneas por ban en planes Business RED desde la 1 hasta 4.
+- Oferta solo aplica a 30 plazos en Update Plus o Financiamiento.
+-El crédito aplica a partir del primer mes de facturación.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                         - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los pricecodes a utilizar son:
+Update Plus- SWCH30
+Financiamiento- FIUP30
+[Ofertas Equipos en Portafolio R9] NUEVO!
+50% de descuento
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes de $50 en adelante | Samsung Galaxy S26 256GB
+Samsung Galaxy S26 Plus 256GB
+Samsung Galaxy S26 Ultra 256GB
+Motorola Razr 2025
+iPhone 17 256GB
+iPhone Air 256GB
+iPhone Air 512GB
+iPhone 17 Pro 256GB
+iPhone 17 Pro 512GB
+iPhone 17 Pro Max 256GB
+iPhone 17 Pro Max 512GB
+SAMSUNG Z FLIP 7
+SAMSUNG Z FOLD 7 | PYMES | - Aplica  - Bono de Streaming. | APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- No Requeire Trade-In. Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+- EL CRÉDITO SE VERÁ EN LA CUENTA DEL CLIENTE A PARTIR DEL SEGUNDO CICLO DE FACTURACIÓN.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo    
+-  Todos los equipos en oferta aplicarán también a todas las lineas de los planes Business RED desde la 1 hasta 10
+-La oferta aplica en planes desde $50
+- Oferta valida en Update Plus o  Financiamiento
+
+- Los price codes a utilizar son:
+Update Plus- U50%30
+Financiamiento- F50%30
+[Ofertas Equipos en Portafolio R13] ¡NUEVO! OFERTAS DE EQUIPOS CON TRADE IN PARA RENOVACIONES EN PLANES $60, $75 Y $100
+[Ofertas Equipos en Portafolio R14] OFERTA | PLANES QUE APLICAN | EQUIPOS QUE APLICAN
+(Si alguno) | Account types que aplican | BONOS QUE APLICAN DE ACUERDO A LA REGLA DE CADA UNO | TÉRMINOS Y CONDICIONES
+LÍNEAS NUEVAS | TÉRMINOS Y CONDICIONES
+RENOVACIONES
+[Ofertas Equipos en Portafolio R15] Equipo GRATIS
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes desde $60 | SAMSUNG GALAXY S26 256GB
+Motorola Moto Razr 2025
+iPhone Air 256GB
+Samsung Galaxy Z Flip 7
+iPhone 17 256GB | PYMES | - Aplica  - Bono de Streaming. | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+-Oferta solo le aplicara a cuatro (4) líneas por ban en planes BUSINESS RED PLUS, BUSINESS RED EXTREME, BUSINESS RED SUPREME y  BUSINESS RED SIN FRONTERAS.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30 | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max, iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta solo le aplicara a cuatro (4) líneas por ban en planes BUSINESS RED PLUS, BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30
+[Ofertas Equipos en Portafolio R18] Equipo GRATIS
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes Individuales desde $75 | SAMSUNG GALAXY S26 ULTRA 256GB
+IPHONE 17 PRO 256GB 
+SAMSUNG GALAXY S26 PLUS 256GB
+iPhone 17 Pro Max 256GB | PYMES | - Aplica  - Bono de Streaming. | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+--Oferta aplica solo a  Plan Individual- BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30 | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max,  iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta aplica solo a  Plan Individual-  BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS  -Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30
+[Ofertas Equipos en Portafolio R20] Equipo GRATIS
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes Individuales desde $95 | IPHONE AIR 512GB
+IPHONE 17 PRO 512GB 
+IPHONE 17 PRO MAX 512GB | PYMES | - Aplica  - Bono de Streaming. | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+--Oferta aplica solo a  Plan Individual- BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30 | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max, iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta aplica solo a  Plan Individual-  BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS 
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30
+[Ofertas Equipos en Portafolio R22] OFERTA PLANES MULTILÍNEAS:
+DOS EQUIPOS GRATIS
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes multilíneas desde $60 | Oferta para planes multilíneas:
+DOS EQUIPOS GRATIS
+
+IPHONE 17 PRO 256GB
+SAMSUNG GALAXY S26 PLUS 256GB
+SAMSUNG GALAXY S26 ULTRA 256GB
+iPhone Air 512GB
+iPhone 17 Pro Max 256GB
+iPhone 17 Pro 512GB
+iPhone 17 Pro Max 512GB | PYMES | - Aplica  - Bono de Streaming. | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+-Oferta solo le aplicara a dos (2) líneas por ban en planes BUSINESS RED PLUS, BUSINESS RED EXTREME,BUSINESS RED SUPREME Y BUSINESS  RED SIN FRONTERAS
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPFAM2
+Financiamiento- FIFAM2
+
+NOTA: En el caso que el cliente desee adquirir otro equipo que no sea parte de esta oferta de planes multilíneas, por ejemplo un iPhone 17 256GB que está gratis en planes desde $60 sin Trade In, el vendedor debe utilizar el price code que se incluye en la oferta del iPhone 17 256GB (UPTI30 o FITI30) y el job aplicará la oferta de equipo gratis. | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max, iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta solo le aplicara a dos (2) líneas por ban en planes BUSINESS RED PLUS,BUSINESS RED EXTREME,BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS  -Aplica Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+Los price codes a utilizar son:
+Update Plus- UPFAM2
+Financiamiento- FIFAM2
+
+NOTA: En el caso que el cliente desee adquirir otro equipo que no sea parte de esta oferta de planes familiares, por ejemplo un iPhone 17 256GB que está gratis en planes desde $60 sin Trade In, el vendedor debe utilizar el price code que se incluye en la oferta del iPhone 17 256GB (UPTI30 o FITI30) y el job aplicará la oferta de equipo gratis.
+[Ofertas Equipos en Portafolio R24] CREDITO DE HASTA $1,000 
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes desde $75 | Crédito $1,000:
+Samsung Galaxy Z Fold 7 | PYMES | - Aplica  - Bono de Streaming. | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+-Oferta solo le aplicara a dos (2) líneas por ban en planes BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30 | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max, iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta solo le aplicara a dos (2) líneas por ban en planes BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS.-Aplica Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30
+[Ofertas Equipos en Portafolio R26] CREDITO DE HASTA $1,100 
+
+NO REQUIERE TRADE IN- PARA LÍNEAS NUEVAS
+SI REQUIERE TRADE IN PARA RENOVACIONES
+
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes Individuales desde $75 | Crédito $1,100:
+iPhone 17 Pro 512GB
+iPhone 17 Pro Max 512GB | PYMES | - Aplica  - Bono de Streaming | - Aplica a líneas nuevas, portabilidades y clientes existentes que añadan líneas
+- No requiere entrega de equipo en Trade In
+-Oferta solo le aplicara a dos (2) líneas por ban en planesBUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación
+ -Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30 | - Aplica a renovaciones
+- Requiere entrega de equipo en Trade In sin valorización de equipos selectos. Los equipos que se aceptarán son:
+•Samsung
+Samsung S22, S22 Plus, S22 Ultra, Samsung S23, S23 Plus, S23 Ultra, Samsung S24 Fe, Samsung S24, S24 Plus, S24 Ultra, Samsung S25 Fe, Samsung S25, S25 Plus, S25 Ultra, S25 EDGE, Samsung S26, S26 Plus, S26 Ultra, Flip4, Flip5, Flip6 y Flip7, Fold4, Fold5, Fold6 y Fold7
+•Apple
+iPhone 14, iPhone 14 Plus, iPhone 14 Pro, iPhone 14 Pro Max, iPhone 15, iPhone 15 Plus, iPhone 15 Pro, iPhone 15 Pro Max, iPhone 16, iPhone 16 Plus, iPhone 16 Pro, iPhone 16 Pro Max, iPhone 17e, iPhone 17, iPhone Air, iPhone 17 Pro, iPhone 17 Pro Max
+•Motorola 
+Razr 2025, Razr ultra 2025, Razr+ 2023, Razr+ 2024, Razr 2024, Razr+ 2025, Razr 2025
+•OnePlus
+10 Pro 5G, 9 Pro 5G
+-Oferta solo le aplicara a dos (2) líneas por ban en planes BUSINESS RED EXTREME, BUSINESS RED SUPREME Y BUSINESS RED SIN FRONTERAS.
+-Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo              
+-El crédito aplica a partir del segundo mes mes de facturación.
+-Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+Los price codes a utilizar son:
+Update Plus- UPTI30
+Financiamiento- FITI30
+[Ofertas Equipos en Portafolio R29] Precio Regular Nuevo | Nuevo precio regular:
+Motorola G Play 2024- $129.99
+[Ofertas Equipos en Portafolio R30] Ver boletín de términos y condiciones para más detalles e información de los procesos. 
+* Equipos en liquidación.  El inventario de estos equipos es limitado, así que la oferta aplica para aquellos canales de ventas donde haya inventario disponible.
+[Ofertas Equipos en Portafolio R32] CANAL DIRECTO:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Complimiento con Legales y Terminos y Condiciones COM: LIH - 2020 - 826
+[Ofertas Equipos en Portafolio R33] CANAL INDIRECTO - AGENTES:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Boletín B-VI-2020-001 Escenarios de Facturación al Agente por NO cumplir con los procesos establecidos.
+[Ofertas Equipos en Li R1] OFERTAS DE EQUIPOS EN LIQUIDACIÓN DEL  3 AL 31 DE OCTUBRE DE 2024- APLICA A CANAL PYMES Y CORPORATIVO
+FINANCIAMIENTO
+[Ofertas Equipos en Li R2] OFERTAS DE EQUIPOS
+[Ofertas Equipos en Li R3] OFERTA | PLANES QUE APLICAN | EQUIPOS QUE APLICAN | Account types que aplican | RESUMEN TERMINOS Y CONDICIONES
+[Ofertas Equipos en Li R4] Equipos GRATIS
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES | Plan de $20 | PCD U40* 
+PCD PH4003*
+Nokia 1.4* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones.                                               
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+- Oferta solo aplica a 24 plazos en  Financiamiento.
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a todas las líneas de los planes multilíneas Business RED.
+- Aplican a Planes Claro Sin Fronteras. 
+- No Apilca Bono de Streaming 
+
+ Price Code a usar es:
+
+Financiamiento- FIUP24
+[Ofertas Equipos en Li R5] Equipos con 20% Descuento
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES | Plan de $20 | Samsung A12* $151.99 luego de 20% descuento (reg. $189.99)
+Samsung A21s* $151.99 luego de 20% descuento (reg. $189.99)
+Motorola G Stylus* $183.99 luego de 20% descuento (reg. $229.99) | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+- Oferta aplica a 20, 24, 30 o 36 plazos en Financiamiento.
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.        
+-Apilca Bono de Streaming  si el cliente es convergente, el pago del equipo es a 30 plazos o mas y cumple con todos los requisitos del mismo                                                                                                                                                                                                              Código de descuento: UPD20%
+Price Codes a utilizar: FIUP20, FIUP 24, FIUP 30, FIUP36
+Tarifa: VOLT820
+Proceso para aplicar descuento a los clientes que adquieran estas ofertas con descuento de 20%:
+• Una vez el vendedor entre el ítem code como regularmente lo hace, deberá oprimir el botón de descuentos y elegir el descuento UPD20% para que automáticamente se le aplique al precio del equipo comprado.
+[Ofertas Equipos en Li R6] Equipos GRATIS
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES | NUEVO Planes desde $35 | Verykool s5028*
+LG K4 2017*
+Samsung J7 Neo*
+Sony Xperia XA*
+Verykool SL5029 Pro Bolt*
+Sony Xperia L1*
+Motorola G5*
+Samsung Galaxy J5*
+Alcate; Go Play*
+PCD PH3501*
+'PCD PH4002*
+Alcatel U3*
+Avvio A400*
+Azumi IRO A4Q*
+Azumi IRO A5Q*
+Motorola Moto C *
+LG K9*
+LG Qstylus*
+AVVIO 362*
+Samsung J4+*
+Nokia 2.1*
+'Azumi A4*
+LG K22*
+Samsung J2 CORE*
+LG K20*
+MOTO E5 Play*
+MOTO E*
+LG K40*
+Galaxy A20s*
+LG K51*
+LG Q60*     
+Galaxy A21s*                                                                                                                                      
+SAMSUNG GALAXY A8+*                                                                                                                          
+IPHONE 7*  (TODAS LAS MEMORIAS)
+IPHONE 7 PLUS*  (TODAS LAS MEMORIAS)
+Motorola e7i Power*
+Nokia 1.4*
+SAMSUNG A02*     
+Samsung A12*
+MOTOROLA G 2022 5G*
+MOTOROLA G STYLUS 2022 4.5G*
+SAMSUNG GALAXY A04e*
+Nokia G20*
+Samsung A03*
+PCD PH4003*
+NOKIA G10*
+ALCATEL TCL 20E* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+ - Con esta oferta de Equipos Gratis NO aplica Bono de Portabilidad en planes individuales sobre $50
+- El cliente puede adquirir hasta 5 equipos gratis y hasta 5 líneas con Claro.
+- Todos los equipos gratis aplicarán también a todas las líneas de planes multilíneas Business Red desde 1 hasta 10.
+- Oferta solo aplica a 24 plazos en FInanciamiento.
+-No Apilca Bono de Streaming
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a todas las líneas de los planes multilíneas Business RED.
+- Aplican a Planes Claro Sin Fronteras.
+
+- Price code a utilizar:
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R9] NUEVO Planes desde $45 | Sony Xperia X1 A Ultra*
+Samsung A7 2017*
+Samsung J7 Pro*
+Motorola Zplay*
+Sony Xperia X*
+Samsung A20 *
+Motorola G6 Plus* 
+Galaxy A50* 
+Motorola Z3 Play *
+iPhone 6S PLUS 32GB *
+SAMSUN GALAXY A70*
+Motorola G7 Plus*
+'Motorola G8 Plus*
+Motorola G Power*
+Galaxy A51*
+LG Stylo 6*
+SAMSUNG GALAXY NOTE 9
+Motorola G Stylus*
+'Motorola G20*
+Samsung A71 * 
+SAMSUNG GALAXY S8*    
+SAMSUNG GALAXY S8+*  
+SAMSUNG GALAXY S9*   
+SAMSUNG GALAXY S9+*   
+IPHONE 8* (TODAS LAS MEMORIAS)  
+IPHONE 8 PLUS* (TODAS LAS MEMORIAS
+SAMSUNG GALAXY A13*
+[Ofertas Equipos en Li R11] Planes desde $50 | Galaxy Note 10 LITE*       
+SAMSUNG GALAXY S10* 
+SAMSUNG GALAXY S10+*   
+SAMSUNG GALAXY NOTE 10*  
+SAMSUNG GALAXY NOTE 10+      
+IPHONE 11 PRO 256GB*                                                                                                                          
+iPhonne 11 PRO MAX 64GB*
+IPHONE 11 PRO MAX 256GB* | PYMES
+[Ofertas Equipos en Li R12] Equipo GRATIS
+
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | NUEVO Planes desde $35 | IPHONE 11 PRO MAX 64GB*
+IPHONE SE 64GB* (Modelo No 5G)
+IPHONE SE 128GB* (Modelo No 5G)
+IPHONE 12 MINI 64GB*
+PHONE XR 64GB*
+iPhone XR 128GB*
+iPhone XR 256GB*
+IPHONE X 64GB*
+IPHONE X 256GB*
+iPhone XS 64GB y iPhone XS 256GB*
+iPhone XS Max 64GB y iPhone XS Max 256GB* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes Business RED desde la 1 hasta 10
+- Oferta solo aplica a 30 plazos en Financiamiento.
+-Aplica Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los requisitos del mismo                                                                                                                                                                                                                    - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a Planes Claro Sin Fronteras.
+- Price code a utilizar:
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R14] Equipo GRATIS
+
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | NUEVO Planes desde $45 | iPhone 13 Mini 128GB* 
+iPHONE SE 64GB 5G*
+SAMSUNG S20 FE*
+MOTOROLA G STYLUS 2022 5G  (con Reloj)*
+iPhone 11 128GB*
+SAMSUNG GALAXY A52*
+MOTOROLA G STYLUS 5G*
+SAMSUNG GALAXY S21 FE* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+-  Todos los equipos gratis aplicarán también a todas las lineas de los planes Business RED desde la 1 hasta 10
+- Oferta solo aplica a 30 plazos en Financiamiento.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                         - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a Planes Claro Sin Fronteras.
+- Price code a utilizar:
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R16] Equipo GRATIS
+
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes desde $50 | iPhone 12 Mini 128GB*
+iPhone 12 Mini 256GB*
+IPHONE 12 128GB*
+iPhone 12 256GB*
+SAMSUNG NOTE 20*
+SAMSUNG S20 ULTRA* 
+IPHONE 12 PRO 128GB* 
+IPHONE 13 MINI 256GB*
+LG G8X THINQ* 
+SAMSUNG GALAXY S21*
+SAMSUNG GALAXY S21+*        
+Samsung Galaxy S20+
+SAMSUNG GALAXY A42*
+GOOGLE PIXEL 6A*
+SAMSUNG GALAXY A53 5G* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+-  Todos los equipos gratis aplicarán también a todas las lineas de los planes Business RED desde la 1 hasta 10
+- Oferta solo aplica a 30 plazos en Financiamiento.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                  
+ - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a Planes Claro Sin Fronteras.
+- Price code a utilizar:
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R18] Equipo GRATIS
+
+NO REQUIERE TRADE IN
+
+CLIENTE NUEVO, PORTABILIDADES Y RENOVACIONES
+
+SOLO 30 PLAZOS | Planes desde $60 | SAMSUNG Z FLIP3*
+SAMSUNG GALAXY S21 ULTRA*
+IPHONE 13 256GB*  bandas MILIMÉTRICAS
+SAMSUNG GALAXY S22*
+iPHONE 13 PRO 128GB* EN BANDA NO MILIMETRICA SOLAMENTE-Aplica a los siguientes item codes y números de material | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+-  Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED PLUS, RED EXTREME, RED SUPREME Y RED SIN FRONTERAS desde la 1 hasta 10
+- Oferta solo aplica a 30 plazos en Financiamiento.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                  
+ - Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a Planes Claro Sin Fronteras.
+-Price code a utilizar:
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R19] CREDITO DE $800 Garantizado
+
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | EN PLANES DESDE $50 | iPhone 13 512GB (APLICA A BANDA MILIMETRICA Y NO MILIMETRICA)*
+iPhone 13 Pro 128GB BANDA MILIMETRICA*
+Phone 13 Pro 256GB (aplica a ambas bandas)  *                                      
+iPhone 13 PRO MAX 128GB BANDA MILIMETRICA* 
+iPhone 13 PRO MAX 256GB BANDA MILIMETRICA*
+iPhone 13 PRO MAX 512GB BANDA MILIMETRICA* | PYMES | CLIENTE CON CREDITO B, C, E NO REQUIERE PAGO INIICIAL (DOWN PAYMENT)
+CLIENTE CON CREDITO D, F, G REQUIRE PAGO INICIAL EN EQUIPOS SELECCIONADOS, Y EN RENOVACIONES SOLO CON TENURE (CLIENTE DE CLARO) DE 19 MESES O MENOS. 
+APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Oferta NO Requiere la entrega de equipo selecto en Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo    
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+-La oferta aplica en planes desde $50
+- Oferta valida en Financiamiento
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R22] CREDITO DE $850 Garantizado
+
+NO REQUIERE TRADE IN
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+
+SOLO A 30 PLAZOS | Planes desde $50 | iPhone 12 PRO MAX 128GB* 
+iPhone 12 PRO MAX 256GB* 
+iPhone 12 PRO MAX 512GB*
+IPHONE 12 PRO 256GB*
+IPHONE 12 PRO 512GB* | PYMES | 'CLIENTE CON CREDITO B, C, E NO REQUIERE PAGO INIICIAL (DOWN PAYMENT)
+CLIENTE CON CREDITO D, F, G REQUIRE PAGO INICIAL EN EQUIPOS SELECCIONADOS, Y EN RENOVACIONES SOLO CON TENURE (CLIENTE DE CLARO) DE 19 MESES O MENOS. 
+APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Oferta NO Requiere Trade in
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                    
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+- La oferta aplica en planes desde $50
+- Oferta valida en Financiamiento
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R24] CREDITO DE $700 Y $600 Garantizado
+
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes desde $60 | Crédito $700:
+Samsung Galaxy S22 Ultra*
+iPhone 14 256GB*
+iPhone 14 Plus 128GB*
+Samsung Galaxy S22+*
+iPhone 14 Pro 128GB*
+iPhone 14 Plus 256GB*
+Samsung Galaxy Z Flip4*
+iPhone 14 Pro 256GB*
+iPhone 14 Pro Max 128GB
+Samsung Z Fold3 5G*
+
+Crédito $600:
+iPhone 14 Pro Max 256GB*
+iPhone 14 Plus 512GB*
+iPhone 14 Pro 512GB*
+iPhone 14 Pro Max 512GB*
+Z Fold 4* | PYMES | APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Oferta NO Requiere la entrega de equipo selecto en Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo    
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED PLUS, RED EXTREME, SUPREME y RED SIN FRONTERAS desde la 1 hasta 10
+-La oferta aplica en planes desde $60
+- Oferta valida en Financiamiento
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R27] NUEVO
+CREDITO DE $1,000 Y $900 Garantizado
+
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes desde $75 | Crédito $1,000:
+iPhone 14 Pro 256GB*
+iPhone 14 Pro Max 128GB*
+iPhone 14 Pro Max 256GB*
+iPhone 14 Pro Max 512GB*
+Crédito $900:
+iPhone 14 Pro 128GB* | PYMES | APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Oferta NO Requiere la entrega de equipo selecto en Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo    
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED EXTREME, RED SUPREME y RED SIN FRONTERAS desde la 1 hasta 10
+-La oferta aplica en planes desde $75
+- Oferta valida en Financiamiento
+
+Financiamiento- FIOF30
+[Ofertas Equipos en Li R29] CREDITO DE $1,000 Garantizado
+
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | AHORA APLICA EN PLANES DESDE $50 | iPhone 13 PRO MAX 128GB BANDA NO MILIMETRICA  
+iPhone 13 PRO MAX 256GB BANDA NO MILIMETRICA  
+iPhone 13 PRO MAX 512GB BANDA NO MILIMETRICA | PYMES | CLIENTE CON CREDITO B, C, E NO REQUIERE PAGO INIICIAL (DOWN PAYMENT)
+CLIENTE CON CREDITO D, F, G REQUIRE PAGO INICIAL EN EQUIPOS SELECCIONADOS, Y EN RENOVACIONES SOLO CON TENURE (CLIENTE DE CLARO) DE 19 MESES O MENOS. 
+APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+Oferta no requiere trade in.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                                                           - Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+- La oferta aplica en planes desde $50
+- Oferta valida en Financiamiento
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R32] Equipo GRATIS
+
+
+SOLO PARA CLIENTE EXISTENTE QUE AÑADA LINEAS NUEVAS CON Y SIN PORTABILIDAD | NUEVO Planes desde $45 | Galaxy NOTE 10 LITE* | PYMES | - Aplica solo para cliene existente que traiga lineas nuevas con o sin portabilidad.
+ - Oferta solo aplica en planes desde $40 para la linea nueva que traiga un cliente existente
+-  Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo            
+- Oferta solo aplica a 20, 24, 30 y 36 plazos en Financiamiento.
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los  equipos que adquiera, al momento de la activación.
+- Aplican a Planes Claro Sin Fronteras.
+
+- Price code a utilizar:
+
+Financiamiento- FIIP20, FIIP24, FIIP30, FIIP36
+[Ofertas Equipos en Li R34] EQUIIPOS CON 50% DESC
+(A MITAD DE PRECIO)
+
+
+NO REQUIERE TRADE IN
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes desde $50 | LG G8X ThinQ*
+Samsung Galaxy A71* | PYMES | APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+-NO  Requiere Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo
+-  Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED desde la 1 hasta 10
+- La oferta aplica en planes desde $50
+- Oferta no requiere pago inicial 
+- Oferta valida en Financiamiento
+
+PRICE CODE ESPECIAL PARA ESTA OFERTA SOLO A 30 MESES:
+
+FINANCIAMIENTO:  FI50%
+[Ofertas Equipos en Li R36] CREDITO DE $850 Garantizado
+
+REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+
+SOLO A 30 PLAZOS | Planes desde $60 | Galaxy Z Flip*
+Galaxy Z Fold2 5G*
+Galaxy Fold*
+SAMSUNG NOTE 20 ULTRA | PYMES | CLIENTE CON CREDITO B, C, E NO REQUIERE PAGO INIICIAL (DOWN PAYMENT)
+CLIENTE CON CREDITO D, F, G REQUIRE PAGO INICIAL EN EQUIPOS SELECCIONADOS, Y EN RENOVACIONES SOLO CON TENURE (CLIENTE DE CLARO) DE 19 MESES O MENOS. 
+APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES 
+- Oferta Requiere la entrega de equipo selecto en Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo                                                                                                                                                                                                                         
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED PLUS, RED EXTREME, RED SUPREME y RED SIN FRONTERAS desde la 1 hasta 10
+- La oferta aplica en planes desde $60
+- Oferta valida en  Financiamiento
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R39] CREDITO DE $700 Garantizado
+
+NO REQUIERE TRADE IN SIN VALORIZACION
+
+LINEAS NUEVAS, PORTABILIDADES Y RENOVACIONES
+
+
+SOLO A 30 PLAZOS | Planes desde $60 | SAMSUNG Z FOLD 3 5G | PYMES | CLIENTE CON CREDITO B, C, E NO REQUIERE PAGO INIICIAL (DOWN PAYMENT)
+CLIENTE CON CREDITO D, F, G REQUIRE PAGO INICIAL EN EQUIPOS SELECCIONADOS, Y EN RENOVACIONES SOLO CON TENURE (CLIENTE DE CLARO) DE 19 MESES O MENOS. 
+APLICA A LINEAS NUEVAS CON Y SIN PORTABILIDAD Y RENOVACIONES
+- Oferta  NO requiere la entrega de equipo selecto en Trade in SIN valorización
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta aplica solo a 30 PLAZOS. Créditos se comienzan a ver a partir de la 2nda factura.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo    
+- Todos los equipos gratis aplicarán también a todas las lineas de los planes BUSINESS RED PLUS, RED EXTREME, RED SUPREME y RED SIN FRONTERAS desde la 1 hasta 10
+- La oferta aplica en planes desde $60
+- Oferta valida en Financiamiento
+
+Financiamiento- FIUP30
+[Ofertas Equipos en Li R41] 30% de Descuento | NUEVO Planes desde $45 | LG G8s Thin Q (Precio regular bajo a $599.99)* | PYMES | - Aplica  para cliente Nuevo, y Existentes que traigan líneas nuevas, con o sin portabilidad, o renueven
+- Con esta oferta de Equipos con 30%  de descuento No aplica Bono de Portabilidad SOLO en planes individuales sobre $50
+- Aplican los mismos términos y condiciones del equipo a 30%,  NO requiere Down Payment y no requiere trade in sin valorización (ver boletín de términos y condiciones para detalles).
+- Aplican a todas las líneas de los planes multilíneas Business RED de la 1 hasta la 10.
+ - Oferta NO requiere la entrega de equipo selecto en Trade in sin valorización
+- ESTA Oferta aplica  solo a plazos de 20, 24, 30 o 36.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del  mismo. 
+- Oferta aplica en  Financiamiento
+[Ofertas Equipos en Li R42] 50% de descuento | NUEVO Planes desde $35 | LG G7* | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones.
+- Con esta oferta de Equipos con 50%  de descuento SI aplica Bono de Portabilidad SOLO en planes individuales sobre $50
+- El cliente deberá pagar mensualmente la renta del plan y el remanente del installment del equipo luego del descuento de 50%.
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta solo aplica a 24 plazos en Financiamiento.
+-NO Apilca Bono de Streaming 
+- Aplican a todas las líneas de los planes multilíneas Business  RED.
+- Aplica a planes Sin Frontera
+[Ofertas Equipos en Li R43] NUEVO Planes desde $45 | LG V20*
+ LG G6*
+[Ofertas Equipos en Li R44] Equipo 56.36% de Descuento | NUEVO Planes desde $45 | LG V30* (cliente paga $12.00 mensuales por 24 plazos) | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones.
+- Con esta oferta de Equipos con 56.36%  de descuento SI aplica Bono de Portabilidad SOLO en planes individuales desde $50
+- El cliente deberá pagar mensualmente la renta del plan y el remanente del installment del equipo luego del descuento de 50%.
+- Aunque los equipos estén en oferta, el cliente deberá pagar los taxes de todos los equipos que adquiera,  al momento de la activación.
+- ESTA Oferta solo aplica a 24 plazos en Financiamiento.
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del  mismo. 
+- Aplican a todas las líneas de los planes multlíneas Business RED.
+- Aplica a planes Sin Frontera
+[Ofertas Equipos en Li R45] OFERTA 10% de Descuento
+
+CLIENTE NUEVO, CLIENTE EXISTENTE Y RENOVACIONES | NUEVO Planes desde $45 | 'Samsung A9 * | PYMES | -15% Aplica a lineas nuevas sin portabilidad y a renovaciones 
+ - Con esta oferta de 10% de descuento en equipos en liquidacion NO APLICA el Bono de Portabilidad SOLO en planes individuales desde $50
+ - El cliente debera pagar mensualmente la renta del plan y el remanente del installment que le aplique.
+- Aunque el equipo este en oferta, el cliente deberá pagar los impuestos del precio regular del equipo que adquiera al momento del activacion.
+- Aplican los mismos términos y condiciones del equipo a 10% (ver boletín de términos y condiciones para detalles).
+ - Oferta aplica en  Financiamiento
+- Aplican a todas las líneas de los planes multilíneas Business RED.
+ - Oferta NO require trade in sin valorizacion
+-Descuento de 10% en estos equipos aplica solo plazo de 20, 24, 30 y 36 meses 
+-Apilca Bono de Streaming  si el cliente es convergente, el pago de equipo  es a 30 plazos o mas y cumple con todos los rerquisitos del mismo
+[Ofertas Equipos en Li R46] Planes desde $50 | LG V35 con Homebot*
+[Ofertas Equipos en Li R47] Ver boletín de términos y condiciones para más detalles e información de los procesos. 
+* Equipos en liquidación.  El inventario de estos equipos es limitado, así que la oferta aplica para aquellos canales de ventas donde haya inventario disponible.
+[Ofertas Equipos en Li R49] CANAL DIRECTO:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Complimiento con Legales y Terminos y Condiciones COM: LIH - 2020 - 826
+[Ofertas Equipos en Li R50] CANAL INDIRECTO - AGENTES:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Boletín B-VI-2020-001 Escenarios de Facturación al Agente por NO cumplir con los procesos establecidos.
+[Ofertas Planes y Bonos R1] OFERTAS DE EQUIPOS EN PORTAFOLIO DEL 20 DE JUNIO AL 3 DE JULIO DE 2026
+ FINANCIAMIENTO  - PYMES
+[Ofertas Planes y Bonos R2] OFERTAS DE PLANES Y SERVICIOS ESPECIALES
+[Ofertas Planes y Bonos R3] OFERTA | PLANES QUE APLICAN | EQUIPOS QUE APLICAN | CODIGO | Account types que aplican | BONOS QUE APLICAN DE ACUERDO A LA REGLA DE CADA UNO | RESUMEN TERMINOS Y CONDICIONES
+[Ofertas Planes y Bonos R4] Bono Portabilidad $150 | Aplica solo en planes desde $45 | -  Aplica a todas las ofertas vigentes de equipos, excepto  para los equipo gratis.  Ver detalles en el tab Oferta Equipos.                         -Aplica a equipos en precio regular. | Será aplicado por JOB automáticamente al cumplir con los requisitos del mismo. | PYMES | Ahora aplica tanto a clientes  CONVERGENTES y NO CONVERGENTES si se acojen a planes desde $45. | Aplica a clientes nuevos o existentes que activen o añadan lineas en Portabilidad 
+Aplica a clientes Update y Financiamiento solo en ciertos planes de $45 en adelante.  No disponible para todos los planes .
+-Aplica a clientes convergentes $150 y no convergentes portando 2 lineas o más $100 por línea portada. En el caso de cliente no convergente que porta sólo 1 línea se le aplicará $50 de Bono de Portabilidad. Aplica a planes individuales desde $40 y planes multilíneas Business Red. 
+No aplica BYOP, Prepago, Banda Ancha, FWA, Claro Hogar
+Para información detallada  del beneficio y los requerimientos favor de ver: 
+Boletin de Mercadeo: Nuevo Bono de Portabilidad $150 PYMES o Boletín de Procesos 2024-VVM-003
+[Ofertas Planes y Bonos R5] ¡Oferta por tiempo Limitado!
+
+Nuevos Bonos de  Portabilidad hasta $500 | Aplica solo en planes Business Red desde $65 | -  Aplica a todas las ofertas vigentes de equipos, excepto  para los equipo gratis.  Ver detalles en el tab Oferta Equipos.                         -Aplica a equipos en precio regular. | Será aplicado por JOB automáticamente al cumplir con los requisitos del mismo. | PYMES | Aplica sólo a clientes PYMES, Aplica a clientes  CONVERGENTES y NO CONVERGENTES si se acojen a planes Business Red desde $65. | Aplica a clientes nuevos o existentes que activen o añadan lineas en Portabilidad del segmento de PYMES.
+Aplica a clientes Update y Financiamiento solo en planes individuales y/o multilíneas Business Red de $65 en adelante.  No disponible para todos los planes .
+-Aplica a clientes convergentes y no convergentes portando línea portada. 
+-La cantidad que recibirá el cliente dependerá del plan Business Red al que se active inicialmente ya sea individual o multilínea: 
+       -Business Red Plus – Recibirá un total de $175 por línea, hasta un máximo de 3 líneas.
+       -Business Red Extreme- Recibirá un total de $300 por línea, hasta un máximo de 3 líneas.
+       -Business Red Supreme o Business Red Sin Fronteras- Recibirá un total de $500 por línea, hasta un    
+         máximo de 3 líneas.
+No aplica BYOP, Prepago, Banda Ancha, FWA, Claro Hogar
+Para información detallada  del beneficio y los requerimientos favor de ver: 
+Boletin de Mercadeo: Boletín Oferta Limitada Nuevos Bonos de Portabilidad Móvil hasta $500 PYMES- o Boletín de Procesos MSV HCB 2026-502
+[Ofertas Planes y Bonos R6] Pago Balance de Equipo y accesorios en Portabilidad de hasta $800 | Planes desde $50 | - Aplica con todas las ofertas vigentes de equipos. | Se solicita al vendedor y debe ser enviada a  través del siguiente email  Servicio_BCC@claropr.com o por correo postal. | PYMES | Ahora aplica tanto a clientes  CONVERGENTES y NO CONVERGENTES si se acojen a planes desde $50. | '-Hasta $800 para el saldo del balance pendiente de su equipo y accesorios con la competencia al portar su número a Claro. 
+ El cliente tiene dos opciones de activación:
+1. Update y/o Financiamiento: Adquiere un nuevo equipo mediante un plan de pago a plazos de 24, 30 o 36 meses. 
+2. Bring Your Own Phone (BYOP): El cliente trae su propio dispositivo, siempre que esté desbloqueado y sea compatible con la red de Claro. El dispositivo debe estar desbloqueado antes de la portabilidad del número.
+-Pago de hasta $800 acreditados en la factura o pagados mediante cheque.
+-Maximo de hasta 5 líneas.
+ -Cliente tiene hasta 60 dias calendario a partir de la contratación de servicios para solicitar el reembolso de la penalidad conforme al procedimiento establecido. 
+ -Cliente debe solicitar el rembolso a su vendedor quien le proveerá la solicitud. Esta debe ser enviada a traves del email  Servicio_BCC@claropr.com o por correo postal.
+ -Solo se pagará el cargo por balance de equipo y/o accesorios, no balances pendientes ni impuestos.                                                                                         
+ -Referirse a boletín de Procedimiento 2024-VVM-016.
+[Ofertas Planes y Bonos R7] Bono streaming | Planes desde $35 | - Aplica con todas las ofertas vigentes de equipos. | Se solicita al vendedor y debe ser enviada a  través del siguiente email  Servicio_BCC@claropr.com o por correo postal. | PYMES | Ahora sólo aplica si el cliente es CONVERGENTE y se acoje a planes desde $35. | - Aplica a portabilidades, líneas nuevas y a clientes existentes que traigan 1 o más líneas nuevas adicionales, en estos casos el descuento siempre aplica por la línea nueva.                                                                                            
+-Aplica sólo a clientes convergentes.                                                                                                                                                                
+-Nuevo Solo aplica a clientes convergentes que tengan una combinacion de dos de los servicios de Claro (Movil, Fijo, Claro TV). Ver los NUEVOS Terminos y Condiciones del Bono Streaming en el boletin. 
+- Solo aplica un descuento de $10.00 por BAN. El descuento tendrá una duración de 12 meses en la cuenta del cliente.
+Si el cliente cancela una de las líneas y su cuenta queda con una sola línea, automáticamente perderá el beneficio del descuento.
+-Cliente debe solicitar el rembolso a su vendedor quien le proveerá la solicitud. Esta debe ser enviada a traves del email  Servicio_BCC@claropr.com o por correo postal. El vendedor NO aplicará el bono en la tienda.
+[Ofertas Planes y Bonos R8] Planes Scarlet | - $35 con 35GB
+ - $45 con 60GB | - Aplica las ofertas vigentes de equipos dependiendo del plan requerido. | $35- RED3535
+$45- RED4560 | PYMES | - Aplica a portabilidades, líneas nuevas y renovaciones. 
+- Planes disponibles en Update y Financiamiento.
+[Ofertas Planes y Bonos R10] Ver boletín de términos y condiciones para más detalles e información de los procesos.
+[Ofertas Planes y Bonos R12] CANAL DIRECTO:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Complimiento con Legales y Terminos y Condiciones COM: LIH - 2020 - 826
+[Ofertas Planes y Bonos R13] CANAL INDIRECTO - AGENTES:  Activar la oferta solo a clientes que cumplen con todos los términos y condiciones. Favor referirse al documento:  
+Boletín B-VI-2020-001 Escenarios de Facturación al Agente por NO cumplir con los procesos establecidos.
+[Planes de Lista R1] OFERTAS DE EQUIPOS EN PORTAFOLIO DEL 20 DE JUNIO AL 3 DE JULIO DE 2026
+ UPDATE PLUS Y FINANCIAMIENTO  - PYMES
+[Planes de Lista R2] Codigo | Renta Mensual | PLANES NACIONALES INDIVIDUALES
+[Planes de Lista R3] VOLT412 | 12 | VOLTE - 1000 MIN EN PR Y USA, 100 LD A USA, 900 SMS, 100 MMS, DATA PR Y USA PUJ 4.5GB
+[Planes de Lista R4] VOLT820 | 20 | VOLTE - Voz local ilimitada,SMS/MMS en PR, a US y a ciertos destinos INT, SMS/MMS roaming en USA, LD ilimitado a USA, 100 minutos para Larga distancia a destinos internacionales, Roaming ilimitado en USA y data ilimitada en PR & USA con PUJ de 8GB
+[Planes de Lista R5] RED3535 | 35 | Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, Mejico y Canada, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada con PUJ 35GB
+[Planes de Lista R6] RED4560 | 45 | Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, Mejico y Canada, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada con PUJ de 60GB | NUEVO PLAN
+[Planes de Lista R7] REDBAS | 50 | VOLTE-  Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, Mejico y Canada, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada (sin reduccion) HOTSPOT 10GB  //  (PERMITE SÓLO MÓVIL)
+[Planes de Lista R8] BREDPLUS | 65 | VOLTE-  Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, Mejico y Canada, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada (sin reduccion) HOTSPOT 60GB sólo para uso en PR, USA, Méjico y Canadá //  (PERMITE MOVIL Y BANDA ANCHA) | NUEVO PLAN
+Reemplaza REDPLUS
+[Planes de Lista R9] BREDEXT | 75 | VOLTE -Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, Mejico y Canada, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada (sin reduccion) HOTSPOT 100GB sólo para uso en PR, USA, Méjico y Canadá //  (PERMITE MOVIL Y BANDA ANCHA) | NUEVO PLAN
+Reemplaza EXTREME
+[Planes de Lista R10] BREDSUP | 95 | VOLTE -Voz local ilimitada, SMS/MMS en PR, a US, Mejico, Canada y a ciertos destinos INT, SMS/MMS roaming en USA, Mejico y Canada, LD ilimitado a USA, 100 minutos de Larga Distancia Internacional, Roaming ilimitado en USA, Mejico y Canada y Data ilimitada en PR, USA, Mejico y Canada (sin reduccion) HOTSPOT ILIMTADO sólo para uso en PR, USA, Méjico y Canadá //  (PERMITE MOVIL Y BANDA ANCHA)
+[Planes de Lista R11] BREDSF | 100 | VOLTE- Voz local, LD, RM,  SMS/MMS y Data Ilimitada Sin reduccion de Velocidad  en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador con Hotspot Ilimitado sólo para uso en PR, USA, Méjico y Canadá//  (PERMITE MOVIL Y BANDA ANCHA) | NUEVO PLAN
+Reemplaza REDCSF
+[Planes de Lista R12] Codigo | Renta Mensual | CLARO SIN FRONTERAS
+[Planes de Lista R13] VOLCSF50 | 50 | VOLTE-Voz local, LD, RM,  SMS/MMS y Data ilimitada en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador con PUJ de 5GB./HOT SPOT MISMOS 5GB (PR y US solamente, NO ROAMING INTERNACIONAL)
+[Planes de Lista R14] VOLCSF60 | 60 | VOLTE-Voz local, LD, RM,  SMS/MMS y Data ilimitada en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador con PUJ de 10GB./HOT SPOT MISMOS 10GB (PR y US solamente, NO ROAMING INTERNACIONAL)
+[Planes de Lista R15] VOLCSF70 | 70 | VOLTE-Voz local, LD, RM,  SMS/MMS y Data ilimitada en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador con PUJ de 15GB./ HOT SPOT MISMOS 15GB (PR y US solamente, NO ROAMING INTERNACIONAL)
+[Planes de Lista R16] BREDSF | 100 | VOLTE- Voz local, LD, RM,  SMS/MMS y Data ilimitada en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador con Data Ilimitada Sin reduccion de Velocidad con 100GB de Hotspot //  (PERMITE MOVIL Y BANDA ANCHA) | NUEVO PLAN
+Reemplaza REDCSF
+[Planes de Lista R17] Codigo | Renta | PLANES NACIONALES MULTILÍNEAS
+[Planes de Lista R18] BREDP1 | 10 LÍNEAS X $350 | Voz local ilimitada, SMS/MMS en PR, a US, Méjico, Canadá y a ciertos destinos INT, SMS/MMS roaming en USA, Méjico y Canadá, LD ilimitado a USA, Méjico y Canadá, Roaming ilimitado en USA, Méjico y Canadá y Data ilimitada en PR, USA, Méjico y Canadá (Sin Reducción) // PLAN MULTILÍNEAS HASTA 10 LINEAS (PERMITE MOVIL Y BANDA ANCHA)//  HOTSPOT 60GB sólo para uso en PR, USA, Méjico y Canadá | NUEVO PLAN
+Reemplaza BREDPVL
+[Planes de Lista R19] BREDE1 | 10 LÍNEAS X $400 | Voz local ilimitada, SMS/MMS en PR, a US, Méjico, Canadá y a ciertos destinos INT, SMS/MMS roaming en USA, Méjico y Canadá, LD ilimitado a USA, Méjico y Canadá, Roaming ilimitado en USA, Méjico y Canadá y Data ilimitada en PR, USA, Méjico y Canadá (Sin Reducción) // PLAN MULTILÍNEAS HASTA 10 LINEAS (PERMITE MOVIL Y BANDA ANCHA)// HOTSPOT 100GB sólo para uso en PR, USA, Méjico y Canadá | NUEVO PLAN
+Reemplaza BREDEXV
+[Planes de Lista R20] BREDS1 | 10 LÍNEAS X $500 | Voz local ilimitada, SMS/MMS en PR, a US, Méjico, Canadá y a ciertos destinos INT, SMS/MMS roaming en USA, Méjico y Canadá, LD ilimitado a USA, 100 minutos de Larga Distancia Internacional, Roaming ilimitado en USA, Méjico y Canadá y Data ilimitada en PR, USA, Méjico y Canadá (Sin Reducción) // PLAN MULTILÍNEAS HASTA 10 LINEAS (PERMITE MOVIL Y BANDA ANCHA)// HOTSPOT ILIMITADO sólo para uso en PR, USA, Méjico y Canadá | NUEVO PLAN
+Reemplaza BREDSPV
+[Planes de Lista R21] BREDSF1 | 10 LÍNEAS X $550 | VOLTE- Voz local, LD, RM,  SMS/MMS y Data ilimitada (Sin Reducción) en PR,  en USA, México, Canadá, República Dominicana, Argentina,  Uruguay,  Paraguay,  Panamá, Guatemala,  Nicaragua,  Honduras, Costa Rica,  Perú,  Chile,  Colombia,  El Salvador,  Brasil y  Ecuador // PLAN MULTILÍNEAS HASTA 10 LINEAS (PERMITE MOVIL Y BANDA ANCHA)// HOTSPOT ILIMITADO sólo para uso en PR, USA, Méjico y Canadá | NUEVO PLAN
+[Planes de Lista R22] Codigo | Renta | PLANES BYOP NACIONALES MULTILÍNEAS
+[Planes de Lista R23] BREDP1015 | 10 LÍNEAS X $150 | Voz local ilimitada, SMS/MMS en PR, a US, Méjico, Canadá y a ciertos destinos INT, SMS/MMS roaming en USA, Méjico y Canadá, LD ilimitado a USA, Méjico y Canadá, Roaming ilimitado en USA, Méjico y Canadá y Data ilimitada en PR, USA, Méjico y Canadá (Sin Reducción) // PLAN MULTILÍNEAS HASTA 10 LINEAS (PERMITE SÓLO MOVIL)//  HOTSPOT 60GB sólo para uso en PR, USA, Méjico y Canadá | NUEVO PLAN
+BYOP- OFERTA EXTENDIDA HASTA EL 30 DE JUNIO DE 2026
+[PLANES PROMOCIONALES R1] OFERTAS DE EQUIPOS EN PORTAFOLIO DEL 15 AL 31 DE MAYO DE 2023
+ FINANCIAMIENTO  - PYMES
+[PLANES PROMOCIONALES R2] Codigo | Renta | PLANES NACIONALES INDIVIDUALES | COMENTARIOS
+[PLANES PROMOCIONALES R3] VOLT5039 | 39 | Voz local ilimitada,SMS/MMS en PR, a US y a ciertos destinos INT, SMS/MMS roaming en USA, LD ilimitado a USA, 100 minutos para Larga distancia a destinos internacionales, Roaming ilimitado en USA y data ilimitada en PR & USA con PUJ de 50GB

@@ -1,0 +1,16 @@
+{
+  "name": "planes-para-web",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "pdf-parse": "^2.4.5",
+    "pdf2json": "^4.0.2"
+  }
+}

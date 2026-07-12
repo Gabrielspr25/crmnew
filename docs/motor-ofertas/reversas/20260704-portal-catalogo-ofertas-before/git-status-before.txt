@@ -1,0 +1,15 @@
+﻿ M backend/.env.example
+ M backend/src/routes/correosRoutes.js
+ M backend/src/routes/equiposRoutes.js
+ M frontend/app.html
+?? "Planes para web/"
+?? backend/migrations/2026-06-30-equipos-imagenes.sql
+?? backend/src/services/equiposImagenesService.js
+?? backend/test/correos-contract.test.js
+?? backend/test/equipos-imagenes-contract.test.js
+?? backend/test/oferta-const-portal.test.js
+?? backend/test/ofertas-herencia-contract.test.js
+?? backend/test/ofertas-servicios-contract.test.js
+?? docs/
+?? frontend/img/claro-empresas.png
+?? frontend/img/servicios/

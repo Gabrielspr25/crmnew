@@ -172,7 +172,7 @@ function tog(){const b=document.body,d=b.getAttribute('data-theme')==='day';b.se
 function money(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function ini(n){return (n||'?').trim().slice(0,2).toUpperCase();}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409)throw new Error(p+' -> '+r.status);return r.json();}
+async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409){let msg='';try{const d=await r.json();msg=d&&d.error?': '+d.error:'';}catch(e){}throw new Error(p+' -> '+r.status+msg);}return r.json();}
 async function apiForm(p,formData){const r=await fetch(API+p,{method:'POST',headers:{Authorization:'Bearer '+token},body:formData});if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}return r.json();}
 function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-01';}
 
@@ -210,19 +210,18 @@ async function viewClientes(){
     <td style="text-align:center;color:var(--primary)">→</td></tr>`; };
   return `<div class="head"><div><h1>Clientes</h1><div class="s">Información de todos los clientes · data REAL de crm_pro</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-      <button class="btn ghost" onclick="alert('Reportes: próximamente')">📊 Reportes</button>
-      <button class="btn" style="background:var(--violet)" onclick="alert('Generar Oferta IA: próximamente')">✨ Generar Oferta IA</button>
-      <button class="btn ghost" onclick="alert('Exportar: próximamente')">⬇ Exportar</button>
+      <button class="btn ghost" onclick="mostrarInfoReportes()">📊 Reportes</button>
+      <button class="btn ghost" onclick="exportarBaseCompleta()">⬇ Exportar BD</button>
       <button class="btn" onclick="nuevoCliente()">+ Nuevo cliente</button>
     </div></div>
   <div class="kpis">${CLI_TABS.map(t=>card(t[0],t[1])).join('')}
     <div class="kpi"><div class="l">Total · ${CLI_TABS.find(t=>t[0]===cliTab)[1]}</div><div class="v">${all.length}</div></div></div>
-  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por nombre… (Enter)" value="${cliQ}" onkeydown="cliSearch(event)"></div>
+  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por empresa o contacto… (Enter)" value="${cliQ}" onkeydown="cliSearch(event)"></div>
   <div class="s" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">Mostrando ${all.length?from+1:0}-${Math.min(from+per,all.length)} de ${all.length} · pág ${cliPage}/${pages}
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage>1?'cliPageGo(-1)':''}">Anterior</button>
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage<pages?'cliPageGo(1)':''}">Siguiente</button></div>
   <div class="card" style="overflow-x:auto"><table style="min-width:1200px"><thead><tr>
-    <th>Empresa</th><th>Celular</th><th>Última actividad</th><th>Tipo BAN</th><th>Base</th><th>Estado</th><th>Vendedor</th><th>Num BAN</th><th>Suscriptor</th><th>Fecha vencimiento</th><th></th>
+    <th>Empresa</th><th>Tel. contacto</th><th>Última actividad</th><th>Tipo BAN</th><th>Base</th><th>Estado</th><th>Vendedor</th><th>Num BAN</th><th>Suscriptor</th><th>Fecha vencimiento</th><th></th>
   </tr></thead><tbody>${rows.map(tr).join('')||'<tr><td colspan="11" class="empty">Sin clientes en este filtro</td></tr>'}</tbody></table></div>`;
 }
 // ---- Modal de cliente (réplica ClientModal real, 5 tabs) ----
@@ -232,6 +231,37 @@ function cliAct(s){return ['a','activo','active','activa'].includes(String(s||''
 function cliCanc(s){const x=String(s||'').toLowerCase();return x.includes('cancel')||x==='c'||x==='inactivo'||x==='inactive';}
 function cliNoren(s){var x=String(s||'').toLowerCase();return x.includes('no_renueva')||x==='suspendido';}
 function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
+function cliContractEndFromPayments(v){var n=parseInt(String(v||'').replace(/\D/g,''),10);if(!isFinite(n)||n<=0)return '';var d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10);}
+function cliSubscriberFields(s){
+  s=s||{};
+  return [
+    {key:'phone',label:'Telefono / suscriptor (10 digitos)',ph:'7875551234',value:s.phone||''},
+    {key:'plan',label:'Plan',value:s.plan||''},
+    {key:'price_code',label:'SOC / codigo plan',value:s.price_code||''},
+    {key:'monthly_value',label:'Mensualidad $',value:s.monthly_value!=null?Number(s.monthly_value):''},
+    {key:'line_kind',label:'Tipo producto',type:'select',options:[['','-'],['movil','Movil'],['fijo','Fijo'],['claro_tv','Claro TV'],['cloud','Cloud'],['mpls','MPLS']],value:s.line_kind||''},
+    {key:'line_type',label:'Tipo de linea',type:'select',options:[['','-'],['NEW','NEW'],['REN','REN'],['LINEA_NUEVA','Linea nueva'],['RENOVACION','Renovacion'],['PORTABILIDAD','Portabilidad']],value:s.line_type||''},
+    {key:'product_type',label:'PRODUCT_TYPE',value:s.product_type||''},
+    {key:'equipment',label:'Modelo equipo (si es movil)',value:s.equipment||''},
+    {key:'activation_date',label:'Fecha activacion',value:s.activation_date?String(s.activation_date).slice(0,10):''},
+    {key:'contract_start_date',label:'Inicio contrato',value:s.contract_start_date?String(s.contract_start_date).slice(0,10):''},
+    {key:'contract_term',label:'Duracion contrato meses',value:s.contract_term??''},
+    {key:'payments_made',label:'Cuotas pagadas',value:s.payments_made??''},
+    {key:'remaining_payments',label:'Pagos restantes',value:s.remaining_payments??'',autoDateTo:'contract_end_date'},
+    {key:'contract_end_date',label:'Vencimiento calculado',value:s.contract_end_date?String(s.contract_end_date).slice(0,10):''},
+    {key:'status',label:'Estado',type:'select',options:[['activo','Activo'],['cancelado','Cancelado'],['suspendido','Suspendido / No renueva']],value:s.status||'activo'},
+    {key:'cancel_reason',label:'Razon cancelacion',type:'select',options:[['','-'],['Deuda','Deuda'],['Sin Deuda','Sin Deuda'],['Portout','Portout'],['Cancelado via pegado masivo','Cancelado via pegado masivo']],value:s.cancel_reason||''}
+  ];
+}
+function cliNormalizeSubscriberPayload(v){
+  v=Object.assign({},v||{});
+  if(!v.remaining_payments && v.contract_term && v.payments_made){
+    var total=parseInt(String(v.contract_term).replace(/\D/g,''),10), paid=parseInt(String(v.payments_made).replace(/\D/g,''),10);
+    if(isFinite(total)&&isFinite(paid)&&total>=paid) v.remaining_payments=String(total-paid);
+  }
+  if(v.remaining_payments && !v.contract_end_date) v.contract_end_date=cliContractEndFromPayments(v.remaining_payments);
+  return v;
+}
 function cliWIP(l){alert(l+': lo conecto en el próximo paso (copiando del viejo).');}
 function refreshCli(){ if(cliM&&cliM.id){ api('/api/clients-real/'+cliM.id).then(function(d){cliM=d;renderCli();}).catch(function(){}); } }
 function closeForm(){ var m=$('formBg'); if(m)m.remove(); }
@@ -240,60 +270,106 @@ function openForm(title, fields, onSubmit){
     (f.type==='select'
       ? '<select class="inp" id="ff_'+i+'">'+(f.options||[]).map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(f.value||'')?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
       : '<input class="inp" id="ff_'+i+'" value="'+(f.value!=null?String(f.value).replace(/"/g,'&quot;'):'')+'" placeholder="'+(f.ph||'')+'">')+'</div>'; }).join('');
-  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="formBg" style="z-index:210" onclick="if(event.target===this)closeForm()"><div class="modal" style="max-width:430px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">'+title+'</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeForm()">✕</button></div>'+rows+'<div id="ff_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="ff_save">Guardar</button></div></div>');
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="formBg" style="z-index:210" onclick="if(event.target===this)closeForm()"><div class="modal" style="max-width:680px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">'+title+'</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeForm()">✕</button></div>'+rows+'<div id="ff_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="ff_save">Guardar</button></div></div>');
+  fields.forEach(function(f,i){ if(f.autoDateTo){ var src=$('ff_'+i), dstIdx=fields.findIndex(function(x){return x.key===f.autoDateTo;}); var dst=dstIdx>=0?$('ff_'+dstIdx):null; if(src&&dst){ src.addEventListener('input',function(){dst.value=cliContractEndFromPayments(src.value);}); if(src.value&&!dst.value)dst.value=cliContractEndFromPayments(src.value); } } });
   $('ff_save').onclick=async function(){ var vals={}; fields.forEach(function(f,i){ var el=$('ff_'+i); vals[f.key]=el?el.value:''; }); try{ await onSubmit(vals); closeForm(); }catch(e){ $('ff_err').textContent=(e&&e.message)||'Error'; } };
 }
 async function cliEditar(){ var c=cliM; openForm('Editar cliente',[
-  {key:'name',label:'Nombre',value:c.name},{key:'email',label:'Email',value:c.email},
+  {key:'name',label:'Empresa',value:c.name},{key:'owner_name',label:'Dueño',value:c.owner_name},
+  {key:'contact_person',label:'Contacto',value:c.contact_person},{key:'email',label:'Email',value:c.email},
   {key:'phone',label:'Tel. principal',value:c.phone},{key:'additional_phone',label:'Tel. secundario',value:c.additional_phone},
-  {key:'mobile',label:'Tel. móvil',value:c.mobile||c.cellular},{key:'address',label:'Dirección',value:c.address},
-  {key:'city',label:'Ciudad',value:c.city},{key:'zip_code',label:'Código postal',value:c.zip_code}
+  {key:'cellular',label:'Celular contacto',value:c.cellular},{key:'address',label:'Dirección',value:c.address},
+  {key:'city',label:'Ciudad',value:c.city},{key:'zip_code',label:'Código postal',value:c.zip_code},
+  {key:'tax_id',label:'TAX/SSN',value:c.tax_id}
 ], async function(v){ await api('/api/clients-real/'+c.id,{method:'PUT',body:v}); refreshCli(); }); }
 async function cliEliminar(){ var c=cliM; if(!confirm('¿Eliminar el cliente "'+(c.name||'')+'" con todos sus BANs/líneas? No se puede deshacer.'))return; try{ await api('/api/clients-real/'+c.id,{method:'DELETE'}); cerrarModal(); reClientes(); }catch(e){ alert('No se pudo eliminar: '+e.message); } }
 async function cliNuevoBan(){ openForm('Nuevo BAN',[
   {key:'number',label:'Número de BAN (9 dígitos)',ph:'757963289'},
   {key:'account_type',label:'Tipo',type:'select',options:[['FIJO','FIJO'],['MOVIL','MOVIL'],['CONVERGENTE','CONVERGENTE'],['PYMES','PYMES']],value:'FIJO'}
 ], async function(v){ await api('/api/clients-real/'+cliM.id+'/bans',{method:'POST',body:v}); refreshCli(); }); }
-async function cliAddSub(banId){ openForm('Agregar suscriptor',[
-  {key:'phone',label:'Teléfono (10 dígitos)',ph:'7875551234'},{key:'plan',label:'Plan'},
-  {key:'monthly_value',label:'Mensualidad $'},
-  {key:'line_kind',label:'Tipo',type:'select',options:[['','—'],['movil','Móvil'],['fijo','Fijo']],value:''}
-], async function(v){ await api('/api/bans-real/'+banId+'/subscribers',{method:'POST',body:v}); refreshCli(); }); }
-async function cliEditSub(id,plan,monthly){ openForm('Editar suscriptor',[
-  {key:'plan',label:'Plan',value:plan},{key:'monthly_value',label:'Mensualidad $',value:monthly}
-], async function(v){ await api('/api/subscribers-real/'+id,{method:'PUT',body:v}); refreshCli(); }); }
+async function cliAddSub(banId){ openForm('Agregar suscriptor',cliSubscriberFields({status:'activo'}), async function(v){ await api('/api/bans-real/'+banId+'/subscribers',{method:'POST',body:cliNormalizeSubscriberPayload(v)}); refreshCli(); }); }
+async function cliEditSub(id){ var s=(cliM&&cliM.subscribers||[]).find(function(x){return String(x.id)===String(id);})||{}; openForm('Editar suscriptor',cliSubscriberFields(s), async function(v){ await api('/api/subscribers-real/'+id,{method:'PUT',body:cliNormalizeSubscriberPayload(v)}); refreshCli(); }); }
 async function cliSubStatus(id,status,label){ if(!confirm('¿'+label+' este suscriptor?'))return; try{ await api('/api/subscribers-real/'+id,{method:'PUT',body:{status:status}}); refreshCli(); }catch(e){ alert('No se pudo: '+e.message); } }
 // ---- OCR Subir/Pegar (imagen -> suscriptores) ----
-let ocrRows=[], ocrBanId=null;
+let ocrRows=[], ocrBanId=null, ocrPastedImage=null, ocrOpenedBanNumber=null, ocrDetectedBanNumber=null, ocrBanBlocked=false;
 function cerrarOCR(){ var m=$('ocrBg'); if(m)m.remove(); }
 function abrirOCR(banId){
-  ocrBanId=banId; ocrRows=[];
-  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="ocrBg" style="z-index:210" onclick="if(event.target===this)cerrarOCR()"><div class="modal" id="ocrModal" style="max-width:680px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📷 Subir/Pegar — leer suscriptores</h3><button class="btn ghost" style="padding:6px 10px" onclick="cerrarOCR()">✕</button></div><div class="s" style="margin-bottom:10px">Subí una foto/captura de la lista de suscriptores. Vision lee teléfonos, plan y estado.</div><input type="file" id="ocrFile" accept="image/*" class="inp" style="margin-bottom:10px"><button class="btn" id="ocrGo" onclick="ocrAnalizar()">🔎 Analizar imagen</button><div id="ocrResult" style="margin-top:14px"></div></div></div>');
+  const openedBan=(cliM&&cliM.bans||[]).find(b=>String(b.id)===String(banId));
+  ocrBanId=banId; ocrRows=[]; ocrPastedImage=null; ocrDetectedBanNumber=null; ocrBanBlocked=false; ocrOpenedBanNumber=openedBan?String(openedBan.ban_number||'').replace(/\D/g,''):null;
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="ocrBg" style="z-index:210" onclick="if(event.target===this)cerrarOCR()"><div class="modal" id="ocrModal" style="max-width:720px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📷 Subir o pegar imagen</h3><button class="btn ghost" style="padding:6px 10px" onclick="cerrarOCR()">✕</button></div><div class="s" style="margin-bottom:10px">Subí una foto o pegá una captura con Ctrl+V. Vision lee teléfonos, plan y estado.</div><input type="file" id="ocrFile" accept="image/*" class="inp" style="margin-bottom:10px" onchange="ocrFileChanged()"><div id="ocrPasteZone" tabindex="0" onpaste="ocrPasteImage(event)" onclick="this.focus()" style="border:1.5px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:10px;background:var(--card2);cursor:text"><b>Pegar imagen aquí</b><div class="s">Haz clic en esta caja y presiona Ctrl+V. También puedes arrastrar una captura al selector de arriba.</div><div id="ocrPreview" style="margin-top:10px"></div></div><button class="btn" id="ocrGo" onclick="ocrAnalizar()">🔎 Analizar imagen</button><div id="ocrResult" style="margin-top:14px"></div></div></div>');
+  setTimeout(()=>{var z=$('ocrPasteZone');if(z)z.focus();},80);
+}
+function ocrSetPreview(src, label){
+  var p=$('ocrPreview'); if(!p)return;
+  p.innerHTML='<div class="s" style="margin-bottom:6px;color:var(--green)">'+(label||'Imagen lista')+'</div><img src="'+src+'" style="max-width:100%;max-height:220px;border-radius:10px;background:#fff;border:1px solid var(--line)">';
+}
+function ocrFileChanged(){
+  var f=$('ocrFile')&&$('ocrFile').files&&$('ocrFile').files[0]; if(!f)return;
+  ocrPastedImage=null;
+  ocrSetPreview(URL.createObjectURL(f),'Archivo seleccionado: '+f.name);
+}
+function ocrPasteImage(e){
+  var items=(e.clipboardData&&e.clipboardData.items)||[];
+  for(var i=0;i<items.length;i++){
+    if(items[i].type&&items[i].type.indexOf('image/')===0){
+      e.preventDefault();
+      var file=items[i].getAsFile();
+      var rd=new FileReader();
+      rd.onload=function(ev){ ocrPastedImage={dataUrl:ev.target.result,mime:file.type||'image/png'}; var inp=$('ocrFile'); if(inp)inp.value=''; ocrSetPreview(ev.target.result,'Imagen pegada desde portapapeles'); };
+      rd.readAsDataURL(file);
+      return;
+    }
+  }
+  $('ocrResult').innerHTML='<div class="empty">No encontré una imagen en el portapapeles. Copiá una captura y pegala aquí.</div>';
 }
 async function ocrAnalizar(){
-  var f=$('ocrFile').files[0]; if(!f){ alert('Elegí una imagen'); return; }
+  var f=$('ocrFile')&&$('ocrFile').files&&$('ocrFile').files[0]; if(!f&&!ocrPastedImage){ alert('Subí o pegá una imagen'); return; }
   $('ocrGo').textContent='Analizando…'; $('ocrGo').disabled=true;
   try{
-    var fd=new FormData(); fd.append('file',f);
-    var r=await fetch(API+'/api/subscribers/extract-image',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
+    var opts={method:'POST',headers:{Authorization:'Bearer '+token}};
+    if(f){ var fd=new FormData(); fd.append('file',f); opts.body=fd; }
+    else { opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify({image_base64:ocrPastedImage.dataUrl,mime_type:ocrPastedImage.mime}); }
+    var r=await fetch(API+'/api/subscribers/extract-image',opts);
     var d=await r.json();
     if(!r.ok){ $('ocrResult').innerHTML='<div class="empty">'+((d&&d.error)||'No se pudo leer')+'</div>'; return; }
-    ocrRows=(d.rows||[]).map(function(x){return {phone:x.subscriber||'',plan:x.pricePlan||'',status:x.status||'',type:x.type||''};});
+    ocrDetectedBanNumber=String((d&&d.ban_number)||'').replace(/\D/g,'')||null;
+    ocrBanBlocked=false;
+    if(ocrDetectedBanNumber){
+      var detectedBan=(cliM&&cliM.bans||[]).find(function(b){return String(b.ban_number||'').replace(/\D/g,'')===ocrDetectedBanNumber;});
+      if(detectedBan){ ocrBanId=detectedBan.id; }
+      else { ocrBanBlocked=true; }
+    }
+    ocrRows=(d.rows||[]).map(function(x){return {phone:x.subscriber||'',plan:x.pricePlan||'',status:x.status||'',type:x.type||'',saveStatus:'activo'};});
     renderOcrRows(d.engine);
   }catch(e){ $('ocrResult').innerHTML='<div class="empty">Error: '+e.message+'</div>'; }
   finally{ var g=$('ocrGo'); if(g){g.textContent='🔎 Analizar imagen'; g.disabled=false;} }
 }
 function renderOcrRows(engine){
   if(!ocrRows.length){ $('ocrResult').innerHTML='<div class="empty">No detecté líneas. Probá con una foto más clara/recortada.</div>'; return; }
-  var rows=ocrRows.map(function(r,i){return '<tr><td><input class="cinp" style="width:115px;text-align:left" value="'+r.phone+'" onchange="ocrRows['+i+'].phone=this.value"></td><td><input class="cinp" style="width:95px;text-align:left" value="'+r.plan+'" onchange="ocrRows['+i+'].plan=this.value"></td><td>'+(r.status||'—')+'</td><td><button class="btn ghost" style="padding:3px 8px;font-size:11px" onclick="ocrRows.splice('+i+',1);renderOcrRows()">✕</button></td></tr>';}).join('');
-  $('ocrResult').innerHTML='<div class="s" style="margin-bottom:6px">Detecté '+ocrRows.length+' líneas'+(engine?(' · motor: '+engine):'')+'. Revisá y agregá:</div><div class="card" style="overflow-x:auto"><table><thead><tr><th>Teléfono</th><th>Plan</th><th>Estado</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><button class="btn green" style="width:100%;margin-top:12px" onclick="ocrAgregar()">+ Agregar '+ocrRows.length+' suscriptores al BAN</button>';
+  var rows=ocrRows.map(function(r,i){
+    var raw=(r.status||'—');
+    return '<tr><td><input class="cinp" style="width:115px;text-align:left" value="'+r.phone+'" onchange="ocrRows['+i+'].phone=this.value"></td><td><input class="cinp" style="width:95px;text-align:left" value="'+r.plan+'" onchange="ocrRows['+i+'].plan=this.value"></td><td><span class="pill green">Activo</span><div class="s" style="font-size:10px;margin-top:3px">Leído: '+raw+'</div></td><td><button class="btn ghost" style="padding:3px 8px;font-size:11px" onclick="ocrRows.splice('+i+',1);renderOcrRows()">✕</button></td></tr>';
+  }).join('');
+  var destBan=(cliM&&cliM.bans||[]).find(function(b){return String(b.id)===String(ocrBanId);});
+  var destBanNumber=destBan?String(destBan.ban_number||''):'desconocido';
+  var banMsg=ocrDetectedBanNumber
+    ? (ocrBanBlocked?'<div class="empty" style="margin-bottom:10px;color:var(--red)">La imagen dice BAN '+ocrDetectedBanNumber+', pero ese BAN no está en este cliente. No se puede agregar aquí.</div>':'<div class="s" style="margin-bottom:10px;color:var(--green)">BAN detectado en imagen: '+ocrDetectedBanNumber+'. Se agregará en ese BAN.</div>')
+    : '<div class="s" style="margin-bottom:10px;color:var(--amber)">No detecté BAN en la imagen. Se usará el BAN abierto: '+(ocrOpenedBanNumber||destBanNumber)+'.</div>';
+  $('ocrResult').innerHTML=banMsg+'<div class="s" style="margin-bottom:6px">Detecté '+ocrRows.length+' líneas'+(engine?(' · motor: '+engine):'')+'. El OCR puede leer cancelado, pero al agregar se guarda como Activo en el BAN '+destBanNumber+'.</div><div class="card" style="overflow-x:auto"><table><thead><tr><th>Teléfono</th><th>Plan</th><th>Se guardará como</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><button class="btn green" style="width:100%;margin-top:12px" '+(ocrBanBlocked?'disabled':'')+' onclick="ocrAgregar()">+ Agregar '+ocrRows.length+' suscriptores activos al BAN '+destBanNumber+'</button>';
 }
 async function ocrAgregar(){
-  var ok=0,fail=0;
+  if(ocrBanBlocked){ alert('No se puede agregar: la imagen pertenece al BAN '+ocrDetectedBanNumber+' y ese BAN no está en este cliente.'); return; }
+  var ok=0,created=0,updated=0,reactivated=0,fail=0,errs=[];
   for(var i=0;i<ocrRows.length;i++){ var r=ocrRows[i]; var ph=String(r.phone||'').replace(/\D/g,''); if(ph.length!==10){fail++;continue;}
     var lk=(r.type||'').toLowerCase().indexOf('fij')>=0?'fijo':((r.type||'').toLowerCase().indexOf('m')>=0?'movil':null);
-    try{ await api('/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',body:{phone:ph,plan:r.plan||null,line_kind:lk}}); ok++; }catch(e){ fail++; } }
-  cerrarOCR(); refreshCli(); alert('Agregados: '+ok+(fail?(' · fallaron: '+fail+' (teléfono debe ser 10 dígitos)'):''));
+    try{
+      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,status:'activo',expected_ban_number:ocrDetectedBanNumber||ocrOpenedBanNumber||null})});
+      var out=await resp.json().catch(function(){return {};});
+      if(resp.status===409){ fail++; errs.push(ph+': '+(out.error||'ya existe en otro BAN')); continue; }
+      if(!resp.ok) throw new Error(out.error||('HTTP '+resp.status));
+      ok++; if(out&&out.inserted)created++; else { updated++; var ps=String((out&&out.previous_status)||'').toLowerCase(); if(ps.includes('cancel')||ps==='c'||ps.includes('inactivo'))reactivated++; }
+    }catch(e){ fail++; errs.push(ph+': '+e.message); } }
+  cerrarOCR(); refreshCli(); alert('Procesados: '+ok+' · nuevos: '+created+' · actualizados: '+updated+(reactivated?(' · reactivados desde cancelado: '+reactivated):'')+(fail?(' · fallaron: '+fail+(errs.length?('\\n'+errs.slice(0,4).join('\\n')):'')):''));
 }
 function setCliMTab(t){cliMTab=t;renderCli();}
 function setCliMSub(f){cliMSub=f;renderCli();}
@@ -326,7 +402,7 @@ function tabInfo(c){
     <button class="btn" onclick="cliEditar()">✎ Editar Cliente</button>
     <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliEliminar()">🗑 Eliminar Cliente</button></div>
   <div class="i3">
-    <div><h4>Datos de contacto</h4>${row('Nombre',c.name)}${row('Email',c.email)}${row('Tel. principal',c.phone)}${row('Tel. secundario',c.additional_phone)}${row('Tel. móvil',c.mobile||c.cellular)}</div>
+    <div><h4>Datos de contacto</h4>${row('Empresa',c.name)}${row('Dueño',c.owner_name)}${row('Contacto',c.contact_person)}${row('Email',c.email)}${row('Tel. principal',c.phone)}${row('Tel. secundario',c.additional_phone)}${row('Celular contacto',c.cellular)}${row('TAX/SSN',c.tax_id)}</div>
     <div><h4>Ubicación</h4>${row('Dirección',c.address)}${row('Ciudad',c.city)}${row('Código postal',c.zip_code)}</div>
     <div><h4>Información comercial</h4>${row('Vendedor',c.vendor_name||'Sin asignar')}</div>
   </div>`;
@@ -335,10 +411,10 @@ function tabBans(c){
   const byBan={}; (c.subscribers||[]).forEach(s=>{(byBan[s.ban_number]=byBan[s.ban_number]||[]).push(s);});
   const cards=(c.bans||[]).map(b=>{
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
-    const sel=cliMSub==='canceladas'?ca:cliMSub==='noren'?nr:a;
-    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:200px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}','${(s.plan||'').replace(/'/g,'')}',${Number(s.monthly_value)||0})">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
-    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">✎ Editar</button></span></div>
-      <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='noren'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('noren')">No renueva ahora (${nr.length})</button><button class="btn ${cliMSub==='canceladas'?'':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
+    const sel=cliMSub==='canceladas'?ca:a;
+    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:260px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activación: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
+    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Crédito: ${b.credit_class||'No registrado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">✎ Editar</button></span></div>
+      <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
   return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
 }
@@ -347,14 +423,39 @@ function tabHist(c){
   return `<div class="panel"><h3>Historial de gestiones (Asana)</h3>${h}</div>`;
 }
 function tabVentas(c){
-  const v=(c.ventas||[]).map(x=>`<tr><td>${x.ban_number||'—'}</td><td>${x.phone||'—'}</td><td>${x.mes||'—'}</td><td class="r">${money(x.monthly_value)}</td><td class="r" style="color:var(--green)">${money(x.company_earnings)}</td><td class="r">${money(x.vendor_commission)}</td><td><span class="pill ${x.validation_status==='confirmed'?'green':'amber'}">${x.validation_status||'—'}</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Sin ventas (comisiones) para este cliente.</td></tr>';
-  return `<div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Mes</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comisión$</th><th>Estado</th></tr></thead><tbody>${v}</tbody></table></div>`;
+  const tango=(c.ventas_tango||[]).map(x=>`<tr><td>${x.tango_venta_id||'—'}</td><td>${x.ban_number||'—'}</td><td>${x.phone||'—'}</td><td>${x.ventatipo_nombre||x.product_key||'—'}</td><td>${x.sale_date?new Date(x.sale_date).toLocaleDateString('es'):'—'}</td><td class="r">${money(x.monthly_value)}</td><td>${x.vendor_name||'—'}</td><td><span class="pill ${x.review_reason?'amber':'green'}">${x.review_reason||'Tango V2'}</span></td></tr>`).join('')||'<tr><td colspan="8" class="empty">Sin ventas de Tango V2 para este cliente.</td></tr>';
+  const v=(c.ventas||[]).map(x=>`<tr><td>${x.ban_number||'—'}</td><td>${x.phone||'—'}</td><td>${x.mes||'—'}</td><td class="r">${money(x.monthly_value)}</td><td class="r" style="color:var(--green)">${money(x.company_earnings)}</td><td class="r">${money(x.vendor_commission)}</td><td><span class="pill ${x.validation_status==='confirmed'?'green':'amber'}">${x.validation_status||'—'}</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Sin comisiones para este cliente.</td></tr>';
+  const tangoPanel=(c.ventas_tango||[]).length?`<div class="panel"><h3>Ventas Tango V2</h3><div class="s" style="margin-bottom:10px">Ventas directas sincronizadas desde Tango V2.</div><div style="overflow-x:auto"><table style="min-width:920px"><thead><tr><th>ID Tango</th><th>BAN</th><th>Teléfono</th><th>Producto / tipo</th><th>Fecha</th><th class="r">Mensualidad</th><th>Vendedor</th><th>Estado</th></tr></thead><tbody>${tango}</tbody></table></div></div>`:'';
+  return `${tangoPanel}<div class="panel"><h3>Comisiones Tango V2 / validaciones</h3><div class="s" style="margin-bottom:10px">Fuente actual del módulo Comisiones: datos sincronizados desde Tango V2 por suscriptor.</div><div style="overflow-x:auto"><table style="min-width:760px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Mes</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comisión$</th><th>Estado</th></tr></thead><tbody>${v}</tbody></table></div></div>`;
 }
 function tabComp(c){
   const a=(c.subscribers||[]).filter(s=>cliAct(s.status)); const total=a.reduce((x,s)=>x+Number(s.monthly_value||0),0);
   const rows=a.map(s=>`<tr><td>${s.ban_number||'—'}</td><td>${s.phone||'—'}</td><td>${s.plan||'—'}</td><td class="r" style="color:var(--green)">${money(s.monthly_value)}</td><td>${cliVenc(s.contract_end_date)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin líneas activas</td></tr>';
-  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn green" onclick="abrirComparativa('${c.id}')">⇄ Abrir Comparativa (oferta + Excel/PDF)</button></div>
-  <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan actual</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(total)}</td><td></td></tr></tfoot></table></div>`;
+  const comps=(c.comparativas||[]).map(x=>`<tr><td>${esc(x.name||'Comparativa')}</td><td class="r">${money(x.current_total)}</td><td class="r" style="color:var(--green)">${money(x.offer_total)}</td><td>${x.created_by||'—'}</td><td>${x.created_at?new Date(x.created_at).toLocaleString('es'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin comparativas guardadas.</td></tr>';
+  return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn green" onclick="abrirConstructorCliente('${c.id}')">⇄ Abrir constructor de ofertas</button></div>
+  <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan actual</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(total)}</td><td></td></tr></tfoot></table></div>
+  <div class="panel" style="margin-top:12px"><h3>Comparativas guardadas</h3><div style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Nombre</th><th class="r">Actual</th><th class="r">Oferta</th><th>Usuario</th><th>Fecha</th></tr></thead><tbody>${comps}</tbody></table></div></div>`;
+}
+function abrirConstructorCliente(id){
+  const back=encodeURIComponent(location.href);
+  window.open(`/constructor/oferta-const.html?crm_client_id=${encodeURIComponent(id)}&return=${back}`,'_blank','noopener');
+}
+function mostrarInfoReportes(){
+  alert('Reportes: debe concentrar cartera, clientes en seguimiento, líneas móviles/fijas, plata fija, comisiones y vencimientos. Lo dejamos como módulo separado; no se mezcla con exportar.');
+}
+async function exportarBaseCompleta(){
+  if(!confirm('Exportar la base operativa completa del CRM en JSON?'))return;
+  try{
+    const r=await fetch(API+'/api/export/full',{headers:{Authorization:'Bearer '+token}});
+    if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');return;}
+    if(!r.ok){const t=await r.text();let msg=t;try{msg=JSON.parse(t).error||t;}catch(_e){}throw new Error(msg||('HTTP '+r.status));}
+    const blob=await r.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='crm-export-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  }catch(e){alert('No se pudo exportar: '+e.message);}
 }
 // ---- Comparativa de Planes (completa: oferta + Excel + PDF) ----
 let compCli=null, compOffer=[];
@@ -504,6 +605,7 @@ async function viewAsana(){
   const mobileLines=data.reduce((a,o)=>a+prodVal(o,'movil_ren','quantity_value')+prodVal(o,'movil_new','quantity_value'),0);
   const fixedLines=data.reduce((a,o)=>a+prodSubs(o,'fijo_ren')+prodSubs(o,'fijo_new'),0);
   const fixedMoney=data.reduce((a,o)=>a+prodVal(o,'fijo_ren','money_value')+prodVal(o,'fijo_new','money_value'),0);
+  const trackedLines=mobileLines+fixedLines;
   const classifiedSubs=data.reduce((a,o)=>a+prodSubs(o,'movil_ren')+prodSubs(o,'movil_new')+prodSubs(o,'fijo_ren')+prodSubs(o,'fijo_new')+prodSubs(o,'claro_tv')+prodSubs(o,'cloud')+prodSubs(o,'mpls'),0);
   const unclassified=Math.max(0,totalSubs-classifiedSubs);
   const totLin=mobileLines;
@@ -514,7 +616,7 @@ async function viewAsana(){
     <div class="kpi"><div class="l">$ en seguimiento</div><div class="v" style="color:var(--green)">${money(totMon)}</div></div>
     <div class="kpi"><div class="l">Clientes</div><div class="v">${data.length}</div></div></div>`;
   const asanaSummary=`<div class="asana-kpis">
-    <div class="kpi main"><div class="l">Total en seguimiento</div><div class="v" style="color:var(--primary);font-size:28px">${totalSubs}<span class="tot">líneas</span></div><div class="hint">${data.length} clientes en Asana · ${unclassified} sin clasificar</div></div>
+    <div class="kpi main"><div class="l">Clientes en seguimiento</div><div class="v" style="color:var(--primary);font-size:28px">${data.length}<span class="tot">clientes</span></div><div class="hint">${trackedLines} líneas/productos negociados · ${totalSubs} líneas actuales en esos clientes</div></div>
     <div class="kpi"><div class="l">Líneas móviles</div><div class="v" style="color:var(--green)">${mobileLines}</div><div class="hint">Movil Ren + Movil New</div></div>
     <div class="kpi"><div class="l">Líneas fijas</div><div class="v" style="color:var(--teal)">${fixedLines}</div><div class="hint">Fijo Ren + Fijo New</div></div>
     <div class="kpi"><div class="l">Plata fijo</div><div class="v" style="color:var(--amber)">${money(fixedMoney)}</div><div class="hint">Mensualidad fija en seguimiento</div></div>
@@ -526,14 +628,18 @@ async function viewAsana(){
     const subs=p?Number(p.subscriber_count||0):0;
     return `<td class="c"><div class="acell"><input class="cinp" style="width:84px;text-align:right" value="${val}" disabled><button class="astep" title="Abrir pasos" onclick="location.hash='#/opp/${o.id}'">${step} <span style="color:var(--txt3)">…</span></button><div class="asubs">${subs} subs</div></div></td>`;
   };
-  const row=o=>`<tr>
-    <td><div style="font-weight:700">${o.client_name||'—'}</div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}<div style="font-size:11.5px;color:var(--txt2)">${o.client_phone||'Sin número'}</div><div style="font-size:11px;color:var(--txt3)">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</div></td>
+  const row=o=>{
+    const bans=String(o.ban_numbers||'').split(',').map(x=>x.trim()).filter(Boolean);
+    const banText=bans.length?`BAN ${bans.join(', ')}`:'Sin BAN';
+    return `<tr>
+    <td><button type="button" class="linkbtn" style="font:inherit;font-weight:700;text-align:left;padding:0;color:var(--txt);display:block;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${o.client_name||'—'}</button>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}<div style="font-size:11.5px;color:var(--txt2)">${banText}</div><div style="font-size:11px;color:var(--txt3)">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</div></td>
     <td><span class="pill violet">${o.vendor_name||'Sin asignar'}</span></td>
     ${ASANA_PRODS.map(p=>cell(o,p[0],p[2])).join('')}
     <td class="r" style="color:var(--teal);font-weight:700">${Number(o.total_lines||0)}</td>
     <td class="r" style="color:var(--green);font-weight:700">${money(o.total_money)}</td>
     <td><button class="btn ghost" style="padding:6px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">💬 Abrir</button></td>
     <td><div style="display:flex;flex-direction:column;gap:5px"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="abrirCliente('${o.client_id||''}')">👁 Cliente</button><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cerrarOpp('${o.id}')">⤵ Al pool</button></div></td></tr>`;
+  };
   const head=`<tr><th>Cliente</th><th>Vendedor</th>${ASANA_PRODS.map(p=>`<th class="c" style="color:var(--${p[3]})">${p[1]}</th>`).join('')}<th class="r">Total Líneas</th><th class="r">Total $</th><th>Notas</th><th>Acciones</th></tr>`;
   return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">🎤 Cliente Voz</button></div>
   ${asanaSummary}
@@ -799,17 +905,40 @@ async function viewVendedores(){
 
 // ---------------- CORREOS ----------------
 let coClientes=[], coSel=new Set(), coTab='activo';
-const CO_FIRMA='\n\n—\nEquipo Claro Negocios';
+const CO_FIRMA=`
+
+Gabriel Sanchez
+Corporate and retail account Director
+Tel Of: 787-796-2099  Cel: 787-319-0909
+CLARO  Agente de ventas SS
+Email: gabriel.sanchez@claropr.com
+
+AVISO DE CONFIDENCIALIDAD: Este correo electronico, incluyendo en su caso los archivos adjuntos al
+mismo, puede contener informacion de caracter confidencial y/o privilegiada, y se envian a la atencion
+unica y exclusivamente de la persona y/o entidad a quien va dirigido. La copia, revision, uso, revelacion y/o
+distribucion de dicha informacion confidencial sin la autorizacion por escrito de Claro esta prohibida. Si usted
+no es el destinatario a quien se dirige el presente correo, favor de contactar al remitente respondiendo al
+presente correo y eliminar el correo original incluyendo sus archivos, asi como cualquier copia del mismo.
+Mediante la recepcion del presente correo usted reconoce y acepta que en caso de incumplimiento de su
+parte y/o de sus representantes a los terminos antes mencionados, Claro tendra derecho a los danos y
+perjuicios que esto le cause.
+
+CONFIDENTIALITY NOTICE: This e-mail message including attachments, if any, is intended only for the
+person or entity to which it is addressed to and may contain confidential and/or privileged material. Any review,
+use, disclosure or distribution of such confidential information without the written authorization of Claro is
+prohibited. If you are not the intended recipient, please contact the sender by replying to this e-mail and destroy all
+copies of the original message. By receiving this e-mail, you acknowledge that any breach by you and/or your
+representatives of the above provisions may entitle Claro to seek for damages.`;
 async function viewCorreos(){
-  return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook (BCC) o enviá por servidor</div></div></div>
+  return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook</div></div></div>
   <div class="panel" id="coCtrl"><div class="s">Cargando…</div></div>
   <div class="grid2"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Clientes con email</h3><input class="inp" id="coSearch" placeholder="Buscar…" style="max-width:220px" oninput="coRenderList()"></div><div id="coList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>
   <div class="panel"><h3>Redactar</h3>
     <div class="flbl">Asunto</div><input class="inp" id="coSubj" placeholder="Asunto del correo" style="margin-bottom:10px">
     <div class="flbl">Mensaje</div><textarea class="inp" id="coBody" style="width:100%;min-height:200px" placeholder="Escribí el mensaje…"></textarea>
     <div id="coCount" class="s" style="margin:8px 0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">📧 Abrir en Outlook (BCC)</button><button class="btn ghost" onclick="coSMTP()">Enviar por servidor (SMTP)</button></div>
-    <div class="s" style="margin-top:8px;color:var(--txt3)">Abre tu correo con los destinatarios en CCO (copia oculta), listo para enviar.</div></div></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div>
+    <div class="s" style="margin-top:8px;color:var(--txt3)">Escritorio oculta destinatarios en BCC. Outlook Web usa Para visible.</div></div></div>`;
 }
 async function coInit(){
   try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
@@ -846,28 +975,69 @@ function coOutlook(){
   var p=new URLSearchParams();
   var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
   var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
-  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(','))+'&'+p.toString();
+  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(';'))+'&'+p.toString();
   if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); el enlace puede quedar muy largo para abrir de una. ¿Intentar igual? Si no abre, mandá en lotes más chicos.'))return; }
   window.location.href=url;
 }
-async function coSMTP(){
+function coOutlookWeb(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
-  var subj=($('coSubj')&&$('coSubj').value)||''; var body=($('coBody')&&$('coBody').value)||'';
-  if(!subj||!body){ alert('Completá asunto y mensaje'); return; }
-  if(!confirm('¿Enviar a '+coSel.size+' destinatarios por el servidor (SMTP)?'))return;
-  try{
-    var res=await fetch(API+'/api/email/send',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({to:[...coSel].join(','),subject:subj,text:body+CO_FIRMA})});
-    var d=await res.json();
-    if(!d.ok){ alert(d.error||('Error '+res.status)); return; } alert('✓ '+(d.message||'Enviado'));
-  }catch(e){ alert('No se pudo enviar: '+e.message); }
+  var p=new URLSearchParams();
+  p.set('to',[...coSel].join(','));
+  var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
+  var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
+  var url='https://outlook.office.com/mail/deeplink/compose?'+p.toString();
+  if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); Outlook Web puede rechazar enlaces largos. ¿Intentar igual?'))return; }
+  window.open(url,'_blank','noopener');
 }
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
 
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
 const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/movil.html';   // portal de ofertas deployado
-const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
+const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['servicios','🧾 Servicios'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
 let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
+const OF_SERVICIOS=[
+  {id:'rescate-residencia-6m',titulo:'6 meses gratis Claro Rescate / Claro Residencia',archivo:'Featires oerta.pdf',vigencia:'Desde el 5 de noviembre de 2025',estado:'Sin fecha final indicada',estadoClass:'amber',soloResumen:true,
+   resumen:'Oferta para clientes 2 Play/3 Play que activen Claro Rescate o Claro Residencia con Internet + Telefonia. Descuento automatico en meses intercalados.',
+   notas:['Aplica a planes Internet + Telefonia 100, 300, 600 y 1,000 megas.','Descuento en meses 2, 4, 6, 8, 10 y 12.','Requiere revision manual porque el boletin no indica fecha final.'],
+   hojas:[
+    {n:1,titulo:'Portada de boletin',img:'img/servicios/features-oferta-p01.png',desc:'Boletin Oferta 6 meses Gratis Claro Rescate & Claro Residencia.'},
+    {n:2,titulo:'Descripcion de oferta',img:'img/servicios/features-oferta-p02.png',desc:'Mecanica de seis meses gratis intercalados y combinaciones de servicio.'},
+    {n:3,titulo:'Clientes que aplican',img:'img/servicios/features-oferta-p03.png',desc:'Reglas para clientes nuevos, existentes y exclusiones.'},
+    {n:4,titulo:'Precios combinados',img:'img/servicios/features-oferta-p04.png',desc:'Precios Internet + Telefonia con Claro Rescate o Claro Residencia.'},
+    {n:5,titulo:'SOC y alpha codes',img:'img/servicios/features-oferta-p05.png',desc:'Codigos de planes y servicios aplicables.'},
+    {n:6,titulo:'Ordenes nuevas',img:'img/servicios/features-oferta-p06.png',desc:'Proceso para emitir ordenes nuevas por COPS.'},
+    {n:7,titulo:'Ordenes existentes',img:'img/servicios/features-oferta-p07.png',desc:'Proceso OSADIA/AS para clientes existentes.'},
+    {n:8,titulo:'Publicidad',img:'img/servicios/features-oferta-p08.png',desc:'Material visual de la oferta.'},
+    {n:9,titulo:'Terminos y condiciones',img:'img/servicios/features-oferta-p09.png',desc:'Condiciones oficiales: account type, planes, descuento SIF y cubierta.'}
+   ]},
+  {id:'features-servicios-2022',titulo:'Cubiertas de servicios Features',archivo:'Features.pdf',vigencia:'1 al 31 de julio de 2022',estado:'Vencida',estadoClass:'red',soloTitulos:true,
+   resumen:'Hojas de referencia de servicios descargables para vendedor. Este boletin esta vencido y debe quedar como alerta hasta reemplazarlo por uno vigente.',
+   notas:['Claro Residencia.','Claro Rescate.','Advantage.','Asistencia Legal.'],
+   hojas:[
+    {n:9,titulo:'Claro Residencia',img:'img/servicios/features-p09.png',desc:'Detalle de cubierta residencial.'},
+    {n:10,titulo:'Claro Rescate',img:'img/servicios/features-p10.png',desc:'Detalle de cubierta para vehiculos.'},
+    {n:11,titulo:'Claro Rescate continuacion',img:'img/servicios/features-p11.png',desc:'Continuacion de condiciones de cubierta.'},
+    {n:12,titulo:'Advantage',img:'img/servicios/features-p12.png',desc:'Advantage.'},
+    {n:13,titulo:'Asistencia Legal',img:'img/servicios/features-p13.png',desc:'Asistencia legal.'}
+   ]}
+];
+const OF_SEGUROS_EQUIPOS=[
+  {rango:'$0 - $200.00',deducible:'$20.00',prima:'$7.99'},
+  {rango:'$200.01 - $400',deducible:'$50.00',prima:'$7.99'},
+  {rango:'$400.01 - $700',deducible:'$100.00',prima:'$13.99'},
+  {rango:'$700.01 - $1,400',deducible:'$199.00',prima:'$13.99'},
+  {rango:'$1,400.01 en adelante',deducible:'$299.00',prima:'$13.99'}
+];
+const OF_SERVICIOS_SOCS=[
+  {descripcion:'Claro Rescate',socMovil:'RESCATEM',socFijo:'RESCATEF / A821',renta:5.99},
+  {descripcion:'Claro Residencia',socMovil:'RESIDEM',socFijo:'RESIDEF / A826',renta:4.50},
+  {descripcion:'Claro Residencia y Rescate',socMovil:'RESRECM',socFijo:'RESRECF / A831',renta:7.99},
+  {descripcion:'Claro Advantage',socMovil:'ADVANM',socFijo:'ADVANF / A840',renta:5.99},
+  {descripcion:'Claro Advantage y Residencia',socMovil:'ADVRESM',socFijo:'ADVRESF / A843',renta:8.99},
+  {descripcion:'Claro Advantage, Residencia y Rescate',socMovil:'ADVANTRM',socFijo:'ADVANTRF / A846',renta:11.99},
+  {descripcion:'Claro Asistencia Legal',socMovil:'LEGALM',socFijo:'LEGALF / A851',renta:9.99}
+];
 async function viewOfertas(){
   var portalBtn = PORTAL_OFERTAS_URL
     ? `<a class="btn" style="background:var(--violet)" href="${PORTAL_OFERTAS_URL}" target="_blank" rel="noopener">🛒 Abrir portal de ofertas</a>`
@@ -883,6 +1053,7 @@ async function reOfertas(){ $('view').innerHTML=await viewOfertas(); ofRenderBod
 async function ofRenderBody(){
   if(ofTab==='equipos') return ofRenderEquipos();
   if(ofTab==='ofertas') return ofRenderOfertasTienda();
+  if(ofTab==='servicios') return ofRenderServicios();
   return ofRenderPlanesPagina(ofTab); // fijos | moviles | inalambrico
 }
 // Tab "Ofertas" (Excel móviles) = lo maneja el programador
@@ -891,6 +1062,84 @@ async function ofRenderOfertasTienda(){
   b.innerHTML='<div class="panel"><h3>🛍 Ofertas (Excel móviles)</h3>'
     +'<div class="s" style="color:var(--txt2)">El parser del boletín de ofertas móviles (financiamiento) lo maneja tu programador. '
     +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
+}
+
+// ----- SERVICIOS / FEATURES -----
+function ofServicioById(docId, hojaNum){
+  var doc=OF_SERVICIOS.find(function(d){return d.id===docId;});
+  if(!doc)return null;
+  var hoja=doc.hojas.find(function(h){return Number(h.n)===Number(hojaNum);});
+  return hoja?{doc:doc,hoja:hoja}:null;
+}
+async function ofRenderServicios(){
+  var b=$('ofBody'); if(!b)return;
+  var alertas=OF_SERVICIOS.filter(function(d){return d.estado!=='Vigente';}).map(function(d){
+    return `<div class="card" style="padding:12px;border-color:var(--${d.estadoClass==='red'?'red':'amber'}-border);min-width:220px;flex:1">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>${esc(d.titulo)}</b><span class="pill ${d.estadoClass}">${esc(d.estado)}</span></div>
+      <div class="s" style="margin-top:6px">${esc(d.vigencia)}</div></div>`;
+  }).join('');
+  var docs=OF_SERVICIOS.map(function(d){
+    var hojas=d.hojas.map(function(h){
+      return `<button class="btn ghost" style="justify-content:flex-start;text-align:left" onclick="openServicioModal('${d.id}',${h.n})">${esc(h.titulo)}</button>`;
+    }).join('');
+    var notas=(d.notas||[]).map(function(n){return `<li>${esc(n)}</li>`;}).join('');
+    return `<div class="card" style="padding:14px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
+        <div><h3 style="margin:0">${esc(d.titulo)}</h3><div class="s" style="margin-top:3px">${esc(d.archivo)} · ${esc(d.vigencia)}</div></div>
+        <span class="pill ${d.estadoClass}">${esc(d.estado)}</span>
+      </div>
+      <div class="s" style="margin:10px 0;color:var(--txt2)">${esc(d.resumen)}</div>
+      ${d.soloResumen?'':`${d.soloTitulos?'':`<ul class="s" style="margin:0 0 12px 18px;color:var(--txt2)">${notas}</ul>`}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px">${hojas}</div>`}
+    </div>`;
+  }).join('');
+  b.innerHTML=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+      <div><h3 style="margin:0">Alertas de vigencia</h3><div class="s" style="margin-top:4px">Boletines vencidos o sin fecha final para que admin los revise antes de publicar.</div></div>
+      <span class="pill amber">${OF_SERVICIOS.length} documentos cargados</span>
+    </div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${alertas}</div></div>
+    <div class="panel"><h3 style="margin-top:0">Hojas de servicios descargables</h3>${docs}${ofRenderServiciosSocs()}${ofRenderSeguroEquipos()}</div>`;
+}
+function ofMoney(n){return '$'+Number(n||0).toFixed(2);}
+function ofRenderServiciosSocs(){
+  var rows=OF_SERVICIOS_SOCS.map(function(s){
+    return `<tr><td><b>${esc(s.descripcion)}</b></td><td>${esc(s.socMovil)}</td><td>${esc(s.socFijo)}</td><td><b>${ofMoney(s.renta)}</b></td></tr>`;
+  }).join('');
+  return `<div class="card" style="padding:14px;margin-top:12px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">SOCS Y CODIGOS DE EMISION</h3><div class="s" style="margin-top:4px">Servicios individuales y combinados oficiales para sumar a la propuesta.</div></div><span class="pill blue">Precios oficiales</span></div>
+    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:760px"><thead><tr><th>Descripcion</th><th>SOC movil</th><th>Alphacode / SOC fijo</th><th>Renta mensual</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="s" style="margin-top:8px;color:var(--txt2)">Estos son cargos de servicios. No usar aqui precios de paquetes de Internet + Telefonia.</div>
+  </div>`;
+}
+function ofRenderSeguroEquipos(){
+  var rows=OF_SEGUROS_EQUIPOS.map(function(s,i){
+    return `<tr><td style="text-align:center"><input type="checkbox" id="of_seg_${i}"></td><td><b>${esc(s.rango)}</b></td><td>${esc(s.deducible)}</td><td>${esc(s.prima)}</td><td><input class="inp" type="number" min="0" step="1" value="0" style="width:90px;text-align:center"></td></tr>`;
+  }).join('');
+  return `<div class="card" style="padding:14px;margin-top:12px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Seguro de equipos a escoger</h3><div class="s" style="margin-top:4px">Check para escoger y cantidad de unidades editable desde 0.</div></div><span class="pill violet">Opcional</span></div>
+    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:720px"><thead><tr><th>Escoger</th><th>Costo del Equipo</th><th>Deducible por unidad</th><th>Prima por unidad mensual</th><th>Cantidad de unidades</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function openServicioModal(docId, hojaNum){
+  var item=ofServicioById(docId, hojaNum); if(!item){ alert('No se encontro la hoja'); return; }
+  var d=item.doc, h=item.hoja;
+  var html=`<div class="modal-bg" id="servicioModalBg" style="z-index:180">
+    <div class="modal" style="max-width:980px;width:94vw;max-height:92vh;overflow:auto">
+      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div><h3 style="margin:0">${esc(d.titulo)} · ${esc(h.titulo)}</h3><div class="s">${esc(d.vigencia)} · ${esc(d.estado)}</div></div>
+        <button class="btn ghost" onclick="closeServicioModal()">Cerrar</button>
+      </div>
+      <div class="s" style="margin-bottom:10px;color:var(--txt2)">${esc(h.desc)}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn green" onclick="downloadServicioImage('${h.img}','${d.id}-hoja-${h.n}.png')">Descargar imagen</button>
+        <a class="btn ghost" href="${h.img}" target="_blank" rel="noopener">Abrir imagen</a>
+      </div>
+      <div class="card" style="padding:8px;background:#fff;overflow:auto"><img src="${h.img}" alt="${esc(h.titulo)}" style="display:block;width:100%;height:auto"></div>
+    </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function closeServicioModal(){ var el=$('servicioModalBg'); if(el)el.remove(); }
+function downloadServicioImage(src, name){
+  var a=document.createElement('a'); a.href=src; a.download=name||'servicio.png'; document.body.appendChild(a); a.click(); a.remove();
 }
 
 // ----- EQUIPOS -----
@@ -917,13 +1166,24 @@ async function eqLoadList(){
     if(!rows.length){ el.innerHTML='<div class="empty">'+(s?'Sin resultados':'No hay equipos cargados todavía. Subí el Excel arriba.')+'</div>'; return; }
     var body=rows.slice(0,200).map(function(e){
       var mens=(e.mensualidades||[]).map(function(m){return m.meses+'m $'+m.monto;}).join(' · ');
-      return '<tr><td><b>'+(e.modelo||'')+'</b><div class="s">'+(e.item_code||'')+(e.sap_code?(' · SAP '+e.sap_code):'')+'</div></td>'
+      var img=e.image_url?'<img src="'+esc(e.image_url)+'" style="width:54px;height:54px;object-fit:contain;background:#fff;border-radius:8px;padding:4px">':'<button class="btn ghost" style="padding:6px 8px;font-size:11px" onclick="eqBuscarFoto('+e.id+',this)">Buscar foto</button>';
+      return '<tr><td>'+img+'</td><td><b>'+(e.modelo||'')+'</b><div class="s">'+(e.item_code||'')+(e.sap_code?(' · SAP '+e.sap_code):'')+'</div></td>'
         +'<td><span class="pill violet">'+(e.marca||'')+'</span></td><td>'+(e.categoria||'')+'</td>'
         +'<td>'+(e.precio_regular!=null?('$'+e.precio_regular):'—')+'</td>'
         +'<td class="s">'+(mens||(e.pospago_precios?'pospago':'—'))+'</td></tr>';
     }).join('');
-    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' equipos vigentes'+(rows.length>200?' (mostrando 200)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Precio reg.</th><th>Mensualidades</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' equipos vigentes'+(rows.length>200?' (mostrando 200)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:820px"><thead><tr><th>Foto</th><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Precio reg.</th><th>Mensualidades</th></tr></thead><tbody>'+body+'</tbody></table></div>';
   }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
+}
+async function eqBuscarFoto(id, btn){
+  if(!id)return;
+  var old=btn&&btn.textContent; if(btn){btn.disabled=true;btn.textContent='Buscando...';}
+  try{
+    var r=await api('/api/equipos-lista/'+id+'/foto/buscar',{method:'POST',body:{}});
+    if(!r.ok){ alert(r.error||'No se pudo buscar foto'); return; }
+    eqLoadList();
+  }catch(e){ alert('No se pudo buscar foto: '+e.message); }
+  finally{ if(btn){btn.disabled=false;btn.textContent=old||'Buscar foto';} }
 }
 async function eqPreview(f){
   if(!f)return;
@@ -1138,24 +1398,32 @@ let impHeaders=[], impRows=[], impMap={};
 // [clave, etiqueta, grupo]  grupos: cli=Cliente, ban=BAN, sub=Suscriptor
 const IMP_FIELDS=[
   ['name','Empresa / Cliente','cli'],['company','Empresa (razón social)','cli'],['email','Email','cli'],
-  ['phone','Teléfono principal','cli'],['mobile','Celular','cli'],['additional_phone','Tel. adicional','cli'],
+  ['phone','Teléfono principal','cli'],['cellular','Celular contacto','cli'],['additional_phone','Tel. adicional','cli'],
   ['address','Dirección','cli'],['city','Ciudad','cli'],['zip_code','Código postal','cli'],
-  ['contact_person','Contacto','cli'],['source','Base / Origen','cli'],['tax_id','RUC / Tax ID','cli'],['cli_notes','Notas cliente','cli'],
-  ['ban','BAN (9 díg)','ban'],['account_type','Tipo BAN','ban'],['ban_status','Estado BAN','ban'],
+  ['contact_person','Contacto','cli'],['source','Base / Origen','cli'],['tax_id','TAX/SSN','cli'],['cli_notes','Notas cliente','cli'],
+  ['ban','BAN (9 díg)','ban'],['account_type','Tipo BAN','ban'],['ban_status','Estado BAN','ban'],['credit_class','Clase crédito','ban'],
   ['sub_phone','Teléfono línea (10 díg)','sub'],['subscriber_name','Nombre suscriptor','sub'],['plan','Plan','sub'],
   ['monthly_value','Mensualidad $','sub'],['contract_end_date','Vencimiento','sub'],['status','Estado línea','sub'],
-  ['equipment','Equipo','sub'],['imei','IMEI','sub'],['sub_notes','Notas línea','sub']
+  ['contract_start_date','Inicio contrato','sub'],
+  ['equipment','Equipo','sub'],['imei','IMEI','sub'],['product_type','Tipo producto','sub'],['item_id','Item ID','sub'],
+  ['soc','SOC / Cód. plan','sub'],['installment_from','Cuota actual','sub'],['installment_total','Total cuotas','sub'],
+  ['sub_notes','Notas línea','sub']
 ];
 const IMP_GROUPS=[['cli','Cliente'],['ban','BAN'],['sub','Suscriptor']];
 const IMP_DETECT={
-  name:/^nombre|^cliente|raz[oó]n/, company:/empresa|negocio/, email:/email|correo|e-?mail/,
-  phone:/principal|^tel[eé]fono$|^tel\b/, mobile:/celular|m[oó]vil|\bcel\b/, additional_phone:/adicional|secundario|otro/,
+  name:/^nombre|^cliente|raz[oó]n|^empresa$/, company:/empresa|negocio/, email:/email|correo|e-?mail/,
+  phone:/principal|^tel[eé]fono$|^tel\b/, cellular:/celular|m[oó]vil|\bcel\b/, additional_phone:/adicional|secundario|otro/,
   address:/direcci|domicilio/, city:/ciudad|localidad/, zip_code:/postal|\bzip\b|\bcp\b/,
   contact_person:/contacto|persona/, source:/\bbase\b|origen|fuente/, tax_id:/ruc|tax|rfc|\bnit\b|cuit|c[eé]dula/,
-  cli_notes:/nota/, ban:/\bban\b|cuenta/, account_type:/tipo/, ban_status:/estado.*ban|ban.*estado/,
-  sub_phone:/suscriptor.*(tel|n[uú]m)|tel.*l[ií]nea|l[ií]nea.*tel/, subscriber_name:/suscriptor|usuario/, plan:/plan/,
-  monthly_value:/mensual|costo|valor|precio|importe|\$/, contract_end_date:/venc|fecha/, status:/estado|status/,
-  equipment:/equipo|terminal|modelo/, imei:/imei/, sub_notes:/nota.*l[ií]nea/
+  cli_notes:/nota/, ban:/\bban\b|cuenta/, account_type:/tipo|acctype/, ban_status:/estado.*ban|ban.*estado/,
+  credit_class:/credit_class|clase.*cr[eé]dito/,
+  sub_phone:/^sub$|suscriptor.*(tel|n[uú]m)|tel.*l[ií]nea|l[ií]nea.*tel/, subscriber_name:/suscriptor|usuario/, plan:/plan/,
+  monthly_value:/mensual|costo|valor|precio|importe|\$/, contract_end_date:/venc|commit_end|fecha/, status:/estado|status/,
+  contract_start_date:/commit_start|inicio.*contrato/,
+  equipment:/equipo|terminal|modelo|item_ldesc|item_sdesc/, imei:/imei/,
+  product_type:/product_type|tipo.*producto/, item_id:/^item_id$/, soc:/^soc$/,
+  installment_from:/no_of_install_from|cuota.*actual/, installment_total:/total_no_of_install|total.*cuota/,
+  sub_notes:/nota.*l[ií]nea/
 };
 function impAutoDetect(hl,key){ var re=IMP_DETECT[key]; return re?re.test(hl):false; }
 async function viewImport(){
@@ -1192,38 +1460,39 @@ function impHandleFile(f){
   };
   rd.readAsArrayBuffer(f);
 }
-// drag de columnas
-function impDragCol(e,ix){ e.dataTransfer.setData('text/plain',String(ix)); e.dataTransfer.effectAllowed='copy'; }
-function impDropCol(e,key){ e.preventDefault(); var ix=Number(e.dataTransfer.getData('text/plain')); if(!isNaN(ix)){ for(var k in impMap){if(impMap[k]===ix)delete impMap[k];} impMap[key]=ix; renderImpStep2(); } }
+// drag: se arrastran CAMPOS de la BD (pastillas) y se sueltan sobre la fila de una columna del archivo
+function impDragField(e,key){ e.dataTransfer.setData('text/plain','F:'+key); e.dataTransfer.effectAllowed='move'; }
+function impDropField(e,colIx){ e.preventDefault(); var d=e.dataTransfer.getData('text/plain'); if(d&&d.indexOf('F:')===0){ var k=d.slice(2); impMap[k]=colIx; renderImpStep2(); } }
 function impClearSlot(key){ delete impMap[key]; renderImpStep2(); }
-function impColChip(i,used){ return '<span class="impcol'+(used?' used':'')+'" draggable="true" ondragstart="impDragCol(event,'+i+')">'+(impHeaders[i]||('col '+(i+1)))+'</span>'; }
-function impSlot(fd){ var ix=impMap[fd[0]]; var has=ix>=0&&ix!=null;
-  return '<div class="impslot'+(has?' has':'')+'" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="this.classList.remove(\'over\');impDropCol(event,\''+fd[0]+'\')">'
-    +'<span class="sl-field">'+fd[1]+'</span>'
-    +(has?'<span class="sl-val">'+(impHeaders[ix]||('col '+(ix+1)))+' <span class="sl-x" title="quitar" onclick="impClearSlot(\''+fd[0]+'\')">✕</span></span>':'<span class="s" style="color:var(--txt3)">arrastrá una columna</span>')
-    +'</div>'; }
 function renderImpStep2(){
-  var used={}; Object.keys(impMap).forEach(function(k){used[impMap[k]]=1;});
-  // 1) TODAS las columnas del archivo, en una fila
-  var cols=impHeaders.map(function(h,i){ return impColChip(i,used[i]); }).join('');
-  // 2) campos destino agrupados Cliente / BAN / Suscriptor
-  var groups=IMP_GROUPS.map(function(g){
-    var slots=IMP_FIELDS.filter(function(fd){return fd[2]===g[0];}).map(impSlot).join('');
-    return '<div class="s" style="margin:14px 0 6px;color:var(--txt2);font-weight:700;letter-spacing:.3px;text-transform:uppercase;font-size:11px">'+g[1]+'</div><div class="impgrid">'+slots+'</div>';
+  var asignado={}; Object.keys(impMap).forEach(function(k){asignado[impMap[k]]=k;});
+  var fieldLabel={}; IMP_FIELDS.forEach(function(fd){fieldLabel[fd[0]]=fd[1];});
+  // 1) arriba: los botones REALES de lo que subió (sus columnas)
+  var cols=impHeaders.map(function(h,i){ return '<span class="impcol'+(asignado[i]!=null?' used':'')+'">'+(h||('col '+(i+1)))+'</span>'; }).join('');
+  // 2) tabla dos columnas: TU EXCEL (izq) -> A DÓNDE VA (der), una fila por columna del archivo, en su orden
+  var filas=impHeaders.map(function(h,i){
+    var k=asignado[i];
+    var der = k!=null
+      ? '<span class="impcol" draggable="true" ondragstart="impDragField(event,\''+k+'\')" title="arrastrá para mover">'+fieldLabel[k]+'</span> <span class="sl-x" title="quitar (se ignora)" onclick="impClearSlot(\''+k+'\')">✕</span>'
+      : '<span class="s" style="color:var(--txt3)">— se ignora —</span>';
+    return '<tr ondragover="event.preventDefault();this.style.outline=\'1px solid var(--green)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';impDropField(event,'+i+')">'
+      +'<td style="width:45%"><b>'+(h||('col '+(i+1)))+'</b></td><td>'+der+'</td></tr>';
   }).join('');
-  // 3) columnas que NO se mapearon (abajo)
-  var sinAsignar=impHeaders.map(function(h,i){ return used[i]?'':impColChip(i,false); }).filter(Boolean).join('');
-  var sinPanel=sinAsignar
-    ? '<div class="panel" style="border-color:var(--amber-border)"><h3 style="color:var(--amber)">⚠ Columnas sin asignar</h3><div class="s" style="margin-bottom:8px">Estas columnas del archivo no se reconocieron. Arrastralas al campo que corresponda; las que dejes acá se ignoran.</div><div class="impcols">'+sinAsignar+'</div></div>'
-    : '<div class="panel" style="border-color:var(--green-border)"><div class="s" style="color:var(--green)">✓ Todas las columnas del archivo quedaron asignadas.</div></div>';
+  var nMap=Object.keys(impMap).length, nIgn=impHeaders.length-Object.keys(asignado).length;
+  // 3) campos de la BD que quedaron libres (por si necesita asignar alguno a mano)
+  var libres=IMP_FIELDS.filter(function(fd){return impMap[fd[0]]==null;}).map(function(fd){
+    return '<span class="impcol" draggable="true" ondragstart="impDragField(event,\''+fd[0]+'\')">'+fd[1]+'</span>';
+  }).join('');
   // vista previa: solo campos mapeados
   var mapped=IMP_FIELDS.filter(function(fd){var ix=impMap[fd[0]];return ix>=0&&ix!=null;});
   var prev=impRows.slice(0,5).map(function(r){ return '<tr>'+mapped.map(function(fd){ return '<td>'+(r[impMap[fd[0]]]||'')+'</td>'; }).join('')+'</tr>'; }).join('');
-  $('impStep2').innerHTML='<div class="panel"><h3>2) Asigná las columnas (auto-detectadas; arrastrá para corregir)</h3>'
-    +'<div class="s" style="margin-bottom:6px">Columnas del archivo (las usadas se ven apagadas):</div><div class="impcols">'+cols+'</div>'
-    +groups+'</div>'
-    +sinPanel
-    +'<div class="panel"><h3>4) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:'+(mapped.length*120)+'px"><thead><tr>'+mapped.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
+  $('impStep2').innerHTML='<div class="panel"><h3>2) Tu archivo → tu base</h3>'
+    +'<div class="s" style="margin-bottom:6px">Columnas de tu archivo (apagada = conectada):</div><div class="impcols">'+cols+'</div>'
+    +'<div class="s" style="margin:10px 0 6px"><b style="color:var(--green)">'+nMap+' conectadas</b>'+(nIgn?' · <b style="color:var(--amber)">'+nIgn+' se ignoran</b>':'')+' — para corregir, arrastrá una pastilla verde a otra fila o soltá una de las de abajo.</div>'
+    +'<div class="card" style="overflow-x:auto"><table style="min-width:480px"><thead><tr><th>Tu Excel</th><th>Va a (tu BD)</th></tr></thead><tbody>'+filas+'</tbody></table></div>'
+    +(libres?'<details style="margin-top:10px"><summary class="s" style="cursor:pointer">Campos de la BD sin usar ('+IMP_FIELDS.filter(function(fd){return impMap[fd[0]]==null;}).length+') — abrir solo si necesitás asignar uno a mano</summary><div class="impcols" style="margin-top:8px">'+libres+'</div></details>':'')
+    +'</div>'
+    +'<div class="panel"><h3>3) Vista previa ('+impRows.length+' filas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:'+(mapped.length*120)+'px"><thead><tr>'+mapped.map(function(fd){return '<th>'+fd[1]+'</th>';}).join('')+'</tr></thead><tbody>'+prev+'</tbody></table></div>'
     +'<div id="impMatch" style="margin-top:12px"></div>'
     +'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" style="flex:1" onclick="impVerificar()">🔎 Verificar con la BD</button><button class="btn green" style="flex:2" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div></div>';
 }
@@ -1238,18 +1507,42 @@ async function impVerificar(){
       +'<div class="irow"><span>BANs existentes / nuevos</span><b>'+m.ban_match+' / '+m.ban_new+'</b></div>'
       +'<div class="irow"><span>Clientes existentes / nuevos</span><b>'+m.cli_match+' / '+m.cli_new+'</b></div>'
       +(m.sin_dato?'<div class="irow"><span>Filas sin BAN/teléfono/empresa (se omiten)</span><b style="color:var(--amber)">'+m.sin_dato+'</b></div>':'')
+      +((m.subs_ausentes||m.bans_ausentes)?'<div style="margin-top:10px;padding:10px;border:1px solid var(--amber-border);border-radius:8px"><b style="color:var(--amber)">⚠ En la BD pero NO en el archivo</b>'
+        +(m.subs_ausentes?'<div class="irow"><span>Líneas que ya no vienen (posibles bajas)</span><b>'+m.subs_ausentes+'</b></div>':'')
+        +(m.bans_ausentes?'<div class="irow"><span>BANs que ya no vienen</span><b>'+m.bans_ausentes+'</b></div>':'')
+        +'<div class="s" style="margin:6px 0">Si este archivo es la cartera completa, podés marcarlos como cancelados/inactivos. Aplicar la importación NO los toca.</div>'
+        +'<button class="btn ghost" onclick="impBajas()">Marcar bajas (cancelar lo que no vino)</button></div>':'')
       +'</div>';
   }catch(e){ $('impMatch').innerHTML='<div class="empty">No se pudo verificar: '+e.message+'</div>'; }
 }
+async function impBajas(){
+  if(!impRows.length){ alert('Soltá un Excel primero'); return; }
+  if(!confirm('Esto marca como CANCELADO toda línea de la BD que no esté en el archivo, y como INACTIVO todo BAN ausente.\n\nSolo hacelo si este archivo es la cartera COMPLETA. ¿Continuar?'))return;
+  try{ var r=await api('/api/import/bajas',{method:'POST',body:{rows:impMappedRows()}});
+    alert('✓ Bajas aplicadas:\n• Líneas canceladas: '+r.subs_cancelados+'\n• BANs inactivados: '+r.bans_inactivados); impVerificar(); }
+  catch(e){ alert('No se pudieron aplicar las bajas: '+e.message); }
+}
 async function impAplicar(){
   if(!impRows.length){ alert('Soltá un Excel primero'); return; }
-  if(!confirm('¿Aplicar a '+impRows.length+' filas? El archivo actualiza/crea registros reales.'))return;
-  try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:impMappedRows()}});
-    alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• Clientes actualizados: '+(res.clientes_actualizados||0)+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):'')); }
+  var rows=impMappedRows(), m=null;
+  try{ m=await api('/api/import/preview',{method:'POST',body:{rows:rows}}); }
+  catch(e){ alert('No se pudo verificar antes de aplicar: '+e.message); return; }
+  var msg='Resumen antes de importar:\n'
+    +'• Filas del archivo: '+m.total+'\n'
+    +'• Suscriptores que se ACTUALIZAN: '+m.sub_update+'\n'
+    +'• Suscriptores NUEVOS: '+m.sub_new+'\n'
+    +'• BANs existentes / nuevos: '+m.ban_match+' / '+m.ban_new+'\n'
+    +'• Clientes existentes / nuevos: '+m.cli_match+' / '+m.cli_new
+    +(m.sin_dato?'\n• Filas sin dato suficiente: '+m.sin_dato:'')
+    +'\n\n¿Confirmas aplicar estos cambios reales?';
+  if(!confirm(msg))return;
+  try{ var res=await api('/api/import/apply',{method:'POST',body:{rows:rows}});
+    alert('✓ Importado:\n• Clientes creados: '+res.clientes_creados+'\n• Clientes actualizados: '+(res.clientes_actualizados||0)+'\n• BANs creados: '+res.bans_creados+'\n• Suscriptores creados: '+res.subs_creados+'\n• Suscriptores actualizados: '+res.subs_actualizados+'\n• BANs con estado recalculado: '+(res.bans_estado_recalculado||0)+'\n• Omitidas: '+res.omitidas+((res.errores&&res.errores.length)?('\n• Errores: '+res.errores.length):''));
+    location.hash='#/historial'; }
   catch(e){ alert('No se pudo importar: '+e.message); }
 }
 // ---------------- ACTIONS ----------------
-async function nuevoCliente(){const name=prompt('Nombre del cliente:');if(!name)return;await api('/api/clients',{method:'POST',body:{name}});router();}
+async function nuevoCliente(){const name=prompt('Empresa del cliente:');if(!name)return;await api('/api/clients',{method:'POST',body:{name}});router();}
 async function enviarSeguimiento(id){const r=await api('/api/clients/'+id+'/seguimiento',{method:'POST',body:{product_key:'fijo_ren'}});if(r.error){alert(r.error);return;}location.hash='#/asana';}
 async function addLog(oid,type){const b=$('logbody').value;if(!b){alert('Escribí algo');return;}await api('/api/opportunities/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
 async function addAsanaLog(oid,type){const el=$('asanaLogBody');const b=el&&el.value.trim();if(!b){alert('Escribe algo');return;}await api('/api/asana-real/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}

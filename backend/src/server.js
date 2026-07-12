@@ -32,7 +32,14 @@ app.use(express.json({ limit: '50mb' }));
 // Servir el frontend (app.html, propuesta-template.html, etc.) -> http://localhost:4000
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const FRONT = path.resolve(__dir, '../../frontend');
+const OFFERS = path.resolve(__dir, '../../Planes para web');
 app.use(express.static(FRONT, {
+  etag: false,
+  setHeaders: (res, fp) => {
+    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');
+  },
+}));
+app.use('/constructor', express.static(OFFERS, {
   etag: false,
   setHeaders: (res, fp) => {
     if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');

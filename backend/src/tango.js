@@ -18,7 +18,12 @@ export async function verifyLogin(usuario, password) {
   const resp = await fetch(`${BASE}/api/external/auth/verify`, {
     method: 'POST',
     headers: headers({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ usuario, password }),
+    body: JSON.stringify({
+      usuario,
+      username: usuario,
+      password,
+      clave: password,
+    }),
   });
   if (!resp.ok) {
     return { valid: false, status: resp.status };

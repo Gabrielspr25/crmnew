@@ -7,6 +7,13 @@ import { requireAuth } from '../auth.js';
 
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
+function contractEndFromRemainingPayments(v) {
+  const n = Number.parseInt(String(v || ''), 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const d = new Date();
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
 async function wp(fn) {
   const c = await pool.connect();
   try { await c.query('BEGIN'); await c.query('SET LOCAL search_path TO public'); const r = await fn(c); await c.query('COMMIT'); return r; }
@@ -16,7 +23,11 @@ async function wp(fn) {
 
 // EDITAR cliente
 writeRouter.put('/clients-real/:id', requireAuth, async (req, res) => {
-  const allowed = ['name', 'email', 'phone', 'additional_phone', 'mobile', 'address', 'city', 'zip_code', 'business_name'];
+  const allowed = [
+    'name', 'owner_name', 'contact_person', 'email',
+    'phone', 'additional_phone', 'cellular',
+    'address', 'city', 'zip_code', 'tax_id', 'business_name'
+  ];
   const sets = [], vals = [];
   for (const k of allowed) if (k in (req.body || {})) { vals.push(req.body[k] === '' ? null : req.body[k]); sets.push(`${k} = $${vals.length}`); }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
@@ -36,7 +47,7 @@ writeRouter.post('/clients-real/:id/bans', requireAuth, async (req, res) => {
   const num = onlyDigits(req.body && req.body.number);
   const acct = (req.body && req.body.account_type) || null;
   if (num.length !== 9) return res.status(400).json({ error: 'El BAN debe tener 9 dígitos' });
-  try { const r = await wp(c => c.query(`INSERT INTO bans (client_id, number, ban_number, status, account_type) VALUES ($1,$2,$2,'activo',$3) RETURNING id, ban_number`, [req.params.id, num, acct])); res.status(201).json(r.rows[0]); }
+  try { const r = await wp(c => c.query(`INSERT INTO bans (client_id, ban_number, status, account_type) VALUES ($1,$2,'activo',$3) RETURNING id, ban_number`, [req.params.id, num, acct])); res.status(201).json(r.rows[0]); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -44,24 +55,125 @@ writeRouter.post('/clients-real/:id/bans', requireAuth, async (req, res) => {
 writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) => {
   const b = req.body || {}; const ph = onlyDigits(b.phone);
   if (ph.length !== 10) return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos' });
+  if (b.remaining_payments && !b.contract_end_date) b.contract_end_date = contractEndFromRemainingPayments(b.remaining_payments);
   try {
-    const r = await wp(c => c.query(
-      `INSERT INTO subscribers (ban_id, phone, phone_number, plan, monthly_value, line_kind, line_type, equipment, status)
-       VALUES ($1,$2,$2,$3,$4,$5,$6,$7,'activo') RETURNING id`,
-      [req.params.banId, ph, b.plan || null, Number(b.monthly_value) || null, b.line_kind || null, b.line_type || null, b.equipment || null]));
-    res.status(201).json(r.rows[0]);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    const r = await wp(async c => {
+      const expectedBan = onlyDigits(b.expected_ban_number);
+      if (expectedBan) {
+        const targetBan = await c.query(`SELECT ban_number FROM bans WHERE id = $1 LIMIT 1`, [req.params.banId]);
+        if (!targetBan.rows[0]) {
+          const err = new Error('BAN destino no existe');
+          err.statusCode = 404;
+          throw err;
+        }
+        const targetBanNumber = onlyDigits(targetBan.rows[0].ban_number);
+        if (targetBanNumber !== expectedBan) {
+          const err = new Error(`La imagen pertenece al BAN ${expectedBan}, pero estás intentando guardar en el BAN ${targetBanNumber}. No se guardó.`);
+          err.statusCode = 409;
+          throw err;
+        }
+      }
+      const existing = await c.query(
+        `SELECT s.id, s.status AS previous_status, b.ban_number AS previous_ban_number, s.ban_id
+           FROM subscribers s
+           LEFT JOIN bans b ON b.id = s.ban_id
+          WHERE s.phone_norm = $1::text
+          LIMIT 1`,
+        [ph]
+      );
+      if (existing.rows[0] && String(existing.rows[0].ban_id) !== String(req.params.banId)) {
+        const err = new Error(`El teléfono ya existe en el BAN ${existing.rows[0].previous_ban_number || 'desconocido'}. No se reasignó automáticamente.`);
+        err.statusCode = 409;
+        err.existing = existing.rows[0];
+        throw err;
+      }
+      return c.query(
+        `WITH existing AS (
+         SELECT s.id, s.status AS previous_status, b.ban_number AS previous_ban_number
+           FROM subscribers s
+           LEFT JOIN bans b ON b.id = s.ban_id
+          WHERE s.phone_norm = $2::text
+          LIMIT 1
+       ),
+       upsert AS (
+          INSERT INTO subscribers (
+           ban_id, phone, phone_norm, plan, monthly_value, line_kind, line_type, equipment,
+           activation_date, contract_start_date, contract_end_date, contract_term, remaining_payments,
+           product_type, price_code, payments_made, status
+          )
+          VALUES ($1,$2::text,$2::text,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'activo')
+         ON CONFLICT (phone_norm) WHERE phone_norm IS NOT NULL AND phone_norm <> ''
+         DO UPDATE SET
+           ban_id = EXCLUDED.ban_id,
+           phone = EXCLUDED.phone,
+           plan = COALESCE(EXCLUDED.plan, subscribers.plan),
+           monthly_value = COALESCE(EXCLUDED.monthly_value, subscribers.monthly_value),
+           line_kind = COALESCE(EXCLUDED.line_kind, subscribers.line_kind),
+           line_type = COALESCE(EXCLUDED.line_type, subscribers.line_type),
+           equipment = COALESCE(EXCLUDED.equipment, subscribers.equipment),
+           activation_date = COALESCE(EXCLUDED.activation_date, subscribers.activation_date),
+           contract_start_date = COALESCE(EXCLUDED.contract_start_date, subscribers.contract_start_date),
+           contract_end_date = COALESCE(EXCLUDED.contract_end_date, subscribers.contract_end_date),
+           contract_term = COALESCE(EXCLUDED.contract_term, subscribers.contract_term),
+           remaining_payments = COALESCE(EXCLUDED.remaining_payments, subscribers.remaining_payments),
+           product_type = COALESCE(EXCLUDED.product_type, subscribers.product_type),
+           price_code = COALESCE(EXCLUDED.price_code, subscribers.price_code),
+           payments_made = COALESCE(EXCLUDED.payments_made, subscribers.payments_made),
+           status = 'activo',
+           cancel_reason = NULL,
+           updated_at = now()
+         RETURNING id, (xmax = 0) AS inserted
+       )
+       SELECT upsert.id, upsert.inserted, existing.previous_status, existing.previous_ban_number
+         FROM upsert
+         LEFT JOIN existing ON true`,
+      [
+        req.params.banId,
+        ph,
+        b.plan || null,
+        Number(b.monthly_value) || null,
+        b.line_kind || null,
+        b.line_type || null,
+        b.equipment || null,
+        b.activation_date || null,
+        b.contract_start_date || null,
+        b.contract_end_date || null,
+        b.contract_term ? Number(b.contract_term) || null : null,
+        b.remaining_payments ? Number(b.remaining_payments) || null : null,
+        b.product_type || null,
+        b.price_code || null,
+        b.payments_made ? Number(b.payments_made) || null : null,
+      ]);
+    });
+    res.status(r.rows[0]?.inserted ? 201 : 200).json(r.rows[0]);
+  } catch (e) { res.status(e.statusCode || 500).json({ error: e.message, existing: e.existing || null }); }
 });
 
 // EDITAR / cambiar estado suscriptor (status: activo|cancelado|suspendido)
 writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
-  const allowed = ['plan', 'monthly_value', 'status', 'equipment', 'contract_end_date', 'line_kind', 'line_type'];
+  if (req.body?.remaining_payments && !req.body.contract_end_date) {
+    req.body.contract_end_date = contractEndFromRemainingPayments(req.body.remaining_payments);
+  }
+  const body = req.body || {};
   const sets = [], vals = [];
-  for (const k of allowed) if (k in (req.body || {})) { vals.push(req.body[k] === '' ? null : req.body[k]); sets.push(`${k} = $${vals.length}`); }
+  if ('phone' in body) {
+    const ph = onlyDigits(body.phone);
+    if (ph.length !== 10) return res.status(400).json({ error: 'El telefono debe tener 10 digitos' });
+    vals.push(ph); sets.push(`phone = $${vals.length}`);
+    vals.push(ph); sets.push(`phone_norm = $${vals.length}`);
+  }
+  const allowed = ['plan', 'monthly_value', 'status', 'activation_date', 'contract_start_date', 'contract_end_date', 'contract_term', 'remaining_payments', 'cancel_reason', 'line_kind', 'line_type', 'equipment', 'product_type', 'price_code', 'payments_made'];
+  for (const k of allowed) if (k in body) { vals.push(body[k] === '' ? null : body[k]); sets.push(`${k} = $${vals.length}`); }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
   vals.push(req.params.id);
-  try { const r = await wp(c => c.query(`UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals)); if (!r.rows[0]) return res.status(404).json({ error: 'Suscriptor no existe' }); res.json({ ok: true }); }
-  catch (e) { res.status(500).json({ error: e.message }); }
+  try {
+    const r = await wp(c => c.query(`UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals));
+    if (!r.rows[0]) return res.status(404).json({ error: 'Suscriptor no existe' });
+    res.json({ ok: true });
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'Ese telefono ya existe en otro suscriptor' });
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ELIMINAR suscriptor

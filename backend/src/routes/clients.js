@@ -33,20 +33,20 @@ clientsRouter.get('/:id', requireAuth, async (req, res) => {
 // POST /api/clients  -> crear
 clientsRouter.post('/', requireAuth, async (req, res) => {
   const b = req.body || {};
-  if (!b.name) return res.status(400).json({ error: 'Falta el nombre' });
+  if (!b.name) return res.status(400).json({ error: 'Falta la empresa' });
   const r = await query(
-    `INSERT INTO clients (name, contact_person, email, phone, phone_secondary, mobile,
-        address, city, zip_code, tax_id, base, salesperson)
+    `INSERT INTO clients (name, owner_name, contact_person, email, phone, additional_phone, cellular,
+        address, city, zip_code, tax_id, source)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-    [b.name, b.contact_person, b.email, b.phone, b.phone_secondary, b.mobile,
-     b.address, b.city, b.zip_code, b.tax_id, b.base, b.salesperson]);
+    [b.name, b.owner_name, b.contact_person, b.email, b.phone, b.additional_phone, b.cellular,
+     b.address, b.city, b.zip_code, b.tax_id, b.source]);
   res.status(201).json(r.rows[0]);
 });
 
 // PUT /api/clients/:id  -> actualizar (solo los campos enviados)
 clientsRouter.put('/:id', requireAuth, async (req, res) => {
-  const allowed = ['name','contact_person','email','phone','phone_secondary','mobile',
-                   'address','city','zip_code','tax_id','base','salesperson'];
+  const allowed = ['name','owner_name','contact_person','email','phone','additional_phone','cellular',
+                   'address','city','zip_code','tax_id','source'];
   const sets = [];
   const vals = [];
   for (const k of allowed) {

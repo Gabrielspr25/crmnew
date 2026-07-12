@@ -1,0 +1,361 @@
+﻿diff --git a/backend/.env.example b/backend/.env.example
+index 9105ecd..8bac95d 100644
+--- a/backend/.env.example
++++ b/backend/.env.example
+@@ -15,3 +15,10 @@ PORT=4000
+ # Google Places API Key
+ GOOGLE_PLACES_API_KEY=tu_clave_de_api_de_google_maps_aqui
+ 
++# SMTP / Office365 para "Enviar por servidor (SMTP)"
++SMTP_HOST=smtp.office365.com
++SMTP_PORT=587
++SMTP_USER=tu_correo@dominio.com
++SMTP_PASS=tu_password_o_app_password
++# Tambien se acepta SMTP_PASSWORD en lugar de SMTP_PASS.
++SMTP_FROM=tu_correo@dominio.com
+diff --git a/backend/src/routes/correosRoutes.js b/backend/src/routes/correosRoutes.js
+index 486c620..771b4f7 100644
+--- a/backend/src/routes/correosRoutes.js
++++ b/backend/src/routes/correosRoutes.js
+@@ -2,11 +2,16 @@
+ // Igual que el viejo, el flujo principal es "Abrir en Outlook" (mailto BCC, sin SMTP).
+ // El envío por servidor (SMTP/Office365) queda disponible si se configuran las credenciales.
+ import { Router } from 'express';
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
+ import { pool } from '../db.js';
+ import { requireAuth } from '../auth.js';
+ 
+ export const correosRouter = Router();
+ 
++const __dir = path.dirname(fileURLToPath(import.meta.url));
++const CLARO_LOGO = path.resolve(__dir, '../../../frontend/img/claro-empresas.png');
+ const ACTIVE_SUB = `COALESCE(LOWER(s.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
+ 
+ // GET /api/correos/clientes -> clientes con email + flag activo
+@@ -29,8 +34,9 @@ correosRouter.get('/correos/clientes', requireAuth, async (req, res) => {
+ correosRouter.post('/email/send', requireAuth, async (req, res) => {
+   const { to, subject, html, text } = req.body || {};
+   if (!to || !subject || (!html && !text)) return res.status(400).json({ ok: false, error: 'Faltan campos (to, subject, html/text)' });
+-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+-    return res.status(400).json({ ok: false, error: 'SMTP no configurado en el servidor (SMTP_USER/SMTP_PASS). Usá "Abrir en Outlook" mientras tanto.' });
++  const smtpPass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD;
++  if (!process.env.SMTP_USER || !smtpPass) {
++    return res.status(400).json({ ok: false, error: 'SMTP no configurado en el servidor (SMTP_USER y SMTP_PASS o SMTP_PASSWORD). Usá "Abrir en Outlook" mientras tanto.' });
+   }
+   try {
+     const nodemailer = (await import('nodemailer')).default;
+@@ -38,10 +44,14 @@ correosRouter.post('/email/send', requireAuth, async (req, res) => {
+       host: process.env.SMTP_HOST || 'smtp.office365.com',
+       port: Number(process.env.SMTP_PORT || 587),
+       secure: false,
+-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
++      auth: { user: process.env.SMTP_USER, pass: smtpPass },
+       tls: { ciphers: 'SSLv3' },
+     });
+-    const info = await transporter.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text, html });
++    const mail = { from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text, html };
++    if (html && fs.existsSync(CLARO_LOGO)) {
++      mail.attachments = [{ filename: 'claro-empresas.png', path: CLARO_LOGO, cid: 'claroLogo' }];
++    }
++    const info = await transporter.sendMail(mail);
+     res.json({ ok: true, message: 'Correo enviado', messageId: info.messageId });
+   } catch (e) {
+     res.status(500).json({ ok: false, error: 'Error al enviar. Verificá las credenciales SMTP. ' + e.message });
+diff --git a/backend/src/routes/equiposRoutes.js b/backend/src/routes/equiposRoutes.js
+index e7b8a40..1f3d104 100644
+--- a/backend/src/routes/equiposRoutes.js
++++ b/backend/src/routes/equiposRoutes.js
+@@ -6,6 +6,7 @@ import multer from 'multer';
+ import XLSX from 'xlsx';
+ import { pool } from '../db.js';
+ import { requireAuth } from '../auth.js';
++import { buscarYDescargarImagenEquipo } from '../services/equiposImagenesService.js';
+ 
+ export const equiposRouter = Router();
+ const upload = multer({
+@@ -157,6 +158,32 @@ equiposRouter.get('/equipos-lista/uploads', requireAuth, async (_req, res) => {
+   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+ });
+ 
++// POST /api/equipos-lista/:id/foto/buscar — busca en sitios oficiales y guarda copia local
++equiposRouter.post('/equipos-lista/:id/foto/buscar', requireAuth, async (req, res) => {
++  try {
++    const id = Number(req.params.id);
++    if (!id) return res.status(400).json({ ok: false, error: 'ID inválido.' });
++    const r = await pool.query(`SELECT id, item_code, modelo, marca FROM public.equipos_lista WHERE id=$1 LIMIT 1`, [id]);
++    if (!r.rows.length) return res.status(404).json({ ok: false, error: 'Equipo no encontrado.' });
++    const found = await buscarYDescargarImagenEquipo(r.rows[0]);
++    await pool.query(
++      `UPDATE public.equipos_lista
++       SET image_url=$1, image_source_url=$2, image_status='ok', image_updated_at=NOW(), actualizado_en=NOW()
++       WHERE id=$3`,
++      [found.image_url, found.image_source_url, id]
++    );
++    res.json({ ok: true, equipo_id: id, ...found });
++  } catch (e) {
++    try {
++      await pool.query(
++        `UPDATE public.equipos_lista SET image_status='error', image_updated_at=NOW() WHERE id=$1`,
++        [Number(req.params.id) || 0]
++      );
++    } catch {}
++    res.status(500).json({ ok: false, error: e.message });
++  }
++});
++
+ // POST /api/equipos-lista/preview — parsear sin guardar
+ equiposRouter.post('/equipos-lista/preview', requireAuth, upload.single('file'), async (req, res) => {
+   try {
+diff --git a/frontend/app.html b/frontend/app.html
+index e46c9a0..4e23b0a 100644
+--- a/frontend/app.html
++++ b/frontend/app.html
+@@ -799,17 +799,40 @@ async function viewVendedores(){
+ 
+ // ---------------- CORREOS ----------------
+ let coClientes=[], coSel=new Set(), coTab='activo';
+-const CO_FIRMA='\n\n—\nEquipo Claro Negocios';
++const CO_FIRMA=`
++
++Gabriel Sanchez
++Corporate and retail account Director
++Tel Of: 787-796-2099  Cel: 787-319-0909
++CLARO  Agente de ventas SS
++Email: gabriel.sanchez@claropr.com
++
++AVISO DE CONFIDENCIALIDAD: Este correo electronico, incluyendo en su caso los archivos adjuntos al
++mismo, puede contener informacion de caracter confidencial y/o privilegiada, y se envian a la atencion
++unica y exclusivamente de la persona y/o entidad a quien va dirigido. La copia, revision, uso, revelacion y/o
++distribucion de dicha informacion confidencial sin la autorizacion por escrito de Claro esta prohibida. Si usted
++no es el destinatario a quien se dirige el presente correo, favor de contactar al remitente respondiendo al
++presente correo y eliminar el correo original incluyendo sus archivos, asi como cualquier copia del mismo.
++Mediante la recepcion del presente correo usted reconoce y acepta que en caso de incumplimiento de su
++parte y/o de sus representantes a los terminos antes mencionados, Claro tendra derecho a los danos y
++perjuicios que esto le cause.
++
++CONFIDENTIALITY NOTICE: This e-mail message including attachments, if any, is intended only for the
++person or entity to which it is addressed to and may contain confidential and/or privileged material. Any review,
++use, disclosure or distribution of such confidential information without the written authorization of Claro is
++prohibited. If you are not the intended recipient, please contact the sender by replying to this e-mail and destroy all
++copies of the original message. By receiving this e-mail, you acknowledge that any breach by you and/or your
++representatives of the above provisions may entitle Claro to seek for damages.`;
+ async function viewCorreos(){
+-  return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook (BCC) o enviá por servidor</div></div></div>
++  return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook</div></div></div>
+   <div class="panel" id="coCtrl"><div class="s">Cargando…</div></div>
+   <div class="grid2"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Clientes con email</h3><input class="inp" id="coSearch" placeholder="Buscar…" style="max-width:220px" oninput="coRenderList()"></div><div id="coList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>
+   <div class="panel"><h3>Redactar</h3>
+     <div class="flbl">Asunto</div><input class="inp" id="coSubj" placeholder="Asunto del correo" style="margin-bottom:10px">
+     <div class="flbl">Mensaje</div><textarea class="inp" id="coBody" style="width:100%;min-height:200px" placeholder="Escribí el mensaje…"></textarea>
+     <div id="coCount" class="s" style="margin:8px 0"></div>
+-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">📧 Abrir en Outlook (BCC)</button><button class="btn ghost" onclick="coSMTP()">Enviar por servidor (SMTP)</button></div>
+-    <div class="s" style="margin-top:8px;color:var(--txt3)">Abre tu correo con los destinatarios en CCO (copia oculta), listo para enviar.</div></div></div>`;
++    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div>
++    <div class="s" style="margin-top:8px;color:var(--txt3)">Escritorio oculta destinatarios en BCC. Outlook Web usa Para visible.</div></div></div>`;
+ }
+ async function coInit(){
+   try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
+@@ -846,28 +869,69 @@ function coOutlook(){
+   var p=new URLSearchParams();
+   var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
+   var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
+-  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(','))+'&'+p.toString();
++  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(';'))+'&'+p.toString();
+   if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); el enlace puede quedar muy largo para abrir de una. ¿Intentar igual? Si no abre, mandá en lotes más chicos.'))return; }
+   window.location.href=url;
+ }
+-async function coSMTP(){
++function coOutlookWeb(){
+   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
+-  var subj=($('coSubj')&&$('coSubj').value)||''; var body=($('coBody')&&$('coBody').value)||'';
+-  if(!subj||!body){ alert('Completá asunto y mensaje'); return; }
+-  if(!confirm('¿Enviar a '+coSel.size+' destinatarios por el servidor (SMTP)?'))return;
+-  try{
+-    var res=await fetch(API+'/api/email/send',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({to:[...coSel].join(','),subject:subj,text:body+CO_FIRMA})});
+-    var d=await res.json();
+-    if(!d.ok){ alert(d.error||('Error '+res.status)); return; } alert('✓ '+(d.message||'Enviado'));
+-  }catch(e){ alert('No se pudo enviar: '+e.message); }
++  var p=new URLSearchParams();
++  p.set('to',[...coSel].join(','));
++  var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
++  var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
++  var url='https://outlook.office.com/mail/deeplink/compose?'+p.toString();
++  if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); Outlook Web puede rechazar enlaces largos. ¿Intentar igual?'))return; }
++  window.open(url,'_blank','noopener');
+ }
+ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
+ 
+ // ---------------- OFERTAS (ADMIN) ----------------
+ // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
+ const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/movil.html';   // portal de ofertas deployado
+-const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
++const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['servicios','🧾 Servicios'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
+ let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
++const OF_SERVICIOS=[
++  {id:'rescate-residencia-6m',titulo:'6 meses gratis Claro Rescate / Claro Residencia',archivo:'Featires oerta.pdf',vigencia:'Desde el 5 de noviembre de 2025',estado:'Sin fecha final indicada',estadoClass:'amber',soloResumen:true,
++   resumen:'Oferta para clientes 2 Play/3 Play que activen Claro Rescate o Claro Residencia con Internet + Telefonia. Descuento automatico en meses intercalados.',
++   notas:['Aplica a planes Internet + Telefonia 100, 300, 600 y 1,000 megas.','Descuento en meses 2, 4, 6, 8, 10 y 12.','Requiere revision manual porque el boletin no indica fecha final.'],
++   hojas:[
++    {n:1,titulo:'Portada de boletin',img:'img/servicios/features-oferta-p01.png',desc:'Boletin Oferta 6 meses Gratis Claro Rescate & Claro Residencia.'},
++    {n:2,titulo:'Descripcion de oferta',img:'img/servicios/features-oferta-p02.png',desc:'Mecanica de seis meses gratis intercalados y combinaciones de servicio.'},
++    {n:3,titulo:'Clientes que aplican',img:'img/servicios/features-oferta-p03.png',desc:'Reglas para clientes nuevos, existentes y exclusiones.'},
++    {n:4,titulo:'Precios combinados',img:'img/servicios/features-oferta-p04.png',desc:'Precios Internet + Telefonia con Claro Rescate o Claro Residencia.'},
++    {n:5,titulo:'SOC y alpha codes',img:'img/servicios/features-oferta-p05.png',desc:'Codigos de planes y servicios aplicables.'},
++    {n:6,titulo:'Ordenes nuevas',img:'img/servicios/features-oferta-p06.png',desc:'Proceso para emitir ordenes nuevas por COPS.'},
++    {n:7,titulo:'Ordenes existentes',img:'img/servicios/features-oferta-p07.png',desc:'Proceso OSADIA/AS para clientes existentes.'},
++    {n:8,titulo:'Publicidad',img:'img/servicios/features-oferta-p08.png',desc:'Material visual de la oferta.'},
++    {n:9,titulo:'Terminos y condiciones',img:'img/servicios/features-oferta-p09.png',desc:'Condiciones oficiales: account type, planes, descuento SIF y cubierta.'}
++   ]},
++  {id:'features-servicios-2022',titulo:'Cubiertas de servicios Features',archivo:'Features.pdf',vigencia:'1 al 31 de julio de 2022',estado:'Vencida',estadoClass:'red',soloTitulos:true,
++   resumen:'Hojas de referencia de servicios descargables para vendedor. Este boletin esta vencido y debe quedar como alerta hasta reemplazarlo por uno vigente.',
++   notas:['Claro Residencia.','Claro Rescate.','Advantage.','Asistencia Legal.'],
++   hojas:[
++    {n:9,titulo:'Claro Residencia',img:'img/servicios/features-p09.png',desc:'Detalle de cubierta residencial.'},
++    {n:10,titulo:'Claro Rescate',img:'img/servicios/features-p10.png',desc:'Detalle de cubierta para vehiculos.'},
++    {n:11,titulo:'Claro Rescate continuacion',img:'img/servicios/features-p11.png',desc:'Continuacion de condiciones de cubierta.'},
++    {n:12,titulo:'Advantage',img:'img/servicios/features-p12.png',desc:'Advantage.'},
++    {n:13,titulo:'Asistencia Legal',img:'img/servicios/features-p13.png',desc:'Asistencia legal.'}
++   ]}
++];
++const OF_SEGUROS_EQUIPOS=[
++  {rango:'$0 - $200.00',deducible:'$20.00',prima:'$7.99'},
++  {rango:'$200.01 - $400',deducible:'$50.00',prima:'$7.99'},
++  {rango:'$400.01 - $700',deducible:'$100.00',prima:'$13.99'},
++  {rango:'$700.01 - $1,400',deducible:'$199.00',prima:'$13.99'},
++  {rango:'$1,400.01 en adelante',deducible:'$299.00',prima:'$13.99'}
++];
++const OF_SERVICIOS_SOCS=[
++  {descripcion:'Claro Rescate',socMovil:'RESCATEM',socFijo:'RESCATEF / A821',renta:5.99},
++  {descripcion:'Claro Residencia',socMovil:'RESIDEM',socFijo:'RESIDEF / A826',renta:4.50},
++  {descripcion:'Claro Residencia y Rescate',socMovil:'RESRECM',socFijo:'RESRECF / A831',renta:7.99},
++  {descripcion:'Claro Advantage',socMovil:'ADVANM',socFijo:'ADVANF / A840',renta:5.99},
++  {descripcion:'Claro Advantage y Residencia',socMovil:'ADVRESM',socFijo:'ADVRESF / A843',renta:8.99},
++  {descripcion:'Claro Advantage, Residencia y Rescate',socMovil:'ADVANTRM',socFijo:'ADVANTRF / A846',renta:11.99},
++  {descripcion:'Claro Asistencia Legal',socMovil:'LEGALM',socFijo:'LEGALF / A851',renta:9.99}
++];
+ async function viewOfertas(){
+   var portalBtn = PORTAL_OFERTAS_URL
+     ? `<a class="btn" style="background:var(--violet)" href="${PORTAL_OFERTAS_URL}" target="_blank" rel="noopener">🛒 Abrir portal de ofertas</a>`
+@@ -883,6 +947,7 @@ async function reOfertas(){ $('view').innerHTML=await viewOfertas(); ofRenderBod
+ async function ofRenderBody(){
+   if(ofTab==='equipos') return ofRenderEquipos();
+   if(ofTab==='ofertas') return ofRenderOfertasTienda();
++  if(ofTab==='servicios') return ofRenderServicios();
+   return ofRenderPlanesPagina(ofTab); // fijos | moviles | inalambrico
+ }
+ // Tab "Ofertas" (Excel móviles) = lo maneja el programador
+@@ -893,6 +958,84 @@ async function ofRenderOfertasTienda(){
+     +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
+ }
+ 
++// ----- SERVICIOS / FEATURES -----
++function ofServicioById(docId, hojaNum){
++  var doc=OF_SERVICIOS.find(function(d){return d.id===docId;});
++  if(!doc)return null;
++  var hoja=doc.hojas.find(function(h){return Number(h.n)===Number(hojaNum);});
++  return hoja?{doc:doc,hoja:hoja}:null;
++}
++async function ofRenderServicios(){
++  var b=$('ofBody'); if(!b)return;
++  var alertas=OF_SERVICIOS.filter(function(d){return d.estado!=='Vigente';}).map(function(d){
++    return `<div class="card" style="padding:12px;border-color:var(--${d.estadoClass==='red'?'red':'amber'}-border);min-width:220px;flex:1">
++      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>${esc(d.titulo)}</b><span class="pill ${d.estadoClass}">${esc(d.estado)}</span></div>
++      <div class="s" style="margin-top:6px">${esc(d.vigencia)}</div></div>`;
++  }).join('');
++  var docs=OF_SERVICIOS.map(function(d){
++    var hojas=d.hojas.map(function(h){
++      return `<button class="btn ghost" style="justify-content:flex-start;text-align:left" onclick="openServicioModal('${d.id}',${h.n})">${esc(h.titulo)}</button>`;
++    }).join('');
++    var notas=(d.notas||[]).map(function(n){return `<li>${esc(n)}</li>`;}).join('');
++    return `<div class="card" style="padding:14px;margin-bottom:12px">
++      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
++        <div><h3 style="margin:0">${esc(d.titulo)}</h3><div class="s" style="margin-top:3px">${esc(d.archivo)} · ${esc(d.vigencia)}</div></div>
++        <span class="pill ${d.estadoClass}">${esc(d.estado)}</span>
++      </div>
++      <div class="s" style="margin:10px 0;color:var(--txt2)">${esc(d.resumen)}</div>
++      ${d.soloResumen?'':`${d.soloTitulos?'':`<ul class="s" style="margin:0 0 12px 18px;color:var(--txt2)">${notas}</ul>`}
++      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px">${hojas}</div>`}
++    </div>`;
++  }).join('');
++  b.innerHTML=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
++      <div><h3 style="margin:0">Alertas de vigencia</h3><div class="s" style="margin-top:4px">Boletines vencidos o sin fecha final para que admin los revise antes de publicar.</div></div>
++      <span class="pill amber">${OF_SERVICIOS.length} documentos cargados</span>
++    </div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${alertas}</div></div>
++    <div class="panel"><h3 style="margin-top:0">Hojas de servicios descargables</h3>${docs}${ofRenderServiciosSocs()}${ofRenderSeguroEquipos()}</div>`;
++}
++function ofMoney(n){return '$'+Number(n||0).toFixed(2);}
++function ofRenderServiciosSocs(){
++  var rows=OF_SERVICIOS_SOCS.map(function(s){
++    return `<tr><td><b>${esc(s.descripcion)}</b></td><td>${esc(s.socMovil)}</td><td>${esc(s.socFijo)}</td><td><b>${ofMoney(s.renta)}</b></td></tr>`;
++  }).join('');
++  return `<div class="card" style="padding:14px;margin-top:12px">
++    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">SOCS Y CODIGOS DE EMISION</h3><div class="s" style="margin-top:4px">Servicios individuales y combinados oficiales para sumar a la propuesta.</div></div><span class="pill blue">Precios oficiales</span></div>
++    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:760px"><thead><tr><th>Descripcion</th><th>SOC movil</th><th>Alphacode / SOC fijo</th><th>Renta mensual</th></tr></thead><tbody>${rows}</tbody></table></div>
++    <div class="s" style="margin-top:8px;color:var(--txt2)">Estos son cargos de servicios. No usar aqui precios de paquetes de Internet + Telefonia.</div>
++  </div>`;
++}
++function ofRenderSeguroEquipos(){
++  var rows=OF_SEGUROS_EQUIPOS.map(function(s,i){
++    return `<tr><td style="text-align:center"><input type="checkbox" id="of_seg_${i}"></td><td><b>${esc(s.rango)}</b></td><td>${esc(s.deducible)}</td><td>${esc(s.prima)}</td><td><input class="inp" type="number" min="0" step="1" value="0" style="width:90px;text-align:center"></td></tr>`;
++  }).join('');
++  return `<div class="card" style="padding:14px;margin-top:12px">
++    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Seguro de equipos a escoger</h3><div class="s" style="margin-top:4px">Check para escoger y cantidad de unidades editable desde 0.</div></div><span class="pill violet">Opcional</span></div>
++    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:720px"><thead><tr><th>Escoger</th><th>Costo del Equipo</th><th>Deducible por unidad</th><th>Prima por unidad mensual</th><th>Cantidad de unidades</th></tr></thead><tbody>${rows}</tbody></table></div>
++  </div>`;
++}
++function openServicioModal(docId, hojaNum){
++  var item=ofServicioById(docId, hojaNum); if(!item){ alert('No se encontro la hoja'); return; }
++  var d=item.doc, h=item.hoja;
++  var html=`<div class="modal-bg" id="servicioModalBg" style="z-index:180">
++    <div class="modal" style="max-width:980px;width:94vw;max-height:92vh;overflow:auto">
++      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
++        <div><h3 style="margin:0">${esc(d.titulo)} · ${esc(h.titulo)}</h3><div class="s">${esc(d.vigencia)} · ${esc(d.estado)}</div></div>
++        <button class="btn ghost" onclick="closeServicioModal()">Cerrar</button>
++      </div>
++      <div class="s" style="margin-bottom:10px;color:var(--txt2)">${esc(h.desc)}</div>
++      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
++        <button class="btn green" onclick="downloadServicioImage('${h.img}','${d.id}-hoja-${h.n}.png')">Descargar imagen</button>
++        <a class="btn ghost" href="${h.img}" target="_blank" rel="noopener">Abrir imagen</a>
++      </div>
++      <div class="card" style="padding:8px;background:#fff;overflow:auto"><img src="${h.img}" alt="${esc(h.titulo)}" style="display:block;width:100%;height:auto"></div>
++    </div></div>`;
++  document.body.insertAdjacentHTML('beforeend',html);
++}
++function closeServicioModal(){ var el=$('servicioModalBg'); if(el)el.remove(); }
++function downloadServicioImage(src, name){
++  var a=document.createElement('a'); a.href=src; a.download=name||'servicio.png'; document.body.appendChild(a); a.click(); a.remove();
++}
++
+ // ----- EQUIPOS -----
+ async function ofRenderEquipos(){
+   var b=$('ofBody'); if(!b)return;
+@@ -917,14 +1060,25 @@ async function eqLoadList(){
+     if(!rows.length){ el.innerHTML='<div class="empty">'+(s?'Sin resultados':'No hay equipos cargados todavía. Subí el Excel arriba.')+'</div>'; return; }
+     var body=rows.slice(0,200).map(function(e){
+       var mens=(e.mensualidades||[]).map(function(m){return m.meses+'m $'+m.monto;}).join(' · ');
+-      return '<tr><td><b>'+(e.modelo||'')+'</b><div class="s">'+(e.item_code||'')+(e.sap_code?(' · SAP '+e.sap_code):'')+'</div></td>'
++      var img=e.image_url?'<img src="'+esc(e.image_url)+'" style="width:54px;height:54px;object-fit:contain;background:#fff;border-radius:8px;padding:4px">':'<button class="btn ghost" style="padding:6px 8px;font-size:11px" onclick="eqBuscarFoto('+e.id+',this)">Buscar foto</button>';
++      return '<tr><td>'+img+'</td><td><b>'+(e.modelo||'')+'</b><div class="s">'+(e.item_code||'')+(e.sap_code?(' · SAP '+e.sap_code):'')+'</div></td>'
+         +'<td><span class="pill violet">'+(e.marca||'')+'</span></td><td>'+(e.categoria||'')+'</td>'
+         +'<td>'+(e.precio_regular!=null?('$'+e.precio_regular):'—')+'</td>'
+         +'<td class="s">'+(mens||(e.pospago_precios?'pospago':'—'))+'</td></tr>';
+     }).join('');
+-    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' equipos vigentes'+(rows.length>200?' (mostrando 200)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Precio reg.</th><th>Mensualidades</th></tr></thead><tbody>'+body+'</tbody></table></div>';
++    el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' equipos vigentes'+(rows.length>200?' (mostrando 200)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:820px"><thead><tr><th>Foto</th><th>Modelo</th><th>Marca</th><th>Categoría</th><th>Precio reg.</th><th>Mensualidades</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+   }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
+ }
++async function eqBuscarFoto(id, btn){
++  if(!id)return;
++  var old=btn&&btn.textContent; if(btn){btn.disabled=true;btn.textContent='Buscando...';}
++  try{
++    var r=await api('/api/equipos-lista/'+id+'/foto/buscar',{method:'POST',body:{}});
++    if(!r.ok){ alert(r.error||'No se pudo buscar foto'); return; }
++    eqLoadList();
++  }catch(e){ alert('No se pudo buscar foto: '+e.message); }
++  finally{ if(btn){btn.disabled=false;btn.textContent=old||'Buscar foto';} }
++}
+ async function eqPreview(f){
+   if(!f)return;
+   $('eqPrev').innerHTML='<div class="s" style="margin-top:10px">Analizando '+f.name+'…</div>';

@@ -1,0 +1,149 @@
+FILE: C:\Users\Gabriel\Dropbox\Boletines Vigentes PYMES\20 AL 3 DE JULIO 2026\Featires oerta.pdf
+PAGES: 9
+
+===== PAGE 1 =====
+BOLETÍN
+Oferta
+6mesesGratis
+ClaroRescate
+&
+ClaroResidencia
+Válido
+Desde el 5 de
+noviembre de 2025
+
+
+===== PAGE 2 =====
+Con el propósito de ayudar a cumplir con los objetivo de
+ventas hemos trabajado una oferta que combina nuestros
+servicios de Telefonía + Internet con Servicios de Claro
+Asistencias.
+Tendremos en promoción 6 meses gratis intercaladosal
+activar un servicio de Claro Rescate o Claro Residenciaen
+combinación de un plan Internet + Telefonía aplicables para
+la oferta de 100, 300, 600 y 1,000 Megas.
+El descuento aplicará de manera automática en meses
+intercalados: mes 2, 4, 6, 8, 10 y 12 a partir de la activación
+del plan deClaroRescateoClaroResidencia.
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+===== PAGE 3 =====
+¿A quiénes aplica esta oferta?
+Clientes Nuevos de 2 Play (Internet + Telefonía) y 3Play
+(Internet + Telefonía + Televisión) que se suscriban al
+plan aplicables para la oferta de 100, 300, 600 y 1,000
+Megas y active un servicio de Claro Rescate o Claro
+Residencia.
+Clientes Existentes de 2 Play (Internet + Telefonía) y
+3Play (Internet + Telefonía + Televisión) en planes
+aplicables para la oferta de 100, 300 y 600 Megas y
+active servicio de Claro Residencia.
+Importante:
+• No aplica a clientes existentes con servicio de Claro
+Rescate o Claro Residencia.
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+===== PAGE 4 =====
+PreciosdeOfertaCombinada
+Internet+Telefonía&ClaroRescate
+• Telefonía Ilimitada PR US + Internet 100 Megas + Claro Rescate por $45.99
+• Telefonía Ilimitada PR US + Internet 300 Megas + Claro Rescate por $55.99
+• Telefonía Ilimitada PR US + Internet 600 Megas + Claro Rescate por $60.99
+• Telefonía Ilimitada PR US + Internet 1,000 Megas + Claro Rescate por
+$80.99
+Internet+Telefonía&ClaroResidencia
+• Telefonía Ilimitada PR US + Internet 100 Megas + Claro Residencia por
+$44.50
+• Telefonía Ilimitada PR US + Internet 300 Megas + Claro Residencia por
+$54.50
+• Telefonía Ilimitada PR US + Internet 600 Megas + Claro Residencia por
+$59.50
+• Telefonía Ilimitada PR US + Internet 1,000 Megas + Claro Residencia por
+$79.50
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+===== PAGE 5 =====
+Los planes Wireline + Internet aplicables para la oferta:
+VRAD
+GPON
+Plan Claro Residencia aplicable para la oferta:
+SOC ALPHACODE DESCRIPCION MRC
+A826 RESIDEF CLARO RESIDENCIA $4.50
+A821 RESCATEF CLARO RESCATE $5.99
+SOC ALPHACODE DESCRIPCION PRECIO
+C680 100IPRUSV 100M PRUS VRD $40.00
+C681 100PRUSVNC 100M PRUS NC VRD $40.00
+SOC ALPHACODE DESCRIPCION PRECIO
+C672 100ILPRUS 100M PRUS $40.00
+C673 100IPRUSNC 100M PRUS NC $40.00
+C678 300ILPRUS 300M PRUS $50.00
+C679 300IPRUSNC 300M PRUS NC $50.00
+C674 600ILPRUS 600M PRUS $55.00
+C675 600IPRUSNC 600M PRUS NC $55.00
+C676 1GBILPRUS 1GB PR US $75.00
+C677 1GBIPRUSNC 1GB PR US NC $75.00
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+===== PAGE 6 =====
+¿Cómo emitir las ordenes para la oferta de 6 meses gratis
+de Claro Rescate o Claro Residencial?
+La emisión de las ordenes nuevas de 2 Playserá a través de COPS con
+su proceso regular.
+El empleado deberá marcar las siguientes opciones en la orden de servicio:
+1. Wireline + Internet– Escoger la velocidad (100, 300, 600 o 1,000 Megas)
+del plan limitado PR US.
+2. FijoHogar/FijoRescate – Escoger el plan de servicio de valor agregado:
+- Marcar el plan CLARORESCATE[A821]$5.99
+- Marcar el plan CLARORESIDENCIA[A826]$4.50
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+
+===== PAGE 7 =====
+¿Cómo emitir las ordenes para la oferta de 6 meses
+gratis de Claro Rescate o Claro Residencial?
+La emisión de las ordenes para clientes existentes será por
+el proceso regular a través de OSADIA.
+1. El empleado deberá realizar una orden record de Alta
+Suplementaria (AS) utilizando el Alpha code:
+• Claro Rescate $5.99 – RESCATEF
+• Claro Residencia $4.50 – RESIDEF
+*Elclientedeberátenerunplanaplicablesparalaofertade100,
+300,600o1,000megas.
+Vigencia:
+Desde el 5 de noviembre de
+2025
+
+===== PAGE 8 =====
+LaPublicidadqueestarápautandomientrasestévigentelaofertaes:
+
+===== PAGE 9 =====
+Términos yCondiciones
+• Esta oferta aplica a los siguientes Account Type; Individual Residential .
+• Aplica a clientes de 2 Play (Internet + Telefonía) en un planes aplicables
+para la oferta de 100, 300, 600 o 1,000 megas en contrato o sin contrato.
+• El sistema le aplicará el descuento automáticamente y se verá en SIF
+posterior a la activación del plan de Claro Rescate o Claro Residencia.
+• El descuento aplicara en meses intercalados: mes 2, 4, 6, 8, 10 y 12 a partir
+de la activación del plan Claro Residencia.
+• La cubierta de Claro Rescate o Claro Residencia entra en vigor a partir de
+setenta y dos (72) horas de la activación del servicio. Desde ese momento el
+afiliado podrá utilizar los servicios que se describen en la cubierta. Claro no
+provee los servicios de estos productos y es solo un agente para fines de
+promoción, venta y facturación.
+• Canal Directo – activar la oferta solo a clientes que cumplan con todos
+los términos y condiciones. Favor referirse al documento: Cumplimiento
+con Legales y Términos y Condiciones COM: LIH – 2020 –826.
+• Canal Indirecto - Agentes - activar la oferta solo a clientes que cumplan
+con todos los términos y condiciones. Favor referirse al documento:
+Boletín B-VI-2020-001 Escenarios de Facturación al Agente por NO
+cumplir con los procesos establecidos.
