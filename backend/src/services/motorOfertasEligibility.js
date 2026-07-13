@@ -60,9 +60,11 @@ function offerSource(offer, contract) {
 }
 
 function offerValidityMetadata(offer, contract) {
+  const from = offer.vigencia_desde ?? contract.vigencia.desde;
+  const until = offer.vigencia_hasta ?? contract.vigencia.hasta;
   return {
-    desde: offer.vigencia_desde ?? contract.vigencia.desde ?? null,
-    hasta: offer.vigencia_hasta ?? contract.vigencia.hasta ?? null,
+    desde: from === null || from === undefined ? null : dateKey(from),
+    hasta: until === null || until === undefined ? null : dateKey(until),
     estado: offerValidity(offer, contract),
   };
 }

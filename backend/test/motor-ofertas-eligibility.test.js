@@ -188,6 +188,11 @@ test('normaliza fechas Date persistidas sin aceptar una vigencia realmente venci
   });
 
   assert.equal(inside.equipos.length, 1);
+  assert.deepEqual(inside.equipos[0].vigencia, {
+    desde: '2026-07-04',
+    hasta: '2026-07-15',
+    estado: 'vigente',
+  });
   assert.deepEqual(outside.equipos, []);
   assert.ok(outside.validaciones.some((item) => item.codigo === 'oferta_fuera_vigencia'));
 });
