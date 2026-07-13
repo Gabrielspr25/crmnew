@@ -73,6 +73,20 @@ export function requireAuth(req, res, next) {
   return res.status(401).json({ error: header ? 'Sesión inválida o vencida' : 'No autenticado' });
 }
 
+// Middleware estricto para flujos que nunca pueden usar DEV_LOGIN.
+export function requireStrictAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+  try {
+    req.user = jwt.verify(header.slice(7), SECRET);
+    return next();
+  } catch {
+    return res.status(401).json({ error: 'Sesion invalida o vencida' });
+  }
+}
+
 // Middleware: exige rol admin o supervisor.
 export function requireAdmin(req, res, next) {
   if (!['admin', 'supervisor'].includes(req.user?.rol)) {

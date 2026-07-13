@@ -150,6 +150,63 @@ function normalizeInput() {
   };
 }
 
+test('infiere vigencia solo desde rangos explicitos presentes en encabezados Excel', async () => {
+  const normalizer = await loadNormalizer();
+  const inferred = normalizer.inferSourceValidity({
+    financingBuffer: financingBuffer(),
+    priceListBuffer: priceListBuffer(),
+    now: new Date('2026-07-13T12:00:00.000Z'),
+  });
+
+  assert.deepEqual(inferred, {
+    tabla_financiamiento: {
+      desde: '2026-07-04',
+      hasta: '2026-07-15',
+      estado: 'vigente',
+    },
+    lista_precios: {
+      desde: '2026-05-28',
+      hasta: '2026-07-31',
+      estado: 'vigente',
+    },
+    preview: {
+      desde: '2026-07-04',
+      hasta: '2026-07-15',
+      estado: 'vigente',
+    },
+  });
+});
+
+test('deja vigencia pendiente cuando los encabezados no contienen un rango explicito', async () => {
+  const normalizer = await loadNormalizer();
+  const blank = workbookBuffer({
+    Portafolio: [['OFERTAS DE EQUIPOS'], ['MODELO', 'PRECIO']],
+  });
+  const inferred = normalizer.inferSourceValidity({
+    financingBuffer: blank,
+    priceListBuffer: blank,
+    now: new Date('2026-07-13T12:00:00.000Z'),
+  });
+
+  assert.deepEqual(inferred, {
+    tabla_financiamiento: {
+      desde: null,
+      hasta: null,
+      estado: 'pendiente_confirmacion',
+    },
+    lista_precios: {
+      desde: null,
+      hasta: null,
+      estado: 'pendiente_confirmacion',
+    },
+    preview: {
+      desde: null,
+      hasta: null,
+      estado: 'pendiente_confirmacion',
+    },
+  });
+});
+
 test('normaliza de forma determinista e inventaria todas las hojas', async () => {
   const normalizer = await loadNormalizer();
   assert.ok(normalizer, 'falta motorOfertasNormalizer.js');

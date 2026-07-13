@@ -9,6 +9,21 @@ const EVENT_ORDER = Object.freeze([
   'linea_adicional',
 ]);
 
+const SPANISH_MONTHS = Object.freeze({
+  ENERO: 0,
+  FEBRERO: 1,
+  MARZO: 2,
+  ABRIL: 3,
+  MAYO: 4,
+  JUNIO: 5,
+  JULIO: 6,
+  AGOSTO: 7,
+  SEPTIEMBRE: 8,
+  OCTUBRE: 9,
+  NOVIEMBRE: 10,
+  DICIEMBRE: 11,
+});
+
 export function normalizeText(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -59,6 +74,86 @@ function readWorkbook(buffer) {
     throw new TypeError('El normalizador requiere buffers Excel');
   }
   return XLSX.read(buffer, { type: 'buffer', cellDates: false });
+}
+
+function isoDate(year, monthName, day) {
+  const month = SPANISH_MONTHS[monthName];
+  const numericDay = Number(day);
+  const numericYear = Number(year);
+  if (month === undefined || !Number.isInteger(numericDay) || !Number.isInteger(numericYear)) {
+    return null;
+  }
+  const value = new Date(Date.UTC(numericYear, month, numericDay));
+  if (
+    value.getUTCFullYear() !== numericYear
+    || value.getUTCMonth() !== month
+    || value.getUTCDate() !== numericDay
+  ) {
+    return null;
+  }
+  return value.toISOString().slice(0, 10);
+}
+
+function explicitRangeFromHeader(text) {
+  const normalized = normalizeText(text);
+  const sameMonth = normalized.match(
+    /\b(?:DEL\s+)?(\d{1,2})\s+AL\s+(\d{1,2})\s+DE\s+([A-Z]+)\s+DE\s+(20\d{2})\b/
+  );
+  if (sameMonth) {
+    const desde = isoDate(sameMonth[4], sameMonth[3], sameMonth[1]);
+    const hasta = isoDate(sameMonth[4], sameMonth[3], sameMonth[2]);
+    return desde && hasta && desde <= hasta ? { desde, hasta } : null;
+  }
+
+  const twoMonths = normalized.match(
+    /\b(?:DEL\s+)?(\d{1,2})\s+DE\s+([A-Z]+)\s+AL\s+(\d{1,2})\s+DE\s+([A-Z]+)\s+DE\s+(20\d{2})\b/
+  );
+  if (!twoMonths) return null;
+  const desde = isoDate(twoMonths[5], twoMonths[2], twoMonths[1]);
+  const hasta = isoDate(twoMonths[5], twoMonths[4], twoMonths[3]);
+  return desde && hasta && desde <= hasta ? { desde, hasta } : null;
+}
+
+function headerRange(buffer) {
+  const workbook = readWorkbook(buffer);
+  for (const sheetName of workbook.SheetNames) {
+    const rows = rowsForSheet(workbook.Sheets[sheetName]).slice(0, 10);
+    for (const row of rows) {
+      const range = explicitRangeFromHeader(row.map((cell) => String(cell ?? '')).join(' '));
+      if (range) return range;
+    }
+  }
+  return null;
+}
+
+function validityForRange(range, now) {
+  if (!range) {
+    return { desde: null, hasta: null, estado: 'pendiente_confirmacion' };
+  }
+  const current = new Date(now).toISOString().slice(0, 10);
+  return {
+    ...range,
+    estado: current < range.desde ? 'futura' : current > range.hasta ? 'vencida' : 'vigente',
+  };
+}
+
+export function inferSourceValidity({ financingBuffer, priceListBuffer, now = new Date() }) {
+  const tabla_financiamiento = validityForRange(headerRange(financingBuffer), now);
+  const lista_precios = validityForRange(headerRange(priceListBuffer), now);
+  let preview;
+  if (
+    tabla_financiamiento.estado === 'pendiente_confirmacion'
+    || lista_precios.estado === 'pendiente_confirmacion'
+  ) {
+    preview = { desde: null, hasta: null, estado: 'pendiente_confirmacion' };
+  } else {
+    const desde = [tabla_financiamiento.desde, lista_precios.desde].sort().at(-1);
+    const hasta = [tabla_financiamiento.hasta, lista_precios.hasta].sort()[0];
+    preview = desde <= hasta
+      ? validityForRange({ desde, hasta }, now)
+      : { desde: null, hasta: null, estado: 'pendiente_confirmacion' };
+  }
+  return { tabla_financiamiento, lista_precios, preview };
 }
 
 function findHeaderIndex(rows, requiredPatterns) {

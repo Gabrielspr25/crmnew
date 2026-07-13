@@ -23,6 +23,7 @@ import { planesRouter } from './routes/planesRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
+import { motorOfertasRouter } from './routes/motorOfertasRoutes.js';
 
 
 const app = express();
@@ -73,6 +74,7 @@ app.use('/api', ocrRouter);               // OCR: subir/pegar imagen -> suscript
 app.use('/api', importRouter);            // Importador: actualización masiva desde Excel
 app.use('/api', equiposRouter);           // Admin de Equipos: lista de precios PYMES/CORP
 app.use('/api/planes-modulos', planesRouter); // Admin de Planes: CRUD + constructor de ofertas (PDF)
+app.use('/api/motor-ofertas', motorOfertasRouter);
 app.use('/api', prospectosRouter);        // Prospección masiva Google Places -> public.prospectos
 app.use('/api', correosRouter);           // Correos: clientes con email + envío (mailto/SMTP)
 app.use('/api/sales', salesRouter);       // ventas / comisiones
