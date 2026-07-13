@@ -12,3 +12,4 @@ scripts/__pycache__/
 .agents/
 .claude/
 .codex/
+.worktrees/
