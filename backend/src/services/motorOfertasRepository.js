@@ -382,7 +382,7 @@ export function createMotorOfertasRepository({
     return { version, sources: sources.rows };
   }
 
-  async function getVersionWithSources(versionId) {
+  async function getVersionWithSources(versionId, { includeContradictions = false } = {}) {
     const versionResult = await pool.query(
       `SELECT *
        FROM public.motor_ofertas_versiones
@@ -398,7 +398,15 @@ export function createMotorOfertasRepository({
        ORDER BY tipo, nombre_original`,
       [version.id]
     );
-    return { version, sources: sources.rows };
+    if (!includeContradictions) return { version, sources: sources.rows };
+    const contradictions = await pool.query(
+      `SELECT id, codigo, bloqueante, estado, detalle
+       FROM public.motor_ofertas_contradicciones
+       WHERE version_id = $1
+       ORDER BY creada_en, id`,
+      [version.id]
+    );
+    return { version, sources: sources.rows, contradicciones: contradictions.rows };
   }
 
   async function getEligibleSnapshot(versionId) {

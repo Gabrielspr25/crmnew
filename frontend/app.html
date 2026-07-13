@@ -1107,7 +1107,7 @@ function moVigenciaEsVigente(r){
 function moTieneBloqueantes(r){
   var resumen=(r&&r.resumen)||{};
   if(Number(resumen.contradicciones_bloqueantes||0)>0)return true;
-  return ((r&&r.contradicciones)||[]).some(function(c){ return c&&c.bloqueante&&c.estado!=='resuelta'; });
+  return ((r&&r.contradicciones)||[]).some(function(c){ return c&&Boolean(c.blocking??c.bloqueante)&&c.estado!=='resuelta'; });
 }
 function moSyncAprobar(){
   var btn=$('moAprobar'), r=moPreview; if(!btn)return;
@@ -1119,8 +1119,11 @@ function moRenderPreview(r){
   var contradicciones=Array.isArray(r&&r.contradicciones)?r.contradicciones:[];
   var bloqueantes=moTieneBloqueantes(r), vigente=moVigenciaEsVigente(r);
   var filas=contradicciones.length?contradicciones.map(function(c){
-    var esBloqueante=!!(c&&c.bloqueante);
-    return '<div class="irow"><span>'+esc((c&&c.codigo)||'contradiccion_sin_codigo')+'</span><b style="color:var(--'+(esBloqueante?'red':'amber')+')">'+esc(esBloqueante?'Bloqueante':'No bloqueante')+' · '+esc((c&&c.estado)||'abierta')+'</b></div>';
+    var esBloqueante=Boolean(c&&(c.blocking??c.bloqueante));
+    var codigo=(c&&(c.code??c.codigo))||'contradiccion_sin_codigo';
+    var detalle=(c&&(c.detail??c.detalle))||'Sin detalle adicional.';
+    var estado=(c&&c.estado)||'abierta';
+    return '<div class="irow"><div style="min-width:0;flex:1"><b>'+esc(codigo)+'</b><div class="s" style="margin-top:3px">'+esc(detalle)+'</div></div><b style="color:var(--'+(esBloqueante?'red':'amber')+')">'+esc(esBloqueante?'Bloqueante':'No bloqueante')+' · '+esc(estado)+'</b></div>';
   }).join(''):'<div class="s">Sin contradicciones reportadas.</div>';
   var aviso=bloqueantes?'Hay contradicciones bloqueantes abiertas.':(!vigente?'La vigencia documental no esta vigente.':'Lista para aprobar y activar.');
   el.innerHTML='<div class="card" style="padding:12px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Version '+esc(version.numero||version.id||'sin numero')+'</b><span class="pill '+(bloqueantes?'red':(vigente?'green':'amber'))+'">'+esc(version.estado||'pendiente_revision')+'</span>'+(r&&r.reutilizada?'<span class="pill violet">Version reutilizada</span>':'')+'</div>'

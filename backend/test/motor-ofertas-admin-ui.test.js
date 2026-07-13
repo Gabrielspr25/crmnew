@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import vm from 'node:vm';
 
 const appPath = new URL('../../frontend/app.html', import.meta.url);
 
@@ -8,7 +9,30 @@ async function readApp() {
   return readFile(appPath, 'utf8');
 }
 
-test('integra el motor móvil dentro de la pestaña ofertas existente', async () => {
+async function loadMotorUi() {
+  const html = await readApp();
+  const start = html.indexOf('let moPreview=');
+  const end = html.indexOf('// ----- SERVICIOS / FEATURES -----', start);
+  assert.ok(start >= 0 && end > start, 'falta el bloque UI del motor de ofertas');
+
+  const elements = new Map([
+    ['moResultado', { innerHTML: '', disabled: false }],
+    ['moAprobar', { innerHTML: '', disabled: true }],
+    ['moEstado', { innerHTML: '', disabled: false }],
+    ['moVigente', { innerHTML: '', disabled: false }],
+  ]);
+  const context = {
+    $: (id) => elements.get(id) ?? null,
+    esc: (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[character])),
+  };
+  vm.createContext(context);
+  vm.runInContext(html.slice(start, end), context);
+  return { context, elements };
+}
+
+test('integra el motor movil dentro de la pestana ofertas existente', async () => {
   const html = await readApp();
 
   assert.match(html, /async function ofRenderOfertasTienda\(\)/);
@@ -19,7 +43,7 @@ test('integra el motor móvil dentro de la pestaña ofertas existente', async ()
   assert.doesNotMatch(html, /#\/motor-ofertas|function viewMotorOfertas|function moSetTab/);
 });
 
-test('envía ambos Exceles en FormData y no hace preview incompleto', async () => {
+test('envia ambos Exceles en FormData y no hace preview incompleto', async () => {
   const html = await readApp();
 
   assert.match(html, /new FormData\(\)/);
@@ -31,20 +55,45 @@ test('envía ambos Exceles en FormData y no hace preview incompleto', async () =
   assert.match(html, /Lista de precios/);
 });
 
-test('muestra el resultado del preview y bloquea la activación no aprobable', async () => {
-  const html = await readApp();
+test('renderiza el shape real del normalizador y habilita una reutilizada aprobable', async () => {
+  const { context, elements } = await loadMotorUi();
+  const blockingPreview = {
+    ok: true,
+    version: { id: 'version-bloqueada', numero: 18, estado: 'pendiente_revision' },
+    resumen: { ofertas: 2, equipos: 4, contradicciones_abiertas: 1, contradicciones_bloqueantes: 1 },
+    vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    contradicciones: [{
+      blocking: true,
+      code: 'equipo_sin_coincidencia_exacta',
+      detail: 'Modelo sin coincidencia exacta.',
+      estado: 'abierta',
+    }],
+  };
 
-  assert.match(html, /function moRenderPreview\(r\)/);
-  assert.match(html, /r\.resumen/);
-  assert.match(html, /r\.vigencia/);
-  assert.match(html, /r\.contradicciones/);
-  assert.match(html, /contradicciones_bloqueantes/);
-  assert.match(html, /vigencia\.estado\s*===\s*['"]vigente['"]/);
-  assert.match(html, /moAprobar[^\n]*disabled|\.disabled\s*=/);
-  assert.match(html, /esc\(/);
+  vm.runInContext(`moPreview=${JSON.stringify(blockingPreview)}; moRenderPreview(moPreview);`, context);
+
+  assert.equal(elements.get('moAprobar').disabled, true);
+  assert.match(elements.get('moResultado').innerHTML, /equipo_sin_coincidencia_exacta/);
+  assert.match(elements.get('moResultado').innerHTML, /Modelo sin coincidencia exacta\./);
+  assert.match(elements.get('moResultado').innerHTML, /Bloqueante/);
+  assert.match(elements.get('moResultado').innerHTML, /abierta/);
+
+  const reusablePreview = {
+    ok: true,
+    reutilizada: true,
+    version: { id: 'version-reutilizada', numero: 17, estado: 'pendiente_revision' },
+    resumen: { ofertas: 2, equipos: 4, contradicciones_abiertas: 0, contradicciones_bloqueantes: 0 },
+    vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    contradicciones: [],
+  };
+
+  vm.runInContext(`moPreview=${JSON.stringify(reusablePreview)}; moRenderPreview(moPreview);`, context);
+
+  assert.equal(elements.get('moAprobar').disabled, false);
+  assert.match(elements.get('moResultado').innerHTML, /Version reutilizada/);
 });
 
-test('recarga la versión vigente antes y después de aprobar', async () => {
+test('recarga la version vigente antes y despues de aprobar', async () => {
   const html = await readApp();
 
   assert.match(html, /function moLoadVigente\(\)/);
@@ -56,7 +105,7 @@ test('recarga la versión vigente antes y después de aprobar', async () => {
   assert.ok((html.match(/moLoadVigente\(\)/g) || []).length >= 3);
 });
 
-test('no aprueba si no puede leer la versión vigente actual', async () => {
+test('no aprueba si no puede leer la version vigente actual', async () => {
   const html = await readApp();
 
   assert.match(html, /moVigenteLeida\s*=\s*false/);

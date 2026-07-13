@@ -83,6 +83,28 @@ function sourceDocumentValidity(source) {
   };
 }
 
+function persistedPreviewValidity(sources, today) {
+  const ranges = REQUIRED_SOURCES.map((type) => {
+    const source = (sources ?? []).find((item) => item?.tipo === type);
+    return sourceDocumentValidity(source);
+  });
+  const dates = ranges.map(({ from, to }) => ({
+    desde: validIsoDate(from),
+    hasta: validIsoDate(to),
+  }));
+  if (!today || dates.some(({ desde, hasta }) => !desde || !hasta)) {
+    return { desde: null, hasta: null, estado: 'pendiente_confirmacion' };
+  }
+  const desde = dates.map((range) => range.desde).sort().at(-1);
+  const hasta = dates.map((range) => range.hasta).sort()[0];
+  if (desde > hasta) return { desde: null, hasta: null, estado: 'pendiente_confirmacion' };
+  return {
+    desde,
+    hasta,
+    estado: today < desde ? 'futura' : today > hasta ? 'vencida' : 'vigente',
+  };
+}
+
 function versionDocumentValidity(version) {
   const hasDocumentValidity = version
     && (
@@ -243,7 +265,18 @@ export function createMotorOfertasHandlers({
           normalizadorVersion: requestedVersion,
         });
         if (existing) {
-          return res.json({ ok: true, reutilizada: true, version: existing, resumen: existing.resumen });
+          const persisted = await repository.getVersionWithSources(existing.id, {
+            includeContradictions: true,
+          });
+          if (!persisted?.version) throw new Error('version_reutilizada_no_disponible');
+          return res.json({
+            ok: true,
+            reutilizada: true,
+            version: persisted.version,
+            resumen: persisted.version.resumen ?? existing.resumen ?? {},
+            vigencia: persistedPreviewValidity(persisted.sources, currentIsoDate(now)),
+            contradicciones: persisted.contradicciones ?? [],
+          });
         }
       } catch {
         return res.status(500).json({ error: 'preview_no_pudo_crearse' });

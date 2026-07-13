@@ -197,14 +197,36 @@ test('preview informa solo la fuente requerida ausente sin archivar ni persistir
   assert.deepEqual(calls.createPreview, []);
 });
 
-test('preview reutiliza una identidad existente antes de normalizar o persistir', async () => {
+test('preview reutilizado devuelve vigencia y contradicciones persistidas sin normalizar ni persistir', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
-  const existing = { id: 'version-existente', estado: 'pendiente_revision' };
+  const existing = {
+    id: '00000000-0000-4000-8000-000000000099',
+    estado: 'pendiente_revision',
+    resumen: { ofertas: 2, equipos: 4, contradicciones_abiertas: 1, contradicciones_bloqueantes: 1 },
+  };
+  const persisted = {
+    version: existing,
+    sources: [
+      { tipo: 'tabla_financiamiento', vigencia_desde: '2026-07-01', vigencia_hasta: '2026-07-31', vigencia_documental: 'vigente' },
+      { tipo: 'lista_precios', vigencia_desde: '2026-07-01', vigencia_hasta: '2026-07-31', vigencia_documental: 'vigente' },
+    ],
+    contradicciones: [{
+      id: '00000000-0000-4000-8000-000000000098',
+      codigo: 'equipo_sin_coincidencia_exacta',
+      bloqueante: true,
+      estado: 'abierta',
+      detalle: 'Modelo sin coincidencia exacta.',
+    }],
+  };
   const { dependencies, calls } = makeDependencies({
     repository: {
       async findVersionByIdentity(input) {
         calls.findIdentity.push(input);
         return existing;
+      },
+      async getVersionWithSources(versionId, options) {
+        calls.versionSources.push({ versionId, options });
+        return persisted;
       },
     },
   });
@@ -218,7 +240,18 @@ test('preview reutiliza una identidad existente antes de normalizar o persistir'
   }, res);
 
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, { ok: true, reutilizada: true, version: existing, resumen: undefined });
+  assert.deepEqual(res.body, {
+    ok: true,
+    reutilizada: true,
+    version: existing,
+    resumen: existing.resumen,
+    vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    contradicciones: persisted.contradicciones,
+  });
+  assert.deepEqual(calls.versionSources, [{
+    versionId: existing.id,
+    options: { includeContradictions: true },
+  }]);
   assert.equal(calls.archive.length, 2);
   assert.equal(calls.normalize.length, 0);
   assert.equal(calls.createPreview.length, 0);
