@@ -71,31 +71,6 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
     return false;
   }
 
-  const relatedSourceValidity = sourceValidity(offer, sources);
-  if (['vencida', 'futura'].includes(relatedSourceValidity)) {
-    addValidation(validation('fuente_no_vigente'));
-    return false;
-  }
-
-  const validity = offerValidity(offer, contract);
-  if (validity === 'vencida_pendiente_reemplazo') {
-    const sourceWarning = validation('fuente_vencida');
-    addValidation(sourceWarning);
-    return {
-      visible: true,
-      aplicacionAutomatica: false,
-      beneficio: undefined,
-      validaciones: [sourceWarning],
-    };
-  }
-  if (validity !== 'vigente' || contract.vigencia.estado !== 'vigente') {
-    addValidation(validation('oferta_no_vigente'));
-    return false;
-  }
-  if (!isWithinDocumentRange(offer, contract, today)) {
-    addValidation(validation('oferta_fuera_vigencia'));
-    return false;
-  }
   if (!contract.tipos_plan.includes(linea.tipo)) return false;
   if (
     linea.tipo === 'multilinea_business_red'
@@ -127,6 +102,24 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
     return false;
   }
 
+  const relatedSourceValidity = sourceValidity(offer, sources);
+  if (['vencida', 'futura'].includes(relatedSourceValidity)) {
+    addValidation(validation('fuente_no_vigente'));
+    return false;
+  }
+
+  const validity = offerValidity(offer, contract);
+  const pendingValidity = validity === 'vencida_pendiente_reemplazo'
+    || contract.vigencia.estado === 'vencida_pendiente_reemplazo';
+  if (!pendingValidity && (validity !== 'vigente' || contract.vigencia.estado !== 'vigente')) {
+    addValidation(validation('oferta_no_vigente'));
+    return false;
+  }
+  if (!pendingValidity && !isWithinDocumentRange(offer, contract, today)) {
+    addValidation(validation('oferta_fuera_vigencia'));
+    return false;
+  }
+
   const policy = {
     visible: true,
     aplicacionAutomatica: true,
@@ -134,7 +127,7 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
     validaciones: [],
   };
 
-  if (relatedSourceValidity === 'vencida_pendiente_reemplazo') {
+  if (pendingValidity || relatedSourceValidity === 'vencida_pendiente_reemplazo') {
     const sourceWarning = validation('fuente_vencida');
     addValidation(sourceWarning);
     policy.aplicacionAutomatica = false;

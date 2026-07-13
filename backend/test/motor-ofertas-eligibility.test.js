@@ -438,6 +438,32 @@ test('oferta vencida pendiente conserva la combinacion visible y bloquea aplicac
   assert.equal(result.equipos[0].vigencia.estado, 'vencida_pendiente_reemplazo');
 });
 
+test('vigencia pendiente no habilita una combinacion con evento incompatible', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({
+    fuente_principal_id: 'source-pendiente',
+    vigencia_documental: 'vencida_pendiente_reemplazo',
+    contract: {
+      vigencia: { estado: 'vencida_pendiente_reemplazo' },
+      eventos: ['portabilidad'],
+    },
+  });
+  const result = evaluateEligibleOffers({
+    request: makeRequest({ linea: { evento: 'linea_nueva' } }),
+    snapshot: makeSnapshot({
+      offers: [offer],
+      sources: [{
+        id: 'source-pendiente',
+        vigencia_documental: 'vencida_pendiente_reemplazo',
+      }],
+    }),
+    today: TODAY,
+  });
+
+  assert.deepEqual(result.equipos, []);
+  assert.ok(result.validaciones.some((item) => item.codigo === 'sin_equipos_elegibles'));
+});
+
 test('fuente relacionada vencida pendiente conserva oferta vigente como no automatica', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({ fuente_principal_id: 'source-relacionada' });
