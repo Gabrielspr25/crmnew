@@ -102,7 +102,7 @@ El preview actual usa memoria por 30 minutos y aplica cambios directos a modulos
 Incluye para la fase de implementacion posterior:
 
 - migracion SQL revisable y no ejecutada;
-- contratos de entrada y salida validados;
+- contratos de entrada y salida definidos y validados con Zod;
 - normalizacion de fuentes oficiales con hoja, pagina y fila;
 - persistencia inmutable de versiones, fuentes, ofertas y combinaciones de equipo;
 - contradicciones separadas del estado de version;
@@ -628,6 +628,7 @@ Casos tecnicos:
 - Los cuatro endpoints cumplen sus contratos.
 - `/elegibles` no inventa reglas comerciales.
 - Las pruebas dirigidas con `node --test` pasan.
+- Los contratos Zod rechazan estructuras ambiguas antes de consultar PostgreSQL.
 - Los archivos JS nuevos pasan `node --check`.
 - No se modifica frontend, portal, modal ni CRM viejo.
 - No se ejecuta migracion, backfill ni deploy.
