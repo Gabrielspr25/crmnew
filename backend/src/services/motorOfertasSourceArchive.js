@@ -17,16 +17,16 @@ const SOURCE_FIELDS = new Set([
   'buffer',
 ]);
 
-const MIME_EXTENSIONS = new Map([
-  ['application/pdf', '.pdf'],
-  ['application/vnd.ms-excel', '.xls'],
-  [
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    '.xlsx',
-  ],
+const ALLOWED_TYPES = new Set([
+  'tabla_financiamiento',
+  'lista_precios',
 ]);
 
-const TYPE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+const ALLOWED_MIME_TYPES = new Set([
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/octet-stream',
+]);
+
 const SHA256_PATTERN = /^[a-f0-9]{64}$/i;
 
 function sha256(value) {
@@ -50,7 +50,7 @@ function assertArchiveInput(source) {
   }
   if (
     typeof source.type !== 'string'
-    || !TYPE_PATTERN.test(source.type)
+    || !ALLOWED_TYPES.has(source.type)
   ) {
     throw new TypeError('El tipo de fuente es invalido.');
   }
@@ -63,7 +63,7 @@ function assertArchiveInput(source) {
   if (typeof source.mimeType !== 'string' || source.mimeType.trim() === '') {
     throw new TypeError('mimeType es requerido.');
   }
-  if (!MIME_EXTENSIONS.has(source.mimeType)) {
+  if (!ALLOWED_MIME_TYPES.has(source.mimeType)) {
     throw new TypeError('El MIME de la fuente no esta permitido.');
   }
   if (!Buffer.isBuffer(source.buffer)) {
@@ -120,8 +120,7 @@ export async function archiveOfferSource(source) {
   assertArchiveInput(source);
 
   const digest = sha256(source.buffer);
-  const extension = MIME_EXTENSIONS.get(source.mimeType);
-  const archivedName = `${digest}-${source.type}${extension}`;
+  const archivedName = `${digest}-${source.type}.xlsx`;
   const typeDir = path.join(source.rootDir, source.type);
   await mkdir(typeDir, { recursive: true });
   await archiveAtomically(path.join(typeDir, archivedName), source.buffer, digest);
@@ -153,7 +152,7 @@ export function buildSourcesManifest(sources) {
     if (!source || typeof source !== 'object' || Array.isArray(source)) {
       throw new TypeError('Cada fuente del manifiesto debe ser un objeto.');
     }
-    if (typeof source.type !== 'string' || !TYPE_PATTERN.test(source.type)) {
+    if (typeof source.type !== 'string' || !ALLOWED_TYPES.has(source.type)) {
       throw new TypeError('El tipo de fuente del manifiesto es invalido.');
     }
     if (typeof source.sha256 !== 'string' || !SHA256_PATTERN.test(source.sha256)) {

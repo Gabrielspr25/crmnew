@@ -81,10 +81,10 @@ test('rechaza rutas y tipos con segmentos suministrados por el cliente', async (
   const rootDir = await createTempRoot(t);
   const baseSource = {
     rootDir,
-    type: 'boletin',
-    originalName: 'boletin.pdf',
-    mimeType: 'application/pdf',
-    buffer: Buffer.from('pdf'),
+    type: 'lista_precios',
+    originalName: 'precios.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer: Buffer.from('xlsx'),
   };
 
   await assert.rejects(
@@ -92,7 +92,7 @@ test('rechaza rutas y tipos con segmentos suministrados por el cliente', async (
     /ruta/i
   );
   await assert.rejects(
-    archiveOfferSource({ ...baseSource, type: '../boletin' }),
+    archiveOfferSource({ ...baseSource, type: '../lista_precios' }),
     /tipo/i
   );
 });
@@ -102,9 +102,9 @@ test('rechaza un archivo existente cuyo contenido no coincide con el hash', asyn
   const rootDir = await createTempRoot(t);
   const source = {
     rootDir,
-    type: 'seguro',
-    originalName: 'seguro.pdf',
-    mimeType: 'application/pdf',
+    type: 'lista_precios',
+    originalName: 'precios.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     buffer: Buffer.from('contenido seguro'),
   };
 
@@ -125,48 +125,82 @@ test('rechaza una ruta canonica existente que no sea archivo regular', async (t)
   const digest = createHash('sha256').update(buffer).digest('hex');
   const canonicalPath = path.join(
     rootDir,
-    'seguro',
-    `${digest}-seguro.pdf`
+    'lista_precios',
+    `${digest}-lista_precios.xlsx`
   );
   await mkdir(canonicalPath, { recursive: true });
 
   await assert.rejects(
     archiveOfferSource({
       rootDir,
-      type: 'seguro',
-      originalName: 'seguro.pdf',
-      mimeType: 'application/pdf',
+      type: 'lista_precios',
+      originalName: 'precios.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       buffer,
     }),
     /archivo regular/i
   );
 });
 
-test('reutiliza un unico archivo fisico para el mismo hash con nombres distintos', async (t) => {
+test('MIME XLSX y octet-stream reutilizan la misma ruta fisica canonica', async (t) => {
   const { archiveOfferSource } = await loadService();
   const rootDir = await createTempRoot(t);
   const buffer = Buffer.from('mismo contenido oficial');
 
   const first = await archiveOfferSource({
     rootDir,
-    type: 'boletin',
-    originalName: 'boletin-julio.pdf',
-    mimeType: 'application/pdf',
+    type: 'tabla_financiamiento',
+    originalName: 'tabla-julio.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     buffer,
   });
   const second = await archiveOfferSource({
     rootDir,
-    type: 'boletin',
-    originalName: 'copia-renombrada.pdf',
-    mimeType: 'application/pdf',
+    type: 'tabla_financiamiento',
+    originalName: 'copia-renombrada.xlsx',
+    mimeType: 'application/octet-stream',
     buffer,
   });
 
   assert.equal(second.archivedName, first.archivedName);
   assert.equal(second.relativePath, first.relativePath);
-  assert.deepEqual(await readdir(path.join(rootDir, 'boletin')), [
+  assert.deepEqual(await readdir(path.join(rootDir, 'tabla_financiamiento')), [
     first.archivedName,
   ]);
+});
+
+test('rechaza type fuera del MVP antes de tocar el filesystem', async (t) => {
+  const { archiveOfferSource } = await loadService();
+  const rootDir = await createTempRoot(t);
+
+  await assert.rejects(
+    archiveOfferSource({
+      rootDir,
+      type: 'boletin',
+      originalName: 'boletin.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: Buffer.from('xlsx'),
+    }),
+    TypeError
+  );
+  assert.deepEqual(await readdir(rootDir), []);
+});
+
+test('rechaza type extremadamente largo antes de tocar el filesystem', async (t) => {
+  const { archiveOfferSource } = await loadService();
+  const rootDir = await createTempRoot(t);
+
+  await assert.rejects(
+    archiveOfferSource({
+      rootDir,
+      type: 'a'.repeat(10000),
+      originalName: 'tabla.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: Buffer.from('xlsx'),
+    }),
+    TypeError
+  );
+  assert.deepEqual(await readdir(rootDir), []);
 });
 
 test('publica una sola fuente canonica bajo llamadas concurrentes', async (t) => {
@@ -215,16 +249,16 @@ test('archiva aunque originalName exceda el limite usual del filesystem', async 
   );
 });
 
-test('rechaza MIME sin extension canonica permitida', async (t) => {
+test('rechaza MIME no permitido', async (t) => {
   const { archiveOfferSource } = await loadService();
   const rootDir = await createTempRoot(t);
 
   await assert.rejects(
     archiveOfferSource({
       rootDir,
-      type: 'boletin',
-      originalName: 'boletin.exe',
-      mimeType: 'application/octet-stream',
+      type: 'lista_precios',
+      originalName: 'precios.txt',
+      mimeType: 'text/plain',
       buffer: Buffer.from('binario'),
     }),
     /MIME/i
@@ -236,9 +270,8 @@ test('construye un manifiesto estable ordenado por type y sha256', async () => {
   const sources = [
     { type: 'lista_precios', sha256: 'b'.repeat(64) },
     { type: 'tabla_financiamiento', sha256: 'a'.repeat(64) },
-    { type: 'boletin', sha256: 'c'.repeat(64) },
   ];
-  const expectedEntries = [sources[2], sources[0], sources[1]];
+  const expectedEntries = [sources[0], sources[1]];
   const expectedSha256 = createHash('sha256')
     .update(JSON.stringify(expectedEntries))
     .digest('hex');
@@ -252,7 +285,6 @@ test('construye un manifiesto estable ordenado por type y sha256', async () => {
   assert.deepEqual(sources, [
     { type: 'lista_precios', sha256: 'b'.repeat(64) },
     { type: 'tabla_financiamiento', sha256: 'a'.repeat(64) },
-    { type: 'boletin', sha256: 'c'.repeat(64) },
   ]);
 });
 
@@ -261,22 +293,22 @@ test('manifiesto ignora renombrado, MIME y rutas de las fuentes', async () => {
   const sha = 'd'.repeat(64);
 
   const first = buildSourcesManifest([{
-    type: 'boletin',
+    type: 'tabla_financiamiento',
     sha256: sha,
-    originalName: 'original.pdf',
-    mimeType: 'application/pdf',
-    relativePath: 'boletin/ruta-uno.pdf',
+    originalName: 'original.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    relativePath: 'tabla_financiamiento/ruta-uno.xlsx',
   }]);
   const renamed = buildSourcesManifest([{
-    type: 'boletin',
+    type: 'tabla_financiamiento',
     sha256: sha,
-    originalName: 'renombrado.pdf',
-    mimeType: 'application/x-pdf',
-    relativePath: 'otra/ruta-dos.pdf',
+    originalName: 'renombrado.xlsx',
+    mimeType: 'application/octet-stream',
+    relativePath: 'tabla_financiamiento/ruta-dos.xlsx',
   }]);
 
   assert.deepEqual(first, renamed);
-  assert.deepEqual(first.entries, [{ type: 'boletin', sha256: sha }]);
+  assert.deepEqual(first.entries, [{ type: 'tabla_financiamiento', sha256: sha }]);
 });
 
 test('manifiesto rechaza tipos duplicados', async () => {
@@ -284,10 +316,21 @@ test('manifiesto rechaza tipos duplicados', async () => {
 
   assert.throws(
     () => buildSourcesManifest([
-      { type: 'seguro', sha256: 'a'.repeat(64) },
-      { type: 'seguro', sha256: 'b'.repeat(64) },
+      { type: 'lista_precios', sha256: 'a'.repeat(64) },
+      { type: 'lista_precios', sha256: 'b'.repeat(64) },
     ]),
     /tipo duplicado/i
+  );
+});
+
+test('manifiesto rechaza type fuera del MVP', async () => {
+  const { buildSourcesManifest } = await loadService();
+
+  assert.throws(
+    () => buildSourcesManifest([
+      { type: 'boletin', sha256: 'a'.repeat(64) },
+    ]),
+    TypeError
   );
 });
 
@@ -296,7 +339,7 @@ test('manifiesto rechaza SHA-256 con formato invalido', async () => {
 
   assert.throws(
     () => buildSourcesManifest([
-      { type: 'seguro', sha256: 'no-es-un-sha-256' },
+      { type: 'lista_precios', sha256: 'no-es-un-sha-256' },
     ]),
     /SHA-256/i
   );
