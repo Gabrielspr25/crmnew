@@ -29,8 +29,18 @@ function dateKey(value) {
 
 function isWithinDocumentRange(offer, contract, today) {
   const current = dateKey(today);
-  const from = offer.vigencia_desde ?? contract.vigencia.desde;
-  const until = offer.vigencia_hasta ?? contract.vigencia.hasta;
+  const fromValue = offer.vigencia_desde ?? contract.vigencia.desde;
+  const untilValue = offer.vigencia_hasta ?? contract.vigencia.hasta;
+  const from = fromValue === null || fromValue === undefined
+    ? null
+    : dateKey(fromValue);
+  const until = untilValue === null || untilValue === undefined
+    ? null
+    : dateKey(untilValue);
+
+  if (!current || (fromValue != null && !from) || (untilValue != null && !until)) {
+    return false;
+  }
   return (!from || from <= current) && (!until || current <= until);
 }
 

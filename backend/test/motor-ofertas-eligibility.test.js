@@ -168,6 +168,30 @@ test('devuelve solo plazos persistidos para una linea individual de $35', async 
   assert.equal(result.equipos[0].aplicacion_automatica, true);
 });
 
+test('normaliza fechas Date persistidas sin aceptar una vigencia realmente vencida', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({
+    vigencia_desde: new Date('2026-07-04T00:00:00.000Z'),
+    vigencia_hasta: new Date('2026-07-15T00:00:00.000Z'),
+  });
+  const snapshot = makeSnapshot({ offers: [offer] });
+
+  const inside = evaluateEligibleOffers({
+    request: makeRequest(),
+    snapshot,
+    today: TODAY,
+  });
+  const outside = evaluateEligibleOffers({
+    request: makeRequest(),
+    snapshot,
+    today: new Date('2026-07-16T12:00:00.000Z'),
+  });
+
+  assert.equal(inside.equipos.length, 1);
+  assert.deepEqual(outside.equipos, []);
+  assert.ok(outside.validaciones.some((item) => item.codigo === 'oferta_fuera_vigencia'));
+});
+
 test('acepta una linea individual de $50 dentro del rango documentado', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const result = evaluateEligibleOffers({
