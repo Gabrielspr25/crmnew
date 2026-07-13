@@ -53,9 +53,9 @@ function makeRequest(overrides = {}) {
         ...overrides.linea?.trade_in,
       },
     },
-    contexto_ban: overrides.contexto_ban === undefined
-      ? request.contexto_ban
-      : overrides.contexto_ban,
+    contexto_ban: Object.hasOwn(overrides, 'contexto_ban')
+      ? overrides.contexto_ban
+      : request.contexto_ban,
   };
 }
 
@@ -132,8 +132,12 @@ function makeEquipment(overrides = {}) {
   };
 }
 
-function makeSnapshot({ offers = [makeOffer()], equipment = [makeEquipment()] } = {}) {
-  return { offers, equipment };
+function makeSnapshot({
+  offers = [makeOffer()],
+  equipment = [makeEquipment()],
+  sources = [],
+} = {}) {
+  return { offers, equipment, sources };
 }
 
 test('devuelve solo plazos persistidos para una linea individual de $35', async () => {
@@ -164,6 +168,20 @@ test('devuelve solo plazos persistidos para una linea individual de $35', async 
   assert.equal(result.equipos[0].aplicacion_automatica, true);
 });
 
+test('acepta una linea individual de $50 dentro del rango documentado', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const result = evaluateEligibleOffers({
+    request: makeRequest({ linea: { plan: { codigo: 'PLAN-50', monto: 50 } } }),
+    snapshot: makeSnapshot({
+      offers: [makeOffer({ plan_monto_minimo: 50, plan_monto_maximo: 50 })],
+    }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, true);
+});
+
 test('exige familia Business RED exacta', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({
@@ -189,6 +207,42 @@ test('exige familia Business RED exacta', async () => {
   assert.ok(result.validaciones.some((item) => item.codigo === 'sin_equipos_elegibles'));
 });
 
+test('acepta las cuatro familias Business RED documentadas', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const families = [
+    'business_red_plus',
+    'business_red_extreme',
+    'business_red_supreme',
+    'business_red_sin_fronteras',
+  ];
+
+  for (const family of families) {
+    const offer = makeOffer({
+      id: `row-${family}`,
+      contract: {
+        id: `oferta-${family}`,
+        tipos_plan: ['multilinea_business_red'],
+        familias: [family],
+      },
+    });
+    const result = evaluateEligibleOffers({
+      request: makeRequest({
+        linea: {
+          tipo: 'multilinea_business_red',
+          familia_business_red: family,
+        },
+      }),
+      snapshot: makeSnapshot({
+        offers: [offer],
+        equipment: [makeEquipment({ oferta_id: offer.id })],
+      }),
+      today: TODAY,
+    });
+
+    assert.equal(result.equipos.length, 1, family);
+  }
+});
+
 test('no cruza eventos distintos', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({ contract: { eventos: ['portabilidad'] } });
@@ -199,6 +253,21 @@ test('no cruza eventos distintos', async () => {
   });
 
   assert.deepEqual(result.equipos, []);
+});
+
+test('acepta portabilidad y linea adicional solo cuando cada evento esta documentado', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+
+  for (const event of ['portabilidad', 'linea_adicional']) {
+    const offer = makeOffer({ contract: { eventos: [event] } });
+    const result = evaluateEligibleOffers({
+      request: makeRequest({ linea: { evento: event } }),
+      snapshot: makeSnapshot({ offers: [offer] }),
+      today: TODAY,
+    });
+
+    assert.equal(result.equipos.length, 1, event);
+  }
 });
 
 test('permite el beneficio dentro del limite BAN', async () => {
@@ -218,7 +287,23 @@ test('permite el beneficio dentro del limite BAN', async () => {
   assert.equal(result.equipos[0].aplicacion_automatica, true);
 });
 
-test('no devuelve combinaciones aplicables fuera del limite BAN', async () => {
+test('BAN sin contexto conserva la combinacion con bloqueo automatico', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const result = evaluateEligibleOffers({
+    request: makeRequest({ contexto_ban: undefined }),
+    snapshot: makeSnapshot(),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, false);
+  assert.equal(result.equipos[0].beneficio, null);
+  assert.deepEqual(result.equipos[0].validaciones, [
+    { codigo: 'limite_ban_pendiente', estado: 'blocking' },
+  ]);
+});
+
+test('BAN excedido conserva la combinacion financiada cuando la fuente lo permite', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const result = evaluateEligibleOffers({
     request: makeRequest({
@@ -231,8 +316,43 @@ test('no devuelve combinaciones aplicables fuera del limite BAN', async () => {
     today: TODAY,
   });
 
-  assert.deepEqual(result.equipos, []);
-  assert.ok(result.validaciones.some((item) => item.codigo === 'limite_ban_excedido'));
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, false);
+  assert.deepEqual(result.equipos[0].beneficio, {
+    tipo: 'financiado',
+    estado: 'financiado',
+    motivo: 'limite_ban_excedido',
+  });
+  assert.deepEqual(result.equipos[0].validaciones, [
+    { codigo: 'limite_ban_excedido', estado: 'blocking' },
+  ]);
+});
+
+test('BAN excedido sin fuente de financiamiento no asigna beneficio automatico', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({
+    contract: {
+      limite_ban: {
+        aplica: true,
+        cantidad: 4,
+        fuera_limite: 'pendiente_fuente',
+      },
+    },
+  });
+  const result = evaluateEligibleOffers({
+    request: makeRequest({
+      contexto_ban: {
+        posicion_en_ban: 5,
+        beneficios_usados_por_oferta: { 'oferta-35': 4 },
+      },
+    }),
+    snapshot: makeSnapshot({ offers: [offer] }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, false);
+  assert.equal(result.equipos[0].beneficio, null);
 });
 
 test('requiere trade-in validado para renovacion cuando la oferta lo documenta', async () => {
@@ -273,11 +393,56 @@ test('requiere trade-in validado para renovacion cuando la oferta lo documenta',
   assert.equal(withTradeIn.equipos.length, 1);
 });
 
-test('oferta vencida pendiente de reemplazo solo devuelve advertencia', async () => {
+test('acepta renovacion sin trade-in cuando la oferta no lo exige', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({
+    contract: {
+      eventos: ['renovacion'],
+      trade_in: {
+        requerido_eventos: [],
+        no_requerido_eventos: ['renovacion'],
+        texto: 'No requiere trade-in para renovacion',
+      },
+    },
+  });
+  const result = evaluateEligibleOffers({
+    request: makeRequest({ linea: { evento: 'renovacion' } }),
+    snapshot: makeSnapshot({ offers: [offer] }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, true);
+});
+
+test('oferta vencida pendiente conserva la combinacion visible y bloquea aplicacion', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({
     vigencia_documental: 'vencida_pendiente_reemplazo',
     contract: { vigencia: { estado: 'vencida_pendiente_reemplazo' } },
+  });
+  const result = evaluateEligibleOffers({
+    request: makeRequest(),
+    snapshot: makeSnapshot({
+      offers: [offer],
+      sources: [{ id: 'source-vencida', vigencia_documental: 'vencida' }],
+    }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, false);
+  assert.deepEqual(result.equipos[0].validaciones, [
+    { codigo: 'fuente_vencida', estado: 'warning' },
+  ]);
+  assert.equal(result.equipos[0].vigencia.estado, 'vencida_pendiente_reemplazo');
+});
+
+test('vigencia vencida excluye la combinacion y mantiene la validacion sin elegibles', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({
+    vigencia_documental: 'vencida',
+    contract: { vigencia: { estado: 'vencida' } },
   });
   const result = evaluateEligibleOffers({
     request: makeRequest(),
@@ -286,7 +451,10 @@ test('oferta vencida pendiente de reemplazo solo devuelve advertencia', async ()
   });
 
   assert.deepEqual(result.equipos, []);
-  assert.ok(result.validaciones.some((item) => item.codigo === 'oferta_vencida_pendiente_reemplazo'));
+  assert.deepEqual(result.validaciones, [
+    { codigo: 'oferta_no_vigente', estado: 'warning' },
+    { codigo: 'sin_equipos_elegibles', estado: 'info' },
+  ]);
 });
 
 test('equipo pendiente nunca forma una combinacion aplicable', async () => {
@@ -299,6 +467,7 @@ test('equipo pendiente nunca forma una combinacion aplicable', async () => {
 
   assert.deepEqual(result.equipos, []);
   assert.ok(result.validaciones.some((item) => item.codigo === 'equipo_no_confirmado'));
+  assert.ok(result.validaciones.some((item) => item.codigo === 'sin_equipos_elegibles'));
 });
 
 test('ofertas pendientes o en contradiccion nunca forman combinaciones aplicables', async () => {

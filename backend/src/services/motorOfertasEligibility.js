@@ -57,7 +57,17 @@ function offerValidityMetadata(offer, contract) {
   };
 }
 
-function matchesOffer({ offer, contract, request, today, addValidation }) {
+function hasExpiredSource(offer, sources) {
+  const relatedSources = offer.fuente_principal_id
+    ? sources.filter((source) => source.id === offer.fuente_principal_id)
+    : sources;
+  return relatedSources.some((source) => [
+    'vencida',
+    'vencida_pendiente_reemplazo',
+  ].includes(source.vigencia_documental));
+}
+
+function matchesOffer({ offer, contract, request, today, sources, addValidation }) {
   const { linea, contexto_ban: banContext } = request;
   const commercialState = offer.estado_comercial ?? contract.estado;
   if (commercialState !== 'confirmada' || contract.estado !== 'confirmada') {
@@ -67,8 +77,14 @@ function matchesOffer({ offer, contract, request, today, addValidation }) {
 
   const validity = offerValidity(offer, contract);
   if (validity === 'vencida_pendiente_reemplazo') {
-    addValidation(validation('oferta_vencida_pendiente_reemplazo'));
-    return false;
+    const sourceWarning = validation('fuente_vencida');
+    addValidation(sourceWarning);
+    return {
+      visible: true,
+      aplicacionAutomatica: false,
+      beneficio: undefined,
+      validaciones: [sourceWarning],
+    };
   }
   if (validity !== 'vigente' || contract.vigencia.estado !== 'vigente') {
     addValidation(validation('oferta_no_vigente'));
@@ -109,10 +125,28 @@ function matchesOffer({ offer, contract, request, today, addValidation }) {
     return false;
   }
 
-  if (!contract.limite_ban.aplica) return true;
+  const policy = {
+    visible: true,
+    aplicacionAutomatica: true,
+    beneficio: undefined,
+    validaciones: [],
+  };
+
+  if (hasExpiredSource(offer, sources)) {
+    const sourceWarning = validation('fuente_vencida');
+    addValidation(sourceWarning);
+    policy.aplicacionAutomatica = false;
+    policy.validaciones.push(sourceWarning);
+  }
+
+  if (!contract.limite_ban.aplica) return policy;
   if (!banContext) {
-    addValidation(validation('limite_ban_pendiente'));
-    return false;
+    const pending = validation('limite_ban_pendiente', 'blocking');
+    addValidation(pending);
+    policy.aplicacionAutomatica = false;
+    policy.beneficio = null;
+    policy.validaciones.push(pending);
+    return policy;
   }
 
   const used = banContext.beneficios_usados_por_oferta[contract.id] ?? 0;
@@ -120,13 +154,22 @@ function matchesOffer({ offer, contract, request, today, addValidation }) {
     banContext.posicion_en_ban > contract.limite_ban.cantidad
     || used >= contract.limite_ban.cantidad
   ) {
-    addValidation(validation('limite_ban_excedido'));
-    return false;
+    const exceeded = validation('limite_ban_excedido', 'blocking');
+    addValidation(exceeded);
+    policy.aplicacionAutomatica = false;
+    policy.validaciones.push(exceeded);
+    policy.beneficio = contract.limite_ban.fuera_limite === 'financiado_si_fuente_lo_permite'
+      ? {
+        tipo: 'financiado',
+        estado: 'financiado',
+        motivo: 'limite_ban_excedido',
+      }
+      : null;
   }
-  return true;
+  return policy;
 }
 
-function makeEquipmentGroup({ offer, contract, equipment }) {
+function makeEquipmentGroup({ offer, contract, equipment, policy }) {
   return {
     equipo: {
       id: equipment.equipo_key,
@@ -143,11 +186,11 @@ function makeEquipmentGroup({ offer, contract, equipment }) {
       nombre: contract.nombre,
     },
     plazos: [],
-    beneficio: {
+    beneficio: policy.beneficio === undefined ? {
       tipo: equipment.beneficio_tipo ?? null,
-    },
-    aplicacion_automatica: true,
-    validaciones: [],
+    } : policy.beneficio,
+    aplicacion_automatica: policy.aplicacionAutomatica,
+    validaciones: [...policy.validaciones],
     fuente: offerSource(offer, contract),
     vigencia: offerValidityMetadata(offer, contract),
   };
@@ -161,10 +204,16 @@ function compareGroups(left, right) {
   ].find((result) => result !== 0) ?? 0;
 }
 
+function compareValidations(left, right) {
+  return left.codigo.localeCompare(right.codigo)
+    || left.estado.localeCompare(right.estado);
+}
+
 export function evaluateEligibleOffers({ request, snapshot, today = new Date() }) {
   const parsedRequest = parseEligibilityRequest(request);
   const offers = Array.isArray(snapshot?.offers) ? snapshot.offers : [];
   const equipmentRows = Array.isArray(snapshot?.equipment) ? snapshot.equipment : [];
+  const sources = Array.isArray(snapshot?.sources) ? snapshot.sources : [];
   const validations = [];
   const validationCodes = new Set();
   const groups = new Map();
@@ -190,7 +239,15 @@ export function evaluateEligibleOffers({ request, snapshot, today = new Date() }
       addValidation(validation('contrato_oferta_invalido'));
       continue;
     }
-    if (!matchesOffer({ offer, contract, request: parsedRequest, today, addValidation })) {
+    const policy = matchesOffer({
+      offer,
+      contract,
+      request: parsedRequest,
+      today,
+      sources,
+      addValidation,
+    });
+    if (!policy) {
       continue;
     }
 
@@ -203,7 +260,12 @@ export function evaluateEligibleOffers({ request, snapshot, today = new Date() }
       if (!Number.isFinite(Number(equipment.pago_mensual))) continue;
 
       const key = `${contract.id}:${equipment.equipo_key}`;
-      const group = groups.get(key) ?? makeEquipmentGroup({ offer, contract, equipment });
+      const group = groups.get(key) ?? makeEquipmentGroup({
+        offer,
+        contract,
+        equipment,
+        policy,
+      });
       group.plazos.push({
         meses: equipment.plazo,
         pago_mensual: Number(equipment.pago_mensual),
@@ -219,12 +281,9 @@ export function evaluateEligibleOffers({ request, snapshot, today = new Date() }
     }))
     .sort(compareGroups);
 
-  if (equipos.length === 0 && validations.length === 0) {
-    return {
-      equipos: [],
-      validaciones: [validation('sin_equipos_elegibles', 'info')],
-    };
+  if (equipos.length === 0) {
+    addValidation(validation('sin_equipos_elegibles', 'info'));
   }
 
-  return { equipos, validaciones: validations };
+  return { equipos, validaciones: validations.sort(compareValidations) };
 }
