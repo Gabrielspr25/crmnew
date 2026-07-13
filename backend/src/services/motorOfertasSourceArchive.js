@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const SOURCE_FIELDS = new Set([
@@ -64,17 +64,27 @@ export async function archiveOfferSource(source) {
   assertArchiveInput(source);
 
   const digest = sha256(source.buffer);
-  const archivedName = `${digest}-${sanitizeFileName(source.originalName)}`;
-  const relativePath = path.join(source.type, archivedName);
   const typeDir = path.join(source.rootDir, source.type);
-  const archivedPath = path.join(typeDir, archivedName);
-
   await mkdir(typeDir, { recursive: true });
-  try {
-    await writeFile(archivedPath, source.buffer, { flag: 'wx' });
-  } catch (error) {
-    if (error?.code !== 'EEXIST') throw error;
+
+  const hashPrefix = `${digest}-`;
+  const existingName = (await readdir(typeDir)).find(
+    (name) => name.startsWith(hashPrefix)
+  );
+  const archivedName = existingName
+    ?? `${hashPrefix}${sanitizeFileName(source.originalName)}`;
+
+  if (!existingName) {
+    try {
+      await writeFile(path.join(typeDir, archivedName), source.buffer, {
+        flag: 'wx',
+      });
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error;
+    }
   }
+
+  const relativePath = path.join(source.type, archivedName);
 
   return {
     type: source.type,

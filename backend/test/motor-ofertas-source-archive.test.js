@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -109,6 +109,33 @@ test('reutiliza un archivo existente con el mismo hash sin reescribirlo', async 
     await readFile(archivedPath),
     Buffer.from('contenido existente')
   );
+});
+
+test('reutiliza un unico archivo fisico para el mismo hash con nombres distintos', async (t) => {
+  const { archiveOfferSource } = await loadService();
+  const rootDir = await createTempRoot(t);
+  const buffer = Buffer.from('mismo contenido oficial');
+
+  const first = await archiveOfferSource({
+    rootDir,
+    type: 'boletin',
+    originalName: 'boletin-julio.pdf',
+    mimeType: 'application/pdf',
+    buffer,
+  });
+  const second = await archiveOfferSource({
+    rootDir,
+    type: 'boletin',
+    originalName: 'copia-renombrada.pdf',
+    mimeType: 'application/pdf',
+    buffer,
+  });
+
+  assert.equal(second.archivedName, first.archivedName);
+  assert.equal(second.relativePath, first.relativePath);
+  assert.deepEqual(await readdir(path.join(rootDir, 'boletin')), [
+    first.archivedName,
+  ]);
 });
 
 test('construye un manifiesto estable ordenado por type y sha256', async () => {
