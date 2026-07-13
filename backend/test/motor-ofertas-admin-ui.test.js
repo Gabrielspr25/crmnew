@@ -21,15 +21,22 @@ async function loadMotorUi() {
     ['moEstado', { innerHTML: '', disabled: false }],
     ['moVigente', { innerHTML: '', disabled: false }],
   ]);
+  const calls = { api: [] };
   const context = {
     $: (id) => elements.get(id) ?? null,
+    api: async (path) => {
+      calls.api.push(path);
+      return path === '/api/motor-ofertas/version-vigente'
+        ? { ok: true, version: null }
+        : { ok: true };
+    },
     esc: (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[character])),
   };
   vm.createContext(context);
   vm.runInContext(html.slice(start, end), context);
-  return { context, elements };
+  return { context, elements, calls };
 }
 
 test('integra el motor movil dentro de la pestana ofertas existente', async () => {
@@ -56,7 +63,7 @@ test('envia ambos Exceles en FormData y no hace preview incompleto', async () =>
 });
 
 test('renderiza el shape real del normalizador y habilita una reutilizada aprobable', async () => {
-  const { context, elements } = await loadMotorUi();
+  const { context, elements, calls } = await loadMotorUi();
   const blockingPreview = {
     ok: true,
     version: { id: 'version-bloqueada', numero: 18, estado: 'pendiente_revision' },
@@ -91,6 +98,16 @@ test('renderiza el shape real del normalizador y habilita una reutilizada aproba
 
   assert.equal(elements.get('moAprobar').disabled, false);
   assert.match(elements.get('moResultado').innerHTML, /Version reutilizada/);
+
+  const alreadyCurrent = {
+    ...reusablePreview,
+    version: { id: 'version-vigente', numero: 16, estado: 'vigente' },
+  };
+  await vm.runInContext(`moPreview=${JSON.stringify(alreadyCurrent)}; moRenderPreview(moPreview); moAprobarYActivar();`, context);
+
+  assert.equal(elements.get('moAprobar').disabled, true);
+  assert.match(elements.get('moResultado').innerHTML, /estado vigente/);
+  assert.equal(calls.api.includes('/api/motor-ofertas/aprobar'), false);
 });
 
 test('recarga la version vigente antes y despues de aprobar', async () => {

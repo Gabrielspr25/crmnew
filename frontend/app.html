@@ -1104,6 +1104,10 @@ function moVigenciaEsVigente(r){
   var vigencia=r&&r.vigencia;
   return !!vigencia&&vigencia.estado === 'vigente';
 }
+function moEstadoAprobable(r){
+  var estado=r&&r.version&&r.version.estado;
+  return estado==='pendiente_revision'||estado==='aprobada';
+}
 function moTieneBloqueantes(r){
   var resumen=(r&&r.resumen)||{};
   if(Number(resumen.contradicciones_bloqueantes||0)>0)return true;
@@ -1111,13 +1115,13 @@ function moTieneBloqueantes(r){
 }
 function moSyncAprobar(){
   var btn=$('moAprobar'), r=moPreview; if(!btn)return;
-  btn.disabled=!(r&&r.ok&&r.version&&r.version.id&&!moTieneBloqueantes(r)&&moVigenciaEsVigente(r));
+  btn.disabled=!(r&&r.ok&&r.version&&r.version.id&&moEstadoAprobable(r)&&!moTieneBloqueantes(r)&&moVigenciaEsVigente(r));
 }
 function moRenderPreview(r){
   var el=$('moResultado'); if(!el)return;
   var version=(r&&r.version)||{}, resumen=(r&&r.resumen)||{}, vigencia=(r&&r.vigencia)||{};
   var contradicciones=Array.isArray(r&&r.contradicciones)?r.contradicciones:[];
-  var bloqueantes=moTieneBloqueantes(r), vigente=moVigenciaEsVigente(r);
+  var bloqueantes=moTieneBloqueantes(r), vigente=moVigenciaEsVigente(r), aprobable=moEstadoAprobable(r);
   var filas=contradicciones.length?contradicciones.map(function(c){
     var esBloqueante=Boolean(c&&(c.blocking??c.bloqueante));
     var codigo=(c&&(c.code??c.codigo))||'contradiccion_sin_codigo';
@@ -1125,7 +1129,7 @@ function moRenderPreview(r){
     var estado=(c&&c.estado)||'abierta';
     return '<div class="irow"><div style="min-width:0;flex:1"><b>'+esc(codigo)+'</b><div class="s" style="margin-top:3px">'+esc(detalle)+'</div></div><b style="color:var(--'+(esBloqueante?'red':'amber')+')">'+esc(esBloqueante?'Bloqueante':'No bloqueante')+' · '+esc(estado)+'</b></div>';
   }).join(''):'<div class="s">Sin contradicciones reportadas.</div>';
-  var aviso=bloqueantes?'Hay contradicciones bloqueantes abiertas.':(!vigente?'La vigencia documental no esta vigente.':'Lista para aprobar y activar.');
+  var aviso=bloqueantes?'Hay contradicciones bloqueantes abiertas.':(!vigente?'La vigencia documental no esta vigente.':(!aprobable?'La version esta en estado '+(version.estado||'sin estado')+' y no puede aprobarse ni activarse.':'Lista para aprobar y activar.'));
   el.innerHTML='<div class="card" style="padding:12px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Version '+esc(version.numero||version.id||'sin numero')+'</b><span class="pill '+(bloqueantes?'red':(vigente?'green':'amber'))+'">'+esc(version.estado||'pendiente_revision')+'</span>'+(r&&r.reutilizada?'<span class="pill violet">Version reutilizada</span>':'')+'</div>'
     +'<div class="s" style="margin-top:8px">Ofertas: '+esc(resumen.ofertas||0)+' · Equipos: '+esc(resumen.equipos||0)+' · Contradicciones abiertas: '+esc(resumen.contradicciones_abiertas||0)+' · Bloqueantes: '+esc(resumen.contradicciones_bloqueantes||0)+'</div>'
     +'<div class="s" style="margin-top:6px">Vigencia: '+esc(vigencia.desde||'sin fecha inicial')+' a '+esc(vigencia.hasta||'sin fecha final')+' · '+esc(vigencia.estado||'sin dato')+'</div>'
@@ -1155,7 +1159,7 @@ async function moPreviewOfertas(){
   finally{ if(btn)btn.disabled=false; }
 }
 async function moAprobarYActivar(){
-  if(!moPreview||moTieneBloqueantes(moPreview)||!moVigenciaEsVigente(moPreview)){ moSyncAprobar(); return; }
+  if(!moPreview||!moEstadoAprobable(moPreview)||moTieneBloqueantes(moPreview)||!moVigenciaEsVigente(moPreview)){ moSyncAprobar(); return; }
   var btn=$('moAprobar'); if(btn)btn.disabled=true;
   moSetEstado('Leyendo la version vigente actual...','txt2');
   try{
