@@ -23,7 +23,7 @@ function workbookBuffer(sheets) {
   return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 }
 
-function financingBuffer() {
+function financingBuffer({ additionalRows = [] } = {}) {
   return workbookBuffer({
     'Ofertas Equipos en Portafolio': [
       [
@@ -94,6 +94,7 @@ function financingBuffer() {
         '',
         'Financiamiento en 24 y 30 plazos.',
       ],
+      ...additionalRows,
     ],
     'Ofertas Planes y Bonos': [
       ['OFERTAS DE PLANES Y SERVICIOS ESPECIALES'],
@@ -290,6 +291,44 @@ test('cruza equipos exactos y deja coincidencias inciertas como contradiccion', 
         item.blocking === true
     )
   );
+});
+
+test('propaga solo el beneficio documentado a cada snapshot de equipo', async () => {
+  const normalizer = await loadNormalizer();
+  const result = normalizer.normalizeOfferWorkbooks({
+    ...normalizeInput(),
+    financingBuffer: financingBuffer({
+      additionalRows: [
+        [
+          null,
+          'Credito de $100 para LINEAS NUEVAS',
+          'Plan de $35',
+          'Samsung Galaxy A37 128GB',
+          'PYMES',
+          '',
+          'Aplica a lineas nuevas. Solo 24 plazos.',
+        ],
+        [
+          null,
+          'Oferta especial para LINEAS NUEVAS',
+          'Plan de $35',
+          'Samsung Galaxy A37 128GB',
+          'PYMES',
+          '',
+          'Aplica a lineas nuevas. Solo 24 plazos.',
+        ],
+      ],
+    }),
+  });
+
+  const equipmentByRow = new Map(
+    result.offers.map((offer) => [offer.trace.row, offer.equipment[0]])
+  );
+
+  assert.equal(equipmentByRow.get(4).beneficio_tipo, 'gratis');
+  assert.equal(equipmentByRow.get(5).beneficio_tipo, 'descuento_porcentaje');
+  assert.equal(equipmentByRow.get(10).beneficio_tipo, 'credito');
+  assert.equal(equipmentByRow.get(11).beneficio_tipo, null);
 });
 
 test('mantiene estado comercial, vigencia y contradicciones separados', async () => {

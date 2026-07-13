@@ -365,6 +365,14 @@ function offerIdentity(offerText, planMinimum, row) {
   };
 }
 
+function documentedBenefitType(offerText) {
+  const normalized = normalizeText(offerText);
+  if (/\bGRATIS\b/.test(normalized)) return 'gratis';
+  if (/\b50\s*%/.test(normalized)) return 'descuento_porcentaje';
+  if (/\bCREDITO\b/.test(normalized)) return 'credito';
+  return null;
+}
+
 function findOfferSheet(workbook) {
   return workbook.SheetNames.find((name) =>
     normalizeText(name).includes('OFERTAS EQUIPOS EN PORTAFOLIO')
@@ -521,6 +529,7 @@ export function normalizeOfferWorkbooks({
 
     const planScope = parsePlanScope(planText);
     const identity = offerIdentity(offerText, planScope.minimum, excelRow);
+    const beneficioTipo = documentedBenefitType(offerText);
     const events = parseEvents(offerText, termsText);
     const families = parseFamilies(planText, termsText);
     const planTypes = parsePlanTypes(planText, termsText);
@@ -536,7 +545,10 @@ export function normalizeOfferWorkbooks({
         priceIndex,
         sourceIds.lista_precios
       );
-      equipment.push(matched.snapshot);
+      equipment.push({
+        ...matched.snapshot,
+        beneficio_tipo: beneficioTipo,
+      });
       if (matched.exact) {
         exactMatches += 1;
         const availableTerms = new Set(
