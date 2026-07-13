@@ -15,18 +15,26 @@ function firstFile(files, field) {
   return Array.isArray(file) ? file[0] : null;
 }
 
-function hasPendingValidity(snapshot) {
+function hasNonCurrentDocumentValidity(snapshot) {
   return (snapshot?.offers ?? []).some((offer) => {
-    if (offer?.vigencia_documental === 'pendiente_confirmacion') return true;
+    if (offer?.vigencia_documental) return offer.vigencia_documental !== 'vigente';
     try {
       const contract = typeof offer?.contrato === 'string'
         ? JSON.parse(offer.contrato)
         : offer?.contrato;
-      return contract?.vigencia?.estado === 'pendiente_confirmacion';
+      return contract?.vigencia?.estado !== 'vigente';
     } catch {
-      return false;
+      return true;
     }
   });
+}
+
+function repositoryValidity(validity) {
+  return {
+    from: validity?.desde ?? null,
+    to: validity?.hasta ?? null,
+    state: validity?.estado ?? 'pendiente_confirmacion',
+  };
 }
 
 function approvalInput(body) {
@@ -52,9 +60,12 @@ function approvalInput(body) {
 
 function approvalErrorStatus(code) {
   if (code === 'version_no_encontrada') return 404;
-  if (['version_vigente_cambio', 'version_cambio_concurrente'].includes(code)) return 409;
   if ([
+    'version_vigente_cambio',
+    'version_cambio_concurrente',
     'contradicciones_bloqueantes',
+  ].includes(code)) return 409;
+  if ([
     'transicion_invalida',
     'estado_version_invalido',
     'vigencia_pendiente_confirmacion',
@@ -89,10 +100,11 @@ export function createMotorOfertasHandlers({
 
     async preview(req, res) {
       const files = Object.fromEntries(REQUIRED_SOURCES.map((field) => [field, firstFile(req.files, field)]));
-      if (REQUIRED_SOURCES.some((field) => !files[field])) {
+      const archivos_faltantes = REQUIRED_SOURCES.filter((field) => !files[field]);
+      if (archivos_faltantes.length > 0) {
         return res.status(422).json({
           error: 'preview_incompleto',
-          archivos_faltantes: [...REQUIRED_SOURCES],
+          archivos_faltantes,
         });
       }
 
@@ -144,7 +156,9 @@ export function createMotorOfertasHandlers({
           financingBuffer: files.tabla_financiamiento.buffer,
           priceListBuffer: files.lista_precios.buffer,
         });
-        for (const source of sources) source.validity = validity[source.type];
+        for (const source of sources) {
+          source.validity = repositoryValidity(validity[source.type]);
+        }
         normalized = normalizeOfferWorkbooks({
           financingBuffer: files.tabla_financiamiento.buffer,
           priceListBuffer: files.lista_precios.buffer,
@@ -185,8 +199,8 @@ export function createMotorOfertasHandlers({
       try {
         if (input.activate) {
           const snapshot = await repository.getEligibleSnapshot(input.versionId);
-          if (hasPendingValidity(snapshot)) {
-            return res.status(422).json({ error: 'vigencia_pendiente_confirmacion' });
+          if (hasNonCurrentDocumentValidity(snapshot)) {
+            return res.status(422).json({ error: 'vigencia_documental_no_vigente' });
           }
         }
         const version = await repository.approveVersion({ ...input, actor });

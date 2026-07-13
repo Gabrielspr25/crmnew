@@ -153,6 +153,27 @@ test('preview incompleto responde el contrato fijo sin archivar ni persistir', a
   assert.deepEqual(calls.createPreview, []);
 });
 
+test('preview informa solo la fuente requerida ausente sin archivar ni persistir', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies();
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.preview({
+    files: { tabla_financiamiento: validFiles().tabla_financiamiento },
+    body: {},
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, {
+    error: 'preview_incompleto',
+    archivos_faltantes: ['lista_precios'],
+  });
+  assert.deepEqual(calls.archive, []);
+  assert.deepEqual(calls.createPreview, []);
+});
+
 test('preview reutiliza una identidad existente antes de normalizar o persistir', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
   const existing = { id: 'version-existente', estado: 'pendiente_revision' };
@@ -200,6 +221,41 @@ test('preview usa IDs de fuentes archivadas y no persiste si el parser falla', a
   assert.deepEqual(res.body, { error: 'parser_error' });
   assert.equal(calls.archive.length, 2);
   assert.equal(calls.createPreview.length, 0);
+});
+
+test('preview adapta la vigencia inferida al shape persistido por el repositorio', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    inferSourceValidity: () => ({
+      tabla_financiamiento: { desde: '2026-07-04', hasta: '2026-07-15', estado: 'vigente' },
+      lista_precios: { desde: '2026-05-28', hasta: '2026-07-31', estado: 'vigente' },
+      preview: { desde: '2026-07-04', hasta: '2026-07-15', estado: 'vigente' },
+    }),
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.preview({
+    files: validFiles(),
+    body: { normalizador_version: '1.0.0' },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(calls.createPreview[0].sources.map((source) => source.validity), [
+    { from: '2026-07-04', to: '2026-07-15', state: 'vigente' },
+    { from: '2026-05-28', to: '2026-07-31', state: 'vigente' },
+  ]);
+  assert.deepEqual(calls.normalize[0].vigencia, {
+    desde: '2026-07-04',
+    hasta: '2026-07-15',
+    estado: 'vigente',
+  });
+  assert.deepEqual(res.body.vigencia, {
+    desde: '2026-07-04',
+    hasta: '2026-07-15',
+    estado: 'vigente',
+  });
 });
 
 test('elegibles sin version vigente devuelve vacio y nunca consulta un catalogo general', async () => {
@@ -275,20 +331,14 @@ test('aprobar usa el actor autenticado y traduce errores de dominio', async () =
   });
 });
 
-test('aprobar no activa una version con vigencia pendiente de confirmacion', async () => {
+test('aprobar responde 409 ante contradicciones bloqueantes', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
-  const { dependencies, calls } = makeDependencies({
+  const domainError = new Error('contradicciones abiertas');
+  domainError.code = 'contradicciones_bloqueantes';
+  const { dependencies } = makeDependencies({
     repository: {
-      async getEligibleSnapshot() {
-        return {
-          offers: [{
-            vigencia_documental: 'pendiente_confirmacion',
-            contrato: JSON.stringify({
-              vigencia: { estado: 'pendiente_confirmacion' },
-            }),
-          }],
-          equipment: [],
-        };
+      async approveVersion() {
+        throw domainError;
       },
     },
   });
@@ -296,11 +346,40 @@ test('aprobar no activa una version con vigencia pendiente de confirmacion', asy
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-pendiente', activar: true, version_vigente_esperada_id: null },
+    body: { version_id: 'version-con-contradicciones', activar: false },
     user: { nick: 'supervisor-a' },
   }, res);
 
-  assert.equal(res.statusCode, 422);
-  assert.deepEqual(res.body, { error: 'vigencia_pendiente_confirmacion' });
-  assert.deepEqual(calls.approve, []);
+  assert.equal(res.statusCode, 409);
+  assert.deepEqual(res.body, { error: 'contradicciones_bloqueantes' });
+});
+
+test('aprobar no activa una version con vigencia documental distinta de vigente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  for (const vigencia of ['pendiente_confirmacion', 'vencida']) {
+    const { dependencies, calls } = makeDependencies({
+      repository: {
+        async getEligibleSnapshot() {
+          return {
+            offers: [{
+              vigencia_documental: vigencia,
+              contrato: JSON.stringify({ vigencia: { estado: vigencia } }),
+            }],
+            equipment: [],
+          };
+        },
+      },
+    });
+    const handlers = createMotorOfertasHandlers(dependencies);
+    const res = response();
+
+    await handlers.aprobar({
+      body: { version_id: `version-${vigencia}`, activar: true, version_vigente_esperada_id: null },
+      user: { nick: 'supervisor-a' },
+    }, res);
+
+    assert.equal(res.statusCode, 422, vigencia);
+    assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' }, vigencia);
+    assert.deepEqual(calls.approve, [], vigencia);
+  }
 });
