@@ -29,6 +29,30 @@ function hasNonCurrentDocumentValidity(snapshot) {
   });
 }
 
+function sourceDocumentValidity(source) {
+  return source?.vigencia_documental
+    ?? source?.validity?.state
+    ?? source?.state
+    ?? null;
+}
+
+function hasCompleteCurrentSources(versionWithSources) {
+  if (!versionWithSources?.version) return false;
+  const versionValidity = versionWithSources.version.vigencia_documental
+    ?? versionWithSources.version.vigencia?.estado;
+  if (versionValidity !== undefined && versionValidity !== 'vigente') return false;
+
+  const sources = Array.isArray(versionWithSources.sources)
+    ? versionWithSources.sources
+    : [];
+  if (!REQUIRED_SOURCES.every((type) =>
+    sources.some((source) => source?.tipo === type && sourceDocumentValidity(source) === 'vigente')
+  )) {
+    return false;
+  }
+  return sources.every((source) => sourceDocumentValidity(source) === 'vigente');
+}
+
 function repositoryValidity(validity) {
   return {
     from: validity?.desde ?? null,
@@ -198,6 +222,13 @@ export function createMotorOfertasHandlers({
       if (!input || !actor) return res.status(422).json({ error: 'solicitud_invalida' });
       try {
         if (input.activate) {
+          const versionWithSources = await repository.getVersionWithSources(input.versionId);
+          if (!versionWithSources) {
+            return res.status(404).json({ error: 'version_no_encontrada' });
+          }
+          if (!hasCompleteCurrentSources(versionWithSources)) {
+            return res.status(422).json({ error: 'vigencia_documental_no_vigente' });
+          }
           const snapshot = await repository.getEligibleSnapshot(input.versionId);
           if (hasNonCurrentDocumentValidity(snapshot)) {
             return res.status(422).json({ error: 'vigencia_documental_no_vigente' });

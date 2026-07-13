@@ -382,6 +382,25 @@ export function createMotorOfertasRepository({
     return { version, sources: sources.rows };
   }
 
+  async function getVersionWithSources(versionId) {
+    const versionResult = await pool.query(
+      `SELECT *
+       FROM public.motor_ofertas_versiones
+       WHERE id = $1`,
+      [versionId]
+    );
+    const version = versionResult.rows[0] ?? null;
+    if (!version) return null;
+    const sources = await pool.query(
+      `SELECT *
+       FROM public.motor_ofertas_fuentes
+       WHERE version_id = $1
+       ORDER BY tipo, nombre_original`,
+      [version.id]
+    );
+    return { version, sources: sources.rows };
+  }
+
   async function getEligibleSnapshot(versionId) {
     const offers = await pool.query(
       `SELECT *
@@ -693,6 +712,7 @@ export function createMotorOfertasRepository({
     findVersionByIdentity,
     getCurrentVersion,
     getCurrentVersionWithSources,
+    getVersionWithSources,
     getEligibleSnapshot,
     createPreview,
     approveVersion,

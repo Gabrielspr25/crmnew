@@ -230,6 +230,56 @@ test('createPreview persiste una version trazable dentro de una transaccion', as
   assert.equal(fake.released, true);
 });
 
+test('getVersionWithSources obtiene la version solicitada y sus fuentes', async () => {
+  const { createMotorOfertasRepository } = await loadRepository();
+  const fake = createFakePool((call) => {
+    if (
+      call.sql.includes('FROM public.motor_ofertas_versiones')
+      && call.sql.includes('WHERE id = $1')
+    ) {
+      return {
+        rowCount: 1,
+        rows: [{ id: VERSION_ID, dominio: 'movil_equipos', estado: 'pendiente_revision' }],
+      };
+    }
+    if (call.sql.includes('FROM public.motor_ofertas_fuentes')) {
+      return {
+        rowCount: 2,
+        rows: [
+          { version_id: VERSION_ID, tipo: 'tabla_financiamiento', vigencia_documental: 'vigente' },
+          { version_id: VERSION_ID, tipo: 'lista_precios', vigencia_documental: 'vigente' },
+        ],
+      };
+    }
+    return { rowCount: 0, rows: [] };
+  });
+  const repository = createMotorOfertasRepository({
+    pool: fake.pool,
+    randomUUID: makeUuidSequence(),
+    now: () => new Date('2026-07-12T12:00:00.000Z'),
+  });
+
+  const result = await repository.getVersionWithSources(VERSION_ID);
+
+  assert.deepEqual(result, {
+    version: { id: VERSION_ID, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+    sources: [
+      { version_id: VERSION_ID, tipo: 'tabla_financiamiento', vigencia_documental: 'vigente' },
+      { version_id: VERSION_ID, tipo: 'lista_precios', vigencia_documental: 'vigente' },
+    ],
+  });
+  assert.ok(fake.calls.some((call) =>
+    call.sql.includes('FROM public.motor_ofertas_versiones')
+      && call.sql.includes('WHERE id = $1')
+      && call.params[0] === VERSION_ID
+  ));
+  assert.ok(fake.calls.some((call) =>
+    call.sql.includes('FROM public.motor_ofertas_fuentes')
+      && call.sql.includes('WHERE version_id = $1')
+      && call.params[0] === VERSION_ID
+  ));
+});
+
 test('persiste trazabilidad y mantiene estados separados', async () => {
   const { createMotorOfertasRepository } = await loadRepository();
   const fake = createFakePool(successResponder);

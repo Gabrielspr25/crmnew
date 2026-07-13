@@ -69,6 +69,7 @@ function makeDependencies(overrides = {}) {
     snapshot: [],
     evaluate: [],
     approve: [],
+    versionSources: [],
   };
   const repository = {
     async getCurrentVersionWithSources() {
@@ -76,6 +77,16 @@ function makeDependencies(overrides = {}) {
     },
     async getCurrentVersion() {
       return null;
+    },
+    async getVersionWithSources(versionId) {
+      calls.versionSources.push(versionId);
+      return {
+        version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+        sources: [
+          { tipo: 'tabla_financiamiento', vigencia_documental: 'vigente' },
+          { tipo: 'lista_precios', vigencia_documental: 'vigente' },
+        ],
+      };
     },
     async getEligibleSnapshot(versionId) {
       calls.snapshot.push(versionId);
@@ -382,4 +393,75 @@ test('aprobar no activa una version con vigencia documental distinta de vigente'
     assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' }, vigencia);
     assert.deepEqual(calls.approve, [], vigencia);
   }
+});
+
+test('aprobar bloquea una version sin ofertas si una fuente requerida no esta vigente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getVersionWithSources(versionId) {
+        calls.versionSources.push(versionId);
+        return {
+          version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+          sources: [
+            { tipo: 'tabla_financiamiento', vigencia_documental: 'vencida' },
+            { tipo: 'lista_precios', vigencia_documental: 'vigente' },
+          ],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: 'version-sin-ofertas', activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' });
+  assert.deepEqual(calls.approve, []);
+});
+
+test('aprobar bloquea una version sin las dos fuentes requeridas', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getVersionWithSources(versionId) {
+        calls.versionSources.push(versionId);
+        return {
+          version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+          sources: [{ tipo: 'tabla_financiamiento', vigencia_documental: 'vigente' }],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: 'version-sin-lista', activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' });
+  assert.deepEqual(calls.approve, []);
+});
+
+test('aprobar permite una version sin ofertas cuando ambas fuentes requeridas estan vigentes', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies();
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: 'version-vigente-sin-ofertas', activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(calls.versionSources, ['version-vigente-sin-ofertas']);
+  assert.equal(calls.approve.length, 1);
 });
