@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { logAudit } from './misc.js';
+import { applyPlanCodeDefaults } from '../services/planCode.js';
 
 export const importRouter = Router();
 const dig = (s) => String(s || '').replace(/\D/g, '');
@@ -36,13 +37,13 @@ function normDate(v) {
   const d = new Date(s);
   return isNaN(d) ? null : d.toISOString().slice(0, 10);
 }
-// estado BAN: activo|inactivo|suspendido
+// estado BAN: produccion guarda un caracter (A/I/S); suscriptores usan textos largos.
 function normBanStatus(s) {
   const x = String(s || '').toLowerCase().trim();
   if (!x) return null;
-  if (x.includes('inactiv')) return 'inactivo';
-  if (x.includes('suspend')) return 'suspendido';
-  if (x.includes('activ')) return 'activo';
+  if (x === 'i' || x.includes('inactiv')) return 'I';
+  if (x === 's' || x.includes('suspend')) return 'S';
+  if (x === 'a' || x.includes('activ')) return 'A';
   return null;
 }
 
@@ -58,6 +59,29 @@ const SUB = [['plan', 'plan'], ['monthly_value', 'monthly_value'], ['contract_en
   ['contract_start_date', 'contract_start_date']];
 const SUB_DATES = new Set(['activation_date', 'contract_end_date', 'contract_start_date']);
 const SUB_INTS = new Set(['payments_made', 'contract_term']);
+
+function appendSubscriberFieldsFromRow(r, vals, target, mode) {
+  const defaults = applyPlanCodeDefaults({
+    plan: txt(r.plan) || txt(r.soc),
+    price_code: txt(r.soc),
+    contract_term: txt(r.installment_total),
+  });
+  SUB.forEach(([k, col]) => {
+    let v = txt(r[k]);
+    if (col === 'plan') v = txt(r.plan) || txt(r.soc);
+    if (col === 'price_code') v = defaults.price_code;
+    if (col === 'contract_term') v = txt(r.installment_total) || defaults.contract_term;
+    if (v != null) {
+      if (col === 'monthly_value') v = Number(v) || null;
+      if (SUB_INTS.has(col)) v = Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : null;
+      if (SUB_DATES.has(col)) v = normDate(v);
+      if (v != null) {
+        vals.push(v);
+        target.push(mode === 'set' ? `${col} = $${vals.length}` : col);
+      }
+    }
+  });
+}
 
 function pushPsRemainingPayments(r, vals, target) {
   const paid = Number.parseInt(txt(r.installment_from) || '', 10);
@@ -102,7 +126,7 @@ importRouter.post('/import/preview', requireAuth, async (req, res) => {
       out.subs_ausentes = ms.rows[0].n;
     }
     if (bans.length >= 100) {
-      const mb = await c.query(`SELECT COUNT(*)::int AS n FROM public.bans WHERE status IS DISTINCT FROM 'inactivo' AND NOT (ban_number = ANY($1))`, [bans]);
+      const mb = await c.query(`SELECT COUNT(*)::int AS n FROM public.bans WHERE status IS DISTINCT FROM 'I' AND NOT (ban_number = ANY($1))`, [bans]);
       out.bans_ausentes = mb.rows[0].n;
     }
     res.json(out);
@@ -197,7 +221,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             if (banStatus) { vals.push(banStatus); sets.push(`status = $${vals.length}`); }
             if (sets.length) { vals.push(banId); await c.query(`UPDATE public.bans SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals); }
           } else if (clientId) {
-            const ins = await c.query(`INSERT INTO public.bans (client_id, ban_number, status, account_type, credit_class) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [clientId, ban, banStatus || 'activo', txt(r.account_type), txt(r.credit_class)]);
+            const ins = await c.query(`INSERT INTO public.bans (client_id, ban_number, status, account_type, credit_class) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [clientId, ban, banStatus || 'A', txt(r.account_type), txt(r.credit_class)]);
             banId = ins.rows[0].id; out.bans_creados++;
           }
         }
@@ -210,14 +234,14 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             : await c.query(`SELECT id FROM public.subscribers WHERE phone=$1 LIMIT 1`, [subPhone]);
           if (sf.rows[0]) {
             const sets = [], vals = [];
-            SUB.forEach(([k, col]) => { let v = txt(r[k]); if (v != null) { if (col === 'monthly_value') v = Number(v) || null; if (SUB_INTS.has(col)) v = Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : null; if (SUB_DATES.has(col)) v = normDate(v); if (v != null) { vals.push(v); sets.push(`${col} = $${vals.length}`); } } });
+            appendSubscriberFieldsFromRow(r, vals, sets, 'set');
             pushPsRemainingPayments(r, vals, sets);
             if (subStatus) { vals.push(subStatus); sets.push(`status = $${vals.length}`); }
             if (sets.length) { vals.push(sf.rows[0].id); await c.query(`UPDATE public.subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals); }
             out.subs_actualizados++;
           } else if (banId) {
             const cols = ['ban_id', 'phone', 'status'], vals = [banId, subPhone, subStatus || 'activo'];
-            SUB.forEach(([k, col]) => { let v = txt(r[k]); if (v != null) { if (col === 'monthly_value') v = Number(v) || null; if (SUB_INTS.has(col)) v = Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : null; if (SUB_DATES.has(col)) v = normDate(v); if (v != null) { vals.push(v); cols.push(col); } } });
+            appendSubscriberFieldsFromRow(r, vals, cols, 'col');
             appendPsRemainingPayments(r, vals, cols);
             await c.query(`INSERT INTO public.subscribers (${cols.join(',')}) VALUES (${cols.map((_, j) => '$' + (j + 1)).join(',')})`, vals);
             out.subs_creados++;
@@ -229,8 +253,8 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
     // Estado del BAN automático: activo si le queda alguna línea activa, si no inactivo.
     if (bansTocados.size) {
       const rec = await c.query(`UPDATE public.bans b SET status = CASE
-          WHEN EXISTS (SELECT 1 FROM public.subscribers s WHERE s.ban_id = b.id AND s.status = 'activo') THEN 'activo'
-          ELSE 'inactivo' END, updated_at = now()
+          WHEN EXISTS (SELECT 1 FROM public.subscribers s WHERE s.ban_id = b.id AND s.status = 'activo') THEN 'A'
+          ELSE 'I' END, updated_at = now()
         WHERE b.id = ANY($1)`, [[...bansTocados]]);
       out.bans_estado_recalculado = rec.rowCount;
     }
@@ -277,8 +301,8 @@ importRouter.post('/import/bajas', requireAuth, async (req, res) => {
     await c.query('BEGIN');
     const rs = await c.query(`UPDATE public.subscribers SET status = 'cancelado', updated_at = now()
       WHERE status IS DISTINCT FROM 'cancelado' AND NOT (phone = ANY($1))`, [phones]);
-    const rb = await c.query(`UPDATE public.bans SET status = 'inactivo', updated_at = now()
-      WHERE status IS DISTINCT FROM 'inactivo' AND NOT (ban_number = ANY($1))`, [bans]);
+    const rb = await c.query(`UPDATE public.bans SET status = 'I', updated_at = now()
+      WHERE status IS DISTINCT FROM 'I' AND NOT (ban_number = ANY($1))`, [bans]);
     await c.query('COMMIT');
     try {
       await logAudit({

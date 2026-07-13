@@ -44,10 +44,10 @@ test('auto-deteccion reconoce TODOS los encabezados utiles del formato PS de Cla
   assert.ok(!usados.has('UNIT_ESN'));
 });
 
-test('apply recalcula el estado del BAN segun sus lineas (activo si queda alguna activa)', () => {
+test('apply recalcula el estado del BAN segun sus lineas (A si queda alguna activa)', () => {
   assert.match(routesSource, /bansTocados/);
-  assert.match(routesSource, /WHEN EXISTS \(SELECT 1 FROM public\.subscribers s WHERE s\.ban_id = b\.id AND s\.status = 'activo'\) THEN 'activo'/);
-  assert.match(routesSource, /ELSE 'inactivo'/);
+  assert.match(routesSource, /WHEN EXISTS \(SELECT 1 FROM public\.subscribers s WHERE s\.ban_id = b\.id AND s\.status = 'activo'\) THEN 'A'/);
+  assert.match(routesSource, /ELSE 'I'/);
   assert.match(routesSource, /bans_estado_recalculado/);
 });
 
@@ -61,6 +61,14 @@ test('backend escribe los campos PS: subscriber (product_type, item_id, soc, cuo
   assert.match(routesSource, /\['contract_start_date', 'contract_start_date'\]/);
   assert.match(routesSource, /credit_class = \$/);
   assert.match(routesSource, /account_type, credit_class\)/);
+});
+
+test('importador trata SOC como plan visible y guarda price_code normalizado para lookup', () => {
+  assert.match(routesSource, /applyPlanCodeDefaults/);
+  assert.match(routesSource, /plan: txt\(r\.plan\) \|\| txt\(r\.soc\)/);
+  assert.match(routesSource, /if \(col === 'plan'\) v = txt\(r\.plan\) \|\| txt\(r\.soc\)/);
+  assert.match(routesSource, /if \(col === 'price_code'\) v = defaults\.price_code/);
+  assert.match(routesSource, /if \(col === 'contract_term'\) v = txt\(r\.installment_total\) \|\| defaults\.contract_term/);
 });
 
 test('auto-deteccion no rompe archivos en espanol (encabezados clasicos)', () => {
@@ -98,8 +106,8 @@ test('normDate convierte seriales de Excel y fechas dd-Mon-yy', () => {
 test('apply normaliza fechas y enteros del formato PS en update e insert', () => {
   const dates = routesSource.match(/SUB_DATES\.has\(col\)\) v = normDate\(v\)/g) || [];
   const ints = routesSource.match(/SUB_INTS\.has\(col\)\) v = /g) || [];
-  assert.equal(dates.length, 2);
-  assert.equal(ints.length, 2);
+  assert.equal(dates.length, 1);
+  assert.equal(ints.length, 1);
   assert.match(routesSource, /SUB_DATES = new Set\(\['activation_date', 'contract_end_date', 'contract_start_date'\]\)/);
 });
 
@@ -115,7 +123,7 @@ test('endpoint de bajas existe, exige cartera completa y es transaccional', () =
   assert.match(routesSource, /BEGIN/);
   assert.match(routesSource, /ROLLBACK/);
   assert.match(routesSource, /SET status = 'cancelado'/);
-  assert.match(routesSource, /SET status = 'inactivo'/);
+  assert.match(routesSource, /SET status = 'I'/);
 });
 
 test('la UI muestra bajas como paso aparte y nunca dentro de Aplicar', () => {

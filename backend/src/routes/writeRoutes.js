@@ -1,9 +1,10 @@
 // Acciones de escritura sobre data REAL (crm_pro / public): clientes, BANs, suscriptores.
 // Respeta los CHECK reales: BAN number = 9 dígitos, phone_number = 10 dígitos,
-// status suscriptor IN (activo|cancelado|suspendido), status BAN IN (activo|inactivo|suspendido).
+// status suscriptor IN (activo|cancelado|suspendido), status BAN usa A/C/I/S en produccion.
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { applyPlanCodeDefaults } from '../services/planCode.js';
 
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
@@ -47,13 +48,18 @@ writeRouter.post('/clients-real/:id/bans', requireAuth, async (req, res) => {
   const num = onlyDigits(req.body && req.body.number);
   const acct = (req.body && req.body.account_type) || null;
   if (num.length !== 9) return res.status(400).json({ error: 'El BAN debe tener 9 dígitos' });
-  try { const r = await wp(c => c.query(`INSERT INTO bans (client_id, ban_number, status, account_type) VALUES ($1,$2,'activo',$3) RETURNING id, ban_number`, [req.params.id, num, acct])); res.status(201).json(r.rows[0]); }
+  try { const r = await wp(c => c.query(`INSERT INTO bans (client_id, ban_number, status, account_type) VALUES ($1,$2,'A',$3) RETURNING id, ban_number`, [req.params.id, num, acct])); res.status(201).json(r.rows[0]); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // AGREGAR suscriptor a un BAN
 writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) => {
   const b = req.body || {}; const ph = onlyDigits(b.phone);
+  const planDefaults = applyPlanCodeDefaults({
+    plan: b.plan,
+    price_code: b.price_code,
+    contract_term: b.contract_term,
+  });
   if (ph.length !== 10) return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos' });
   if (b.remaining_payments && !b.contract_end_date) b.contract_end_date = contractEndFromRemainingPayments(b.remaining_payments);
   try {
@@ -130,7 +136,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
       [
         req.params.banId,
         ph,
-        b.plan || null,
+        planDefaults.plan || null,
         Number(b.monthly_value) || null,
         b.line_kind || null,
         b.line_type || null,
@@ -138,10 +144,10 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
         b.activation_date || null,
         b.contract_start_date || null,
         b.contract_end_date || null,
-        b.contract_term ? Number(b.contract_term) || null : null,
+        planDefaults.contract_term || null,
         b.remaining_payments ? Number(b.remaining_payments) || null : null,
         b.product_type || null,
-        b.price_code || null,
+        planDefaults.price_code || null,
         b.payments_made ? Number(b.payments_made) || null : null,
       ]);
     });
@@ -155,6 +161,12 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
     req.body.contract_end_date = contractEndFromRemainingPayments(req.body.remaining_payments);
   }
   const body = req.body || {};
+  if ('plan' in body || 'price_code' in body || 'contract_term' in body) {
+    const planDefaults = applyPlanCodeDefaults(body);
+    if ('plan' in body) body.plan = planDefaults.plan;
+    if (planDefaults.price_code) body.price_code = planDefaults.price_code;
+    if (planDefaults.contract_term) body.contract_term = planDefaults.contract_term;
+  }
   const sets = [], vals = [];
   if ('phone' in body) {
     const ph = onlyDigits(body.phone);

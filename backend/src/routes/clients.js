@@ -33,12 +33,29 @@ clientsRouter.get('/:id', requireAuth, async (req, res) => {
 // POST /api/clients  -> crear
 clientsRouter.post('/', requireAuth, async (req, res) => {
   const b = req.body || {};
-  if (!b.name) return res.status(400).json({ error: 'Falta la empresa' });
+  const name = String(b.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Falta la empresa' });
+  const existing = await query(
+    `SELECT c.id, c.name, c.business_name
+       FROM clients c
+      WHERE LOWER(TRIM(COALESCE(c.name,''))) = LOWER(TRIM($1))
+         OR LOWER(TRIM(COALESCE(c.business_name,''))) = LOWER(TRIM($1))
+      ORDER BY c.created_at DESC NULLS LAST, c.id
+      LIMIT 1`,
+    [name]
+  );
+  if (existing.rows[0]) {
+    const displayName = existing.rows[0].name || existing.rows[0].business_name || name;
+    return res.status(409).json({
+      error: `Cliente ya existe en CRM: ${displayName}`,
+      client_id: existing.rows[0].id
+    });
+  }
   const r = await query(
     `INSERT INTO clients (name, owner_name, contact_person, email, phone, additional_phone, cellular,
         address, city, zip_code, tax_id, source)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-    [b.name, b.owner_name, b.contact_person, b.email, b.phone, b.additional_phone, b.cellular,
+    [name, b.owner_name, b.contact_person, b.email, b.phone, b.additional_phone, b.cellular,
      b.address, b.city, b.zip_code, b.tax_id, b.source]);
   res.status(201).json(r.rows[0]);
 });

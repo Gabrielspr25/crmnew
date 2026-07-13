@@ -184,6 +184,7 @@ const CLI_PILL={active:'green',cancelled:'red',following:'violet',incomplete:'am
 async function reClientes(){ $('view').innerHTML=await viewClientes(); }
 function setCliTab(t){ cliTab=t; cliPage=1; reClientes(); }
 function cliSearch(ev){ if(ev.key==='Enter'){ cliQ=ev.target.value.trim(); cliPage=1; reClientes(); } }
+function cliSearchNow(v){ cliQ=String(v||'').trim(); cliPage=1; reClientes(); }
 function cliPageGo(d){ cliPage+=d; reClientes(); }
 function fmtDate(d){ if(!d) return '—'; const x=new Date(d); if(isNaN(x)) return '—'; return x.toLocaleDateString('es-PR',{day:'numeric',month:'numeric',year:'numeric'}); }
 function vencBadge(d){ if(!d) return ''; const days=Math.floor((new Date(d)-new Date())/86400000); if(isNaN(days)) return ''; if(days<0) return `<div class="pill red" style="margin-top:3px;font-size:10px">Vencido hace ${-days} días</div>`; if(days<=60) return `<div class="pill amber" style="margin-top:3px;font-size:10px">Vence en ${days} días</div>`; return ''; }
@@ -216,7 +217,7 @@ async function viewClientes(){
     </div></div>
   <div class="kpis">${CLI_TABS.map(t=>card(t[0],t[1])).join('')}
     <div class="kpi"><div class="l">Total · ${CLI_TABS.find(t=>t[0]===cliTab)[1]}</div><div class="v">${all.length}</div></div></div>
-  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por empresa o contacto… (Enter)" value="${cliQ}" onkeydown="cliSearch(event)"></div>
+  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por empresa, BAN, contacto, teléfono o email" value="${cliQ}" oninput="cliSearchNow(this.value)" onkeydown="cliSearch(event)"></div>
   <div class="s" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">Mostrando ${all.length?from+1:0}-${Math.min(from+per,all.length)} de ${all.length} · pág ${cliPage}/${pages}
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage>1?'cliPageGo(-1)':''}">Anterior</button>
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage<pages?'cliPageGo(1)':''}">Siguiente</button></div>
@@ -291,11 +292,11 @@ async function cliAddSub(banId){ openForm('Agregar suscriptor',cliSubscriberFiel
 async function cliEditSub(id){ var s=(cliM&&cliM.subscribers||[]).find(function(x){return String(x.id)===String(id);})||{}; openForm('Editar suscriptor',cliSubscriberFields(s), async function(v){ await api('/api/subscribers-real/'+id,{method:'PUT',body:cliNormalizeSubscriberPayload(v)}); refreshCli(); }); }
 async function cliSubStatus(id,status,label){ if(!confirm('¿'+label+' este suscriptor?'))return; try{ await api('/api/subscribers-real/'+id,{method:'PUT',body:{status:status}}); refreshCli(); }catch(e){ alert('No se pudo: '+e.message); } }
 // ---- OCR Subir/Pegar (imagen -> suscriptores) ----
-let ocrRows=[], ocrBanId=null, ocrPastedImage=null, ocrOpenedBanNumber=null, ocrDetectedBanNumber=null, ocrBanBlocked=false;
+let ocrRows=[], ocrBanId=null, ocrPastedImage=null, ocrOpenedBanNumber=null, ocrDetectedBanNumber=null, ocrManualBanNumber=null, ocrBanBlocked=false;
 function cerrarOCR(){ var m=$('ocrBg'); if(m)m.remove(); }
 function abrirOCR(banId){
   const openedBan=(cliM&&cliM.bans||[]).find(b=>String(b.id)===String(banId));
-  ocrBanId=banId; ocrRows=[]; ocrPastedImage=null; ocrDetectedBanNumber=null; ocrBanBlocked=false; ocrOpenedBanNumber=openedBan?String(openedBan.ban_number||'').replace(/\D/g,''):null;
+  ocrBanId=banId; ocrRows=[]; ocrPastedImage=null; ocrDetectedBanNumber=null; ocrManualBanNumber=null; ocrBanBlocked=false; ocrOpenedBanNumber=openedBan?String(openedBan.ban_number||'').replace(/\D/g,''):null;
   document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="ocrBg" style="z-index:210" onclick="if(event.target===this)cerrarOCR()"><div class="modal" id="ocrModal" style="max-width:720px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📷 Subir o pegar imagen</h3><button class="btn ghost" style="padding:6px 10px" onclick="cerrarOCR()">✕</button></div><div class="s" style="margin-bottom:10px">Subí una foto o pegá una captura con Ctrl+V. Vision lee teléfonos, plan y estado.</div><input type="file" id="ocrFile" accept="image/*" class="inp" style="margin-bottom:10px" onchange="ocrFileChanged()"><div id="ocrPasteZone" tabindex="0" onpaste="ocrPasteImage(event)" onclick="this.focus()" style="border:1.5px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:10px;background:var(--card2);cursor:text"><b>Pegar imagen aquí</b><div class="s">Haz clic en esta caja y presiona Ctrl+V. También puedes arrastrar una captura al selector de arriba.</div><div id="ocrPreview" style="margin-top:10px"></div></div><button class="btn" id="ocrGo" onclick="ocrAnalizar()">🔎 Analizar imagen</button><div id="ocrResult" style="margin-top:14px"></div></div></div>');
   setTimeout(()=>{var z=$('ocrPasteZone');if(z)z.focus();},80);
 }
@@ -354,16 +355,19 @@ function renderOcrRows(engine){
   var destBanNumber=destBan?String(destBan.ban_number||''):'desconocido';
   var banMsg=ocrDetectedBanNumber
     ? (ocrBanBlocked?'<div class="empty" style="margin-bottom:10px;color:var(--red)">La imagen dice BAN '+ocrDetectedBanNumber+', pero ese BAN no está en este cliente. No se puede agregar aquí.</div>':'<div class="s" style="margin-bottom:10px;color:var(--green)">BAN detectado en imagen: '+ocrDetectedBanNumber+'. Se agregará en ese BAN.</div>')
-    : '<div class="s" style="margin-bottom:10px;color:var(--amber)">No detecté BAN en la imagen. Se usará el BAN abierto: '+(ocrOpenedBanNumber||destBanNumber)+'.</div>';
+    : '<div class="s" style="margin-bottom:10px;color:var(--amber)">No detecté BAN en la imagen. Escribí el BAN de la imagen para confirmar destino.</div><div class="flbl">BAN de la imagen</div><input class="inp" id="ocrManualBan" maxlength="9" placeholder="9 dígitos" oninput="this.value=this.value.replace(/[^0-9]/g,String());ocrManualBanNumber=this.value">';
   $('ocrResult').innerHTML=banMsg+'<div class="s" style="margin-bottom:6px">Detecté '+ocrRows.length+' líneas'+(engine?(' · motor: '+engine):'')+'. El OCR puede leer cancelado, pero al agregar se guarda como Activo en el BAN '+destBanNumber+'.</div><div class="card" style="overflow-x:auto"><table><thead><tr><th>Teléfono</th><th>Plan</th><th>Se guardará como</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><button class="btn green" style="width:100%;margin-top:12px" '+(ocrBanBlocked?'disabled':'')+' onclick="ocrAgregar()">+ Agregar '+ocrRows.length+' suscriptores activos al BAN '+destBanNumber+'</button>';
 }
 async function ocrAgregar(){
   if(ocrBanBlocked){ alert('No se puede agregar: la imagen pertenece al BAN '+ocrDetectedBanNumber+' y ese BAN no está en este cliente.'); return; }
+  var expectedBan=ocrDetectedBanNumber||String(ocrManualBanNumber||(($('ocrManualBan')&&$('ocrManualBan').value)||'')).replace(/\D/g,'');
+  if(!expectedBan){ alert('No se puede agregar: confirma primero el BAN de la imagen.'); return; }
+  if(expectedBan.length!==9){ alert('El BAN de la imagen debe tener 9 dígitos.'); return; }
   var ok=0,created=0,updated=0,reactivated=0,fail=0,errs=[];
   for(var i=0;i<ocrRows.length;i++){ var r=ocrRows[i]; var ph=String(r.phone||'').replace(/\D/g,''); if(ph.length!==10){fail++;continue;}
     var lk=(r.type||'').toLowerCase().indexOf('fij')>=0?'fijo':((r.type||'').toLowerCase().indexOf('m')>=0?'movil':null);
     try{
-      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,status:'activo',expected_ban_number:ocrDetectedBanNumber||ocrOpenedBanNumber||null})});
+      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,status:'activo',expected_ban_number:expectedBan})});
       var out=await resp.json().catch(function(){return {};});
       if(resp.status===409){ fail++; errs.push(ph+': '+(out.error||'ya existe en otro BAN')); continue; }
       if(!resp.ok) throw new Error(out.error||('HTTP '+resp.status));
@@ -594,7 +598,16 @@ function abrirVoz(){
 async function vozCrear(){
   const body={empresa:$('vz_emp').value.trim(),telefono:$('vz_tel').value.trim(),product_key:$('vz_prod').value,qty:$('vz_qty').value,monto:$('vz_monto').value,nota:$('vz_nota').value.trim()};
   if(!body.empresa){ alert('Falta la empresa o nombre del cliente'); return; }
-  try{ const r=await api('/api/asana-real/voz',{method:'POST',body}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo crear: '+e.message); }
+  try{
+    const r=await api('/api/asana-real/voz',{method:'POST',body});
+    if(r&&r.error){
+      alert(r.error);
+      cerrarModal();
+      if(r.client_id){ await abrirCliente(r.client_id); }
+      return;
+    }
+    cerrarModal(); location.hash='#/opp/'+r.opportunity_id;
+  }catch(e){ alert('No se pudo crear: '+e.message); }
 }
 const ASANA_PRODS=[['fijo_ren','Fijo Ren','money','teal'],['fijo_new','Fijo New','money','primary'],['movil_ren','Movil Ren','qty','green'],['movil_new','Movil New','qty','violet'],['claro_tv','Claro TV','qty','amber'],['cloud','Cloud','qty','teal'],['mpls','MPLS','money','red']];
 async function viewAsana(){
@@ -638,7 +651,7 @@ async function viewAsana(){
     <td class="r" style="color:var(--teal);font-weight:700">${Number(o.total_lines||0)}</td>
     <td class="r" style="color:var(--green);font-weight:700">${money(o.total_money)}</td>
     <td><button class="btn ghost" style="padding:6px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">💬 Abrir</button></td>
-    <td><div style="display:flex;flex-direction:column;gap:5px"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="abrirCliente('${o.client_id||''}')">👁 Cliente</button><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cerrarOpp('${o.id}')">⤵ Al pool</button></div></td></tr>`;
+    <td><div style="display:flex;flex-direction:column;gap:5px"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="abrirCliente('${o.client_id||''}')">👁 Cliente</button><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cerrarOpp('${o.id}')">Eliminar seg.</button></div></td></tr>`;
   };
   const head=`<tr><th>Cliente</th><th>Vendedor</th>${ASANA_PRODS.map(p=>`<th class="c" style="color:var(--${p[3]})">${p[1]}</th>`).join('')}<th class="r">Total Líneas</th><th class="r">Total $</th><th>Notas</th><th>Acciones</th></tr>`;
   return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">🎤 Cliente Voz</button></div>
@@ -666,7 +679,7 @@ async function viewOpp(id){
   const logIcon={llamada:'☎',nota:'✎',paso:'✓'};
   const logItems=(o.log||[]).map(l=>`<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}</div><div class="logmeta">${esc(l.user_name||'Sistema')} · ${new Date(l.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin llamadas ni notas todavía.</div>';
   return `<div class="crumb"><a href="#/asana">Asana</a> / Seguimiento</div>
-  <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1>${o.client_name}</h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Cerrar · al pool</button></div></div>
+  <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1>${o.client_name}</h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Eliminar de seguimiento</button></div></div>
   <div class="panel"><h3>Caminito de pasos (${o.steps.filter(s=>s.done).length}/${o.steps.length})</h3><div class="flowgrid">${steps}</div></div>
   <div class="panel"><h3>Llamadas y notas</h3><div class="logbox"><textarea class="inp logbody" id="asanaLogBody" placeholder="Escribe resumen de llamada o nota..."></textarea><button class="btn" onclick="addAsanaLog('${o.id}','llamada')">+ Llamada</button><button class="btn ghost" onclick="addAsanaLog('${o.id}','nota')">+ Nota</button></div>${logItems}</div>
   <div class="panel"><h3>Productos que estás negociando</h3><table><thead><tr><th>Producto</th><th>Teléfono</th><th class="r">Cant.</th><th class="r">$</th><th>Plan destino</th></tr></thead><tbody>${lineas}</tbody></table></div>`;
@@ -1420,7 +1433,7 @@ const IMP_DETECT={
   sub_phone:/^sub$|suscriptor.*(tel|n[uú]m)|tel.*l[ií]nea|l[ií]nea.*tel/, subscriber_name:/suscriptor|usuario/, plan:/plan/,
   monthly_value:/mensual|costo|valor|precio|importe|\$/, contract_end_date:/venc|commit_end|fecha/, status:/estado|status/,
   contract_start_date:/commit_start|inicio.*contrato/,
-  equipment:/equipo|terminal|modelo|item_ldesc|item_sdesc/, imei:/imei/,
+  equipment:/equipo|terminal|modelo/, imei:/imei/,
   product_type:/product_type|tipo.*producto/, item_id:/^item_id$/, soc:/^soc$/,
   installment_from:/no_of_install_from|cuota.*actual/, installment_total:/total_no_of_install|total.*cuota/,
   sub_notes:/nota.*l[ií]nea/
@@ -1547,7 +1560,7 @@ async function enviarSeguimiento(id){const r=await api('/api/clients/'+id+'/segu
 async function addLog(oid,type){const b=$('logbody').value;if(!b){alert('Escribí algo');return;}await api('/api/opportunities/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
 async function addAsanaLog(oid,type){const el=$('asanaLogBody');const b=el&&el.value.trim();if(!b){alert('Escribe algo');return;}await api('/api/asana-real/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
 async function avanzar(oid,sid){await api('/api/asana-real/'+oid+'/steps/'+sid+'/done',{method:'POST'});router();}
-async function cerrarOpp(oid){if(!confirm('¿Cerrar el seguimiento y devolver el cliente al pool?'))return;await api('/api/asana-real/'+oid+'/close',{method:'POST'});location.hash='#/asana';}
+async function cerrarOpp(oid){if(!confirm('¿Eliminar esta oportunidad de seguimiento y devolver el cliente al pool?'))return;try{await api('/api/asana-real/'+oid,{method:'DELETE'});location.hash='#/asana';router();}catch(e){alert('No se pudo eliminar de seguimiento: '+e.message);}}
 
 async function editComision(id,v){try{await api('/api/sales/'+id,{method:'PATCH',body:{vendor_commission:v}});}catch(e){alert('No se pudo guardar');}}
 async function pagarLinea(id){await api('/api/sales/'+id+'/pay',{method:'POST'});router();}

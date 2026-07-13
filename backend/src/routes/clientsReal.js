@@ -41,6 +41,17 @@ const CANCELLED_CLIENT_SQL = `(
   ${VALID_CLIENT_NAME_SQL}
   AND EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
   AND NOT (${ACTIVE_CLIENT_RELATION_SQL}))`;
+const EMPTY_DUPLICATE_CLIENT_SQL = `(
+  NOT EXISTS (SELECT 1 FROM bans b_empty WHERE b_empty.client_id = c.id)
+  AND EXISTS (
+    SELECT 1
+    FROM clients c2
+    WHERE c2.id <> c.id
+      AND lower(trim(COALESCE(NULLIF(c2.business_name,''), NULLIF(c2.name,''), ''))) =
+          lower(trim(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), '')))
+      AND EXISTS (SELECT 1 FROM bans b_keep WHERE b_keep.client_id = c2.id)
+  )
+)`;
 const ACTIVE_SUB_STATUS = (a) => `COALESCE(LOWER(${a}.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
 
 // ---- Clasificación de líneas por familia (texto libre del viejo) ----
@@ -73,12 +84,29 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   const { tab, q } = req.query;
   const conds = [];
   const params = [];
-  if (tab === 'cancelled') conds.push(CANCELLED_CLIENT_SQL);
-  else if (tab === 'following') conds.push(FOLLOWING_CLIENT_SQL);
-  else if (tab === 'incomplete') conds.push(INCOMPLETE_CLIENT_SQL);
-  else conds.push(ACTIVE_CLIENT_SQL); // default = activos
-  if (q && q.trim()) { params.push(`%${q.trim()}%`); conds.push(`c.name ILIKE $${params.length}`); }
-  const whereClause = 'WHERE ' + conds.join(' AND ');
+  const hasSearch = Boolean(q && q.trim());
+  if (!hasSearch) {
+    if (tab === 'cancelled') conds.push(CANCELLED_CLIENT_SQL);
+    else if (tab === 'following') conds.push(FOLLOWING_CLIENT_SQL);
+    else if (tab === 'incomplete') conds.push(INCOMPLETE_CLIENT_SQL);
+    else conds.push(ACTIVE_CLIENT_SQL); // default = activos
+  }
+  if (hasSearch) {
+    params.push(`%${q.trim()}%`);
+    conds.push(`(
+      c.name ILIKE $${params.length}
+      OR c.business_name ILIKE $${params.length}
+      OR c.owner_name ILIKE $${params.length}
+      OR c.contact_person ILIKE $${params.length}
+      OR c.email ILIKE $${params.length}
+      OR CAST(c.phone AS text) ILIKE $${params.length}
+      OR CAST(c.cellular AS text) ILIKE $${params.length}
+      OR EXISTS (SELECT 1 FROM bans bq WHERE bq.client_id = c.id AND CAST(bq.ban_number AS text) ILIKE $${params.length})
+      OR EXISTS (SELECT 1 FROM subscribers sq JOIN bans bqs ON sq.ban_id = bqs.id WHERE bqs.client_id = c.id AND CAST(sq.phone AS text) ILIKE $${params.length})
+    )`);
+    conds.push(`NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`);
+  }
+  const whereClause = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
 
   const conn = await pool.connect();
   try {

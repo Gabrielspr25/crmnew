@@ -45,6 +45,11 @@ function cleanText(value) {
   return String(value || '').trim();
 }
 
+function cleanDigits(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits || null;
+}
+
 function logPrefix(type) {
   if (type === 'llamada') return '[LLAMADA]';
   if (type === 'paso') return '[PASO]';
@@ -152,6 +157,15 @@ async function ensureOpportunityWorkflowSteps(c, opportunityId) {
       existingNames.add(nameKey);
     }
   }
+}
+
+async function closeOpportunityToPool(c, opportunityId) {
+  const o = await c.query(
+    `UPDATE sales_opportunities SET status='cerrada', archived_at=now(), closed_at=now()
+      WHERE id=$1 AND archived_at IS NULL RETURNING client_id`, [opportunityId]);
+  if (!o.rows[0]) return false;
+  await c.query(`UPDATE clients SET salesperson_id = NULL WHERE id = $1`, [o.rows[0].client_id]);
+  return true;
 }
 
 // LISTA: oportunidades activas con la MISMA estructura de tu Asana real (SOV2):
@@ -297,14 +311,15 @@ asanaRealRouter.post('/asana-real/:id/log', requireAuth, async (req, res) => {
 // CERRAR → al pool (regla SOV2: archiva oportunidad + cliente sin vendedor)
 asanaRealRouter.post('/asana-real/:id/close', requireAuth, async (req, res) => {
   try {
-    const done = await withPublic(async c => {
-      const o = await c.query(
-        `UPDATE sales_opportunities SET status='cerrada', archived_at=now(), closed_at=now()
-          WHERE id=$1 AND archived_at IS NULL RETURNING client_id`, [req.params.id]);
-      if (!o.rows[0]) return false;
-      await c.query(`UPDATE clients SET salesperson_id = NULL WHERE id = $1`, [o.rows[0].client_id]);
-      return true;
-    });
+    const done = await withPublic(c => closeOpportunityToPool(c, req.params.id));
+    if (!done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+asanaRealRouter.delete('/asana-real/:id', requireAuth, async (req, res) => {
+  try {
+    const done = await withPublic(c => closeOpportunityToPool(c, req.params.id));
     if (!done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -315,11 +330,41 @@ asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
   const { empresa, telefono, product_key, qty, monto, nota } = req.body || {};
   const name = cleanText(empresa || '');
   if (!name) return res.status(400).json({ error: 'Falta la empresa o nombre del cliente' });
+  const phoneDigits = cleanDigits(telefono);
   const PK = ['fijo_ren', 'fijo_new', 'movil_ren', 'movil_new', 'claro_tv', 'cloud', 'mpls'];
   const pk = PK.includes(product_key) ? product_key : null;
   const isMoney = ['fijo_ren', 'fijo_new', 'mpls'].includes(pk);
   try {
     const out = await withPublic(async c => {
+      const existing = await c.query(
+        `SELECT c.id, c.name, c.business_name,
+                (
+                  SELECT so.id
+                    FROM sales_opportunities so
+                   WHERE so.client_id = c.id
+                     AND so.archived_at IS NULL
+                   ORDER BY so.created_at DESC NULLS LAST, so.id
+                   LIMIT 1
+                ) AS opportunity_id
+           FROM clients c
+          WHERE LOWER(TRIM(COALESCE(c.name,''))) = LOWER(TRIM($1))
+             OR LOWER(TRIM(COALESCE(c.business_name,''))) = LOWER(TRIM($1))
+             OR ($2::text IS NOT NULL AND regexp_replace(COALESCE(c.phone,''), '\\D', '', 'g') = $2)
+             OR ($2::text IS NOT NULL AND regexp_replace(COALESCE(c.cellular,''), '\\D', '', 'g') = $2)
+          ORDER BY c.created_at DESC NULLS LAST, c.id
+          LIMIT 1`,
+        [name, phoneDigits]);
+      if (existing.rows[0]) {
+        const displayName = existing.rows[0].name || existing.rows[0].business_name || name;
+        return {
+          duplicate: true,
+          error: existing.rows[0].opportunity_id
+            ? `Cliente ya existe y ya tiene seguimiento activo: ${displayName}`
+            : `Cliente ya existe en CRM: ${displayName}`,
+          client_id: existing.rows[0].id,
+          opportunity_id: existing.rows[0].opportunity_id || null,
+        };
+      }
       const cli = await c.query(
         `INSERT INTO clients (name, phone, pendiente_validacion) VALUES ($1,$2,true) RETURNING id`,
         [name, telefono ? cleanText(telefono) : null]);
@@ -345,6 +390,7 @@ asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
       }
       return { opportunity_id: oppId, client_id: clientId };
     });
+    if (out?.duplicate) return res.status(409).json(out);
     res.status(201).json(out);
   } catch (e) {
     console.error('[asana-voz]', e.message);
