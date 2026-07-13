@@ -438,6 +438,62 @@ test('oferta vencida pendiente conserva la combinacion visible y bloquea aplicac
   assert.equal(result.equipos[0].vigencia.estado, 'vencida_pendiente_reemplazo');
 });
 
+test('fuente relacionada vencida pendiente conserva oferta vigente como no automatica', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const offer = makeOffer({ fuente_principal_id: 'source-relacionada' });
+  const result = evaluateEligibleOffers({
+    request: makeRequest(),
+    snapshot: makeSnapshot({
+      offers: [offer],
+      sources: [{
+        id: 'source-relacionada',
+        vigencia_documental: 'vencida_pendiente_reemplazo',
+      }],
+    }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, false);
+  assert.deepEqual(result.equipos[0].validaciones, [
+    { codigo: 'fuente_vencida', estado: 'warning' },
+  ]);
+});
+
+test('fuente relacionada vencida o futura excluye una oferta documental vigente', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+
+  for (const state of ['vencida', 'futura']) {
+    const offer = makeOffer({ fuente_principal_id: `source-${state}` });
+    const result = evaluateEligibleOffers({
+      request: makeRequest(),
+      snapshot: makeSnapshot({
+        offers: [offer],
+        sources: [{ id: `source-${state}`, vigencia_documental: state }],
+      }),
+      today: TODAY,
+    });
+
+    assert.deepEqual(result.equipos, [], state);
+    assert.ok(result.validaciones.some((item) => item.codigo === 'fuente_no_vigente'), state);
+  }
+});
+
+test('fuente vencida sin enlace principal no bloquea una oferta ajena', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const result = evaluateEligibleOffers({
+    request: makeRequest(),
+    snapshot: makeSnapshot({
+      sources: [{ id: 'source-ajena', vigencia_documental: 'vencida' }],
+    }),
+    today: TODAY,
+  });
+
+  assert.equal(result.equipos.length, 1);
+  assert.equal(result.equipos[0].aplicacion_automatica, true);
+  assert.deepEqual(result.equipos[0].validaciones, []);
+});
+
 test('vigencia vencida excluye la combinacion y mantiene la validacion sin elegibles', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({

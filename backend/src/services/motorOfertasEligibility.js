@@ -57,14 +57,10 @@ function offerValidityMetadata(offer, contract) {
   };
 }
 
-function hasExpiredSource(offer, sources) {
-  const relatedSources = offer.fuente_principal_id
-    ? sources.filter((source) => source.id === offer.fuente_principal_id)
-    : sources;
-  return relatedSources.some((source) => [
-    'vencida',
-    'vencida_pendiente_reemplazo',
-  ].includes(source.vigencia_documental));
+function sourceValidity(offer, sources) {
+  if (!offer.fuente_principal_id) return null;
+  return sources.find((source) => source.id === offer.fuente_principal_id)
+    ?.vigencia_documental ?? null;
 }
 
 function matchesOffer({ offer, contract, request, today, sources, addValidation }) {
@@ -72,6 +68,12 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
   const commercialState = offer.estado_comercial ?? contract.estado;
   if (commercialState !== 'confirmada' || contract.estado !== 'confirmada') {
     addValidation(validation('oferta_no_confirmada'));
+    return false;
+  }
+
+  const relatedSourceValidity = sourceValidity(offer, sources);
+  if (['vencida', 'futura'].includes(relatedSourceValidity)) {
+    addValidation(validation('fuente_no_vigente'));
     return false;
   }
 
@@ -132,7 +134,7 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
     validaciones: [],
   };
 
-  if (hasExpiredSource(offer, sources)) {
+  if (relatedSourceValidity === 'vencida_pendiente_reemplazo') {
     const sourceWarning = validation('fuente_vencida');
     addValidation(sourceWarning);
     policy.aplicacionAutomatica = false;
