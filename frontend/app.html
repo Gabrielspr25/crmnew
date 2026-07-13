@@ -1056,12 +1056,116 @@ async function ofRenderBody(){
   if(ofTab==='servicios') return ofRenderServicios();
   return ofRenderPlanesPagina(ofTab); // fijos | moviles | inalambrico
 }
-// Tab "Ofertas" (Excel móviles) = lo maneja el programador
+let moPreview=null, moVersionVigente=null, moVigenteLeida=false;
+const MO_ARCHIVO_LABEL={tabla_financiamiento:'Tabla de financiamiento',lista_precios:'Lista de precios'};
 async function ofRenderOfertasTienda(){
   var b=$('ofBody'); if(!b)return;
-  b.innerHTML='<div class="panel"><h3>🛍 Ofertas (Excel móviles)</h3>'
-    +'<div class="s" style="color:var(--txt2)">El parser del boletín de ofertas móviles (financiamiento) lo maneja tu programador. '
-    +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
+  moPreview=null; moVersionVigente=null; moVigenteLeida=false;
+  b.innerHTML='<div class="panel"><h3>Ofertas moviles</h3>'
+    +'<div class="s" style="color:var(--txt2);margin-bottom:12px">Cargue los dos Excel oficiales para crear una version en revision. La activacion solo se habilita con vigencia vigente y sin contradicciones bloqueantes.</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">'
+    +'<div><div class="flbl">Tabla de financiamiento</div><input id="moTablaFinanciamiento" type="file" accept=".xlsx" class="inp"></div>'
+    +'<div><div class="flbl">Lista de precios</div><input id="moListaPrecios" type="file" accept=".xlsx" class="inp"></div></div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><button class="btn" id="moPreviewBtn" onclick="moPreviewOfertas()">Vista previa</button><button class="btn green" id="moAprobar" onclick="moAprobarYActivar()" disabled>Aprobar y activar</button><span class="s" id="moEstado"></span></div>'
+    +'<div id="moResultado" style="margin-top:12px"></div></div>'
+    +'<div class="panel"><h3>Version vigente</h3><div id="moVigente" class="s">Cargando...</div></div>';
+  await moLoadVigente();
+}
+function moArchivoLabel(codigo){ return MO_ARCHIVO_LABEL[codigo]||String(codigo||'Archivo requerido'); }
+function moSetEstado(mensaje,color){
+  var el=$('moEstado'); if(el)el.innerHTML='<span style="color:var(--'+(color||'txt2')+')">'+esc(mensaje||'')+'</span>';
+}
+function moRenderVigente(mensaje){
+  var el=$('moVigente'); if(!el)return;
+  if(!moVersionVigente){ el.innerHTML='<div class="s" style="color:var(--txt2)">'+esc(mensaje||'No hay una version vigente de ofertas moviles.')+'</div>'; return; }
+  var v=moVersionVigente, resumen=v.resumen||{};
+  el.innerHTML='<div class="card" style="padding:12px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Version '+esc(v.numero||v.id||'sin numero')+'</b><span class="pill green">'+esc(v.estado||'vigente')+'</span><span class="s">Vigencia: '+esc(v.vigencia_documental||'sin dato')+'</span></div>'
+    +'<div class="s" style="margin-top:7px">Ofertas: '+esc(resumen.ofertas||0)+' · Equipos: '+esc(resumen.equipos||0)+' · Contradicciones abiertas: '+esc(resumen.contradicciones_abiertas||0)+'</div></div>';
+}
+async function moLoadVigente(){
+  var el=$('moVigente'); if(el)el.innerHTML='<div class="s">Cargando version vigente...</div>';
+  moVigenteLeida=false;
+  try{
+    var r=await api('/api/motor-ofertas/version-vigente');
+    moVersionVigente=(r&&r.version)||null;
+    moVigenteLeida=true;
+    moRenderVigente();
+    return moVersionVigente;
+  }catch(e){
+    moVersionVigente=null;
+    var mensaje=String((e&&e.message)||'No se pudo cargar la version vigente.');
+    var sinVigente=mensaje.indexOf('-> 404')>=0;
+    moVigenteLeida=sinVigente;
+    moRenderVigente(sinVigente?'No hay una version vigente de ofertas moviles.':'No se pudo cargar la version vigente: '+mensaje);
+    return null;
+  }
+}
+function moVigenciaEsVigente(r){
+  var vigencia=r&&r.vigencia;
+  return !!vigencia&&vigencia.estado === 'vigente';
+}
+function moTieneBloqueantes(r){
+  var resumen=(r&&r.resumen)||{};
+  if(Number(resumen.contradicciones_bloqueantes||0)>0)return true;
+  return ((r&&r.contradicciones)||[]).some(function(c){ return c&&c.bloqueante&&c.estado!=='resuelta'; });
+}
+function moSyncAprobar(){
+  var btn=$('moAprobar'), r=moPreview; if(!btn)return;
+  btn.disabled=!(r&&r.ok&&r.version&&r.version.id&&!moTieneBloqueantes(r)&&moVigenciaEsVigente(r));
+}
+function moRenderPreview(r){
+  var el=$('moResultado'); if(!el)return;
+  var version=(r&&r.version)||{}, resumen=(r&&r.resumen)||{}, vigencia=(r&&r.vigencia)||{};
+  var contradicciones=Array.isArray(r&&r.contradicciones)?r.contradicciones:[];
+  var bloqueantes=moTieneBloqueantes(r), vigente=moVigenciaEsVigente(r);
+  var filas=contradicciones.length?contradicciones.map(function(c){
+    var esBloqueante=!!(c&&c.bloqueante);
+    return '<div class="irow"><span>'+esc((c&&c.codigo)||'contradiccion_sin_codigo')+'</span><b style="color:var(--'+(esBloqueante?'red':'amber')+')">'+esc(esBloqueante?'Bloqueante':'No bloqueante')+' · '+esc((c&&c.estado)||'abierta')+'</b></div>';
+  }).join(''):'<div class="s">Sin contradicciones reportadas.</div>';
+  var aviso=bloqueantes?'Hay contradicciones bloqueantes abiertas.':(!vigente?'La vigencia documental no esta vigente.':'Lista para aprobar y activar.');
+  el.innerHTML='<div class="card" style="padding:12px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Version '+esc(version.numero||version.id||'sin numero')+'</b><span class="pill '+(bloqueantes?'red':(vigente?'green':'amber'))+'">'+esc(version.estado||'pendiente_revision')+'</span>'+(r&&r.reutilizada?'<span class="pill violet">Version reutilizada</span>':'')+'</div>'
+    +'<div class="s" style="margin-top:8px">Ofertas: '+esc(resumen.ofertas||0)+' · Equipos: '+esc(resumen.equipos||0)+' · Contradicciones abiertas: '+esc(resumen.contradicciones_abiertas||0)+' · Bloqueantes: '+esc(resumen.contradicciones_bloqueantes||0)+'</div>'
+    +'<div class="s" style="margin-top:6px">Vigencia: '+esc(vigencia.desde||'sin fecha inicial')+' a '+esc(vigencia.hasta||'sin fecha final')+' · '+esc(vigencia.estado||'sin dato')+'</div>'
+    +'<div style="margin-top:10px">'+filas+'</div><div class="s" style="margin-top:10px;color:var(--'+(bloqueantes||!vigente?'red':'green')+')">'+esc(aviso)+'</div></div>';
+  moSyncAprobar();
+}
+async function moPreviewOfertas(){
+  var tabla=$('moTablaFinanciamiento'), lista=$('moListaPrecios');
+  var faltantes=[];
+  if(!tabla||!tabla.files.length)faltantes.push('Tabla de financiamiento');
+  if(!lista||!lista.files.length)faltantes.push('Lista de precios');
+  if(faltantes.length){ moPreview=null; moSyncAprobar(); moSetEstado('Falta: '+faltantes.join(' y '),'red'); return; }
+  var btn=$('moPreviewBtn'); if(btn)btn.disabled=true;
+  moPreview=null; moSyncAprobar(); moSetEstado('Analizando los dos Excel...','txt2');
+  try{
+    var fd=new FormData();
+    fd.append('tabla_financiamiento',tabla.files[0]);
+    fd.append('lista_precios',lista.files[0]);
+    var r=await apiForm('/api/motor-ofertas/preview',fd);
+    if(!r||!r.ok){
+      var incompletos=((r&&r.archivos_faltantes)||[]).map(moArchivoLabel);
+      moSetEstado(r&&r.error==='preview_incompleto'?'Falta: '+incompletos.join(' y '):(r&&r.error)||'No se pudo crear la vista previa.','red');
+      return;
+    }
+    moPreview=r; moSetEstado(r.reutilizada?'Version existente recuperada.':'Vista previa creada.','green'); moRenderPreview(r);
+  }catch(e){ moSetEstado('No se pudo crear la vista previa: '+String((e&&e.message)||''),'red'); }
+  finally{ if(btn)btn.disabled=false; }
+}
+async function moAprobarYActivar(){
+  if(!moPreview||moTieneBloqueantes(moPreview)||!moVigenciaEsVigente(moPreview)){ moSyncAprobar(); return; }
+  var btn=$('moAprobar'); if(btn)btn.disabled=true;
+  moSetEstado('Leyendo la version vigente actual...','txt2');
+  try{
+    var vigente=await moLoadVigente();
+    if(!moVigenteLeida){ moSetEstado('No se pudo confirmar la version vigente actual.','red'); return; }
+    var r=await api('/api/motor-ofertas/aprobar',{method:'POST',body:{version_id:moPreview.version.id,activar:true,version_vigente_esperada_id:vigente&&vigente.id?vigente.id:null}});
+    if(!r||!r.ok){ moSetEstado((r&&r.error)||'No se pudo aprobar la version.','red'); await moLoadVigente(); return; }
+    moPreview=null; moSyncAprobar();
+    var resultado=$('moResultado'); if(resultado)resultado.innerHTML='<div class="card" style="padding:12px"><span class="pill green">Version activada</span><div class="s" style="margin-top:8px">La version aprobada ya es la vigente.</div></div>';
+    moSetEstado('Version aprobada y activada.','green');
+    await moLoadVigente();
+  }catch(e){ moSetEstado('No se pudo aprobar la version: '+String((e&&e.message)||''),'red'); await moLoadVigente(); }
+  finally{ moSyncAprobar(); }
 }
 
 // ----- SERVICIOS / FEATURES -----
