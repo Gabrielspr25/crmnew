@@ -68,7 +68,7 @@ export const planSchema = z.object({
   codigo: z.string().trim().min(1),
   nombre: z.string().trim().min(1),
   monto: z.number().finite().nonnegative(),
-}).strict();
+}).passthrough();
 
 export const tradeInSchema = z.object({
   estado: z.string().trim().min(1),
@@ -85,7 +85,7 @@ export const mobileLineSchema = z.object({
   evento: lineEventSchema,
   convergente: z.boolean(),
   trade_in: tradeInSchema,
-}).strict().superRefine((line, context) => {
+}).passthrough().superRefine((line, context) => {
   if (
     line.tipo === 'multilinea_business_red' &&
     !line.familia_business_red

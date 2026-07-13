@@ -85,6 +85,29 @@ test('acepta LineaMovil con contexto BAN', async () => {
   assert.equal(result.success, true);
 });
 
+test('acepta el contrato completo de LineaMovil sin descartar campos documentados', async () => {
+  const contract = await loadContract();
+  assert.ok(contract, 'falta motorOfertasContract.js');
+  const input = validLineRequest();
+  input.linea.posicion_en_ban = 5;
+  input.linea.plan.autopay = true;
+  input.linea.plan.renta_mensual = 60;
+  input.linea.plan.fuente = { tipo: 'boletin_planes' };
+  input.linea.oferta_aplicada = null;
+  input.linea.equipo = null;
+  input.linea.plazo = null;
+  input.linea.bonos = [];
+  input.linea.seguro = { seleccionado: false, estado: 'pendiente_fuente' };
+  input.linea.promociones_aplicadas = [];
+  input.linea.subtotal = { total_mensual: 60 };
+  input.linea.validaciones = [];
+  input.linea.estado = 'pendiente_equipo';
+
+  const result = contract.eligibilityRequestSchema.safeParse(input);
+  assert.equal(result.success, true);
+  assert.equal(result.data.linea.subtotal.total_mensual, 60);
+});
+
 test('rechaza evento y posicion BAN invalidos', async () => {
   const contract = await loadContract();
   assert.ok(contract, 'falta motorOfertasContract.js');
