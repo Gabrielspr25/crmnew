@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 const handlersPath = '../src/services/motorOfertasHandlers.js';
+const VERSION_ID = '00000000-0000-4000-8000-000000000001';
 
 async function loadHandlers() {
   return import(handlersPath);
@@ -83,8 +84,18 @@ function makeDependencies(overrides = {}) {
       return {
         version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
         sources: [
-          { tipo: 'tabla_financiamiento', vigencia_documental: 'vigente' },
-          { tipo: 'lista_precios', vigencia_documental: 'vigente' },
+          {
+            tipo: 'tabla_financiamiento',
+            vigencia_documental: 'vigente',
+            vigencia_desde: '2026-07-01',
+            vigencia_hasta: '2026-07-31',
+          },
+          {
+            tipo: 'lista_precios',
+            vigencia_documental: 'vigente',
+            vigencia_desde: '2026-07-01',
+            vigencia_hasta: '2026-07-31',
+          },
         ],
       };
     },
@@ -113,6 +124,7 @@ function makeDependencies(overrides = {}) {
   const dependencies = {
     repository,
     normalizadorVersion: '1.0.0',
+    now: () => new Date('2026-07-13T12:00:00.000Z'),
     uploadRoot: 'C:\\tmp\\motor-ofertas-test',
     archiveOfferSource: async (input) => {
       calls.archive.push(input);
@@ -327,14 +339,14 @@ test('aprobar usa el actor autenticado y traduce errores de dominio', async () =
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-a', activar: true, version_vigente_esperada_id: null, motivo: 'Revision' },
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null, motivo: 'Revision' },
     user: { nick: 'supervisor-a' },
   }, res);
 
   assert.equal(res.statusCode, 404);
   assert.deepEqual(res.body, { error: 'version_no_encontrada' });
   assert.deepEqual(calls.approve[0], {
-    versionId: 'version-a',
+    versionId: VERSION_ID,
     activate: true,
     expectedCurrentVersionId: null,
     actor: 'supervisor-a',
@@ -357,7 +369,7 @@ test('aprobar responde 409 ante contradicciones bloqueantes', async () => {
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-con-contradicciones', activar: false },
+    body: { version_id: VERSION_ID, activar: false },
     user: { nick: 'supervisor-a' },
   }, res);
 
@@ -385,7 +397,7 @@ test('aprobar no activa una version con vigencia documental distinta de vigente'
     const res = response();
 
     await handlers.aprobar({
-      body: { version_id: `version-${vigencia}`, activar: true, version_vigente_esperada_id: null },
+      body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
       user: { nick: 'supervisor-a' },
     }, res);
 
@@ -415,7 +427,7 @@ test('aprobar bloquea una version sin ofertas si una fuente requerida no esta vi
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-sin-ofertas', activar: true, version_vigente_esperada_id: null },
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
     user: { nick: 'supervisor-a' },
   }, res);
 
@@ -441,7 +453,7 @@ test('aprobar bloquea una version sin las dos fuentes requeridas', async () => {
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-sin-lista', activar: true, version_vigente_esperada_id: null },
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
     user: { nick: 'supervisor-a' },
   }, res);
 
@@ -457,11 +469,129 @@ test('aprobar permite una version sin ofertas cuando ambas fuentes requeridas es
   const res = response();
 
   await handlers.aprobar({
-    body: { version_id: 'version-vigente-sin-ofertas', activar: true, version_vigente_esperada_id: null },
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
     user: { nick: 'supervisor-a' },
   }, res);
 
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(calls.versionSources, ['version-vigente-sin-ofertas']);
+  assert.deepEqual(calls.versionSources, [VERSION_ID]);
   assert.equal(calls.approve.length, 1);
+});
+
+test('aprobar bloquea una fuente vencida por fecha aunque su estado sea vigente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getVersionWithSources(versionId) {
+        calls.versionSources.push(versionId);
+        return {
+          version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+          sources: [
+            {
+              tipo: 'tabla_financiamiento',
+              vigencia_documental: 'vigente',
+              vigencia_desde: '2026-07-01',
+              vigencia_hasta: '2026-07-12',
+            },
+            {
+              tipo: 'lista_precios',
+              vigencia_documental: 'vigente',
+              vigencia_desde: '2026-07-01',
+              vigencia_hasta: '2026-07-31',
+            },
+          ],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' });
+  assert.deepEqual(calls.approve, []);
+});
+
+test('aprobar bloquea una oferta vencida por fecha aunque su estado sea vigente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getEligibleSnapshot() {
+        return {
+          offers: [{
+            vigencia_documental: 'vigente',
+            vigencia_desde: '2026-07-01',
+            vigencia_hasta: '2026-07-12',
+            contrato: JSON.stringify({
+              vigencia: {
+                desde: '2026-07-01',
+                hasta: '2026-07-12',
+                estado: 'vigente',
+              },
+            }),
+          }],
+          equipment: [],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'vigencia_documental_no_vigente' });
+  assert.deepEqual(calls.approve, []);
+});
+
+test('aprobar rechaza UUIDs invalidos antes de consultar el repositorio', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  for (const body of [
+    { version_id: 'no-es-uuid', activar: true },
+    { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: 'no-es-uuid' },
+    { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: 42 },
+  ]) {
+    const { dependencies, calls } = makeDependencies();
+    const handlers = createMotorOfertasHandlers(dependencies);
+    const res = response();
+
+    await handlers.aprobar({ body, user: { nick: 'supervisor-a' } }, res);
+
+    assert.equal(res.statusCode, 422);
+    assert.deepEqual(res.body, { error: 'solicitud_invalida' });
+    assert.deepEqual(calls.versionSources, []);
+    assert.deepEqual(calls.approve, []);
+  }
+});
+
+test('aprobar traduce 22P02 a solicitud invalida', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const databaseError = new Error('invalid input syntax for type uuid');
+  databaseError.code = '22P02';
+  const { dependencies } = makeDependencies({
+    repository: {
+      async approveVersion() {
+        throw databaseError;
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: VERSION_ID, activar: false },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'solicitud_invalida' });
 });

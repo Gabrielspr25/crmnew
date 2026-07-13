@@ -5,6 +5,8 @@ const REQUIRED_SOURCES = Object.freeze([
   'tabla_financiamiento',
   'lista_precios',
 ]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function actorFrom(user) {
   return user?.nick || user?.email || user?.usuario || null;
@@ -15,42 +17,107 @@ function firstFile(files, field) {
   return Array.isArray(file) ? file[0] : null;
 }
 
-function hasNonCurrentDocumentValidity(snapshot) {
+function validIsoDate(value) {
+  if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value
+    ? null
+    : value;
+}
+
+function currentIsoDate(now) {
+  const date = now();
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10);
+}
+
+function hasCurrentDocumentRange({ state, from, to }, today) {
+  const desde = validIsoDate(from);
+  const hasta = validIsoDate(to);
+  return state === 'vigente'
+    && Boolean(today)
+    && Boolean(desde)
+    && Boolean(hasta)
+    && desde <= hasta
+    && desde <= today
+    && today <= hasta;
+}
+
+function offerDocumentValidity(offer) {
+  let contract;
+  try {
+    contract = typeof offer?.contrato === 'string'
+      ? JSON.parse(offer.contrato)
+      : offer?.contrato;
+  } catch {
+    return null;
+  }
+  return {
+    state: offer?.vigencia_documental ?? contract?.vigencia?.estado ?? null,
+    from: offer?.vigencia_desde ?? contract?.vigencia?.desde ?? null,
+    to: offer?.vigencia_hasta ?? contract?.vigencia?.hasta ?? null,
+  };
+}
+
+function hasNonCurrentDocumentValidity(snapshot, today) {
   return (snapshot?.offers ?? []).some((offer) => {
-    if (offer?.vigencia_documental) return offer.vigencia_documental !== 'vigente';
-    try {
-      const contract = typeof offer?.contrato === 'string'
-        ? JSON.parse(offer.contrato)
-        : offer?.contrato;
-      return contract?.vigencia?.estado !== 'vigente';
-    } catch {
-      return true;
-    }
+    const validity = offerDocumentValidity(offer);
+    return !validity || !hasCurrentDocumentRange(validity, today);
   });
 }
 
 function sourceDocumentValidity(source) {
-  return source?.vigencia_documental
-    ?? source?.validity?.state
-    ?? source?.state
-    ?? null;
+  return {
+    state: source?.vigencia_documental
+      ?? source?.validity?.state
+      ?? source?.state
+      ?? null,
+    from: source?.vigencia_desde
+      ?? source?.validity?.from
+      ?? source?.from
+      ?? null,
+    to: source?.vigencia_hasta
+      ?? source?.validity?.to
+      ?? source?.to
+      ?? null,
+  };
 }
 
-function hasCompleteCurrentSources(versionWithSources) {
+function versionDocumentValidity(version) {
+  const hasDocumentValidity = version
+    && (
+      Object.hasOwn(version, 'vigencia_documental')
+      || Object.hasOwn(version, 'vigencia_desde')
+      || Object.hasOwn(version, 'vigencia_hasta')
+      || Object.hasOwn(version, 'vigencia')
+    );
+  if (!hasDocumentValidity) return null;
+  return {
+    state: version.vigencia_documental ?? version.vigencia?.estado ?? null,
+    from: version.vigencia_desde ?? version.vigencia?.desde ?? null,
+    to: version.vigencia_hasta ?? version.vigencia?.hasta ?? null,
+  };
+}
+
+function hasCompleteCurrentSources(versionWithSources, today) {
   if (!versionWithSources?.version) return false;
-  const versionValidity = versionWithSources.version.vigencia_documental
-    ?? versionWithSources.version.vigencia?.estado;
-  if (versionValidity !== undefined && versionValidity !== 'vigente') return false;
+  const versionValidity = versionDocumentValidity(versionWithSources.version);
+  if (versionValidity && !hasCurrentDocumentRange(versionValidity, today)) return false;
 
   const sources = Array.isArray(versionWithSources.sources)
     ? versionWithSources.sources
     : [];
   if (!REQUIRED_SOURCES.every((type) =>
-    sources.some((source) => source?.tipo === type && sourceDocumentValidity(source) === 'vigente')
+    sources.some((source) =>
+      source?.tipo === type
+        && hasCurrentDocumentRange(sourceDocumentValidity(source), today)
+    )
   )) {
     return false;
   }
-  return sources.every((source) => sourceDocumentValidity(source) === 'vigente');
+  return sources.every((source) =>
+    hasCurrentDocumentRange(sourceDocumentValidity(source), today)
+  );
 }
 
 function repositoryValidity(validity) {
@@ -61,15 +128,22 @@ function repositoryValidity(validity) {
   };
 }
 
+function isUuid(value) {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
 function approvalInput(body) {
   if (!body || typeof body !== 'object') return null;
   const versionId = typeof body.version_id === 'string' ? body.version_id.trim() : '';
-  if (!versionId || typeof body.activar !== 'boolean') return null;
+  if (!isUuid(versionId) || typeof body.activar !== 'boolean') return null;
   const expectedCurrentVersionId = body.version_vigente_esperada_id;
   if (
     expectedCurrentVersionId !== undefined
     && expectedCurrentVersionId !== null
-    && (typeof expectedCurrentVersionId !== 'string' || expectedCurrentVersionId.trim() === '')
+    && (
+      typeof expectedCurrentVersionId !== 'string'
+      || !isUuid(expectedCurrentVersionId.trim())
+    )
   ) {
     return null;
   }
@@ -77,7 +151,7 @@ function approvalInput(body) {
   return {
     versionId,
     activate: body.activar,
-    expectedCurrentVersionId: expectedCurrentVersionId ?? null,
+    expectedCurrentVersionId: expectedCurrentVersionId?.trim() ?? null,
     reason: body.motivo?.trim() || null,
   };
 }
@@ -90,6 +164,7 @@ function approvalErrorStatus(code) {
     'contradicciones_bloqueantes',
   ].includes(code)) return 409;
   if ([
+    '22P02',
     'transicion_invalida',
     'estado_version_invalido',
     'vigencia_pendiente_confirmacion',
@@ -106,6 +181,7 @@ export function createMotorOfertasHandlers({
   evaluateEligibleOffers,
   uploadRoot,
   normalizadorVersion = '1.0.0',
+  now = () => new Date(),
 }) {
   if (!repository || !normalizeOfferWorkbooks || !archiveOfferSource || !buildSourcesManifest || !inferSourceValidity || !evaluateEligibleOffers || !uploadRoot) {
     throw new TypeError('Dependencias incompletas para el motor de ofertas.');
@@ -222,15 +298,16 @@ export function createMotorOfertasHandlers({
       if (!input || !actor) return res.status(422).json({ error: 'solicitud_invalida' });
       try {
         if (input.activate) {
+          const today = currentIsoDate(now);
           const versionWithSources = await repository.getVersionWithSources(input.versionId);
           if (!versionWithSources) {
             return res.status(404).json({ error: 'version_no_encontrada' });
           }
-          if (!hasCompleteCurrentSources(versionWithSources)) {
+          if (!hasCompleteCurrentSources(versionWithSources, today)) {
             return res.status(422).json({ error: 'vigencia_documental_no_vigente' });
           }
           const snapshot = await repository.getEligibleSnapshot(input.versionId);
-          if (hasNonCurrentDocumentValidity(snapshot)) {
+          if (hasNonCurrentDocumentValidity(snapshot, today)) {
             return res.status(422).json({ error: 'vigencia_documental_no_vigente' });
           }
         }
@@ -238,7 +315,9 @@ export function createMotorOfertasHandlers({
         return res.json({ ok: true, version });
       } catch (error) {
         const code = error?.code || 'aprobacion_no_disponible';
-        return res.status(approvalErrorStatus(code)).json({ error: code });
+        return res.status(approvalErrorStatus(code)).json({
+          error: code === '22P02' ? 'solicitud_invalida' : code,
+        });
       }
     },
 
