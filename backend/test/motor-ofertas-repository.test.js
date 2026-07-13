@@ -263,9 +263,38 @@ test('persiste trazabilidad y mantiene estados separados', async () => {
       && value.includes('equipo-gratis-plan-35-fila-4')
   );
   assert.equal(JSON.parse(storedContract).estado, 'confirmada');
+  const storedTrace = offerInsert.params.find((value) =>
+    typeof value === 'string'
+      && value.startsWith('{')
+      && value.includes('"cells"')
+  );
+  assert.equal(JSON.parse(storedTrace).cells.plan, '$35');
   assert.ok(contradictionInsert.params.includes('equipo_sin_coincidencia_exacta'));
   assert.ok(!offerInsert.params.includes('contradiccion'));
   assert.ok(!offerInsert.params.includes('vencida'));
+});
+
+test('persiste solo combinaciones con mensualidad confirmada', async () => {
+  const { createMotorOfertasRepository } = await loadRepository();
+  const fake = createFakePool(successResponder);
+  const repository = createMotorOfertasRepository({
+    pool: fake.pool,
+    randomUUID: makeUuidSequence(),
+    now: () => new Date('2026-07-12T12:00:00.000Z'),
+  });
+  const input = makePreviewInput();
+  const offer = input.normalized.offers[0];
+  offer.contract.plazos = [24, 30];
+  offer.contract.equipos[0].mensualidades = [{ meses: 30, monto: 11.67 }];
+
+  await repository.createPreview(input);
+
+  const equipmentInserts = fake.calls.filter((call) =>
+    call.sql.startsWith('INSERT INTO public.motor_ofertas_equipos')
+  );
+  assert.equal(equipmentInserts.length, 1);
+  assert.ok(equipmentInserts[0].params.includes(30));
+  assert.ok(!equipmentInserts[0].params.includes(24));
 });
 
 test('reutiliza la identidad existente sin duplicar contenido', async () => {
@@ -431,6 +460,7 @@ test('approveVersion bloquea filas y registra aprobacion, reemplazo y activacion
   assert.equal(result.estado, 'vigente');
   assert.ok(fake.calls.some((call) => call.sql.includes('WHERE id = $1') && call.sql.includes('FOR UPDATE')));
   assert.ok(fake.calls.some((call) => call.sql.includes("estado = 'vigente'") && call.sql.includes('FOR UPDATE')));
+  assert.ok(fake.calls.some((call) => call.sql.includes('pg_advisory_xact_lock')));
   assert.ok(updates.some((call) => call.params.includes('pendiente_revision') && call.params.includes('aprobada')));
   assert.ok(updates.some((call) => call.params.includes('vigente') && call.params.includes('reemplazada')));
   assert.ok(updates.some((call) => call.params.includes('aprobada') && call.params.includes('vigente')));

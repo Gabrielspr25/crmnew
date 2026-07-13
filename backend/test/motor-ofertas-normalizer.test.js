@@ -76,6 +76,24 @@ function financingBuffer() {
         '',
         'BOTH. Solo 30 plazos.',
       ],
+      [
+        null,
+        '50% de descuento LINEAS NUEVAS Y PORTABILIDADES',
+        'Business RED Plus, RED Extreme, RED Supreme y Sin Fronteras',
+        'Samsung Galaxy A37 128GB',
+        'PYMES',
+        '',
+        'Aplica a dos (2) lineas por BAN. Financiamiento en 24 y 30 plazos.',
+      ],
+      [
+        null,
+        '50% de descuento LINEAS NUEVAS Y PORTABILIDADES',
+        'Planes desde $50',
+        'iPhone 17 Pro Max 256GB',
+        'PYMES',
+        '',
+        'Financiamiento en 24 y 30 plazos.',
+      ],
     ],
     'Ofertas Planes y Bonos': [
       ['OFERTAS DE PLANES Y SERVICIOS ESPECIALES'],
@@ -85,41 +103,29 @@ function financingBuffer() {
   });
 }
 
-function priceListBuffer() {
-  return workbookBuffer({
-    'Finan Equipos Movil': [
-      ['Lista de Precios de Update Plus'],
-      ['28 de mayo al 31 de julio de 2026'],
-      [],
-      [],
-      [
-        'Nuevo Item Code SIF',
-        'Numero de Material SAP',
-        'Modelo',
-        'Price Code',
-        'Precio',
-        'Mensualidad 24 meses',
-        'Mensualidad 30 meses',
-      ],
-      [
-        '33979H',
-        '7014074',
-        'Samsung Galaxy A37 128GB',
-        'FIUP24/FIUP30',
-        349.99,
-        14.58,
-        11.67,
-      ],
-      [
-        '34017H',
-        '7015001',
-        'iPhone 17 Pro Max 256GB',
-        'FIUP30',
-        1299.99,
-        null,
-        43.33,
-      ],
+function priceListBuffer({ duplicateA37 = false } = {}) {
+  const rows = [
+    ['Lista de Precios de Update Plus'],
+    ['28 de mayo al 31 de julio de 2026'],
+    [],
+    [],
+    [
+      'Nuevo Item Code SIF',
+      'Numero de Material SAP',
+      'Modelo',
+      'Price Code',
+      'Precio',
+      'Mensualidad 24 meses',
+      'Mensualidad 30 meses',
     ],
+    ['33979H', '7014074', 'Samsung Galaxy A37 128GB', 'FIUP24/FIUP30', 349.99, 14.58, 11.67],
+    ['34017H', '7015001', 'iPhone 17 Pro Max 256GB', 'FIUP30', 1299.99, null, 43.33],
+  ];
+  if (duplicateA37) {
+    rows.push(['DUP-A37', 'DUP-SAP', 'Samsung Galaxy A37 128GB', 'FIUP30', 359.99, null, 12]);
+  }
+  return workbookBuffer({
+    'Finan Equipos Movil': rows,
     Accesorios: [['Modelo', 'Precio'], ['Case de prueba', 10]],
   });
 }
@@ -259,4 +265,43 @@ test('rechaza alcance both y no lo persiste como oferta', async () => {
       (item) => item.code === 'alcance_ambiguo_both' && item.source.row === 7
     )
   );
+});
+
+test('extrae familias abreviadas, limite de dos lineas y plazos compuestos', async () => {
+  const normalizer = await loadNormalizer();
+  const result = normalizer.normalizeOfferWorkbooks(normalizeInput());
+  const offer = result.offers.find((item) => item.trace.row === 8);
+
+  assert.deepEqual(offer.contract.tipos_plan, ['multilinea_business_red']);
+  assert.deepEqual(offer.contract.familias, [
+    'business_red_plus',
+    'business_red_extreme',
+    'business_red_supreme',
+    'business_red_sin_fronteras',
+  ]);
+  assert.equal(offer.contract.limite_ban.cantidad, 2);
+  assert.deepEqual(offer.contract.plazos, [24, 30]);
+});
+
+test('marca plazo sin mensualidad y conserva fuentes de modelos ambiguos', async () => {
+  const normalizer = await loadNormalizer();
+  const result = normalizer.normalizeOfferWorkbooks(normalizeInput());
+  const missingTerm = result.offers.find((item) => item.trace.row === 9);
+
+  assert.equal(missingTerm.contract.estado, 'confirmada_parcial');
+  assert.ok(result.contradictions.some((item) =>
+    item.code === 'plazo_sin_mensualidad_confirmada'
+      && item.offerKey === missingTerm.contract.id
+  ));
+
+  const duplicateResult = normalizer.normalizeOfferWorkbooks({
+    ...normalizeInput(),
+    priceListBuffer: priceListBuffer({ duplicateA37: true }),
+  });
+  const ambiguous = duplicateResult.contradictions.find((item) =>
+    item.code === 'equipo_sin_coincidencia_exacta'
+      && item.offerKey === 'equipo-gratis-plan-35-fila-4'
+  );
+  assert.equal(ambiguous.sources.length, 2);
+  assert.deepEqual(ambiguous.sources.map((source) => source.row), [6, 8]);
 });

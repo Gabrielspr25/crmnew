@@ -178,12 +178,13 @@ export function parseEvents(...values) {
 
 function parseFamilies(...values) {
   const text = normalizeText(values.join(' '));
+  if (!/\bBUSINESS RED\b/.test(text)) return [];
   const families = [];
   const definitions = [
     ['business_red_plus', /\bBUSINESS RED PLUS\b/],
-    ['business_red_extreme', /\bBUSINESS RED EXTREME\b/],
-    ['business_red_supreme', /\bBUSINESS RED SUPREME\b/],
-    ['business_red_sin_fronteras', /\bBUSINESS RED SIN FRONTERAS\b/],
+    ['business_red_extreme', /\b(?:BUSINESS )?RED EXTREME\b/],
+    ['business_red_supreme', /\b(?:BUSINESS )?RED SUPREME\b/],
+    ['business_red_sin_fronteras', /\b(?:BUSINESS RED )?SIN FRONTERAS\b/],
   ];
   for (const [family, pattern] of definitions) {
     if (pattern.test(text)) families.push(family);
@@ -204,9 +205,13 @@ function parsePlanTypes(planText, termsText) {
 function parseTerms(value) {
   const text = normalizeText(value);
   const terms = new Set();
-  for (const match of text.matchAll(/\b(12|20|24|30|36)\s+(?:PLAZOS?|MESES?)\b/g)) {
-    const term = Number(match[1]);
-    if (ALLOWED_TERMS.includes(term)) terms.add(term);
+  for (const match of text.matchAll(
+    /\b(12|20|24|30|36)(?:\s+Y\s+(12|20|24|30|36))?\s+(?:PLAZOS?|MESES?)\b/g
+  )) {
+    for (const value of match.slice(1)) {
+      const term = Number(value);
+      if (ALLOWED_TERMS.includes(term)) terms.add(term);
+    }
   }
   return [...terms].sort((left, right) => left - right);
 }
@@ -214,8 +219,8 @@ function parseTerms(value) {
 function parseBanLimit(value) {
   const text = normalizeText(value);
   let quantity = null;
-  const perBan = text.match(/(?:CUATRO\s*4|4)\s+LINEAS?\s+POR\s+BAN/);
-  if (perBan) quantity = 4;
+  const perBan = text.match(/(?:[A-Z]+\s+)?(\d{1,2})\s+LINEAS?\s+POR\s+BAN/);
+  if (perBan) quantity = Number(perBan[1]);
   if (quantity === null) {
     const range = text.match(/(?:DESDE LA 1 HASTA|HASTA)\s+(\d{1,2})/);
     if (range) quantity = Number(range[1]);
@@ -293,7 +298,14 @@ function sourceForRow(sheet, row) {
   return { sheet, row };
 }
 
-function contradiction({ code, offerKey = null, detail, sheet, row }) {
+function contradiction({
+  code,
+  offerKey = null,
+  detail,
+  sheet,
+  row,
+  sources = [],
+}) {
   return {
     code,
     severity: 'error',
@@ -301,6 +313,7 @@ function contradiction({ code, offerKey = null, detail, sheet, row }) {
     offerKey,
     detail,
     source: sourceForRow(sheet, row),
+    sources,
   };
 }
 
@@ -321,6 +334,13 @@ function matchEquipment(model, priceIndex, sourceId) {
         mensualidades: [],
       },
       exact: false,
+      sources: matches.map((match) => ({
+        sourceId,
+        sheet: match.source.sheet,
+        row: match.source.row,
+        modelo: match.model,
+        sku_sif: match.sku_sif,
+      })),
     };
   }
 
@@ -339,6 +359,13 @@ function matchEquipment(model, priceIndex, sourceId) {
       fuente_precio: match.source,
     },
     exact: true,
+    sources: [{
+      sourceId,
+      sheet: match.source.sheet,
+      row: match.source.row,
+      modelo: match.model,
+      sku_sif: match.sku_sif,
+    }],
   };
 }
 
@@ -406,6 +433,7 @@ export function normalizeOfferWorkbooks({
     const models = splitEquipment(equipmentText);
     const equipment = [];
     let exactMatches = 0;
+    let missingTerms = 0;
 
     for (const model of models) {
       const matched = matchEquipment(
@@ -416,6 +444,21 @@ export function normalizeOfferWorkbooks({
       equipment.push(matched.snapshot);
       if (matched.exact) {
         exactMatches += 1;
+        const availableTerms = new Set(
+          matched.snapshot.mensualidades.map((item) => item.meses)
+        );
+        for (const term of terms) {
+          if (availableTerms.has(term)) continue;
+          missingTerms += 1;
+          contradictions.push(contradiction({
+            code: 'plazo_sin_mensualidad_confirmada',
+            offerKey: identity.id,
+            detail: `${model} no tiene mensualidad confirmada para ${term} meses.`,
+            sheet: sheetName,
+            row: excelRow,
+            sources: matched.sources,
+          }));
+        }
       } else {
         contradictions.push(contradiction({
           code: 'equipo_sin_coincidencia_exacta',
@@ -423,11 +466,12 @@ export function normalizeOfferWorkbooks({
           detail: `No hay una coincidencia unica para ${model}.`,
           sheet: sheetName,
           row: excelRow,
+          sources: matched.sources,
         }));
       }
     }
 
-    const state = exactMatches === equipment.length
+    const state = exactMatches === equipment.length && missingTerms === 0
       ? 'confirmada'
       : exactMatches > 0
         ? 'confirmada_parcial'

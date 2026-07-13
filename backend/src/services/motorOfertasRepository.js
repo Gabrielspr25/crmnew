@@ -117,10 +117,11 @@ async function insertOffer(client, {
       fuente_principal_id,
       fuente_hoja,
       fuente_fila,
-      contrato
+      contrato,
+      trazabilidad
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-      $11, $12, $13, $14, $15, $16, $17, $18::jsonb
+      $11, $12, $13, $14, $15, $16, $17, $18::jsonb, $19::jsonb
     )`,
     [
       offerId,
@@ -141,6 +142,7 @@ async function insertOffer(client, {
       trace.sheet ?? contract.fuente.hoja ?? null,
       trace.row ?? contract.fuente.fila ?? null,
       asJson(contract),
+      asJson(trace),
     ]
   );
 
@@ -240,7 +242,13 @@ async function insertContradiction(client, {
       contradiction.severity,
       Boolean(contradiction.blocking),
       contradiction.detail,
-      asJson(contradiction.source ? [contradiction.source] : []),
+      asJson(
+        contradiction.sources?.length
+          ? contradiction.sources
+          : contradiction.source
+            ? [contradiction.source]
+            : []
+      ),
       actor,
     ]
   );
@@ -481,7 +489,10 @@ export function createMotorOfertasRepository({
         offerIds.set(contract.id, offerId);
 
         for (const equipment of normalizedOffer.equipment ?? contract.equipos) {
-          for (const term of contract.plazos) {
+          const confirmedTerms = new Set(
+            (equipment.mensualidades ?? []).map((item) => item.meses)
+          );
+          for (const term of contract.plazos.filter((item) => confirmedTerms.has(item))) {
             await insertEquipment(client, {
               equipment,
               contract,
@@ -612,6 +623,10 @@ export function createMotorOfertasRepository({
       }
 
       const steps = activationTransitions(target.estado);
+      await client.query(
+        'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+        [target.dominio]
+      );
       const currentResult = await client.query(
         `SELECT *
          FROM public.motor_ofertas_versiones

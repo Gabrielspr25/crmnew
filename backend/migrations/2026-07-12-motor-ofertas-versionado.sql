@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS public.motor_ofertas (
   fuente_hoja TEXT,
   fuente_fila INTEGER,
   contrato JSONB NOT NULL,
+  trazabilidad JSONB NOT NULL DEFAULT '{}'::jsonb,
   creada_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT motor_ofertas_estado_comercial_chk CHECK (estado_comercial IN (
     'confirmada',
@@ -250,12 +251,60 @@ CREATE TRIGGER trg_motor_ofertas_historial_append_only
   FOR EACH ROW
   EXECUTE FUNCTION public.motor_ofertas_historial_append_only();
 
+CREATE OR REPLACE FUNCTION public.motor_ofertas_version_identidad_inmutable()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.id IS DISTINCT FROM OLD.id
+     OR NEW.numero IS DISTINCT FROM OLD.numero
+     OR NEW.dominio IS DISTINCT FROM OLD.dominio
+     OR NEW.fuentes_manifest_sha256 IS DISTINCT FROM OLD.fuentes_manifest_sha256
+     OR NEW.normalizador_version IS DISTINCT FROM OLD.normalizador_version
+     OR NEW.creada_por IS DISTINCT FROM OLD.creada_por
+     OR NEW.creada_en IS DISTINCT FROM OLD.creada_en THEN
+    RAISE EXCEPTION 'la identidad de una version de ofertas es inmutable';
+  END IF;
+
+  IF OLD.estado <> 'borrador' AND NEW.resumen IS DISTINCT FROM OLD.resumen THEN
+    RAISE EXCEPTION 'el resumen solo puede cerrarse desde borrador';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_motor_ofertas_version_identidad_inmutable
+  ON public.motor_ofertas_versiones;
+
+CREATE TRIGGER trg_motor_ofertas_version_identidad_inmutable
+  BEFORE UPDATE ON public.motor_ofertas_versiones
+  FOR EACH ROW
+  EXECUTE FUNCTION public.motor_ofertas_version_identidad_inmutable();
+
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'crm_user') THEN
+    GRANT SELECT, INSERT
+      ON public.motor_ofertas_versiones
+      TO crm_user;
+
+    GRANT UPDATE (
+      estado,
+      resumen,
+      reemplaza_version_id,
+      aprobada_por,
+      activada_por,
+      archivada_por,
+      actualizada_en,
+      aprobada_en,
+      activada_en,
+      reemplazada_en,
+      archivada_en
+    ) ON public.motor_ofertas_versiones TO crm_user;
+
     GRANT SELECT, INSERT, UPDATE
-      ON public.motor_ofertas_versiones,
-         public.motor_ofertas_contradicciones
+      ON public.motor_ofertas_contradicciones
       TO crm_user;
 
     GRANT SELECT, INSERT

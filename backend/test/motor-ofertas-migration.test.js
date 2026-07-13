@@ -82,3 +82,25 @@ test('snapshots de equipo pueden enlazar el catalogo actual sin depender de el',
   );
   assert.match(sql, /snapshot JSONB NOT NULL/);
 });
+
+test('oferta persiste trazabilidad exacta separada del contrato', async () => {
+  const sql = await readMigration();
+  const offersTable = sql.match(
+    /CREATE TABLE IF NOT EXISTS public\.motor_ofertas \(([\s\S]*?)\n\);/
+  )?.[1];
+  assert.ok(offersTable, 'falta tabla motor_ofertas');
+  assert.match(offersTable, /trazabilidad JSONB NOT NULL/);
+});
+
+test('identidad de version es inmutable y crm_user no recibe UPDATE total', async () => {
+  const sql = await readMigration();
+  assert.match(sql, /motor_ofertas_version_identidad_inmutable/);
+  assert.match(sql, /NEW\.dominio IS DISTINCT FROM OLD\.dominio/);
+  assert.match(sql, /NEW\.fuentes_manifest_sha256 IS DISTINCT FROM OLD\.fuentes_manifest_sha256/);
+  assert.match(sql, /NEW\.normalizador_version IS DISTINCT FROM OLD\.normalizador_version/);
+  assert.doesNotMatch(
+    sql,
+    /GRANT SELECT, INSERT, UPDATE\s+ON public\.motor_ofertas_versiones/
+  );
+  assert.match(sql, /GRANT UPDATE \([\s\S]*?estado[\s\S]*?\)\s+ON public\.motor_ofertas_versiones/);
+});

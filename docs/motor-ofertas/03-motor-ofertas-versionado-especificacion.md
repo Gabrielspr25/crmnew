@@ -214,6 +214,7 @@ Campos:
 Restricciones:
 
 - identidad unica por `dominio + fuentes_manifest_sha256 + normalizador_version`;
+- identidad inmutable despues de crear la version;
 - indice unico parcial para una sola version `vigente` por dominio;
 - sin endpoints DELETE;
 - versiones anteriores no se sobrescriben.
@@ -254,7 +255,8 @@ Campos:
 - `plazos SMALLINT[]`;
 - `plan_monto_minimo`, `plan_monto_maximo`;
 - `fuente_principal_id`, `fuente_hoja`, `fuente_fila`;
-- `contrato JSONB NOT NULL`.
+- `contrato JSONB NOT NULL`;
+- `trazabilidad JSONB NOT NULL` con archivo, fuente, hoja, fila y celdas originales.
 
 El valor ambiguo `both` no se persiste. El normalizador expande alcances solo cuando la fuente los define de manera verificable; de lo contrario crea contradiccion.
 
