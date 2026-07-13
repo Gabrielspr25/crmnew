@@ -70,6 +70,12 @@ function token(rol) {
   return jwt.sign({ nick: `${rol}-user`, rol }, process.env.JWT_SECRET || 'dev-secret-cambiar', { expiresIn: '1h' });
 }
 
+test('el default real versiona el snapshot comercial actualizado', async () => {
+  const { DEFAULT_NORMALIZADOR_VERSION } = await import(routesPath);
+
+  assert.equal(DEFAULT_NORMALIZADOR_VERSION, '1.0.1');
+});
+
 test('las cuatro rutas rechazan Bearer ausente o invalido incluso con DEV_LOGIN=1', async () => {
   const { createMotorOfertasRouter } = await import(routesPath);
   const previous = process.env.DEV_LOGIN;

@@ -205,7 +205,7 @@ export function createMotorOfertasHandlers({
   inferSourceValidity,
   evaluateEligibleOffers,
   uploadRoot,
-  normalizadorVersion = '1.0.0',
+  normalizadorVersion = '1.0.1',
   now = () => new Date(),
 }) {
   if (!repository || !normalizeOfferWorkbooks || !archiveOfferSource || !buildSourcesManifest || !inferSourceValidity || !evaluateEligibleOffers || !uploadRoot) {

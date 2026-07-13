@@ -379,7 +379,7 @@ test('reutiliza la identidad existente sin duplicar contenido', async () => {
   assert.equal(sql.at(-1), 'COMMIT');
 });
 
-test('una nueva version del normalizador crea otra version sin sobrescribir la anterior', async () => {
+test('normalizador 1.0.1 crea otra identidad sin sobrescribir la version 1.0.0', async () => {
   const { createMotorOfertasRepository } = await loadRepository();
   let created = 0;
   const fake = createFakePool((call) => {
@@ -418,14 +418,19 @@ test('una nueva version del normalizador crea otra version sin sobrescribir la a
   });
 
   await repository.createPreview(makePreviewInput());
-  await repository.createPreview(makePreviewInput({ normalizadorVersion: '1.1.0' }));
+  const callsBeforeNewVersion = fake.calls.length;
+  await repository.createPreview(makePreviewInput({ normalizadorVersion: '1.0.1' }));
 
   const versionInserts = fake.calls.filter((call) =>
     call.sql.startsWith('INSERT INTO public.motor_ofertas_versiones')
   );
   assert.equal(versionInserts.length, 2);
   assert.ok(versionInserts[0].params.includes('1.0.0'));
-  assert.ok(versionInserts[1].params.includes('1.1.0'));
+  assert.ok(versionInserts[1].params.includes('1.0.1'));
+  assert.ok(fake.calls.slice(callsBeforeNewVersion).every((call) =>
+    !call.sql.startsWith('UPDATE public.motor_ofertas_versiones')
+      || !call.params.includes(VERSION_ID)
+  ));
   assert.ok(fake.calls.every((call) => !/\bDELETE\b/i.test(call.sql)));
 });
 
