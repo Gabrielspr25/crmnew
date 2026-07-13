@@ -194,6 +194,17 @@ export const offerEquipmentSchema = z.object({
   ]).optional(),
 }).passthrough();
 
+export const offerTradeInSchema = z.object({
+  requerido_eventos: z.array(lineEventSchema),
+  no_requerido_eventos: z.array(lineEventSchema),
+  texto: z.string(),
+}).strict();
+
+export const offerTermsSchema = z.object({
+  texto: z.string(),
+  bonos_texto: z.string(),
+}).strict();
+
 export const offerContractSchema = z.object({
   id: z.string().trim().min(1),
   nombre: z.string().trim().min(1),
@@ -205,6 +216,8 @@ export const offerContractSchema = z.object({
   plazos: z.array(z.number().int().positive()).min(1),
   limite_ban: banLimitSchema,
   equipos: z.array(offerEquipmentSchema),
+  trade_in: offerTradeInSchema.optional(),
+  terminos: offerTermsSchema.optional(),
   fuente: offerSourceSchema,
 }).strict().superRefine((offer, context) => {
   if (new Set(offer.plazos).size !== offer.plazos.length) {
