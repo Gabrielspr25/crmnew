@@ -18,6 +18,9 @@ function firstFile(files, field) {
 }
 
 function validIsoDate(value) {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  }
   if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) return null;
   const date = new Date(`${value}T00:00:00.000Z`);
   return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value

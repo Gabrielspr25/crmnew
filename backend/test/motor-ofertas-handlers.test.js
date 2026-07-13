@@ -511,6 +511,59 @@ test('aprobar permite una version sin ofertas cuando ambas fuentes requeridas es
   assert.equal(calls.approve.length, 1);
 });
 
+test('aprobar acepta fechas Date de node-postgres dentro de la vigencia', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const desde = new Date('2026-07-04T00:00:00.000Z');
+  const hasta = new Date('2026-07-15T00:00:00.000Z');
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getVersionWithSources(versionId) {
+        calls.versionSources.push(versionId);
+        return {
+          version: { id: versionId, dominio: 'movil_equipos', estado: 'pendiente_revision' },
+          sources: [
+            {
+              tipo: 'tabla_financiamiento',
+              vigencia_documental: 'vigente',
+              vigencia_desde: desde,
+              vigencia_hasta: hasta,
+            },
+            {
+              tipo: 'lista_precios',
+              vigencia_documental: 'vigente',
+              vigencia_desde: desde,
+              vigencia_hasta: hasta,
+            },
+          ],
+        };
+      },
+      async getEligibleSnapshot() {
+        return {
+          offers: [{
+            vigencia_documental: 'vigente',
+            vigencia_desde: desde,
+            vigencia_hasta: hasta,
+            contrato: JSON.stringify({
+              vigencia: { desde: '2026-07-04', hasta: '2026-07-15', estado: 'vigente' },
+            }),
+          }],
+          equipment: [],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.aprobar({
+    body: { version_id: VERSION_ID, activar: true, version_vigente_esperada_id: null },
+    user: { nick: 'supervisor-a' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.approve.length, 1);
+});
+
 test('aprobar bloquea una fuente vencida por fecha aunque su estado sea vigente', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
   const { dependencies, calls } = makeDependencies({
