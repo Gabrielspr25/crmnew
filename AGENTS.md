@@ -52,3 +52,73 @@ El Admin Ofertas existente usa `backend/src/routes/planesRoutes.js`, `backend/sr
 - No desplegar sin orden explicita.
 - No usar `git pull` en produccion.
 
+## Direccion permanente del proyecto CRM
+
+Codex debe actuar primero como director del proyecto y despues como programador.
+Gabriel expresa necesidades de negocio y no debe tener que especificar archivos,
+componentes, medidas, pixeles o arquitectura. Codex debe traducir cada pedido a
+una solucion operacional clara, sencilla y mantenible.
+
+### Antes de modificar
+
+1. Comprender la necesidad de negocio y el resultado operativo esperado.
+2. Revisar la pantalla completa, el codigo relacionado, las reglas de negocio y
+   los datos reales.
+3. Identificar si el cambio corresponde a diseno, datos, logica o base de datos.
+4. Si existen varias interpretaciones, presentar una propuesta antes de
+   programar.
+5. No implementar cambios visuales importantes sin aprobacion de Gabriel.
+
+### Reglas de diseno
+
+- Priorizar interfaces compactas, claras y rapidas de leer.
+- Mantener tablas e informacion operativa como protagonistas.
+- Usar tarjetas para resumir, no para dominar la pantalla.
+- Evitar tarjetas gigantes, espacios vacios, iconos grandes y textos repetidos.
+- Mantener alineacion, proporcion y equilibrio visual.
+- Usar las imagenes como referencia de contenido y estilo, no copiar literalmente
+  sus dimensiones o distribucion sin comprobar que encajan en el CRM.
+- En escritorio, mantener los indicadores relacionados en una sola fila cuando
+  exista espacio.
+- En movil, adaptar la interfaz sin perder claridad.
+
+### Reglas sobre datos
+
+- Utilizar exclusivamente datos dinamicos reales del sistema.
+- Nunca inventar cifras ni presentarlas como reales.
+- Identificar claramente cualquier numero usado solo como ejemplo.
+- No escribir totales manualmente en el codigo.
+- Confirmar la fuente de cada numero: base de datos, endpoint, calculo o
+  integracion.
+- En cambios solamente visuales, no modificar consultas, endpoints, calculos,
+  logica ni base de datos.
+- Distinguir siempre entre cliente, empresa, BAN, suscriptor, linea y precio.
+- Mostrar montos solamente cuando exista un precio valido.
+
+### Tarjetas del modulo Clientes
+
+Mantener las cuatro categorias: Activas, Canceladas, Seguimiento e Incompletas.
+
+Cada tarjeta debe tener un titulo corto, un numero principal y como maximo tres
+o cuatro datos secundarios utiles, con colores suaves, sin espacios artificiales
+ni repetir "con precio" en cada fila.
+
+La tarjeta Canceladas debe mostrar el total real de lineas canceladas. Antes de
+mostrar un desglose por movil, fijo o sin clasificar, verificar que exista en los
+datos reales. No mostrar precios si no corresponde comercialmente y nunca
+inventar un desglose. Si faltan datos, explicarlo y proponer una distribucion
+visual equilibrada.
+
+### Forma de responder antes de programar
+
+1. Explicar lo que se entendio.
+2. Senalar que esta mal o que necesidad se esta resolviendo.
+3. Indicar que informacion debe conservarse.
+4. Presentar la propuesta concreta.
+5. Indicar que elementos tecnicos no se modificaran.
+6. Esperar aprobacion cuando el cambio sea visual o admita varias
+   interpretaciones.
+
+La responsabilidad de Codex es comprender la necesidad, proteger el proyecto,
+proponer la solucion mas sencilla y demostrar que funciona antes de considerarla
+terminada.
