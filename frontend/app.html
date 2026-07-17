@@ -137,6 +137,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<script src="/import-workbook.js"></script>
 </head>
 <body data-theme="dark">
   <aside class="side">
@@ -1407,7 +1408,7 @@ async function prLoadList(){
     el.innerHTML='<div class="s" style="margin-bottom:6px">'+rows.length+' prospectos'+(rows.length>=500?' (mostrando 500)':'')+'</div><div class="card" style="overflow-x:auto"><table style="min-width:560px"><thead><tr><th>Negocio</th><th>Ciudad</th><th>Rubro</th><th>Teléfono</th></tr></thead><tbody>'+body+'</tbody></table></div>';
   }catch(e){ el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>'; }
 }
-let impHeaders=[], impRows=[], impMap={};
+let impHeaders=[], impRows=[], impMap={}, impOperational=null;
 // [clave, etiqueta, grupo]  grupos: cli=Cliente, ban=BAN, sub=Suscriptor
 const IMP_FIELDS=[
   ['name','Empresa / Cliente','cli'],['company','Empresa (razón social)','cli'],['email','Email','cli'],
@@ -1420,7 +1421,7 @@ const IMP_FIELDS=[
   ['contract_start_date','Inicio contrato','sub'],
   ['equipment','Equipo','sub'],['imei','IMEI','sub'],['product_type','Tipo producto','sub'],['item_id','Item ID','sub'],
   ['soc','SOC / Cód. plan','sub'],['installment_from','Cuota actual','sub'],['installment_total','Total cuotas','sub'],
-  ['sub_notes','Notas línea','sub']
+  ['remaining_payments','Plazos restantes','sub'],['line_kind','Tipo de línea','sub'],['sub_notes','Notas línea','sub']
 ];
 const IMP_GROUPS=[['cli','Cliente'],['ban','BAN'],['sub','Suscriptor']];
 const IMP_DETECT={
@@ -1433,9 +1434,10 @@ const IMP_DETECT={
   sub_phone:/^sub$|suscriptor.*(tel|n[uú]m)|tel.*l[ií]nea|l[ií]nea.*tel/, subscriber_name:/suscriptor|usuario/, plan:/plan/,
   monthly_value:/mensual|costo|valor|precio|importe|\$/, contract_end_date:/venc|commit_end|fecha/, status:/estado|status/,
   contract_start_date:/commit_start|inicio.*contrato/,
-  equipment:/equipo|terminal|modelo/, imei:/imei/,
+  equipment:/equipo|terminal|modelo|item_ldesc/, imei:/imei/,
   product_type:/product_type|tipo.*producto/, item_id:/^item_id$/, soc:/^soc$/,
   installment_from:/no_of_install_from|cuota.*actual/, installment_total:/total_no_of_install|total.*cuota/,
+  remaining_payments:/plazos?_restantes|pagos?.*restantes/, line_kind:/line_kind|tipo.*línea/,
   sub_notes:/nota.*l[ií]nea/
 };
 function impAutoDetect(hl,key){ var re=IMP_DETECT[key]; return re?re.test(hl):false; }
@@ -1461,6 +1463,20 @@ function impHandleFile(f){
   rd.onload=function(e){
     try{
       var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var operational=window.ImportWorkbook&&window.ImportWorkbook.parseOperationalWorkbook
+        ? window.ImportWorkbook.parseOperationalWorkbook(wb,XLSX) : {isOperationalWorkbook:false};
+      if(operational.isOperationalWorkbook){
+        impOperational=operational;
+        impRows=operational.rows;
+        impHeaders=['Empresa','Email','BAN','SUB','ACCTYPE','SUB_STATUS','SOC','PRECIO','PRODUCT_TYPE','COMMIT_START_DATE','COMMIT_END_DATE','CREDIT_CLASS','NO_OF_INSTALL_FROM','TOTAL_NO_OF_INSTALL','ITEM_ID','ITEM_LDESC','PLAZOS_RESTANTES','Tipo de línea'];
+        impMap={};
+        var operationalMap={company:0,email:1,ban:2,sub_phone:3,account_type:4,status:5,soc:6,monthly_value:7,product_type:8,contract_start_date:9,contract_end_date:10,credit_class:11,installment_from:12,installment_total:13,item_id:14,equipment:15,remaining_payments:16,line_kind:17};
+        Object.keys(operationalMap).forEach(function(k){impMap[k]=operationalMap[k];});
+        $('impDrop').innerHTML='<span class="dz-ico">📄</span><b>'+f.name+'</b><div class="s" style="margin-top:4px">Archivo operativo Claro reconocido · '+impRows.length+' líneas listas para verificar</div>';
+        renderImpStep2();
+        return;
+      }
+      impOperational=null;
       var ws=wb.Sheets[wb.SheetNames[0]];
       var data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       if(!data.length){ $('impStep2').innerHTML='<div class="empty">El Excel está vacío</div>'; return; }
@@ -1478,6 +1494,17 @@ function impDragField(e,key){ e.dataTransfer.setData('text/plain','F:'+key); e.d
 function impDropField(e,colIx){ e.preventDefault(); var d=e.dataTransfer.getData('text/plain'); if(d&&d.indexOf('F:')===0){ var k=d.slice(2); impMap[k]=colIx; renderImpStep2(); } }
 function impClearSlot(key){ delete impMap[key]; renderImpStep2(); }
 function renderImpStep2(){
+  if(impOperational){
+    var s=impOperational.summary, errores=impOperational.errors||[];
+    var prev=impOperational.rows.slice(0,8).map(function(r){return '<tr><td>'+r.company+'</td><td>'+r.ban+'</td><td>'+r.sub_phone+'</td><td>'+r.status+'</td><td>'+r.soc+'</td><td>'+r.line_kind+'</td></tr>';}).join('');
+    $('impStep2').innerHTML='<div class="panel"><h3>2) Archivo operativo Claro</h3>'
+      +'<div class="s" style="margin-bottom:10px">Las hojas <b>MOvil</b>, <b>Fijos</b> y <b>Cancelados</b> se integran. <b>Convergente</b> solo verifica combinaciones y no crea duplicados.</div>'
+      +'<div class="irow"><span>Móvil</span><b>'+s.movil+'</b><span>Fijo</span><b>'+s.fijo+'</b><span>Cancelados</span><b>'+s.cancelados+'</b><span>Convergente (referencia)</span><b>'+s.convergente+'</b></div>'
+      +(errores.length?'<div class="empty" style="margin-top:10px"><b>Se encontraron '+errores.length+' filas que no se enviarán:</b><br>'+errores.slice(0,8).join('<br>')+(errores.length>8?'<br>… y '+(errores.length-8)+' más.':'')+'</div>':'')
+      +'</div><div class="panel"><h3>3) Vista previa ('+impRows.length+' líneas)</h3><div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>Empresa</th><th>BAN</th><th>Suscriptor</th><th>Estado origen</th><th>SOC</th><th>Tipo</th></tr></thead><tbody>'+prev+'</tbody></table></div>'
+      +'<div id="impMatch" style="margin-top:12px"></div><div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" style="flex:1" onclick="impVerificar()">🔎 Verificar con la BD</button><button class="btn green" style="flex:2" onclick="impAplicar()">Aplicar a '+impRows.length+' líneas</button></div></div>';
+    return;
+  }
   var asignado={}; Object.keys(impMap).forEach(function(k){asignado[impMap[k]]=k;});
   var fieldLabel={}; IMP_FIELDS.forEach(function(fd){fieldLabel[fd[0]]=fd[1];});
   // 1) arriba: los botones REALES de lo que subió (sus columnas)
@@ -1509,7 +1536,10 @@ function renderImpStep2(){
     +'<div id="impMatch" style="margin-top:12px"></div>'
     +'<div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" style="flex:1" onclick="impVerificar()">🔎 Verificar con la BD</button><button class="btn green" style="flex:2" onclick="impAplicar()">Aplicar a '+impRows.length+' filas</button></div></div>';
 }
-function impMappedRows(){ return impRows.map(function(r){ var o={}; IMP_FIELDS.forEach(function(fd){ var ix=impMap[fd[0]]; o[fd[0]]=(ix>=0&&ix!=null)?r[ix]:''; }); return o; }); }
+function impMappedRows(){
+  if(impOperational){ return impOperational.rows.map(function(r){ return Object.assign({name:r.company||''},r); }); }
+  return impRows.map(function(r){ var o={}; IMP_FIELDS.forEach(function(fd){ var ix=impMap[fd[0]]; o[fd[0]]=(ix>=0&&ix!=null)?r[ix]:''; }); return o; });
+}
 async function impVerificar(){
   if(!impRows.length){ alert('Soltá un Excel primero'); return; }
   $('impMatch').innerHTML='<div class="s">Comparando con la base…</div>';
@@ -1520,7 +1550,7 @@ async function impVerificar(){
       +'<div class="irow"><span>BANs existentes / nuevos</span><b>'+m.ban_match+' / '+m.ban_new+'</b></div>'
       +'<div class="irow"><span>Clientes existentes / nuevos</span><b>'+m.cli_match+' / '+m.cli_new+'</b></div>'
       +(m.sin_dato?'<div class="irow"><span>Filas sin BAN/teléfono/empresa (se omiten)</span><b style="color:var(--amber)">'+m.sin_dato+'</b></div>':'')
-      +((m.subs_ausentes||m.bans_ausentes)?'<div style="margin-top:10px;padding:10px;border:1px solid var(--amber-border);border-radius:8px"><b style="color:var(--amber)">⚠ En la BD pero NO en el archivo</b>'
+      +(!impOperational&&(m.subs_ausentes||m.bans_ausentes)?'<div style="margin-top:10px;padding:10px;border:1px solid var(--amber-border);border-radius:8px"><b style="color:var(--amber)">⚠ En la BD pero NO en el archivo</b>'
         +(m.subs_ausentes?'<div class="irow"><span>Líneas que ya no vienen (posibles bajas)</span><b>'+m.subs_ausentes+'</b></div>':'')
         +(m.bans_ausentes?'<div class="irow"><span>BANs que ya no vienen</span><b>'+m.bans_ausentes+'</b></div>':'')
         +'<div class="s" style="margin:6px 0">Si este archivo es la cartera completa, podés marcarlos como cancelados/inactivos. Aplicar la importación NO los toca.</div>'
@@ -1537,6 +1567,7 @@ async function impBajas(){
 }
 async function impAplicar(){
   if(!impRows.length){ alert('Soltá un Excel primero'); return; }
+  if(impOperational&&impOperational.errors&&impOperational.errors.length){ alert('Corregí primero las '+impOperational.errors.length+' filas inválidas o repetidas. No se aplicó ningún cambio.'); return; }
   var rows=impMappedRows(), m=null;
   try{ m=await api('/api/import/preview',{method:'POST',body:{rows:rows}}); }
   catch(e){ alert('No se pudo verificar antes de aplicar: '+e.message); return; }

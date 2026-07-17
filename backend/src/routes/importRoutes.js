@@ -37,6 +37,12 @@ function normDate(v) {
   const d = new Date(s);
   return isNaN(d) ? null : d.toISOString().slice(0, 10);
 }
+function normMoney(v) {
+  if (v == null || String(v).trim() === '') return null;
+  const cleaned = String(v).replace(/[$,\s]/g, '');
+  const amount = Number(cleaned);
+  return Number.isFinite(amount) ? amount : null;
+}
 // estado BAN: produccion guarda un caracter (A/I/S); suscriptores usan textos largos.
 function normBanStatus(s) {
   const x = String(s || '').toLowerCase().trim();
@@ -56,9 +62,9 @@ const SUB = [['plan', 'plan'], ['monthly_value', 'monthly_value'], ['contract_en
   ['activation_date', 'activation_date'], ['equipment', 'equipment'], ['product_type', 'product_type'], ['item_id', 'item_id'], ['soc', 'price_code'],
   // formato PS de Claro (oficial): entra todo sin mapeo manual
   ['installment_from', 'payments_made'], ['installment_total', 'contract_term'],
-  ['contract_start_date', 'contract_start_date']];
+  ['remaining_payments', 'remaining_payments'], ['line_kind', 'line_kind'], ['contract_start_date', 'contract_start_date']];
 const SUB_DATES = new Set(['activation_date', 'contract_end_date', 'contract_start_date']);
-const SUB_INTS = new Set(['payments_made', 'contract_term']);
+const SUB_INTS = new Set(['payments_made', 'contract_term', 'remaining_payments']);
 
 function appendSubscriberFieldsFromRow(r, vals, target, mode) {
   const defaults = applyPlanCodeDefaults({
@@ -72,7 +78,7 @@ function appendSubscriberFieldsFromRow(r, vals, target, mode) {
     if (col === 'price_code') v = defaults.price_code;
     if (col === 'contract_term') v = txt(r.installment_total) || defaults.contract_term;
     if (v != null) {
-      if (col === 'monthly_value') v = Number(v) || null;
+      if (col === 'monthly_value') v = normMoney(v);
       if (SUB_INTS.has(col)) v = Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : null;
       if (SUB_DATES.has(col)) v = normDate(v);
       if (v != null) {
@@ -84,6 +90,7 @@ function appendSubscriberFieldsFromRow(r, vals, target, mode) {
 }
 
 function pushPsRemainingPayments(r, vals, target) {
+  if (txt(r.remaining_payments) != null) return;
   const paid = Number.parseInt(txt(r.installment_from) || '', 10);
   const total = Number.parseInt(txt(r.installment_total) || '', 10);
   if (Number.isFinite(paid) && Number.isFinite(total) && total >= paid) {
@@ -93,6 +100,7 @@ function pushPsRemainingPayments(r, vals, target) {
 }
 
 function appendPsRemainingPayments(r, vals, cols) {
+  if (txt(r.remaining_payments) != null) return;
   const paid = Number.parseInt(txt(r.installment_from) || '', 10);
   const total = Number.parseInt(txt(r.installment_total) || '', 10);
   if (Number.isFinite(paid) && Number.isFinite(total) && total >= paid) {
@@ -165,7 +173,8 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i] || {};
       try {
-        const name = txt(r.name) || txt(r.company), ban = dig(r.ban), subPhone = dig(r.sub_phone);
+        const ban = dig(r.ban), subPhone = dig(r.sub_phone);
+        const name = txt(r.name) || txt(r.company) || (ban.length === 9 && subPhone.length === 10 ? `SIN NOMBRE - BAN ${ban}` : null);
         let clientId = null;
 
         // ----- Cliente -----
@@ -229,9 +238,10 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
         // ----- Suscriptor -----
         if (subPhone.length === 10) {
           const subStatus = normStatus(r.status);
-          const sf = banId
-            ? await c.query(`SELECT id FROM public.subscribers WHERE phone=$1 AND ban_id=$2 LIMIT 1`, [subPhone, banId])
-            : await c.query(`SELECT id FROM public.subscribers WHERE phone=$1 LIMIT 1`, [subPhone]);
+          const sf = await c.query(`SELECT id, ban_id FROM public.subscribers WHERE phone=$1 OR phone_number=$1 LIMIT 1`, [subPhone]);
+          if (sf.rows[0] && banId && sf.rows[0].ban_id !== banId) {
+            throw new Error(`Suscriptor ${subPhone} ya pertenece a otro BAN. No se duplicó ni se movió automáticamente.`);
+          }
           if (sf.rows[0]) {
             const sets = [], vals = [];
             appendSubscriberFieldsFromRow(r, vals, sets, 'set');

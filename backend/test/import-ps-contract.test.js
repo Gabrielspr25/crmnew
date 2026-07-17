@@ -36,9 +36,9 @@ test('auto-deteccion reconoce TODOS los encabezados utiles del formato PS de Cla
   assert.equal(map.item_id, 'ITEM_ID');
   assert.equal(map.installment_from, 'NO_OF_INSTALL_FROM');
   assert.equal(map.installment_total, 'TOTAL_NO_OF_INSTALL');
-  // Columnas excluidas a pedido del usuario: no se importan nunca
+  assert.equal(map.equipment, 'ITEM_LDESC');
+  // ITEM_LDESC es el modelo de equipo; ITEM_SDESC sigue fuera porque no tiene columna propia.
   const usados = new Set(Object.values(map));
-  assert.ok(!usados.has('ITEM_LDESC'));
   assert.ok(!usados.has('ITEM_SDESC'));
   assert.ok(!usados.has('SUB_STATUS_DATE'));
   assert.ok(!usados.has('UNIT_ESN'));
@@ -57,10 +57,18 @@ test('backend escribe los campos PS: subscriber (product_type, item_id, soc, cuo
   assert.match(routesSource, /\['soc', 'price_code'\]/);
   assert.match(routesSource, /\['installment_from', 'payments_made'\]/);
   assert.match(routesSource, /\['installment_total', 'contract_term'\]/);
+  assert.match(routesSource, /\['remaining_payments', 'remaining_payments'\]/);
+  assert.match(routesSource, /\['line_kind', 'line_kind'\]/);
   assert.doesNotMatch(routesSource, /status_date/);
   assert.match(routesSource, /\['contract_start_date', 'contract_start_date'\]/);
   assert.match(routesSource, /credit_class = \$/);
   assert.match(routesSource, /account_type, credit_class\)/);
+});
+
+test('el frontend reconoce el libro operativo de varias hojas antes del mapeo manual', () => {
+  assert.match(appHtml, /src="\/import-workbook\.js"/);
+  assert.match(appHtml, /ImportWorkbook\.parseOperationalWorkbook/);
+  assert.match(appHtml, /Archivo operativo Claro reconocido/);
 });
 
 test('importador trata SOC como plan visible y guarda price_code normalizado para lookup', () => {
