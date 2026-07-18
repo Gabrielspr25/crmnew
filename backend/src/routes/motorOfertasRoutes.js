@@ -13,7 +13,7 @@ import { evaluateEligibleOffers } from '../services/motorOfertasEligibility.js';
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_UPLOAD_ROOT = process.env.MOTOR_OFERTAS_UPLOAD_DIR
   || path.resolve(__dir, '../../uploads/motor-ofertas');
-export const DEFAULT_NORMALIZADOR_VERSION = '1.0.1';
+export const DEFAULT_NORMALIZADOR_VERSION = '1.0.2';
 
 const sourceFields = Object.freeze([
   { name: 'tabla_financiamiento', maxCount: 1 },

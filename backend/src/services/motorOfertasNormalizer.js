@@ -116,14 +116,17 @@ function explicitRangeFromHeader(text) {
 
 function headerRange(buffer) {
   const workbook = readWorkbook(buffer);
+  const ranges = [];
   for (const sheetName of workbook.SheetNames) {
     const rows = rowsForSheet(workbook.Sheets[sheetName]).slice(0, 10);
     for (const row of rows) {
       const range = explicitRangeFromHeader(row.map((cell) => String(cell ?? '')).join(' '));
-      if (range) return range;
+      if (range) ranges.push(range);
     }
   }
-  return null;
+  return ranges.sort((left, right) =>
+    right.hasta.localeCompare(left.hasta) || right.desde.localeCompare(left.desde)
+  )[0] ?? null;
 }
 
 function validityForRange(range, now) {

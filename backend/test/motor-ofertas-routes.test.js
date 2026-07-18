@@ -73,7 +73,7 @@ function token(rol) {
 test('el default real versiona el snapshot comercial actualizado', async () => {
   const { DEFAULT_NORMALIZADOR_VERSION } = await import(routesPath);
 
-  assert.equal(DEFAULT_NORMALIZADOR_VERSION, '1.0.1');
+  assert.equal(DEFAULT_NORMALIZADOR_VERSION, '1.0.2');
 });
 
 test('las cuatro rutas rechazan Bearer ausente o invalido incluso con DEV_LOGIN=1', async () => {

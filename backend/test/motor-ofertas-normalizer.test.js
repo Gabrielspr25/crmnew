@@ -178,6 +178,29 @@ test('infiere vigencia solo desde rangos explicitos presentes en encabezados Exc
   });
 });
 
+test('prioriza el rango documental mas reciente cuando la lista conserva hojas historicas', async () => {
+  const normalizer = await loadNormalizer();
+  const priceListWithHistory = workbookBuffer({
+    'Ofertas historicas': [['Lista valida del 29 de abril al 26 de mayo de 2020']],
+    'Finan Equipos Movil': [
+      ['Lista de Precios del 28 de mayo al 31 de julio de 2026'],
+      ['Item Code SIF', 'Modelo', 'Precio'],
+    ],
+  });
+
+  const inferred = normalizer.inferSourceValidity({
+    financingBuffer: financingBuffer(),
+    priceListBuffer: priceListWithHistory,
+    now: new Date('2026-07-17T12:00:00.000Z'),
+  });
+
+  assert.deepEqual(inferred.lista_precios, {
+    desde: '2026-05-28',
+    hasta: '2026-07-31',
+    estado: 'vigente',
+  });
+});
+
 test('deja vigencia pendiente cuando los encabezados no contienen un rango explicito', async () => {
   const normalizer = await loadNormalizer();
   const blank = workbookBuffer({
