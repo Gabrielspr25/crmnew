@@ -9,27 +9,21 @@ async function readApp() {
   return readFile(appPath, 'utf8');
 }
 
-async function loadMotorUi() {
+async function loadAdminUi() {
   const html = await readApp();
   const start = html.indexOf('let moPreview=');
   const end = html.indexOf('// ----- SERVICIOS / FEATURES -----', start);
-  assert.ok(start >= 0 && end > start, 'falta el bloque UI del motor de ofertas');
-
+  assert.ok(start >= 0 && end > start, 'falta el bloque UI de Admin Ofertas');
   const elements = new Map([
     ['moResultado', { innerHTML: '', disabled: false }],
-    ['moAprobar', { innerHTML: '', disabled: true }],
     ['moEstado', { innerHTML: '', disabled: false }],
+    ['moAprobar', { innerHTML: '', disabled: true }],
     ['moVigente', { innerHTML: '', disabled: false }],
   ]);
-  const calls = { api: [] };
+  const calls = { tabs: [] };
   const context = {
     $: (id) => elements.get(id) ?? null,
-    api: async (path) => {
-      calls.api.push(path);
-      return path === '/api/motor-ofertas/version-vigente'
-        ? { ok: true, version: null }
-        : { ok: true };
-    },
+    ofSetTab: (tab) => calls.tabs.push(tab),
     esc: (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[character])),
@@ -39,92 +33,133 @@ async function loadMotorUi() {
   return { context, elements, calls };
 }
 
-test('integra el motor movil dentro de la pestana ofertas existente', async () => {
+async function loadEquipmentHelpers() {
   const html = await readApp();
+  const start = html.indexOf('const EQ_MONTHS=');
+  const end = html.indexOf('async function ofRenderEquipos()', start);
+  assert.ok(start >= 0 && end > start, 'faltan helpers de vigencia para Lista de Equipos');
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(html.slice(start, end), context);
+  return context;
+}
 
-  assert.match(html, /async function ofRenderOfertasTienda\(\)/);
-  assert.match(html, /id=["']moTablaFinanciamiento["'][^>]*accept=["']\.xlsx["']/);
-  assert.match(html, /id=["']moListaPrecios["'][^>]*accept=["']\.xlsx["']/);
-  assert.match(html, /id=["']moPreviewBtn["']/);
-  assert.match(html, /id=["']moAprobar["'][^>]*disabled/);
-  assert.doesNotMatch(html, /#\/motor-ofertas|function viewMotorOfertas|function moSetTab/);
-});
-
-test('envia ambos Exceles en FormData y no hace preview incompleto', async () => {
-  const html = await readApp();
-
-  assert.match(html, /new FormData\(\)/);
-  assert.match(html, /fd\.append\(['"]tabla_financiamiento['"],\s*tabla\.files\[0\]\)/);
-  assert.match(html, /fd\.append\(['"]lista_precios['"],\s*lista\.files\[0\]\)/);
-  assert.match(html, /apiForm\(['"]\/api\/motor-ofertas\/preview['"],\s*fd\)/);
-  assert.match(html, /archivos_faltantes|faltantes/);
-  assert.match(html, /Tabla de financiamiento/);
-  assert.match(html, /Lista de precios/);
-});
-
-test('renderiza el shape real del normalizador y habilita una reutilizada aprobable', async () => {
-  const { context, elements, calls } = await loadMotorUi();
-  const blockingPreview = {
+function previewValido() {
+  return {
     ok: true,
-    version: { id: 'version-bloqueada', numero: 18, estado: 'pendiente_revision' },
-    resumen: { ofertas: 2, equipos: 4, contradicciones_abiertas: 1, contradicciones_bloqueantes: 1 },
-    vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
-    contradicciones: [{
-      blocking: true,
-      code: 'equipo_sin_coincidencia_exacta',
-      detail: 'Modelo sin coincidencia exacta.',
-      estado: 'abierta',
-    }],
-  };
-
-  vm.runInContext(`moPreview=${JSON.stringify(blockingPreview)}; moRenderPreview(moPreview);`, context);
-
-  assert.equal(elements.get('moAprobar').disabled, true);
-  assert.match(elements.get('moResultado').innerHTML, /equipo_sin_coincidencia_exacta/);
-  assert.match(elements.get('moResultado').innerHTML, /Modelo sin coincidencia exacta\./);
-  assert.match(elements.get('moResultado').innerHTML, /Bloqueante/);
-  assert.match(elements.get('moResultado').innerHTML, /abierta/);
-
-  const reusablePreview = {
-    ok: true,
-    reutilizada: true,
-    version: { id: 'version-reutilizada', numero: 17, estado: 'pendiente_revision' },
-    resumen: { ofertas: 2, equipos: 4, contradicciones_abiertas: 0, contradicciones_bloqueantes: 0 },
-    vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    version: { id: '00000000-0000-4000-8000-000000000005', numero: 5, estado: 'pendiente_revision' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+    fuentes: {
+      tabla_financiamiento: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+      lista_precios: { desde: '2026-05-28', hasta: '2026-07-31', estado: 'vigente' },
+    },
+    resumen: {
+      filas_procesadas: 11,
+      equipos_procesados: 45,
+      ofertas_nuevas: 3,
+      ofertas_modificadas: 2,
+      ofertas_salieron: 1,
+      equipos_nuevos: 4,
+      equipos_salieron: 1,
+      precios_nuevos_modificados: 2,
+      cambios_detectados: 13,
+      contradicciones_bloqueantes: 0,
+    },
     contradicciones: [],
   };
+}
 
-  vm.runInContext(`moPreview=${JSON.stringify(reusablePreview)}; moRenderPreview(moPreview);`, context);
+test('Admin Ofertas tiene un solo renderer simple, sin bloqueos ni decisiones manuales', async () => {
+  const html = await readApp();
+  const offersStart = html.indexOf('async function ofRenderOfertasTienda()');
+  const offersEnd = html.indexOf('function moArchivoLabel', offersStart);
+  const equipmentStart = html.indexOf('async function ofRenderEquipos()');
+  const equipmentEnd = html.indexOf('async function eqPreview', equipmentStart);
+  const offersRenderer = html.slice(offersStart, offersEnd);
+  const equipmentRenderer = html.slice(equipmentStart, equipmentEnd);
+  assert.equal((html.match(/async function ofRenderOfertasTienda\(\)/g) ?? []).length, 1);
+  assert.match(offersRenderer, /id=["']moTablaFinanciamiento["']/);
+  assert.match(offersRenderer, /id=["']moVigenciaDesde["']/);
+  assert.match(offersRenderer, /id=["']moVigenciaHasta["']/);
+  assert.doesNotMatch(offersRenderer, /id=["']moListaPrecios["']/);
+  assert.doesNotMatch(equipmentRenderer, /id=["']moListaPrecios["']/);
+  assert.match(equipmentRenderer, /id=["']eqVigenciaInicio["']/);
+  assert.match(equipmentRenderer, /id=["']eqVigenciaFin["']/);
+  assert.match(offersRenderer, /Ofertas moviles/);
+  assert.match(offersRenderer, /lista vigente aceptada/);
+  assert.match(offersRenderer, /id=["']moAprobar["']/);
+  assert.match(html, /api\/motor-ofertas\/preview-tabla/);
+  assert.doesNotMatch(html, /if\(ofTab==='ofertas'\) return ofRenderOfertasRevisionTecnica\(\)/);
+});
 
+test('renderiza el resumen comercial y habilita actualizar solo para un preview válido', async () => {
+  const { context, elements } = await loadAdminUi();
+  const preview = previewValido();
+  vm.runInContext(`moPreview=${JSON.stringify(preview)}; moRenderPreview(moPreview);`, context);
+
+  const rendered = elements.get('moResultado').innerHTML;
+  assert.match(rendered, /Filas procesadas/);
+  assert.match(rendered, />11</);
+  assert.match(rendered, /Equipos procesados/);
+  assert.match(rendered, />45</);
+  assert.match(rendered, /Ofertas nuevas/);
+  assert.match(rendered, /Precios nuevos o modificados/);
+  assert.match(rendered, /2026-07-16/);
+  assert.match(rendered, /Tabla de financiamiento/);
+  assert.match(rendered, /Lista de precios/);
+  assert.match(rendered, /Fuentes analizadas/);
+  assert.match(rendered, /2026-05-28/);
+  assert.doesNotMatch(rendered, /contradicci/i);
   assert.equal(elements.get('moAprobar').disabled, false);
-  assert.match(elements.get('moResultado').innerHTML, /Version reutilizada/);
 
-  const alreadyCurrent = {
-    ...reusablePreview,
-    version: { id: 'version-vigente', numero: 16, estado: 'vigente' },
-  };
-  await vm.runInContext(`moPreview=${JSON.stringify(alreadyCurrent)}; moRenderPreview(moPreview); moAprobarYActivar();`, context);
-
+  preview.resumen.contradicciones_bloqueantes = 1;
+  vm.runInContext(`moPreview=${JSON.stringify(preview)}; moRenderPreview(moPreview);`, context);
   assert.equal(elements.get('moAprobar').disabled, true);
-  assert.match(elements.get('moResultado').innerHTML, /estado vigente/);
-  assert.equal(calls.api.includes('/api/motor-ofertas/aprobar'), false);
 });
 
-test('recarga la version vigente antes y despues de aprobar', async () => {
-  const html = await readApp();
+test('mantiene Ofertas y Lista de Equipos como tabs independientes', async () => {
+  const { context, calls } = await loadAdminUi();
+  vm.runInContext("moSetSourceFile('tabla_financiamiento',{files:[{name:'ofertas.xlsx'}]})", context);
+  assert.deepEqual(calls.tabs, []);
 
-  assert.match(html, /function moLoadVigente\(\)/);
-  assert.match(html, /api\(['"]\/api\/motor-ofertas\/version-vigente['"]\)/);
-  assert.match(html, /api\(['"]\/api\/motor-ofertas\/aprobar['"],\s*\{\s*method:\s*['"]POST['"]/);
-  assert.match(html, /version_id\s*:/);
-  assert.match(html, /activar\s*:\s*true/);
-  assert.match(html, /version_vigente_esperada_id\s*:/);
-  assert.ok((html.match(/moLoadVigente\(\)/g) || []).length >= 3);
+  vm.runInContext("moSetSourceFile('lista_precios',{files:[{name:'precios.xlsx'}]})", context);
+  assert.deepEqual(calls.tabs, []);
 });
 
-test('no aprueba si no puede leer la version vigente actual', async () => {
+test('distingue un archivo seleccionado de una importacion ya analizada', async () => {
+  const { context } = await loadAdminUi();
+  vm.runInContext("moSetSourceFile('tabla_financiamiento',{files:[{name:'ofertas.xlsx'}]})", context);
+  const status = vm.runInContext("moSourceName('tabla_financiamiento')", context);
+  assert.match(status, /Tabla de financiamiento seleccionado: ofertas\.xlsx/);
+  assert.match(status, /Pendiente de analizar/);
+});
+
+test('detecta la vigencia de la lista desde el nombre oficial cuando el historial no la guardó', async () => {
+  const context = await loadEquipmentHelpers();
+  const vigencia = vm.runInContext("eqUploadVigencia({nombre_archivo:'Lista de Precios 28 de mayo al 31 de julio de 2026-PYM-CORP.xlsx'})", context);
+  assert.deepEqual(JSON.parse(JSON.stringify(vigencia)), {
+    desde: '2026-05-28',
+    hasta: '2026-07-31',
+    origen: 'nombre_archivo',
+  });
+});
+
+test('detecta el rango dentro de un mismo mes para la tabla de ofertas', async () => {
+  const context = await loadEquipmentHelpers();
+  const vigencia = vm.runInContext("eqUploadVigencia({nombre_archivo:'Tabla Ofertas Financiamiento 16 al 21 de julio de 2026- PYMES.xlsx'})", context);
+  assert.deepEqual(JSON.parse(JSON.stringify(vigencia)), {
+    desde: '2026-07-16',
+    hasta: '2026-07-21',
+    origen: 'nombre_archivo',
+  });
+});
+
+test('envia la vigencia visible al aceptar la lista y analizar el boletin', async () => {
   const html = await readApp();
 
-  assert.match(html, /moVigenteLeida\s*=\s*false/);
-  assert.match(html, /if\(!moVigenteLeida\)\s*\{[^}]*No se pudo confirmar la version vigente actual/s);
+  assert.match(html, /var vigencia=eqVigenciaIngresada\(\)\s*\|\|\s*eqUploadVigencia\(\{nombre_archivo:ofEquiposPreview\.name\}\)/);
+  assert.match(html, /fd\.append\('vigencia_inicio',vigencia\.desde\)/);
+  assert.match(html, /fd\.append\('vigencia_fin',vigencia\.hasta\)/);
+  assert.match(html, /moVigenciaDesde/);
+  assert.match(html, /moVigenciaHasta/);
 });

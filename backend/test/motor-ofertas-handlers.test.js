@@ -71,12 +71,18 @@ function makeDependencies(overrides = {}) {
     evaluate: [],
     approve: [],
     versionSources: [],
+    review: [],
+    reviewDecision: [],
+    readPriceSource: [],
   };
   const repository = {
     async getCurrentVersionWithSources() {
       return null;
     },
     async getCurrentVersion() {
+      return null;
+    },
+    async getLatestPriceListSource() {
       return null;
     },
     async getVersionWithSources(versionId) {
@@ -119,6 +125,13 @@ function makeDependencies(overrides = {}) {
       calls.approve.push(input);
       return { id: input.versionId, estado: input.activate ? 'vigente' : 'aprobada' };
     },
+    async getLatestReviewVersion() {
+      return { id: VERSION_ID, numero: 4, estado: 'pendiente_revision' };
+    },
+    async saveReviewDecision(input) {
+      calls.reviewDecision.push(input);
+      return { actualizadas: input.contradiccionIds.length };
+    },
     ...repositoryOverrides,
   };
   const dependencies = {
@@ -154,10 +167,85 @@ function makeDependencies(overrides = {}) {
       calls.evaluate.push(input);
       return { equipos: [], validaciones: [] };
     },
+    readArchivedOfferSources: async () => ({
+      financingBuffer: Buffer.from('tabla'),
+      priceListBuffer: Buffer.from('lista'),
+    }),
+    readArchivedOfferSource: async (input) => {
+      calls.readPriceSource.push(input);
+      return Buffer.from('lista');
+    },
+    buildOfferReviewSnapshot: (input) => {
+      calls.review.push(input);
+      return {
+        ok: true,
+        version: input.version,
+        resumen: { bloqueos_totales: 54, bloqueos_equipos: 49, bloqueos_business_red: 5 },
+        equipos: [],
+        business_red: [],
+      };
+    },
     ...dependencyOverrides,
   };
   return { dependencies, calls };
 }
+
+test('revision actual lee la version pendiente y no altera contratos comerciales', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getVersionWithSources(versionId) {
+        return {
+          version: { id: versionId, numero: 4, estado: 'pendiente_revision' },
+          sources: [
+            { tipo: 'tabla_financiamiento', ruta_relativa: 'tabla.xlsx', sha256: 'a'.repeat(64) },
+            { tipo: 'lista_precios', ruta_relativa: 'lista.xlsx', sha256: 'b'.repeat(64) },
+          ],
+          contradicciones: [{ id: 'equipo-1', codigo: 'equipo_sin_coincidencia_exacta' }],
+        };
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.revisionActual({ user: { nick: 'admin' } }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.resumen.bloqueos_totales, 54);
+  assert.equal(calls.review.length, 1);
+  assert.deepEqual(calls.approve, []);
+  assert.deepEqual(calls.createPreview, []);
+});
+
+test('guardar equivalencia propuesta cambia solo los bloqueos enviados explicitamente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies({
+    buildOfferReviewSnapshot: () => ({
+      equipos: [{
+        id: '00000000-0000-4000-8000-000000000011',
+        candidatos: [{ id: 'SIF-A37|Finan Equipos Movil|18', sku_sif: 'SIF-A37', modelo: 'Samsung Galaxy A37' }],
+      }],
+      business_red: [],
+    }),
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.guardarEquivalenciaPropuesta({
+    params: { versionId: VERSION_ID },
+    body: {
+      contradiccion_ids: ['00000000-0000-4000-8000-000000000011'],
+      candidate_id: 'SIF-A37|Finan Equipos Movil|18',
+    },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(calls.reviewDecision[0].contradiccionIds, ['00000000-0000-4000-8000-000000000011']);
+  assert.equal(calls.reviewDecision[0].decision.aplicada, false);
+  assert.deepEqual(calls.approve, []);
+});
 
 test('preview incompleto responde el contrato fijo sin archivar ni persistir', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
@@ -197,6 +285,130 @@ test('preview informa solo la fuente requerida ausente sin archivar ni persistir
   assert.deepEqual(calls.createPreview, []);
 });
 
+test('el boletin de Ofertas usa la ultima lista aceptada sin pedir que se cargue de nuevo', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const priceSource = {
+    tipo: 'lista_precios',
+    nombre_original: 'lista-vigente.xlsx',
+    nombre_archivado: 'lista-vigente-archivada.xlsx',
+    ruta_relativa: 'lista_precios/lista-vigente-archivada.xlsx',
+    sha256: 'b'.repeat(64),
+    mime_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    bytes: 123,
+    vigencia_desde: '2026-05-28',
+    vigencia_hasta: '2026-07-31',
+    vigencia_documental: 'vigente',
+  };
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getLatestPriceListSource() {
+        return priceSource;
+      },
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.previewTabla({
+    file: file('tabla_financiamiento', 'boletin-ofertas.xlsx', 'tabla-nueva'),
+    body: { normalizador_version: '1.0.0' },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.archive.length, 1);
+  assert.equal(calls.archive[0].type, 'tabla_financiamiento');
+  assert.deepEqual(calls.readPriceSource, [{
+    rootDir: 'C:\\tmp\\motor-ofertas-test',
+    source: priceSource,
+  }]);
+  assert.equal(calls.normalize[0].financingBuffer.toString(), 'tabla-nueva');
+  assert.equal(calls.normalize[0].priceListBuffer.toString(), 'lista');
+  assert.deepEqual(calls.createPreview[0].sources.map((source) => source.type), [
+    'tabla_financiamiento',
+    'lista_precios',
+  ]);
+});
+
+test('el boletin conserva la vigencia oficial ingresada cuando el nombre no trae fechas', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const priceSource = {
+    tipo: 'lista_precios',
+    nombre_original: 'lista-vigente.xlsx',
+    nombre_archivado: 'lista-vigente-archivada.xlsx',
+    ruta_relativa: 'lista_precios/lista-vigente-archivada.xlsx',
+    sha256: 'b'.repeat(64),
+    mime_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    bytes: 123,
+    vigencia_desde: '2026-07-01',
+    vigencia_hasta: '2026-07-31',
+    vigencia_documental: 'vigente',
+  };
+  const { dependencies, calls } = makeDependencies({
+    repository: { async getLatestPriceListSource() { return priceSource; } },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.previewTabla({
+    file: file('tabla_financiamiento', 'boletin-sin-fecha.xlsx', 'tabla-nueva'),
+    body: {
+      normalizador_version: '1.0.0',
+      vigencia_inicio: '2026-07-10',
+      vigencia_fin: '2026-07-21',
+    },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(calls.createPreview[0].sources[0].validity, {
+    from: '2026-07-10',
+    to: '2026-07-21',
+    state: 'vigente',
+  });
+  assert.deepEqual(calls.normalize[0].vigencia, {
+    desde: '2026-07-10',
+    hasta: '2026-07-21',
+    estado: 'vigente',
+  });
+});
+
+test('el boletin rechaza una vigencia manual incompleta sin archivar ni persistir', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies();
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.previewTabla({
+    file: file('tabla_financiamiento', 'boletin-sin-fecha.xlsx'),
+    body: { normalizador_version: '1.0.0', vigencia_inicio: '2026-07-16' },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'vigencia_manual_invalida' });
+  assert.deepEqual(calls.archive, []);
+  assert.deepEqual(calls.createPreview, []);
+});
+
+test('el boletin de Ofertas no crea version si todavia no hay lista de precios aceptada', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const { dependencies, calls } = makeDependencies();
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.previewTabla({
+    file: file('tabla_financiamiento', 'boletin-ofertas.xlsx'),
+    body: { normalizador_version: '1.0.0' },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 422);
+  assert.deepEqual(res.body, { error: 'lista_precios_no_aceptada' });
+  assert.deepEqual(calls.archive, []);
+  assert.deepEqual(calls.createPreview, []);
+});
+
 test('preview reutilizado devuelve vigencia y contradicciones persistidas sin normalizar ni persistir', async () => {
   const { createMotorOfertasHandlers } = await loadHandlers();
   const existing = {
@@ -207,8 +419,8 @@ test('preview reutilizado devuelve vigencia y contradicciones persistidas sin no
   const persisted = {
     version: existing,
     sources: [
-      { tipo: 'tabla_financiamiento', vigencia_desde: '2026-07-01', vigencia_hasta: '2026-07-31', vigencia_documental: 'vigente' },
-      { tipo: 'lista_precios', vigencia_desde: '2026-07-01', vigencia_hasta: '2026-07-31', vigencia_documental: 'vigente' },
+      { tipo: 'tabla_financiamiento', vigencia_desde: '2026-07-01T04:00:00.000Z', vigencia_hasta: '2026-07-31T04:00:00.000Z', vigencia_documental: 'vigente' },
+      { tipo: 'lista_precios', vigencia_desde: '2026-07-01T04:00:00.000Z', vigencia_hasta: '2026-07-31T04:00:00.000Z', vigencia_documental: 'vigente' },
     ],
     contradicciones: [{
       id: '00000000-0000-4000-8000-000000000098',
@@ -246,6 +458,10 @@ test('preview reutilizado devuelve vigencia y contradicciones persistidas sin no
     version: existing,
     resumen: existing.resumen,
     vigencia: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    fuentes: {
+      tabla_financiamiento: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+      lista_precios: { desde: '2026-07-01', hasta: '2026-07-31', estado: 'vigente' },
+    },
     contradicciones: persisted.contradicciones,
   });
   assert.deepEqual(calls.versionSources, [{
@@ -312,6 +528,75 @@ test('preview adapta la vigencia inferida al shape persistido por el repositorio
     hasta: '2026-07-15',
     estado: 'vigente',
   });
+  assert.deepEqual(res.body.fuentes, {
+    tabla_financiamiento: {
+      desde: '2026-07-04',
+      hasta: '2026-07-15',
+      estado: 'vigente',
+    },
+    lista_precios: {
+      desde: '2026-05-28',
+      hasta: '2026-07-31',
+      estado: 'vigente',
+    },
+  });
+});
+
+test('preview persiste y devuelve el resumen de cambios contra la version vigente', async () => {
+  const { createMotorOfertasHandlers } = await loadHandlers();
+  const snapshotsConsultados = [];
+  const { dependencies, calls } = makeDependencies({
+    repository: {
+      async getCurrentVersion() {
+        return { id: 'version-vigente', estado: 'vigente' };
+      },
+      async getEligibleSnapshot(versionId) {
+        snapshotsConsultados.push(versionId);
+        return {
+          offers: [{
+            id: 'oferta-a',
+            oferta_key: 'oferta-a',
+            contrato: { id: 'oferta-a', nombre: 'Oferta anterior', tipos_plan: ['individual'], eventos: ['linea_nueva'], plazos: [30] },
+          }],
+          equipment: [{ oferta_id: 'oferta-a', equipo_key: 'equipo-a', precio_regular: 100 }],
+        };
+      },
+    },
+    normalizeOfferWorkbooks() {
+      return {
+        summary: { filas_procesadas: 1, offers: 1, equipment: 1 },
+        contradictions: [],
+        offers: [{
+          contract: { id: 'oferta-a', nombre: 'Oferta actualizada', tipos_plan: ['individual'], eventos: ['linea_nueva'], plazos: [30] },
+          equipment: [{ equipo_key: 'equipo-a', precio_regular: 120 }],
+        }],
+      };
+    },
+  });
+  const handlers = createMotorOfertasHandlers(dependencies);
+  const res = response();
+
+  await handlers.preview({
+    files: validFiles(),
+    body: { normalizador_version: '1.0.0' },
+    user: { nick: 'admin' },
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(snapshotsConsultados, ['version-vigente']);
+  assert.deepEqual(calls.createPreview[0].normalized.summary, {
+    filas_procesadas: 1,
+    offers: 1,
+    equipment: 1,
+    ofertas_nuevas: 0,
+    ofertas_modificadas: 1,
+    ofertas_salieron: 0,
+    equipos_nuevos: 0,
+    equipos_salieron: 0,
+    precios_nuevos_modificados: 1,
+    cambios_detectados: 2,
+  });
+  assert.equal(res.body.resumen.cambios_detectados, 2);
 });
 
 test('elegibles sin version vigente devuelve vacio y nunca consulta un catalogo general', async () => {

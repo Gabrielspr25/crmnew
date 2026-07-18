@@ -4,11 +4,17 @@
 import { Router } from 'express';
 import multer from 'multer';
 import XLSX from 'xlsx';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { buscarYDescargarImagenEquipo } from '../services/equiposImagenesService.js';
+import { archiveOfferSource } from '../services/motorOfertasSourceArchive.js';
 
 export const equiposRouter = Router();
+const __dir = path.dirname(fileURLToPath(import.meta.url));
+const MOTOR_OFERTAS_UPLOAD_ROOT = process.env.MOTOR_OFERTAS_UPLOAD_DIR
+  || path.resolve(__dir, '../../uploads/motor-ofertas');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
@@ -200,12 +206,39 @@ equiposRouter.post('/equipos-lista/upload', requireAuth, upload.single('file'), 
   if (!req.file) return res.status(400).json({ ok: false, error: 'No se recibió archivo.' });
   const { vigencia_inicio, vigencia_fin, notas } = req.body;
   const username = req.user?.nick || req.user?.usuario || 'admin';
+  let source;
+  try {
+    source = await archiveOfferSource({
+      rootDir: MOTOR_OFERTAS_UPLOAD_ROOT,
+      type: 'lista_precios',
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      buffer: req.file.buffer,
+    });
+  } catch {
+    return res.status(422).json({ ok: false, error: 'No se pudo archivar la lista oficial.' });
+  }
   const c = await pool.connect();
   try {
     await c.query('BEGIN');
     const up = await c.query(
-      `INSERT INTO public.equipos_uploads (nombre_archivo, subido_por, vigencia_inicio, vigencia_fin, notas) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-      [req.file.originalname, username, vigencia_inicio || null, vigencia_fin || null, notas || null]);
+      `INSERT INTO public.equipos_uploads (
+        nombre_archivo, subido_por, vigencia_inicio, vigencia_fin, notas,
+        nombre_archivado, ruta_archivada, sha256, mime_type, bytes, vigencia_documental
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+      [
+        req.file.originalname,
+        username,
+        vigencia_inicio || null,
+        vigencia_fin || null,
+        notas || null,
+        source.archivedName,
+        source.relativePath,
+        source.sha256,
+        source.mimeType,
+        req.file.size,
+        vigencia_inicio && vigencia_fin ? 'vigente' : 'pendiente_confirmacion',
+      ]);
     const uploadId = up.rows[0].id;
     const { items } = parsearExcel(req.file.buffer);
     await c.query(`UPDATE public.equipos_lista SET activo = FALSE`);

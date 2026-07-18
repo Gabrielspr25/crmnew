@@ -247,6 +247,34 @@ test('normaliza de forma determinista e inventaria todas las hojas', async () =>
   ]);
 });
 
+test('cuenta filas y equipos procesados sin incluir rótulos comerciales', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      ['Equipo gratis para linea nueva', 'Plan de $50', 'Samsung Galaxy A37 128GB\nDOS EQUIPOS GRATIS\nCrédito $1,000:', 'Solo 30 plazos.'],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['A37', 'SAP-A37', 'Samsung Galaxy A37 128GB', 359.99, 12],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'precios-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  assert.equal(result.summary.filas_procesadas, 1);
+  assert.equal(result.summary.equipos_procesados, 1);
+  assert.equal(result.offers[0].equipment.length, 1);
+});
+
 test('conserva archivo, hoja, fila y celdas originales', async () => {
   const normalizer = await loadNormalizer();
   assert.ok(normalizer, 'falta motorOfertasNormalizer.js');
@@ -288,6 +316,214 @@ test('extrae plan, eventos, familia, plazo, limite BAN y trade-in', async () => 
     (item) => item.contract.id === 'equipo-gratis-plan-60-fila-6'
   );
   assert.deepEqual(offer60.contract.trade_in.requerido_eventos, ['renovacion']);
+});
+
+test('agrupa variantes de color y SKU por modelo y capacidad sin pedir una equivalencia', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      ['Equipo gratis para linea nueva', 'Plan de $50', 'iPhone 17 Pro 512GB', 'Solo 30 plazos.'],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['SIF-SILVER', 'SAP-1', 'iPhone 17 Pro 512GB Silver', 1299.99, 43.33],
+      ['SIF-BLUE', 'SAP-2', 'iPhone 17 Pro 512GB Deep Blue', 1299.99, 43.33],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'lista-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  assert.equal(result.contradictions.filter((item) => item.code === 'equipo_sin_coincidencia_exacta').length, 0);
+  const equipo = result.offers[0].equipment[0];
+  assert.equal(equipo.coincidencia, 'exacta');
+  assert.equal(equipo.sku_sif, null);
+  assert.equal(equipo.variantes.length, 2);
+  assert.deepEqual(equipo.variantes.map((item) => item.sku_sif), ['SIF-SILVER', 'SIF-BLUE']);
+});
+
+test('relaciona un modelo sin capacidad cuando la lista oficial tiene una sola capacidad', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      ['Equipo gratis para linea nueva', 'Plan de $50', 'Samsung Galaxy A37', 'Solo 30 plazos.'],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['SIF-BLACK', 'SAP-1', 'Samsung GXY A37 128GB Black', 359.99, 12],
+      ['SIF-VIOLET', 'SAP-2', 'Samsung GXY A37 128GB Violet', 359.99, 12],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'lista-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  assert.equal(result.contradictions.filter((item) => item.code === 'equipo_sin_coincidencia_exacta').length, 0);
+  const equipo = result.offers[0].equipment[0];
+  assert.equal(equipo.coincidencia, 'exacta');
+  assert.equal(equipo.modelo_oficial, 'SAMSUNG GALAXY A37 128GB');
+  assert.equal(equipo.sku_sif, null);
+  assert.equal(equipo.variantes.length, 2);
+});
+
+test('relaciona un modelo confirmado aunque la lista oficial tenga varias capacidades', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      ['Equipo gratis para linea nueva', 'Plan de $50', 'Samsung Galaxy A37', 'Solo 30 plazos.'],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['SIF-128', 'SAP-1', 'Samsung GXY A37 128GB Black', 359.99, 12],
+      ['SIF-256', 'SAP-2', 'Samsung GXY A37 256GB Violet', 459.99, 15.33],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'lista-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  assert.equal(result.offers[0].equipment[0].coincidencia, 'equivalencia_aprobada');
+  assert.equal(result.contradictions.filter((item) => item.code === 'equipo_sin_coincidencia_exacta').length, 0);
+});
+
+test('acepta un equipo incluido solo en Precio Regular Nuevo del boletin', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = financingBuffer({
+    additionalRows: [
+      [
+        null,
+        'Equipo gratis para linea nueva',
+        'Plan de $35',
+        'Motorola Moto G Play 2024',
+        'PYMES',
+        '',
+        'Aplica a lineas nuevas. Solo 24 plazos.',
+      ],
+      [null, 'Precio Regular Nuevo', '', 'Nuevo precio regular:\nMotorola G Play 2024- $129.99'],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    ...normalizeInput(),
+    financingBuffer: financing,
+  });
+  const offer = result.offers.find((item) => item.trace.row === 10);
+
+  assert.equal(offer.equipment[0].coincidencia, 'exacta');
+  assert.equal(offer.equipment[0].precio_regular, 129.99);
+  assert.equal(offer.equipment[0].fuente_precio_id, 'fuente-tabla-1');
+  assert.equal(offer.equipment[0].sku_sif, null);
+});
+
+test('Precio Regular Nuevo reemplaza el precio de la lista oficial', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = financingBuffer({
+    additionalRows: [
+      [
+        null,
+        'Equipo gratis para linea nueva',
+        'Plan de $35',
+        'Motorola G Play 2024',
+        'PYMES',
+        '',
+        'Aplica a lineas nuevas. Solo 24 plazos.',
+      ],
+      [null, 'Precio Regular Nuevo', '', 'Nuevo precio regular:\nMotorola G Play 2024- $129.99'],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['SIF-PLAY', 'SAP-PLAY', 'Motorola G Play 2024', 149.99, 5],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    ...normalizeInput(),
+    financingBuffer: financing,
+    priceListBuffer: prices,
+  });
+  const offer = result.offers.find((item) => item.trace.row === 10);
+
+  assert.equal(offer.equipment[0].precio_regular, 129.99);
+  assert.equal(offer.equipment[0].fuente_precio_id, 'fuente-tabla-1');
+  assert.equal(offer.equipment[0].sku_sif, 'SIF-PLAY');
+});
+
+test('relaciona los nueve pares confirmados por su modelo comercial principal', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      [
+        'Equipo gratis para lineas nuevas',
+        'Plan de $50',
+        [
+          'Samsung Galaxy A07',
+          'Samsung Galaxy A17',
+          'Moto G Power 2025 5G',
+          'iPhone 17e',
+          'Motorola Moto Edge 2025',
+          'Motorola Razr 2025',
+          'Samsung Z Flip 7',
+          'Samsung Z Fold 7',
+          'Motorola Moto Razr 2025',
+        ].join('\n'),
+        'Aplica a lineas nuevas. Solo 30 plazos.',
+      ],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['A07', 'SAP-A07', 'Samsung A07 64GB A075M Black', 119.99, 4],
+      ['A17', 'SAP-A17', 'Samsung A17 5G A176U 128GB Black', 199.99, 6.67],
+      ['POWER', 'SAP-POWER', 'Moto G Power 2025 XT2515-1 128GB Juniper', 279.99, 9.33],
+      ['17E', 'SAP-17E', 'IPH 17e 256GB Black', 599.99, 19.97],
+      ['EDGE', 'SAP-EDGE', 'Motorola Edge 2025 XT2519-1 Deep Forest', 429.99, 14.33],
+      ['RAZR', 'SAP-RAZR', 'Motorola Razr 2025 XT2553-3 256GB Gibraltar Sea', 649.99, 21.63],
+      ['FLIP', 'SAP-FLIP', 'Samsung GXY Z Flip 7 F766U 256GB Jet Black', 799.99, 26.63],
+      ['FOLD', 'SAP-FOLD', 'Samsung GXY Z Fold 7 F966U 256GB Jet Black', 1899.99, 63.33],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    ...normalizeInput(),
+    financingBuffer: financing,
+    priceListBuffer: prices,
+  });
+
+  assert.equal(result.offers[0].equipment.length, 9);
+  assert.ok(
+    result.offers[0].equipment.every(
+      (item) => item.coincidencia === 'equivalencia_aprobada'
+    )
+  );
+  assert.equal(result.contradictions.filter((item) => item.code === 'equipo_sin_coincidencia_exacta').length, 0);
 });
 
 test('cruza equipos exactos y deja coincidencias inciertas como contradiccion', async () => {
@@ -402,7 +638,7 @@ test('extrae familias abreviadas, limite de dos lineas y plazos compuestos', asy
   assert.deepEqual(offer.contract.plazos, [24, 30]);
 });
 
-test('marca plazo sin mensualidad y conserva fuentes de modelos ambiguos', async () => {
+test('marca plazo sin mensualidad y agrupa fuentes de variantes del mismo equipo', async () => {
   const normalizer = await loadNormalizer();
   const result = normalizer.normalizeOfferWorkbooks(normalizeInput());
   const missingTerm = result.offers.find((item) => item.trace.row === 9);
@@ -417,10 +653,10 @@ test('marca plazo sin mensualidad y conserva fuentes de modelos ambiguos', async
     ...normalizeInput(),
     priceListBuffer: priceListBuffer({ duplicateA37: true }),
   });
-  const ambiguous = duplicateResult.contradictions.find((item) =>
-    item.code === 'equipo_sin_coincidencia_exacta'
-      && item.offerKey === 'equipo-gratis-plan-35-fila-4'
+  const duplicateOffer = duplicateResult.offers.find((item) =>
+    item.contract.id === 'equipo-gratis-plan-35-fila-4'
   );
-  assert.equal(ambiguous.sources.length, 2);
-  assert.deepEqual(ambiguous.sources.map((source) => source.row), [6, 8]);
+  assert.equal(duplicateOffer.equipment[0].coincidencia, 'exacta');
+  assert.equal(duplicateOffer.equipment[0].sku_sif, null);
+  assert.deepEqual(duplicateOffer.equipment[0].variantes.map((item) => item.fuente_precio.row), [6, 8]);
 });

@@ -280,6 +280,39 @@ test('getVersionWithSources obtiene la version solicitada y sus fuentes', async 
   ));
 });
 
+test('getLatestPriceListSource usa la ultima lista aceptada con archivo archivado', async () => {
+  const { createMotorOfertasRepository } = await loadRepository();
+  const priceSource = {
+    nombre_original: 'Lista vigente.xlsx',
+    nombre_archivado: 'lista-archivada.xlsx',
+    ruta_relativa: 'lista_precios/lista-archivada.xlsx',
+    sha256: 'd'.repeat(64),
+    mime_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    bytes: 2048,
+    vigencia_desde: '2026-05-28',
+    vigencia_hasta: '2026-07-31',
+    vigencia_documental: 'vigente',
+  };
+  const fake = createFakePool((call) => {
+    if (call.sql.includes('FROM public.equipos_uploads')) {
+      return { rowCount: 1, rows: [priceSource] };
+    }
+    return { rowCount: 0, rows: [] };
+  });
+  const repository = createMotorOfertasRepository({
+    pool: fake.pool,
+    randomUUID: makeUuidSequence(),
+    now: () => new Date('2026-07-12T12:00:00.000Z'),
+  });
+
+  const result = await repository.getLatestPriceListSource();
+
+  assert.deepEqual(result, priceSource);
+  const query = fake.calls.find((call) => call.sql.includes('FROM public.equipos_uploads'));
+  assert.ok(query.sql.includes('ruta_archivada IS NOT NULL'));
+  assert.ok(query.sql.includes('ORDER BY fecha_subida DESC'));
+});
+
 test('persiste trazabilidad y mantiene estados separados', async () => {
   const { createMotorOfertasRepository } = await loadRepository();
   const fake = createFakePool(successResponder);

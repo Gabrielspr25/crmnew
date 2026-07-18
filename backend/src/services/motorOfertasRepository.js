@@ -23,6 +23,7 @@ function asTimestamp(value) {
 function previewSummary(normalized) {
   const contradictions = normalized.contradictions ?? [];
   return {
+    ...(normalized.summary ?? {}),
     ofertas: normalized.summary?.offers ?? normalized.offers?.length ?? 0,
     equipos: normalized.summary?.equipment
       ?? normalized.offers?.reduce(
@@ -382,6 +383,27 @@ export function createMotorOfertasRepository({
     return { version, sources: sources.rows };
   }
 
+  async function getLatestPriceListSource() {
+    const result = await pool.query(
+      `SELECT
+         nombre_archivo AS nombre_original,
+         nombre_archivado,
+         ruta_archivada AS ruta_relativa,
+         sha256,
+         mime_type,
+         bytes,
+         vigencia_inicio AS vigencia_desde,
+         vigencia_fin AS vigencia_hasta,
+         vigencia_documental
+       FROM public.equipos_uploads
+       WHERE ruta_archivada IS NOT NULL
+         AND sha256 IS NOT NULL
+       ORDER BY fecha_subida DESC
+       LIMIT 1`
+    );
+    return result.rows[0] ?? null;
+  }
+
   async function getVersionWithSources(versionId, { includeContradictions = false } = {}) {
     const versionResult = await pool.query(
       `SELECT *
@@ -400,13 +422,50 @@ export function createMotorOfertasRepository({
     );
     if (!includeContradictions) return { version, sources: sources.rows };
     const contradictions = await pool.query(
-      `SELECT id, codigo, bloqueante, estado, detalle
+      `SELECT id, codigo, bloqueante, estado, detalle, fuentes_enfrentadas, resolucion
        FROM public.motor_ofertas_contradicciones
        WHERE version_id = $1
        ORDER BY creada_en, id`,
       [version.id]
     );
     return { version, sources: sources.rows, contradicciones: contradictions.rows };
+  }
+
+  async function getLatestReviewVersion(dominio = 'movil_equipos') {
+    const result = await pool.query(
+      `SELECT *
+       FROM public.motor_ofertas_versiones
+       WHERE dominio = $1 AND estado = 'pendiente_revision'
+       ORDER BY numero DESC
+       LIMIT 1`,
+      [dominio]
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async function saveReviewDecision({
+    versionId,
+    contradiccionIds,
+    decision,
+    actor,
+  }) {
+    const result = await pool.query(
+      `UPDATE public.motor_ofertas_contradicciones
+       SET resolucion = $3::jsonb
+       WHERE version_id = $1
+         AND id = ANY($2::uuid[])
+         AND estado = 'abierta'
+       RETURNING id`,
+      [versionId, contradiccionIds, asJson(decision)]
+    );
+    if (result.rowCount !== contradiccionIds.length) {
+      throw repositoryError(
+        'bloqueo_revision_no_encontrado',
+        'Una o mas ocurrencias ya no estan abiertas para revision.',
+        { versionId, contradiccionIds, actor }
+      );
+    }
+    return { actualizadas: result.rowCount };
   }
 
   async function getEligibleSnapshot(versionId) {
@@ -720,7 +779,10 @@ export function createMotorOfertasRepository({
     findVersionByIdentity,
     getCurrentVersion,
     getCurrentVersionWithSources,
+    getLatestPriceListSource,
     getVersionWithSources,
+    getLatestReviewVersion,
+    saveReviewDecision,
     getEligibleSnapshot,
     createPreview,
     approveVersion,

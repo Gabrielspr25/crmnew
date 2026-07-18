@@ -136,6 +136,28 @@ export async function archiveOfferSource(source) {
   };
 }
 
+export async function readArchivedOfferSource({ rootDir, source }) {
+  if (typeof rootDir !== 'string' || !rootDir.trim()) {
+    throw new TypeError('rootDir es requerido.');
+  }
+  if (!source || typeof source !== 'object') {
+    throw new TypeError('La fuente archivada es requerida.');
+  }
+  const relativePath = source.ruta_relativa ?? source.relativePath;
+  const expectedSha256 = source.sha256;
+  if (typeof relativePath !== 'string' || !relativePath || !SHA256_PATTERN.test(expectedSha256 ?? '')) {
+    throw integrityError('la fuente archivada no tiene ruta o SHA valido.');
+  }
+  const root = path.resolve(rootDir);
+  const archivePath = path.resolve(root, relativePath);
+  const relative = path.relative(root, archivePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw integrityError('la ruta archivada esta fuera del directorio permitido.');
+  }
+  await verifyArchivedFile(archivePath, expectedSha256.toLowerCase());
+  return readFile(archivePath);
+}
+
 function compareText(left, right) {
   if (left < right) return -1;
   if (left > right) return 1;

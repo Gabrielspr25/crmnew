@@ -41,6 +41,38 @@ export function normalizeModel(value) {
     .trim();
 }
 
+export function normalizeOfferEquipmentIdentity(value) {
+  let normalized = normalizeModel(value)
+    .replace(/\bGXY\b/g, 'GALAXY')
+    .replace(/\b[A-Z]{1,4}\d{3,}[A-Z0-9]*\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const capacity = normalized.match(/\b\d{2,4}\s*GB\b/);
+  if (capacity) {
+    normalized = normalized.slice(0, capacity.index + capacity[0].length);
+  }
+  return normalized.replace(/\s+/g, ' ').trim();
+}
+
+export function normalizeCommercialModel(value) {
+  return normalizeModel(value)
+    .replace(/(\d{4})[A-Z]{1,4}\d{3,}[A-Z0-9]*(?:\s+\d+)?\b.*$/, '$1')
+    .replace(/\b[A-Z]{1,4}\d{3,}[A-Z0-9]*(?:\s+\d+)?\b.*$/, ' ')
+    .replace(/\b\d{2,4}\s*GB\b.*$/, ' ')
+    .replace(/\b(?:SAMSUNG|GALAXY|GXY|MOTOROLA|MOTO|IPHONE|IPH|5G)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function capacityFromEquipmentIdentity(identity) {
+  return identity.match(/\b\d{2,4}\s*GB\b/)?.[0].replace(/\s+/g, '') ?? null;
+}
+
+function modelWithoutEquipmentCapacity(identity) {
+  const capacity = identity.match(/\b\d{2,4}\s*GB\b/);
+  return capacity ? identity.slice(0, capacity.index).trim() : identity;
+}
+
 export function parseMoney(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   const cleaned = String(value ?? '')
@@ -214,9 +246,11 @@ export function indexPriceWorkbook(buffer) {
       if (!model) continue;
       const normalizedModel = normalizeModel(model);
       if (!normalizedModel) continue;
+      const offerIdentity = normalizeOfferEquipmentIdentity(model);
       entries.push({
         model,
         normalizedModel,
+        offerIdentity,
         sku_sif: String(row[skuColumn] ?? '').trim() || null,
         sap: sapColumn >= 0 ? String(row[sapColumn] ?? '').trim() || null : null,
         precio_regular: parseMoney(row[priceColumn]),
@@ -235,13 +269,77 @@ export function indexPriceWorkbook(buffer) {
   }
 
   const byModel = new Map();
+  const byOfferIdentity = new Map();
+  const byModelWithoutCapacity = new Map();
+  const byCommercialModel = new Map();
   for (const entry of entries) {
     const matches = byModel.get(entry.normalizedModel) ?? [];
     matches.push(entry);
     byModel.set(entry.normalizedModel, matches);
+    const variants = byOfferIdentity.get(entry.offerIdentity) ?? [];
+    variants.push(entry);
+    byOfferIdentity.set(entry.offerIdentity, variants);
+
+    const commercialModel = normalizeCommercialModel(entry.model);
+    if (commercialModel) {
+      const commercialVariants = byCommercialModel.get(commercialModel) ?? [];
+      commercialVariants.push(entry);
+      byCommercialModel.set(commercialModel, commercialVariants);
+    }
+
+    const capacity = capacityFromEquipmentIdentity(entry.offerIdentity);
+    if (!capacity) continue;
+    const modelWithoutCapacity = modelWithoutEquipmentCapacity(entry.offerIdentity);
+    const capacityVariants = byModelWithoutCapacity.get(modelWithoutCapacity) ?? [];
+    capacityVariants.push(entry);
+    byModelWithoutCapacity.set(modelWithoutCapacity, capacityVariants);
   }
 
-  return { entries, byModel };
+  return {
+    entries,
+    byModel,
+    byOfferIdentity,
+    byModelWithoutCapacity,
+    byCommercialModel,
+  };
+}
+
+function normalizeNewRegularPriceIdentity(value) {
+  return normalizeOfferEquipmentIdentity(value)
+    .replace(/^MOTOROLA MOTO\s+/, 'MOTOROLA ')
+    .replace(/^MOTO\s+/, 'MOTOROLA ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function indexNewRegularPrices(workbook, sheetName, sourceId) {
+  const byIdentity = new Map();
+  const rows = rowsForSheet(workbook.Sheets[sheetName]);
+
+  rows.forEach((row, index) => {
+    if (!row.some((cell) => /PRECIO REGULAR NUEVO/.test(normalizeText(cell)))) return;
+    row.forEach((cell) => {
+      String(cell ?? '').split(/\r?\n/).forEach((line) => {
+        const match = line.trim().match(/^(.+?)\s*[-–—]\s*\$?\s*([\d,.]+)\s*$/);
+        if (!match) return;
+        const model = match[1].trim();
+        const precio_regular = parseMoney(match[2]);
+        if (!model || precio_regular === null) return;
+        const identity = normalizeNewRegularPriceIdentity(model);
+        const entries = byIdentity.get(identity) ?? [];
+        entries.push({
+          model,
+          identity,
+          precio_regular,
+          sourceId,
+          source: { sheet: sheetName, row: index + 1 },
+        });
+        byIdentity.set(identity, entries);
+      });
+    });
+  });
+
+  return { byIdentity };
 }
 
 export function parsePlanScope(value) {
@@ -348,7 +446,14 @@ function splitEquipment(value) {
   return String(value ?? '')
     .split(/\r?\n/)
     .map((item) => item.replace(/^\s*(?:NUEVO|NEW)!?\s*/i, '').replace(/\*+$/g, '').trim())
-    .filter(Boolean);
+    .filter((item) => item && !isEquipmentLabel(item));
+}
+
+function isEquipmentLabel(value) {
+  const normalized = normalizeText(value);
+  return normalized === 'OFERTA PARA PLANES MULTILINEAS'
+    || normalized === 'DOS EQUIPOS GRATIS'
+    || /^CREDITO\s+\$?\d/.test(normalized);
 }
 
 function offerIdentity(offerText, planMinimum, row) {
@@ -423,10 +528,60 @@ function contradiction({
   };
 }
 
-function matchEquipment(model, priceIndex, sourceId) {
-  const normalized = normalizeModel(model);
-  const matches = priceIndex.byModel.get(normalized) ?? [];
-  if (matches.length !== 1) {
+function matchEquipment(model, priceIndex, newRegularPrices, sourceId) {
+  const identity = normalizeOfferEquipmentIdentity(model);
+  const overrideCandidates = newRegularPrices.byIdentity.get(
+    normalizeNewRegularPriceIdentity(model)
+  ) ?? [];
+  const override = overrideCandidates.length === 1 ? overrideCandidates[0] : null;
+  let matchedIdentity = identity;
+  let coincidencia = 'exacta';
+  let matches = priceIndex.byOfferIdentity.get(identity) ?? [];
+  if (matches.length === 0 && !capacityFromEquipmentIdentity(identity)) {
+    const candidates = priceIndex.byModelWithoutCapacity.get(identity) ?? [];
+    const capacities = new Set(
+      candidates.map((candidate) => capacityFromEquipmentIdentity(candidate.offerIdentity))
+    );
+    if (capacities.size === 1) {
+      matches = candidates;
+      matchedIdentity = candidates[0].offerIdentity;
+    }
+  }
+  if (matches.length === 0) {
+    const commercialCandidates = priceIndex.byCommercialModel.get(
+      normalizeCommercialModel(model)
+    ) ?? [];
+    if (commercialCandidates.length > 0) {
+      matches = commercialCandidates;
+      matchedIdentity = commercialCandidates[0].offerIdentity;
+      coincidencia = 'equivalencia_aprobada';
+    }
+  }
+  if (matches.length === 0) {
+    if (override) {
+      return {
+        snapshot: {
+          equipo_key: slug(override.identity),
+          modelo_comercial: model,
+          modelo_oficial: override.model,
+          sku_sif: null,
+          sap: null,
+          precio_regular: override.precio_regular,
+          coincidencia: 'exacta',
+          fuente_precio_id: override.sourceId,
+          mensualidades: [],
+          variantes: [],
+        },
+        exact: true,
+        sources: [{
+          sourceId: override.sourceId,
+          sheet: override.source.sheet,
+          row: override.source.row,
+          modelo: override.model,
+          sku_sif: null,
+        }],
+      };
+    }
     return {
       snapshot: {
         equipo_key: slug(model),
@@ -451,27 +606,45 @@ function matchEquipment(model, priceIndex, sourceId) {
   }
 
   const match = matches[0];
+  const singleVariant = matches.length === 1;
+  const variants = matches.map((item) => ({
+    modelo: item.model,
+    sku_sif: item.sku_sif,
+    sap: item.sap,
+    precio_regular: override?.precio_regular ?? item.precio_regular,
+    mensualidades: item.mensualidades,
+    fuente_precio: item.source,
+  }));
   return {
     snapshot: {
-      equipo_key: match.sku_sif || slug(match.model),
+      equipo_key: slug(matchedIdentity),
       modelo_comercial: model,
-      modelo_oficial: match.model,
-      sku_sif: match.sku_sif,
-      sap: match.sap,
-      precio_regular: match.precio_regular,
-      coincidencia: 'exacta',
-      fuente_precio_id: sourceId,
+      modelo_oficial: matchedIdentity,
+      sku_sif: singleVariant ? match.sku_sif : null,
+      sap: singleVariant ? match.sap : null,
+      precio_regular: override?.precio_regular ?? match.precio_regular,
+      coincidencia,
+      fuente_precio_id: override?.sourceId ?? sourceId,
       mensualidades: match.mensualidades,
-      fuente_precio: match.source,
+      variantes: variants,
     },
     exact: true,
-    sources: [{
+    sources: [
+      ...matches.map((item) => ({
       sourceId,
-      sheet: match.source.sheet,
-      row: match.source.row,
-      modelo: match.model,
-      sku_sif: match.sku_sif,
-    }],
+      sheet: item.source.sheet,
+      row: item.source.row,
+      modelo: item.model,
+      sku_sif: item.sku_sif,
+      })),
+      ...(override ? [{
+        sourceId: override.sourceId,
+        sheet: override.source.sheet,
+        row: override.source.row,
+        modelo: override.model,
+        sku_sif: null,
+      }] : []),
+    ],
   };
 }
 
@@ -493,8 +666,16 @@ export function normalizeOfferWorkbooks({
     throw new Error('No se encontro la hoja Ofertas Equipos en Portafolio');
   }
 
+  const newRegularPrices = indexNewRegularPrices(
+    financingWorkbook,
+    sheetName,
+    sourceIds.tabla_financiamiento
+  );
+
   const rows = rowsForSheet(financingWorkbook.Sheets[sheetName]);
   let header = null;
+  let processedRows = 0;
+  let processedEquipment = 0;
 
   for (let index = 0; index < rows.length; index += 1) {
     const row = rows[index];
@@ -509,6 +690,9 @@ export function normalizeOfferWorkbooks({
     const planText = String(row[header.plan] ?? '').trim();
     const equipmentText = String(row[header.equipment] ?? '').trim();
     if (!offerText || !planText || !equipmentText) continue;
+    const models = splitEquipment(equipmentText);
+    processedRows += 1;
+    processedEquipment += models.length;
 
     const excelRow = index + 1;
     const termsText = header.terms
@@ -537,7 +721,6 @@ export function normalizeOfferWorkbooks({
     const families = parseFamilies(planText, termsText);
     const planTypes = parsePlanTypes(planText, termsText);
     const terms = parseTerms(`${offerText} ${termsText}`);
-    const models = splitEquipment(equipmentText);
     const equipment = [];
     let exactMatches = 0;
     let missingTerms = 0;
@@ -546,6 +729,7 @@ export function normalizeOfferWorkbooks({
       const matched = matchEquipment(
         model,
         priceIndex,
+        newRegularPrices,
         sourceIds.lista_precios
       );
       equipment.push({
@@ -656,6 +840,8 @@ export function normalizeOfferWorkbooks({
     summary: {
       offers: offers.length,
       equipment: offers.reduce((total, offer) => total + offer.equipment.length, 0),
+      filas_procesadas: processedRows,
+      equipos_procesados: processedEquipment,
       blockingContradictions: contradictions.filter((item) => item.blocking).length,
     },
   };

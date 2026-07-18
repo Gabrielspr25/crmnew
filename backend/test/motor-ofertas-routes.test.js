@@ -34,6 +34,9 @@ function dependencies() {
       async getCurrentVersion() {
         return null;
       },
+      async getLatestPriceListSource() {
+        return null;
+      },
       async findVersionByIdentity() {
         return null;
       },
@@ -45,6 +48,12 @@ function dependencies() {
       },
       async getEligibleSnapshot() {
         return { offers: [], equipment: [] };
+      },
+      async getLatestReviewVersion() {
+        return null;
+      },
+      async saveReviewDecision() {
+        return { actualizadas: 0 };
       },
     },
     archiveOfferSource: async (input) => ({
@@ -63,6 +72,17 @@ function dependencies() {
     }),
     normalizeOfferWorkbooks: () => ({ offers: [], contradictions: [], summary: {} }),
     evaluateEligibleOffers: () => ({ equipos: [], validaciones: [] }),
+    readArchivedOfferSources: async () => ({
+      financingBuffer: Buffer.from('tabla'),
+      priceListBuffer: Buffer.from('lista'),
+    }),
+    readArchivedOfferSource: async () => Buffer.from('lista'),
+    buildOfferReviewSnapshot: () => ({
+      ok: true,
+      resumen: {},
+      equipos: [],
+      business_red: [],
+    }),
   };
 }
 
@@ -73,10 +93,10 @@ function token(rol) {
 test('el default real versiona el snapshot comercial actualizado', async () => {
   const { DEFAULT_NORMALIZADOR_VERSION } = await import(routesPath);
 
-  assert.equal(DEFAULT_NORMALIZADOR_VERSION, '1.0.2');
+  assert.equal(DEFAULT_NORMALIZADOR_VERSION, '1.0.3');
 });
 
-test('las cuatro rutas rechazan Bearer ausente o invalido incluso con DEV_LOGIN=1', async () => {
+test('las rutas del motor rechazan Bearer ausente o invalido incluso con DEV_LOGIN=1', async () => {
   const { createMotorOfertasRouter } = await import(routesPath);
   const previous = process.env.DEV_LOGIN;
   process.env.DEV_LOGIN = '1';
@@ -84,6 +104,9 @@ test('las cuatro rutas rechazan Bearer ausente o invalido incluso con DEV_LOGIN=
     await withServer(createMotorOfertasRouter(dependencies()), async (baseUrl) => {
       for (const [path, options] of [
         ['/version-vigente', {}],
+        ['/revision-actual', {}],
+        ['/versiones/00000000-0000-4000-8000-000000000001/revision/equivalencias', { method: 'POST' }],
+        ['/versiones/00000000-0000-4000-8000-000000000001/revision/business-red', { method: 'POST' }],
         ['/preview', { method: 'POST' }],
         ['/aprobar', { method: 'POST' }],
         ['/elegibles', { method: 'POST' }],
@@ -103,13 +126,15 @@ test('las cuatro rutas rechazan Bearer ausente o invalido incluso con DEV_LOGIN=
   }
 });
 
-test('preview y aprobar exigen admin o supervisor, mientras version vigente admite vendedor', async () => {
+test('las revisiones, preview y aprobar exigen admin o supervisor, mientras version vigente admite vendedor', async () => {
   const { createMotorOfertasRouter } = await import(routesPath);
   await withServer(createMotorOfertasRouter(dependencies()), async (baseUrl) => {
     const vendedor = { Authorization: `Bearer ${token('vendedor')}` };
     const admin = { Authorization: `Bearer ${token('admin')}` };
     const version = await fetch(`${baseUrl}/version-vigente`, { headers: vendedor });
     assert.equal(version.status, 200);
+    const revision = await fetch(`${baseUrl}/revision-actual`, { headers: vendedor });
+    assert.equal(revision.status, 403);
     const preview = await fetch(`${baseUrl}/preview`, { method: 'POST', headers: vendedor });
     assert.equal(preview.status, 403);
     const aprobar = await fetch(`${baseUrl}/aprobar`, {
@@ -124,5 +149,34 @@ test('preview y aprobar exigen admin o supervisor, mientras version vigente admi
       error: 'preview_incompleto',
       archivos_faltantes: ['tabla_financiamiento', 'lista_precios'],
     });
+  });
+});
+
+test('el preview desde el tab Ofertas exige admin y no acepta una lista inexistente', async () => {
+  const { createMotorOfertasRouter } = await import(routesPath);
+  await withServer(createMotorOfertasRouter(dependencies()), async (baseUrl) => {
+    const form = new FormData();
+    form.append('tabla_financiamiento', new Blob(['tabla'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }), 'boletin.xlsx');
+
+    const vendedor = await fetch(`${baseUrl}/preview-tabla`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token('vendedor')}` },
+      body: form,
+    });
+    assert.equal(vendedor.status, 403);
+
+    const adminForm = new FormData();
+    adminForm.append('tabla_financiamiento', new Blob(['tabla'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }), 'boletin.xlsx');
+    const admin = await fetch(`${baseUrl}/preview-tabla`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token('admin')}` },
+      body: adminForm,
+    });
+    assert.equal(admin.status, 422);
+    assert.deepEqual(await admin.json(), { error: 'lista_precios_no_aceptada' });
   });
 });
