@@ -79,7 +79,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 <main class="wrap">
   <section class="hero">
     <div><h1>Oferta const.</h1><p>Flujo limpio: escoger plan, escoger equipo y oferta, revisar terminos, agregar servicios/seguro y cerrar propuesta.</p></div>
-    <div class="summary" id="topSummary"></div>
   </section>
 
   <section class="step" id="stepPlan">
@@ -92,8 +91,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
         <div class="plan-card"><label>Eventos de esta propuesta</label><div class="chips event-grid" id="eventosChips">
           <button class="chip active" type="button" data-evento="nueva" onclick="toggleEvento('nueva')">Linea nueva</button>
           <button class="chip" type="button" data-evento="portabilidad" onclick="toggleEvento('portabilidad')">Portabilidad</button>
-          <button class="chip" type="button" data-evento="renovacion" onclick="toggleEvento('renovacion')">Renovacion</button>
-          <button class="chip" type="button" data-evento="adicional" onclick="toggleEvento('adicional')">Linea adicional</button>
         </div></div>
         <div class="plan-card"><label>Contexto del cliente</label><button class="context-toggle" id="convergenteBtn" type="button" onclick="toggleConvergente()">No convergente<span>Toca para activar bono streaming</span></button></div>
         <div class="plan-card"><label>Cantidad de lineas</label><input class="plan-input" id="lineas" type="number" min="1" step="1" value="1" oninput="syncPlan();renderSummary()"></div>
@@ -1352,10 +1349,12 @@ function renderProposal(){
   $('closeRule').className=canClose?'warning ok':'warning';$('closeRule').textContent=canClose?'Regla cumplida: puede cerrar la comparativa.':`No puede cerrar todavia: ${state.tipo==='individual'?'individual requiere 1 linea':'multilinea requiere minimo 2 lineas'}.`;
   $('closeProposalBtn').disabled=!canClose;$('propStatus').textContent=canClose?'Lista para cerrar':'Incompleta';
 }
-function renderSummary(){
-  const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
-  $('topSummary').innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span><span class="pill">${state.convergente?'Convergente':'No convergente'}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
-}
+    function renderSummary(){
+      const summary=$('topSummary');
+      if(!summary)return;
+      const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
+      summary.innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span><span class="pill">${state.convergente?'Convergente':'No convergente'}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
+    }
 ensureLineRows();renderSummary();loadCrmClientContext();
 </script>
 </body>

@@ -34,16 +34,29 @@ test('Oferta const protege reglas de cierre individual y multilinea', () => {
   assert.match(page, /Cerrar comparativa/);
 });
 
-test('Oferta const permite evento por linea dentro de una misma propuesta', () => {
+test('Oferta const mantiene la asignacion de evento por linea', () => {
   assert.match(page, /line-event-select/);
   assert.match(page, /setLineEvent/);
   assert.match(page, /toggleEvento/);
   assert.match(page, /eventos:\['nueva'\]/);
-  assert.match(page, /Linea nueva/);
-  assert.match(page, /Portabilidad/);
-  assert.match(page, /Renovacion/);
-  assert.match(page, /Linea adicional/);
   assert.match(page, /Tipo de linea para este equipo/);
+});
+
+test('Oferta const muestra solo Linea nueva y Portabilidad en el formulario principal', () => {
+  const planStart = page.indexOf('<section class="step" id="stepPlan">');
+  const planEnd = page.indexOf('<section class="step locked" id="stepEquipo">', planStart);
+  const planSection = page.slice(planStart, planEnd);
+
+  assert.match(planSection, /data-evento="nueva"/);
+  assert.match(planSection, /data-evento="portabilidad"/);
+  assert.doesNotMatch(planSection, /data-evento="renovacion"/);
+  assert.doesNotMatch(planSection, /data-evento="adicional"/);
+  assert.match(planSection, /id="lineas" type="number" min="1"/);
+  assert.doesNotMatch(planSection, /id="lineas"[^>]*max=/);
+});
+
+test('Oferta const no muestra resumen repetido arriba del formulario', () => {
+  assert.doesNotMatch(page, /id="topSummary"/);
 });
 
 test('Oferta const sincroniza resumen al cambiar plan y aplica minimo multilinea', () => {
