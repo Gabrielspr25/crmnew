@@ -195,6 +195,19 @@ const EVENTOS=[
   {id:'renovacion',label:'Renovacion'},
   {id:'adicional',label:'Linea adicional'}
 ];
+// Operaciones disponibles por linea. Cada linea escoge la suya de forma independiente.
+const LINE_OPERACIONES=[
+  {id:'nueva',label:'Linea nueva',motor:'linea_nueva'},
+  {id:'portabilidad',label:'Portabilidad',motor:'portabilidad'},
+  {id:'renovacion',label:'Renovacion',motor:'renovacion'}
+];
+const PLANES_INDIVIDUALES=[20,35,40,45,50,65,75,95,100];
+const PLANES_BUSINESS_RED=[
+  {id:'plus',label:'Business Red Plus',familia:'business_red_plus'},
+  {id:'extreme',label:'Business Red Extreme',familia:'business_red_extreme'},
+  {id:'supreme',label:'Business Red Supreme',familia:'business_red_supreme'},
+  {id:'sinfronteras',label:'Business Red Sin Fronteras',familia:'business_red_sin_fronteras'}
+];
 const state={tipo:'individual',planInd:75,planMulti:'plus',beneficio:'todos',eventos:['nueva'],convergente:false,usarAutopay:true,lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],servicios:[],seguros:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'precios_2play_internet',openProductGroups:['precios_2play_internet'],activeLineIndex:null,activeBrand:'Todos',selectedModalKey:null};
 const SERVICIOS=[
   {id:'rescate',nombre:'Claro Rescate',desc:'Servicio de asistencia vehicular',socMovil:'RESCATEM',socFijo:'RESCATEF / A821'},
@@ -337,11 +350,119 @@ function ofertaAplicaALinea(row,index){
 function ensureLineRows(){
   const rows=[];
   for(let i=0;i<state.lineas;i++){
-    rows.push(state.cart[i]||{linea:i+1,evento:state.eventos[Math.min(i,state.eventos.length-1)]||state.eventos[0],equipo:null,oferta:null,deudaPortabilidad:0});
+    // Cada linea arranca sin operacion ni plan: ambos se escogen antes de habilitar el equipo.
+    rows.push(state.cart[i]||{linea:i+1,evento:'',plan:null,equipo:null,oferta:null,deudaPortabilidad:0,motorEquipos:null,motorEstado:'idle'});
     rows[i].linea=i+1;
-    if(!state.eventos.includes(rows[i].evento)) rows[i].evento=state.eventos[0];
+    if(!LINE_OPERACIONES.some(op=>op.id===rows[i].evento)) rows[i].evento=rows[i].evento||'';
   }
   state.cart=rows;
+}
+// --- Operacion, plan y elegibilidad por linea -------------------------------
+function rowPlanOptions(){
+  return state.tipo==='individual'
+    ? PLANES_INDIVIDUALES.map(m=>({value:String(m),label:'$'+m}))
+    : PLANES_BUSINESS_RED.map(p=>({value:p.id,label:p.label}));
+}
+function rowPlanLabel(row){
+  if(!row||!row.plan) return 'Pendiente';
+  return row.plan.nombre||row.plan.codigo||'Pendiente';
+}
+function rowReadyForEquipo(row){ return !!(row && row.evento && row.plan); }
+function rowOperacionSelect(row,index){
+  return `<select class="line-event-select" onchange="setRowEvent(${index},this.value)">
+    <option value="" ${row.evento?'':'selected'}>Escoger...</option>
+    ${LINE_OPERACIONES.map(op=>`<option value="${op.id}" ${row.evento===op.id?'selected':''}>${esc(op.label)}</option>`).join('')}
+  </select>`;
+}
+function rowPlanSelect(row,index){
+  const opts=rowPlanOptions();
+  const current=row.plan?String(row.plan.codigo):'';
+  return `<select class="line-event-select" ${row.evento?'':'disabled'} onchange="setRowPlan(${index},this.value)">
+    <option value="" ${current?'':'selected'}>${row.evento?'Escoger...':'Elige operacion'}</option>
+    ${opts.map(o=>`<option value="${esc(o.value)}" ${current===o.value?'selected':''}>${esc(o.label)}</option>`).join('')}
+  </select>`;
+}
+function clearRowEquipo(index){
+  if(!state.cart[index]) return;
+  state.cart[index].equipo=null;
+  state.cart[index].oferta=null;
+  state.cart[index].motorEquipos=null;
+  state.cart[index].motorEstado='idle';
+  state.cart[index].seguro=false;
+  state.cart[index].plazo=null;
+}
+function setRowPlan(index,value){
+  ensureLineRows();
+  if(!value){ state.cart[index].plan=null; }
+  else if(state.tipo==='individual'){
+    const monto=Number(value);
+    state.cart[index].plan={codigo:String(monto),nombre:'Plan $'+monto,monto:monto,familia:null};
+  } else {
+    const fam=PLANES_BUSINESS_RED.find(p=>p.id===value);
+    state.cart[index].plan={codigo:fam.id,nombre:fam.label,monto:planMultiMonto(fam.id),familia:fam.familia};
+  }
+  clearRowEquipo(index);
+  renderLineRows();
+  renderSummary();
+  if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
+}
+function planMultiMonto(id){ return ({plus:65,extreme:110,supreme:130,sinfronteras:160})[id]||0; }
+function motorLineaPayload(index){
+  const row=state.cart[index]||{};
+  const op=LINE_OPERACIONES.find(o=>o.id===row.evento);
+  const linea={
+    id:'linea_'+(index+1), indice:index+1,
+    ban:(state.crmBan||null),
+    tipo: state.tipo==='individual'?'individual':'multilinea_business_red',
+    plan:{codigo:row.plan.codigo,nombre:row.plan.nombre,monto:Number(row.plan.monto)||0},
+    evento: op?op.motor:'linea_nueva',
+    convergente: !!state.convergente,
+    trade_in:{estado:'no_requiere',validado:false}
+  };
+  if(state.tipo!=='individual') linea.familia_business_red=row.plan.familia;
+  return {linea,contexto_ban:{posicion_en_ban:index+1,beneficios_usados_por_oferta:{}}};
+}
+function mapMotorEquipoToRow(item){
+  const eq=item.equipo||{};
+  const of=item.oferta||{};
+  const modelo=eq.modelo_oficial||eq.modelo||'Equipo';
+  const marca=(String(modelo).split(/\s+/)[0]||'Equipo');
+  return {
+    key:(eq.sku_sif||eq.id||modelo),
+    marca:marca, modelo:modelo,
+    precio:Number(eq.precio_regular||0),
+    sku_sif:eq.sku_sif||null, sap:eq.sap||null,
+    plazos:(item.plazos||[]).map(p=>({meses:p.meses,pago:Number(p.pago_mensual||0)})),
+    beneficio:item.beneficio||null,
+    aplicacion_automatica:item.aplicacion_automatica!==false,
+    validaciones:item.validaciones||[],
+    oferta:{id:of.id||'oferta',titulo:of.nombre||'Oferta',nombre:of.nombre||'Oferta'}
+  };
+}
+async function fetchMotorEquipos(index){
+  ensureLineRows();
+  const row=state.cart[index];
+  if(!rowReadyForEquipo(row)) return;
+  row.motorEstado='cargando'; row.motorEquipos=null; renderEquipos();
+  if(!crmToken()){ row.motorEstado='sin_sesion'; renderEquipos(); return; }
+  try{
+    const resp=await crmApi('/api/motor-ofertas/elegibles',{method:'POST',body:motorLineaPayload(index)});
+    const lista=(resp&&resp.equipos)||[];
+    row.motorEquipos=lista.map(mapMotorEquipoToRow);
+    row.motorEstado=row.motorEquipos.length?'ok':'sin_equipos';
+  }catch(err){
+    const msg=String((err&&err.message)||'');
+    row.motorEstado=/401/.test(msg)?'sin_sesion':(/404/.test(msg)?'sin_version':'error');
+  }
+  renderEquipos();
+}
+function motorEstadoMensaje(estado){
+  if(estado==='cargando') return 'Consultando ofertas vigentes...';
+  if(estado==='sin_equipos') return 'No hay equipos elegibles para esta operacion y plan.';
+  if(estado==='sin_version') return 'No hay una version vigente de ofertas publicada.';
+  if(estado==='sin_sesion') return 'Inicia sesion en el CRM para ver equipos elegibles.';
+  if(estado==='error') return 'No se pudo consultar el motor de ofertas.';
+  return 'Selecciona operacion y plan para ver equipos.';
 }
 function offerDisplayTitle(o){
   if(state.tipo!=='multilinea') return o.titulo;
@@ -500,10 +621,11 @@ function renderLineRows(){
   ensureLineRows();
   const selected=state.cart.filter(r=>r.equipo&&r.oferta).length;
   $('equiposDisponiblesMeta').textContent=`${state.lineas} linea(s). Toca el campo Equipo para escoger desde la modal por marca.`;
-  $('lineasTable').innerHTML=`<thead><tr><th>Linea</th><th>Evento</th><th>Equipo</th><th>Beneficio</th><th>Creditos/bonos</th><th>Deuda port.</th><th>Meses</th><th>Pago equipo</th><th>Regular</th><th>Seguro</th></tr></thead><tbody>${state.cart.map((row,i)=>`<tr>
+  $('lineasTable').innerHTML=`<thead><tr><th>Linea</th><th>Evento</th><th>Plan</th><th>Equipo</th><th>Beneficio</th><th>Creditos/bonos</th><th>Deuda port.</th><th>Meses</th><th>Pago equipo</th><th>Regular</th><th>Seguro</th></tr></thead><tbody>${state.cart.map((row,i)=>`<tr>
     <td>Linea ${row.linea}</td>
-    <td><select onchange="setRowEvent(${i},this.value)">${state.eventos.map(ev=>`<option value="${ev}" ${row.evento===ev?'selected':''}>${esc(eventLabel(ev))}</option>`).join('')}</select></td>
-    <td><button class="line-pick ${row.equipo?'':'empty'}" onclick="openEquipmentModal(${i})">${row.equipo?esc(row.equipo.modelo):'Escoger equipo'}</button></td>
+    <td>${rowOperacionSelect(row,i)}</td>
+    <td>${rowPlanSelect(row,i)}</td>
+    <td><button class="line-pick ${row.equipo?'':'empty'}" ${rowReadyForEquipo(row)?'':'disabled'} title="${rowReadyForEquipo(row)?'':'Escoge operacion y plan primero'}" onclick="openEquipmentModal(${i})">${row.equipo?esc(row.equipo.modelo):'Escoger equipo'}</button></td>
     <td>${offerActionPills(row)}</td>
     <td>${lineBonusPills(row)}</td>
     <td>${row.evento==='portabilidad'?`<input class="compare-input compare-mini" type="number" min="0" step="0.01" value="${Number(row.deudaPortabilidad||0)}" onchange="setLineDebt(${i},this.value)">`:'-'}</td>
@@ -518,12 +640,10 @@ function renderLineRows(){
 function setRowEvent(index,value){
   ensureLineRows();
   state.cart[index].evento=value;
-  if(state.cart[index].equipo&&!ofertaAplicaALinea(state.cart[index],index)){
-    state.cart[index].equipo=null;
-    state.cart[index].oferta=null;
-    state.cart[index].seguro=false;
-  }
-  if(state.activeLineIndex===index) renderEquipos();
+  // Cambiar la operacion invalida el equipo elegido para esa linea (y solo esa).
+  clearRowEquipo(index);
+  if(state.activeLineIndex===index&&value&&state.cart[index].plan) fetchMotorEquipos(index);
+  else if(state.activeLineIndex===index) renderEquipos();
   renderLineRows();
   if(!$('stepServicios').classList.contains('locked')) renderOfferExtrasPanel();
   if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
@@ -543,14 +663,16 @@ function setLineDebt(index,value){
 }
 function openEquipmentModal(index){
   ensureLineRows();
+  const row=state.cart[index];
+  if(!rowReadyForEquipo(row)){ alert('Escoge la operacion y el plan de esta linea antes de seleccionar el equipo.'); return; }
   state.activeLineIndex=index;
   state.activeBrand='Todos';
   state.selectedModalKey=null;
   $('modalTitle').textContent=`Escoger equipo - Linea ${index+1}`;
-  $('modalSubtitle').textContent=`${planLabel()} / ${eventLabel(state.cart[index].evento)}`;
+  $('modalSubtitle').textContent=`${rowPlanLabel(row)} / ${eventLabel(row.evento)}`;
   $('equipmentModal').classList.add('open');
   renderBrandTabs();
-  renderEquipos();
+  fetchMotorEquipos(index);
 }
 function closeEquipmentModal(){$('equipmentModal').classList.remove('open');}
 const MODEM_BRANDS=['Dlink','Franklin','Netgear','PCD','SenseConnect'];
@@ -559,8 +681,12 @@ function isModem(eq){return MODEM_BRANDS.includes(eq.marca);}
 function deviceTab(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablets';return eq.marca;}
 function deviceKind(eq){if(isModem(eq))return 'modem';if(isTablet(eq))return 'tablet';return 'phone';}
 function deviceKindLabel(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablet';return eq.marca;}
+function motorRowsForActiveLine(){
+  const row=state.cart[state.activeLineIndex??0]||{};
+  return row.motorEquipos||[];
+}
 function availableBrands(){
-  const tabs=[...new Set(L.getEquiposFiltrados({...lineState(state.activeLineIndex??0),buscar:''}).map(deviceTab))].sort((a,b)=>{
+  const tabs=[...new Set(motorRowsForActiveLine().map(deviceTab))].sort((a,b)=>{
     const order={Modem:0,Tablets:1};
     return (order[a]??10)-(order[b]??10)||a.localeCompare(b);
   });
@@ -571,15 +697,21 @@ function renderBrandTabs(){
 }
 function setActiveBrand(brand){state.activeBrand=brand;state.selectedModalKey=null;renderBrandTabs();renderEquipos();}
 function modalEquipoList(){
-  const q=($('buscarEquipo').value||'').toLowerCase().trim();state.buscar=q;
-  const activeState={...lineState(state.activeLineIndex??0),buscar:q};
-  let list=L.getEquiposFiltrados(activeState);
+  const q=(($('buscarEquipo')&&$('buscarEquipo').value)||'').toLowerCase().trim();state.buscar=q;
+  let list=motorRowsForActiveLine();
+  if(q) list=list.filter(eq=>`${eq.marca} ${eq.modelo}`.toLowerCase().includes(q));
   if(state.activeBrand&&state.activeBrand!=='Todos') list=list.filter(eq=>deviceTab(eq)===state.activeBrand);
   return list.slice(0,80);
 }
 function renderEquipos(){
-  const list=modalEquipoList();
   const current=state.cart[state.activeLineIndex??0]||{};
+  const estado=current.motorEstado||'idle';
+  if(estado!=='ok'){
+    $('modalDeviceList').innerHTML=`<div class="modal-empty">${esc(motorEstadoMensaje(estado))}</div>`;
+    $('modalOfferPanel').innerHTML='<div class="modal-empty">Sin equipos que mostrar.</div>';
+    return;
+  }
+  const list=modalEquipoList();
   if(!state.selectedModalKey) state.selectedModalKey=(current.equipo&&list.some(eq=>eq.key===current.equipo.key))?current.equipo.key:(list[0]&&list[0].key)||null;
   $('modalDeviceList').innerHTML=list.map(eq=>`<button class="modal-device-row device-${deviceKind(eq)} ${state.selectedModalKey===eq.key?'active':''}" onclick="selectModalDevice('${esc(eq.key)}')"><b>${esc(eq.modelo)}</b><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span><em class="device-kind ${deviceKind(eq)==='modem'?'modem':''}">${esc(deviceKindLabel(eq))}</em></button>`).join('')||'<div class="modal-empty">No hay equipos disponibles para este filtro.</div>';
   renderModalOfferPanel();
@@ -589,8 +721,18 @@ function renderModalOfferPanel(){
   const eq=modalEquipoList().find(item=>item.key===state.selectedModalKey);
   if(!eq){$('modalOfferPanel').innerHTML='<div class="modal-empty">Selecciona un equipo para ver ofertas.</div>';return;}
   const current=state.cart[state.activeLineIndex??0]||{};
-  const ofertas=sortRecommendedOffers(ofertasParaEquipo(eq,state.activeLineIndex??0),current);
-  $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span></div><span>${ofertas.length} oferta(s)</span></div><div class="modal-offer-list">${ofertas.map(o=>{const rec=recommendOffer(o,current);return `<div class="offer-choice ${rec.score>=90?'recommended':''} ${current.oferta&&current.oferta.id===o.id&&current.equipo&&current.equipo.key===eq.key?'active':''}" onclick="assignOfferToLine('${esc(eq.key)}','${esc(o.id)}')"><span class="recommend-badge ${rec.warn?'warn':''}">${esc(rec.label)}</span><b>${esc(offerDisplayTitle(o))}</b><span>${esc(rec.detail)} / ${termsShort(o,eq)}${offerEligibilityNote(o)?' / '+esc(offerEligibilityNote(o)):''}</span><div class="select-offer">Escoger para linea ${(state.activeLineIndex??0)+1}</div></div>`}).join('')||'<div class="modal-empty">Este equipo no tiene ofertas para el contexto actual.</div>'}</div>`;
+  // La oferta viene de la version vigente del motor, una por equipo elegible.
+  const plazosTxt=(eq.plazos||[]).map(p=>`${p.meses}m ${money(p.pago)}/mes`).join(' / ')||'Sin plazos publicados';
+  const benef=eq.beneficio&&eq.beneficio.tipo?eq.beneficio.tipo:'Ver oferta';
+  const avisos=(eq.validaciones||[]).map(v=>esc(v.codigo)).join(', ');
+  $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span></div><span>1 oferta(s)</span></div>
+    <div class="modal-offer-list"><div class="offer-choice ${current.oferta&&current.equipo&&current.equipo.key===eq.key?'active':''}" onclick="assignOfferToLine('${esc(eq.key)}','${esc(eq.oferta.id)}')">
+      <span class="recommend-badge ${eq.aplicacion_automatica?'':'warn'}">${eq.aplicacion_automatica?'Elegible':'Revisar'}</span>
+      <b>${esc(eq.oferta.titulo)}</b>
+      <span>${esc(benef)} / ${esc(plazosTxt)}${avisos?' / '+avisos:''}</span>
+      <div class="select-offer">Escoger para linea ${(state.activeLineIndex??0)+1}</div>
+    </div></div>`;
+  return;
 }
 function lineEventSelect(key){
   return `<select class="line-event-select" onclick="event.stopPropagation()" onchange="setLineEvent('${esc(key)}',this.value)">
@@ -605,8 +747,11 @@ function setLineEvent(key,value){
 function assignOfferToLine(key,offerId){
   ensureLineRows();
   const index=state.activeLineIndex??0;
-  const eq=L.getEquiposFiltrados({...lineState(index),buscar:''}).find(e=>e.key===key);const offer=(window.OFERTAS_DATA||[]).find(o=>o.id===offerId);
-  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:defaultPlazo(offer),seguro:state.cart[index]?.seguro||false};
+  // Equipo y oferta provienen de la respuesta del motor para esta linea.
+  const eq=(state.cart[index].motorEquipos||[]).find(e=>e.key===key);
+  if(!eq) return;
+  const offer={...eq.oferta,plazos:(eq.plazos||[]).map(p=>p.meses),beneficio:(eq.beneficio&&eq.beneficio.tipo)||null};
+  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:(eq.plazos&&eq.plazos[0]&&eq.plazos[0].meses)||30,seguro:state.cart[index]?.seguro||false};
   state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
   renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
 }
@@ -1257,7 +1402,7 @@ function downloadComparisonExcel(){
       const services=[...state.servicios.map(serviceSummaryText),...state.productosAdicionales.map(productoAdicionalSummaryText),...selectedLineInsurance().map(s=>`Seguro linea ${s.linea} ${s.modelo}: prima ${s.prima}, deducible ${s.deducible}`)];
   const offerRows=selected.map(row=>{
       const ins=insuranceForPrice(row.equipo.precio);
-      return [`Linea ${row.linea}`,eventLabel(row.evento),row.equipo.modelo,offerProposalLabel(row),linePaySummary(row),lineMonthsText(row),`${money(paymentPerUnit(row))}/mes`,money(row.equipo.precio),row.seguro?`Si - Prima ${ins.prima} / Deducible ${ins.deducible}`:'No'];
+      return [`Linea ${row.linea}`,eventLabel(row.evento),rowPlanLabel(row),row.equipo.modelo,offerProposalLabel(row),linePaySummary(row),lineMonthsText(row),`${money(paymentPerUnit(row))}/mes`,money(row.equipo.precio),row.seguro?`Si - Prima ${ins.prima} / Deducible ${ins.deducible}`:'No'];
     });
   const bonusRows=[
     ...selected.flatMap(row=>lineBonusCredits(row,selected).filter(b=>b.kind==='port'||b.kind==='balance'||b.kind==='stream').map(b=>[`Linea ${row.linea}`,row.equipo.modelo,b.label,b.detail])),
@@ -1294,8 +1439,8 @@ function downloadComparisonExcel(){
     excelRow(['','','','TOTAL ACTUAL',money(d.totalActual),`${cpLineCount(d)} linea(s)`,'','',''],'total'),
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Oferta nueva calculada'),
-    excelRow(['Linea','Evento','Equipo','Beneficio','Que paga','Meses','Paga equipo','Regular','Seguro'],'header'),
-    excelDataRows(offerRows.length?offerRows:[['Sin equipos seleccionados','','','','','','','','']]),
+    excelRow(['Linea','Evento','Plan','Equipo','Beneficio','Que paga','Meses','Paga equipo','Regular','Seguro'],'header'),
+    excelDataRows(offerRows.length?offerRows:[['Sin equipos seleccionados','','','','','','','','','']]),
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Servicios y seguro'),
     (services.length?services.map(s=>`<tr class="note"><td colspan="9">${excelCell(s)}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin servicios o seguros seleccionados</td></tr>'),
