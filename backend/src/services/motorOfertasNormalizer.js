@@ -385,6 +385,12 @@ function parseFamilies(...values) {
   for (const [family, pattern] of definitions) {
     if (pattern.test(text)) families.push(family);
   }
+  // La tabla usa "planes Business RED" para abarcar la familia completa.
+  // Solo se expande a todas las familias cuando la fila menciona Business RED
+  // de forma generica y no nombra ninguna familia especifica.
+  if (families.length === 0 && /\bBUSINESS RED\b/.test(text)) {
+    return definitions.map(([family]) => family);
+  }
   return families;
 }
 
@@ -738,8 +744,11 @@ export function normalizeOfferWorkbooks({
       });
       if (matched.exact) {
         exactMatches += 1;
+        if (beneficioTipo === 'gratis') {
+          equipment.at(-1).mensualidades = terms.map((meses) => ({ meses, monto: 0 }));
+        }
         const availableTerms = new Set(
-          matched.snapshot.mensualidades.map((item) => item.meses)
+          equipment.at(-1).mensualidades.map((item) => item.meses)
         );
         for (const term of terms) {
           if (availableTerms.has(term)) continue;

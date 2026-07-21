@@ -660,3 +660,111 @@ test('marca plazo sin mensualidad y agrupa fuentes de variantes del mismo equipo
   assert.equal(duplicateOffer.equipment[0].sku_sif, null);
   assert.deepEqual(duplicateOffer.equipment[0].variantes.map((item) => item.fuente_precio.row), [6, 8]);
 });
+
+test('"planes Business RED" expande a todas las familias solo cuando se menciona expresamente', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      [
+        '50% de descuento lineas nuevas',
+        'Planes Business RED desde $50',
+        'Samsung Galaxy A37 128GB',
+        'Aplica a lineas nuevas. Solo 30 plazos.',
+      ],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['A37', 'SAP-A37', 'Samsung Galaxy A37 128GB', 359.99, 12],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'precios-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  const offer = result.offers.find((item) => item.trace.row === 2);
+  assert.ok(offer, 'la oferta con Business RED generico debe emitirse');
+  assert.deepEqual(offer.contract.familias, [
+    'business_red_plus',
+    'business_red_extreme',
+    'business_red_supreme',
+    'business_red_sin_fronteras',
+  ]);
+});
+
+test('una fila sin mencion de Business RED no hereda familias automaticamente', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      [
+        '50% de descuento lineas nuevas',
+        'Planes desde $50',
+        'Samsung Galaxy A37 128GB',
+        'Aplica a lineas nuevas. Solo 30 plazos.',
+      ],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 30 meses'],
+      ['A37', 'SAP-A37', 'Samsung Galaxy A37 128GB', 359.99, 12],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'precios-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  const offer = result.offers.find((item) => item.trace.row === 2);
+  assert.ok(offer, 'la oferta individual debe emitirse');
+  assert.deepEqual(offer.contract.familias, []);
+});
+
+test('equipos con beneficio gratis quedan en mensualidad $0 en todos los plazos aplicables', async () => {
+  const normalizer = await loadNormalizer();
+  const financing = workbookBuffer({
+    'Ofertas Equipos en Portafolio': [
+      ['OFERTA', 'PLANES QUE APLICAN', 'EQUIPOS QUE APLICAN', 'TERMINOS Y CONDICIONES'],
+      [
+        'Equipo gratis para linea nueva',
+        'Plan de $50',
+        'Samsung Galaxy A37 128GB',
+        'Aplica a lineas nuevas. Financiamiento en 24 y 30 plazos.',
+      ],
+    ],
+  });
+  const prices = workbookBuffer({
+    'Finan Equipos Movil': [
+      ['Item Code SIF', 'Material SAP', 'Modelo', 'Precio', 'Mensualidad 24 meses', 'Mensualidad 30 meses'],
+      ['A37', 'SAP-A37', 'Samsung Galaxy A37 128GB', 349.99, 14.58, 11.67],
+    ],
+  });
+
+  const result = normalizer.normalizeOfferWorkbooks({
+    financingBuffer: financing,
+    priceListBuffer: prices,
+    sourceIds: { tabla_financiamiento: 'tabla-1', lista_precios: 'precios-1' },
+    fileNames: { tabla_financiamiento: 'tabla.xlsx', lista_precios: 'precios.xlsx' },
+    vigencia: { desde: '2026-07-16', hasta: '2026-07-21', estado: 'vigente' },
+  });
+
+  const offer = result.offers.find((item) => item.trace.row === 2);
+  assert.ok(offer, 'la oferta gratis debe emitirse');
+  assert.equal(offer.equipment[0].beneficio_tipo, 'gratis');
+  assert.deepEqual(offer.equipment[0].mensualidades, [
+    { meses: 24, monto: 0 },
+    { meses: 30, monto: 0 },
+  ]);
+});
