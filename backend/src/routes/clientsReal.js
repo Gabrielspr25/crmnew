@@ -54,6 +54,44 @@ const EMPTY_DUPLICATE_CLIENT_SQL = `(
 )`;
 const ACTIVE_SUB_STATUS = (a) => `COALESCE(LOWER(${a}.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
 
+// Clasificacion operacional del cliente: primero respeta line_kind de la linea
+// importada; si no existe, usa account_type del BAN como respaldo historico.
+const SERVICE_KIND_SQL = (subscriberAlias, banAlias) => `LOWER(COALESCE(NULLIF(${subscriberAlias}.line_kind::text,''), ${banAlias}.account_type,''))`;
+const SERVICE_MOBILE_SQL = (subscriberAlias, banAlias) => `(${SERVICE_KIND_SQL(subscriberAlias, banAlias)} LIKE '%movil%'
+  OR ${SERVICE_KIND_SQL(subscriberAlias, banAlias)} LIKE '%móvil%'
+  OR ${SERVICE_KIND_SQL(subscriberAlias, banAlias)} LIKE '%mobile%')`;
+const SERVICE_FIXED_SQL = (subscriberAlias, banAlias) => `(${SERVICE_KIND_SQL(subscriberAlias, banAlias)} LIKE '%fijo%'
+  OR ${SERVICE_KIND_SQL(subscriberAlias, banAlias)} LIKE '%fixed%')`;
+const SERVICE_CLIENT_SQL = {
+  movil: `(EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                    WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                      AND ${SERVICE_MOBILE_SQL('s_service', 'b_service')})
+            AND NOT EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                            WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                              AND ${SERVICE_FIXED_SQL('s_service', 'b_service')}))`,
+  fijo: `(EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                   WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                     AND ${SERVICE_FIXED_SQL('s_service', 'b_service')})
+           AND NOT EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                           WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                             AND ${SERVICE_MOBILE_SQL('s_service', 'b_service')}))`,
+  convergente: `(EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                          WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                            AND ${SERVICE_MOBILE_SQL('s_service', 'b_service')})
+                  AND EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
+                              WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
+                                AND ${SERVICE_FIXED_SQL('s_service', 'b_service')}))`,
+};
+
+const serviceCountsJson = () => `(
+  SELECT json_build_object(
+    'todas', COUNT(*)::int,
+    'movil', COUNT(*) FILTER (WHERE ${SERVICE_CLIENT_SQL.movil})::int,
+    'fijo', COUNT(*) FILTER (WHERE ${SERVICE_CLIENT_SQL.fijo})::int,
+    'convergente', COUNT(*) FILTER (WHERE ${SERVICE_CLIENT_SQL.convergente})::int)
+  FROM clients c
+  WHERE ${ACTIVE_CLIENT_SQL})`;
+
 // ---- Clasificación de líneas por familia (texto libre del viejo) ----
 const fixedSql = `(LOWER(COALESCE(l.account_type,'')) LIKE '%fijo%'
   OR (LOWER(COALESCE(l.account_type,'')) LIKE '%converg%' AND COALESCE(LOWER(l.line_kind::text),'') LIKE '%fijo%'))`;
@@ -81,7 +119,7 @@ const lineMetricJson = (tabCond) => `(
 
 // GET /api/clients-real?tab=active|cancelled|following|incomplete&q=texto
 clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
-  const { tab, q } = req.query;
+  const { tab, q, service } = req.query;
   const conds = [];
   const params = [];
   const hasSearch = Boolean(q && q.trim());
@@ -106,6 +144,7 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
     )`);
     conds.push(`NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`);
   }
+  if (SERVICE_CLIENT_SQL[service]) conds.push(SERVICE_CLIENT_SQL[service]);
   const whereClause = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
 
   const conn = await pool.connect();
@@ -153,6 +192,7 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
         (SELECT COUNT(*)::int FROM clients c WHERE ${CANCELLED_CLIENT_SQL}) AS cancelled_count,
         (SELECT COUNT(*)::int FROM clients c WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
         (SELECT COUNT(*)::int FROM clients c WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
+        ${serviceCountsJson()} AS service_counts,
         json_build_object(
           'active',     ${lineMetricJson(ACTIVE_CLIENT_SQL)},
           'cancelled',  ${lineMetricJson(CANCELLED_CLIENT_SQL)},
@@ -189,7 +229,7 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
         WHERE c.id = $1`, [req.params.id]);
     if (!c.rows[0]) { await conn.query('ROLLBACK'); return res.status(404).json({ error: 'Cliente no existe' }); }
     const bans = await conn.query(
-      `SELECT id, ban_number, account_type, status, credit_class, activation_date, source
+      `SELECT id, ban_number, account_type, status, credit_class, source
          FROM bans WHERE client_id = $1 ORDER BY ban_number`, [req.params.id]);
     const subs = await conn.query(
       `SELECT s.id, s.phone, s.plan, s.monthly_value, s.status, s.line_kind, s.line_type,

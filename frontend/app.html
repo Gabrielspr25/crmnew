@@ -155,10 +155,11 @@
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
     <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas</a>
     <a class="nav" href="#/prospeccion"><span class="d"></span>Prospección</a>
+    <a class="nav" href="#/directorio"><span class="d"></span>Directorio Operaciones</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
-    <a class="nav" href="https://ofertas.ss-group.cloud/movil.html" target="_blank" rel="noopener"><span class="d"></span>Ofertas Web ↗</a>
+    <a class="nav" href="#/ofertas" onclick="abrirPortalOfertas();return false;"><span class="d"></span>Ofertas Web ↗</a>
   </aside>
   <div class="main">
     <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo día</span></button></div>
@@ -179,25 +180,42 @@ function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.get
 
 // ---------------- VIEWS ----------------
 // ---- Clientes: estado de pantalla (tab + búsqueda + página) ----
-let cliTab='active', cliQ='', cliPage=1;
+let cliTab='active', cliQ='', cliPage=1, cliServiceFilter='todas';
 const CLI_TABS=[['active','Activos'],['cancelled','Cancelados'],['following','Seguimiento'],['incomplete','Incompletos']];
 const CLI_PILL={active:'green',cancelled:'red',following:'violet',incomplete:'amber'};
 async function reClientes(){ $('view').innerHTML=await viewClientes(); }
-function setCliTab(t){ cliTab=t; cliPage=1; reClientes(); }
+function setCliTab(t){ cliTab=t; if(t!=='active')cliServiceFilter='todas'; cliPage=1; reClientes(); }
+function setCliServiceFilter(t){ cliServiceFilter=t; cliPage=1; reClientes(); }
 function cliSearch(ev){ if(ev.key==='Enter'){ cliQ=ev.target.value.trim(); cliPage=1; reClientes(); } }
 function cliSearchNow(v){ cliQ=String(v||'').trim(); cliPage=1; reClientes(); }
 function cliPageGo(d){ cliPage+=d; reClientes(); }
+function cliClientServiceType(client){
+  const types=[client&&client.all_service_types,client&&client.primary_service_type].filter(Boolean).join(' ').toLowerCase();
+  const movil=/movil|móvil|mobile/.test(types);
+  const fijo=/fijo|fixed/.test(types);
+  if(movil&&fijo)return 'convergente';
+  if(movil)return 'movil';
+  if(fijo)return 'fijo';
+  return 'sin_clasificar';
+}
 function fmtDate(d){ if(!d) return '—'; const x=new Date(d); if(isNaN(x)) return '—'; return x.toLocaleDateString('es-PR',{day:'numeric',month:'numeric',year:'numeric'}); }
 function vencBadge(d){ if(!d) return ''; const days=Math.floor((new Date(d)-new Date())/86400000); if(isNaN(days)) return ''; if(days<0) return `<div class="pill red" style="margin-top:3px;font-size:10px">Vencido hace ${-days} días</div>`; if(days<=60) return `<div class="pill amber" style="margin-top:3px;font-size:10px">Vence en ${days} días</div>`; return ''; }
 
 async function viewClientes(){
-  const d=await api(`/api/clients-real?tab=${cliTab}&q=${encodeURIComponent(cliQ)}`);
+  const service=cliTab==='active'?cliServiceFilter:'todas';
+  const d=await api(`/api/clients-real?tab=${cliTab}&q=${encodeURIComponent(cliQ)}&service=${service}`);
   const st=d.stats||{}, lm=st.line_metrics||{};
   const counts={active:st.active_count,cancelled:st.cancelled_count,following:st.following_count,incomplete:st.incomplete_count};
   const card=(t,label)=>{ const m=lm[t]||{}, on=cliTab===t; return `<div class="kpi click${on?' on':''}" onclick="setCliTab('${t}')">
     <div style="display:flex;justify-content:space-between;align-items:center"><span class="l">${label}</span><span class="pill ${CLI_PILL[t]}">${counts[t]??0}</span></div>
     <div class="bk">Móvil <b>${m.mobile_lines||0}</b> · Fijo <b>${m.fixed_lines||0}</b> <span style="color:var(--green)">${money(m.fixed_monthly_value)}</span><br>TV <b>${m.claro_tv_lines||0}</b> · MPLS <b>${m.mpls_lines||0}</b> · Cloud <b>${m.cloud_lines||0}</b> · Inc <b>${m.incomplete_lines||0}</b></div></div>`; };
-  const all=d.clients||[], per=50, pages=Math.max(1,Math.ceil(all.length/per)); if(cliPage>pages)cliPage=pages; const from=(cliPage-1)*per, rows=all.slice(from,from+per);
+  const listed=d.clients||[];
+  const all=listed;
+  const serviceCounts=st.service_counts||{};
+  const serviceTabs=[
+    ['todas','Todas'],['movil','Móvil'],['fijo','Fijo'],['convergente','Convergente']
+  ].map(([value,label])=>`<button class="btn ${cliServiceFilter===value?'':'ghost'}" data-client-service-tab="${value}" style="padding:5px 10px;font-size:11px" onclick="setCliServiceFilter('${value}')">${label} (${serviceCounts[value]??0})</button>`).join('');
+  const per=50, pages=Math.max(1,Math.ceil(all.length/per)); if(cliPage>pages)cliPage=pages; const from=(cliPage-1)*per, rows=all.slice(from,from+per);
   const tr=c=>{ const bans=(c.ban_numbers||'').split(', ').filter(Boolean); const banShow=bans.length?bans[0]+(bans.length>1?` <span style="color:var(--txt3)">(+${bans.length-1})</span>`:''):'—'; const subN=Number(c.subscriber_count||0); const sub=c.primary_subscriber_phone?(c.primary_subscriber_phone+(subN>1?` <span style="color:var(--txt3)">(+${subN-1})</span>`:'')):'—'; const act=Number(c.active_ban_count||0)>0; const nombre=c.name?`<b>${c.name}</b>`:'<b style="color:var(--txt3)">sin nombre</b>'; return `<tr class="click" onclick="abrirCliente('${c.id}')">
     <td><div class="cli"><span class="av">${ini(c.name||'?')}</span>${nombre}</div></td>
     <td>${c.phone||c.mobile||c.cellular||'—'}</td>
@@ -218,6 +236,7 @@ async function viewClientes(){
     </div></div>
   <div class="kpis">${CLI_TABS.map(t=>card(t[0],t[1])).join('')}
     <div class="kpi"><div class="l">Total · ${CLI_TABS.find(t=>t[0]===cliTab)[1]}</div><div class="v">${all.length}</div></div></div>
+  ${cliTab==='active'?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px"><span class="s" style="font-size:11px;margin-right:2px">Servicio:</span>${serviceTabs}</div>`:''}
   <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por empresa, BAN, contacto, teléfono o email" value="${cliQ}" oninput="cliSearchNow(this.value)" onkeydown="cliSearch(event)"></div>
   <div class="s" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">Mostrando ${all.length?from+1:0}-${Math.min(from+per,all.length)} de ${all.length} · pág ${cliPage}/${pages}
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage>1?'cliPageGo(-1)':''}">Anterior</button>
@@ -226,11 +245,84 @@ async function viewClientes(){
     <th>Empresa</th><th>Tel. contacto</th><th>Última actividad</th><th>Tipo BAN</th><th>Base</th><th>Estado</th><th>Vendedor</th><th>Num BAN</th><th>Suscriptor</th><th>Fecha vencimiento</th><th></th>
   </tr></thead><tbody>${rows.map(tr).join('')||'<tr><td colspan="11" class="empty">Sin clientes en este filtro</td></tr>'}</tbody></table></div>`;
 }
+// ---- Directorio Operaciones: tabla independiente de Clientes/BANs ----
+let dirQ='', dirDistrict='', dirContacts=[];
+const DIR_FIELDS=[
+  ['district','Distrito'], ['code','Codigo'], ['full_name','Nombre'], ['employee_number','# Empleado'],
+  ['job_title','Puesto'], ['municipalities','Pueblos que comprende'], ['mobile','Celular'], ['email','Email'],
+];
+async function reDirectorioOperaciones(){ $('view').innerHTML=await viewDirectorioOperaciones(); }
+function dirSearch(value){ dirQ=String(value||'').trim(); reDirectorioOperaciones(); }
+function dirSetDistrict(value){ dirDistrict=value; reDirectorioOperaciones(); }
+function dirCanEdit(){ return ['admin','supervisor'].includes(String(currentUser&&currentUser.rol||'').toLowerCase()); }
+function dirEsc(value){ return esc(value||'—'); }
+function dirEdit(id){
+  const contact=dirContacts.find((item)=>String(item.id)===String(id));
+  if(!contact) return;
+  openForm('Editar contacto',DIR_FIELDS.map(([key,label])=>({key,label,value:contact[key]||''})),async(values)=>{
+    await api('/api/directorio-operaciones/'+id,{method:'PUT',body:values});
+    reDirectorioOperaciones();
+  });
+}
+async function dirImportFile(input){
+  const file=input&&input.files&&input.files[0];
+  if(!file) return;
+  const form=new FormData(); form.append('file',file);
+  try{
+    const response=await fetch(API+'/api/directorio-operaciones/import',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error||'No se pudo actualizar el directorio');
+    alert('Directorio actualizado:\n'+result.total+' contactos leidos\n'+result.inserted+' nuevos\n'+result.updated+' actualizados\n'+result.unchanged+' sin cambios'+(result.ignored&&result.ignored.length?'\n'+result.ignored.length+' filas ignoradas por faltar nombre o empleado':''));
+    reDirectorioOperaciones();
+  }catch(error){ alert('No se pudo actualizar: '+error.message); }
+  finally{ input.value=''; }
+}
+async function viewDirectorioOperaciones(){
+  const params=new URLSearchParams(); if(dirQ)params.set('q',dirQ); if(dirDistrict)params.set('district',dirDistrict);
+  const data=await api('/api/directorio-operaciones?'+params.toString());
+  dirContacts=data.contacts||[];
+  const districts=data.districts||[];
+  const options=['<option value="">Todos los distritos</option>'].concat(districts.map((item)=>'<option value="'+esc(item.district)+'"'+(item.district===dirDistrict?' selected':'')+'>'+esc(item.district)+' ('+item.contacts+')</option>')).join('');
+  const rows=dirContacts.map((contact)=>'<tr>'
+    +'<td><b>'+dirEsc(contact.full_name)+'</b><div class="s" style="font-size:11px;margin-top:2px"># '+dirEsc(contact.employee_number)+'</div></td>'
+    +'<td>'+dirEsc(contact.district)+'</td><td>'+dirEsc(contact.job_title)+'</td><td>'+dirEsc(contact.municipalities)+'</td>'
+    +'<td>'+dirEsc(contact.mobile)+'</td><td>'+dirEsc(contact.email)+'</td>'
+    +(dirCanEdit()?'<td style="text-align:right"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="dirEdit(\''+contact.id+'\')">Editar</button></td>':'')
+    +'</tr>').join('');
+  return '<div class="head"><div><h1>Directorio Operaciones</h1><div class="s">Contactos operacionales de Clientes Masivos. Tabla independiente del CRM comercial.</div></div>'
+    +(dirCanEdit()?'<div><input id="dirFile" type="file" accept=".xlsx,.xls" style="display:none" onchange="dirImportFile(this)"><button class="btn" onclick="$(\'dirFile\').click()">Actualizar desde Excel</button></div>':'')+'</div>'
+    +'<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><span class="pill violet">'+(data.total||0)+' contactos</span>'
+    +'<select class="inp" style="width:250px" onchange="dirSetDistrict(this.value)">'+options+'</select>'
+    +'<input class="inp search" placeholder="Buscar nombre, empleado, email o pueblo" value="'+esc(dirQ)+'" oninput="dirSearch(this.value)"></div>'
+    +'<div class="card" style="overflow-x:auto"><table style="min-width:960px"><thead><tr><th>Contacto</th><th>Distrito</th><th>Puesto</th><th>Pueblos</th><th>Celular</th><th>Email</th>'+(dirCanEdit()?'<th></th>':'')+'</tr></thead><tbody>'
+    +(rows||'<tr><td colspan="7" class="empty">Sin contactos para este filtro.</td></tr>')+'</tbody></table></div>';
+}
 // ---- Modal de cliente (réplica ClientModal real, 5 tabs) ----
-let cliM=null, cliMTab='info', cliMSub='activas';
+let cliM=null, cliMTab='info', cliMSub='activas', cliMLineTab='todas';
 const CLI_TABS_M=[['info','Información del Cliente'],['bans','BANs y Suscriptores'],['hist','Historial de Gestiones'],['comp','Comparativas'],['ventas','Ventas']];
-function cliAct(s){return ['a','activo','active','activa'].includes(String(s||'').toLowerCase());}
+function cliAct(s){return ['a','activo','active','activa','s','suspendido','suspended'].includes(String(s||'').toLowerCase());}
 function cliCanc(s){const x=String(s||'').toLowerCase();return x.includes('cancel')||x==='c'||x==='inactivo'||x==='inactive';}
+function cliLineKind(subscriber, banTypes={}){
+  const fallback=banTypes[subscriber&&subscriber.ban_number]||'';
+  const kind=String(subscriber&&subscriber.line_kind||fallback).toLowerCase();
+  if(kind.includes('movil')||kind.includes('móvil')||kind.includes('mobile'))return 'movil';
+  if(kind.includes('fijo')||kind.includes('fixed'))return 'fijo';
+  return 'sin_clasificar';
+}
+function cliServiceProfile(subscribers,bans=[]){
+  const banTypes=Object.fromEntries((bans||[]).map(b=>[b.ban_number,b.account_type]));
+  const active=(subscribers||[]).filter(s=>cliAct(s.status));
+  const movil=active.filter(s=>cliLineKind(s,banTypes)==='movil');
+  const fijo=active.filter(s=>cliLineKind(s,banTypes)==='fijo');
+  return {movil,fijo,convergente:!!(movil.length&&fijo.length),banTypes};
+}
+function cliProfileLabel(profile){
+  if(profile.convergente)return '<span class="pill violet">Convergente</span>';
+  if(profile.movil.length)return '<span class="pill green">Móvil</span>';
+  if(profile.fijo.length)return '<span class="pill amber">Fijo</span>';
+  return '<span class="pill" style="background:var(--card2);color:var(--txt3)">Sin clasificar</span>';
+}
+function cliLineMonthly(value){return value===null||value===undefined||String(value).trim()===''?'—':money(value);}
 function cliNoren(s){var x=String(s||'').toLowerCase();return x.includes('no_renueva')||x==='suspendido';}
 function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
 function cliContractEndFromPayments(v){var n=parseInt(String(v||'').replace(/\D/g,''),10);if(!isFinite(n)||n<=0)return '';var d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10);}
@@ -341,7 +433,7 @@ async function ocrAnalizar(){
       if(detectedBan){ ocrBanId=detectedBan.id; }
       else { ocrBanBlocked=true; }
     }
-    ocrRows=(d.rows||[]).map(function(x){return {phone:x.subscriber||'',plan:x.pricePlan||'',status:x.status||'',type:x.type||'',saveStatus:'activo'};});
+    ocrRows=(d.rows||[]).map(function(x){return {phone:x.subscriber||'',plan:x.pricePlan||'',status:x.status||'',type:x.type||'',line_kind:x.line_kind||'',saveStatus:'activo'};});
     renderOcrRows(d.engine);
   }catch(e){ $('ocrResult').innerHTML='<div class="empty">Error: '+e.message+'</div>'; }
   finally{ var g=$('ocrGo'); if(g){g.textContent='🔎 Analizar imagen'; g.disabled=false;} }
@@ -365,10 +457,10 @@ async function ocrAgregar(){
   if(!expectedBan){ alert('No se puede agregar: confirma primero el BAN de la imagen.'); return; }
   if(expectedBan.length!==9){ alert('El BAN de la imagen debe tener 9 dígitos.'); return; }
   var ok=0,created=0,updated=0,reactivated=0,fail=0,errs=[];
-  for(var i=0;i<ocrRows.length;i++){ var r=ocrRows[i]; var ph=String(r.phone||'').replace(/\D/g,''); if(ph.length!==10){fail++;continue;}
-    var lk=(r.type||'').toLowerCase().indexOf('fij')>=0?'fijo':((r.type||'').toLowerCase().indexOf('m')>=0?'movil':null);
+  for(var i=0;i<ocrRows.length;i++){ var r=ocrRows[i]; var ph=String(r.phone||'').replace(/\D/g,''); if(ph.length!==10){fail++;continue;} if(/^100/.test(ph)){fail++;continue;}
+    var lk=r.line_kind||((r.type||'').toLowerCase().indexOf('fij')>=0?'fijo':((r.type||'').toLowerCase().indexOf('m')>=0?'movil':null));
     try{
-      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,status:'activo',expected_ban_number:expectedBan})});
+      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,product_type:r.type||null,status:'activo',expected_ban_number:expectedBan})});
       var out=await resp.json().catch(function(){return {};});
       if(resp.status===409){ fail++; errs.push(ph+': '+(out.error||'ya existe en otro BAN')); continue; }
       if(!resp.ok) throw new Error(out.error||('HTTP '+resp.status));
@@ -378,11 +470,12 @@ async function ocrAgregar(){
 }
 function setCliMTab(t){cliMTab=t;renderCli();}
 function setCliMSub(f){cliMSub=f;renderCli();}
+function setCliMLineTab(f){cliMLineTab=f;renderCli();}
 async function enviarSeguimientoCli(id){ try{ const r=await api('/api/asana-real/from-client',{method:'POST',body:{client_id:id}}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo enviar a seguimiento: '+e.message); } }
 async function abrirCliente(id){
   if(!id){ alert('Cliente sin id'); return; }
   try{ cliM=await api('/api/clients-real/'+id); }catch(e){ alert('No se pudo abrir el cliente: '+e.message); return; }
-  cliMTab='info'; cliMSub='activas';
+  cliMTab='info'; cliMSub='activas'; cliMLineTab='todas';
   document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal" id="cliModal" style="max-width:1040px;width:96%"></div></div>`);
   renderCli();
 }
@@ -390,6 +483,8 @@ function renderCli(){
   const c=cliM; if(!c||!$('cliModal'))return;
   const tabbar=CLI_TABS_M.map(t=>`<button class="ctab ${cliMTab===t[0]?'on':''}" onclick="setCliMTab('${t[0]}')">${t[1]}</button>`).join('');
   const body=cliMTab==='bans'?tabBans(c):cliMTab==='hist'?tabHist(c):cliMTab==='comp'?tabComp(c):cliMTab==='ventas'?tabVentas(c):tabInfo(c);
+  const serviceProfile=cliServiceProfile(c.subscribers||[],c.bans||[]);
+  const serviceBadge=cliProfileLabel(serviceProfile);
   const enSeg=!!c.opportunity_id;
   const badge=(enSeg?'<span class="pill green">En seguimiento</span>':'<span class="pill" style="background:var(--card2);color:var(--txt3)">No está en seguimiento</span>')+(c.pendiente_validacion?' <span class="pill amber">Cliente nuevo</span>':'');
   const segBtn=enSeg
@@ -399,6 +494,8 @@ function renderCli(){
       <div><div style="display:flex;align-items:center;gap:10px"><h2 style="font-size:20px">${c.name||'—'}</h2>${badge}</div><div class="s">Gestión completa del cliente</div></div>
       <div style="display:flex;gap:8px">${segBtn}<button class="btn ghost" style="padding:6px 10px" onclick="cerrarModal()">✕</button></div></div>
     <div class="ctabs">${tabbar}</div><div style="margin-top:14px">${body}</div>`;
+  const title=$('cliModal').querySelector('h2');
+  if(title)title.insertAdjacentHTML('afterend',serviceBadge);
 }
 function tabInfo(c){
   const row=(l,v)=>`<div class="irow"><span>${l}</span><b>${v||'No registrado'}</b></div>`;
@@ -412,7 +509,7 @@ function tabInfo(c){
     <div><h4>Información comercial</h4>${row('Vendedor',c.vendor_name||'Sin asignar')}</div>
   </div>`;
 }
-function tabBans(c){
+function tabBansLegacy(c){
   const byBan={}; (c.subscribers||[]).forEach(s=>{(byBan[s.ban_number]=byBan[s.ban_number]||[]).push(s);});
   const cards=(c.bans||[]).map(b=>{
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
@@ -422,6 +519,39 @@ function tabBans(c){
       <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
   return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
+}
+function tabBans(c){
+  const profile=cliServiceProfile(c.subscribers||[],c.bans||[]);
+  const kindLabel={movil:'Movil',fijo:'Fijo',sin_clasificar:'Sin clasificar'};
+  const kindTone={movil:'green',fijo:'amber',sin_clasificar:'violet'};
+  const byBan={};
+  (c.subscribers||[]).forEach(s=>{(byBan[s.ban_number]=byBan[s.ban_number]||[]).push(s);});
+  const visibleLines=lines=>{
+    if(cliMLineTab==='movil')return lines.filter(s=>cliLineKind(s,profile.banTypes)==='movil');
+    if(cliMLineTab==='fijo')return lines.filter(s=>cliLineKind(s,profile.banTypes)==='fijo');
+    if(cliMLineTab==='convergente')return profile.convergente?lines.filter(s=>['movil','fijo'].includes(cliLineKind(s,profile.banTypes))):[];
+    return lines;
+  };
+  const lineTabs=[
+    ['todas','Todas',null],
+    ['movil','Movil',profile.movil.length],
+    ['fijo','Fijo',profile.fijo.length],
+    ['convergente','Convergente',profile.convergente?'si':null]
+  ].map(([value,label,count])=>`<button class="btn ${cliMLineTab===value?'':'ghost'}" data-client-line-tab="${value}" style="padding:5px 10px;font-size:11px" onclick="setCliMLineTab('${value}')">${label}${count!==null?' ('+count+')':''}</button>`).join('');
+  const cards=(c.bans||[]).map(b=>{
+    const list=byBan[b.ban_number]||[];
+    const active=list.filter(s=>cliAct(s.status));
+    const canceled=list.filter(s=>cliCanc(s.status));
+    const selected=visibleLines(cliMSub==='canceladas'?canceled:active);
+    const rows=selected.map(s=>{
+      const kind=cliLineKind(s,profile.banTypes);
+      const plan=s.plan||s.price_code||'Sin plan';
+      const monthly=cliLineMonthly(s.monthly_value);
+      return `<div class="cline"><span style="flex:1;min-width:260px">&#9742; <b>${esc(s.phone||'—')}</b> <span class="pill ${kindTone[kind]}" style="font-size:10px">${kindLabel[kind]}</span> <span style="color:var(--txt3)">${esc(plan)}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+esc(s.equipment)+'</span>':''} ${monthly==='—'?'':'<span style="color:var(--green)">'+monthly+'/mes</span>'} <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activacion: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Termino: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razon: '+esc(s.cancel_reason):''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">Cancelar</button></div>`;
+    }).join('')||'<div class="empty">Sin lineas en este filtro</div>';
+    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${esc(b.ban_number||'—')}</b><span class="pill violet">${esc(b.account_type||'—')}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Credito: ${esc(b.credit_class||'No registrado')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">Editar</button></span></div><div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${active.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${canceled.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
+  }).join('')||'<div class="empty">Sin BANs</div>';
+  return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap">${lineTabs}</div><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
 }
 function tabHist(c){
   const h=(c.historial||[]).map(x=>`<div class="logitem"><span class="lic paso">✅</span><div><div style="font-size:13.5px">${x.note||''}</div><div style="font-size:11.5px;color:var(--txt3)">${x.created_by_username||'—'} · ${x.product_key||''} · ${new Date(x.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin gestiones registradas en Asana todavía.</div>';
@@ -611,8 +741,13 @@ async function vozCrear(){
   }catch(e){ alert('No se pudo crear: '+e.message); }
 }
 const ASANA_PRODS=[['fijo_ren','Fijo Ren','money','teal'],['fijo_new','Fijo New','money','primary'],['movil_ren','Movil Ren','qty','green'],['movil_new','Movil New','qty','violet'],['claro_tv','Claro TV','qty','amber'],['cloud','Cloud','qty','teal'],['mpls','MPLS','money','red']];
+function isAsanaClientVisible(name){
+  const normalized=String(name||'').trim().toLowerCase();
+  return Boolean(normalized)&&!['\u2014','-','null','sin nombre'].includes(normalized);
+}
 async function viewAsana(){
-  const data=await api('/api/asana-real');
+  const rawData=await api('/api/asana-real');
+  const data=rawData.filter(o=>isAsanaClientVisible(o.client_name));
   const prodVal=(o,pk,field)=>Number((o.products&&o.products[pk]&&o.products[pk][field])||0);
   const prodSubs=(o,pk)=>Number((o.products&&o.products[pk]&&o.products[pk].subscriber_count)||0);
   const totalSubs=data.reduce((a,o)=>a+Number(o.subscriber_count||0),0);
@@ -1007,7 +1142,22 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
-const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/movil.html';   // portal de ofertas deployado
+const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/oferta-const.html';   // constructor autenticado desplegado
+function buildPortalOfertasUrl(){
+  let activeToken=token||'';
+  if(!activeToken){try{activeToken=localStorage.getItem('vp_token')||'';}catch(e){}}
+  if(!activeToken)return null;
+  const local=['localhost','127.0.0.1','::1','[::1]'].includes(String(window.location.hostname||'').toLowerCase());
+  const url=new URL(local?'http://127.0.0.1:4173/oferta-const.html':PORTAL_OFERTAS_URL);
+  if(local)url.searchParams.set('crm_origin',window.location.origin);
+  url.hash=new URLSearchParams({crm_token:activeToken}).toString();
+  return url.toString();
+}
+function abrirPortalOfertas(){
+  const url=buildPortalOfertasUrl();
+  if(!url){alert('No hay una sesion CRM activa. Entra nuevamente antes de abrir el portal de ofertas.');return;}
+  window.open(url,'_blank','noopener');
+}
 const OF_TABS=[['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['servicios','🧾 Servicios'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
 let ofTab='equipos', ofEquiposPreview=null, ofEquiposItems=null;
 const OF_SERVICIOS=[
@@ -1054,7 +1204,7 @@ const OF_SERVICIOS_SOCS=[
 ];
 async function viewOfertas(){
   var portalBtn = PORTAL_OFERTAS_URL
-    ? `<a class="btn" style="background:var(--violet)" href="${PORTAL_OFERTAS_URL}" target="_blank" rel="noopener">🛒 Abrir portal de ofertas</a>`
+    ? `<button class="btn" style="background:var(--violet)" onclick="abrirPortalOfertas()">🛒 Abrir portal de ofertas</button>`
     : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal.')">🛒 Abrir portal de ofertas</button>`;
   var tabs = OF_TABS.map(function(t){ return `<button class="btn ${ofTab===t[0]?'':'ghost'}" onclick="ofSetTab('${t[0]}')">${t[1]}</button>`; }).join('');
   return `<div class="head"><div><h1>Admin Ofertas</h1><div class="s">Gestión de listas de precios y planes publicados en el portal</div></div>
@@ -1745,11 +1895,14 @@ function renderImpStep2(){
     return;
   }
   var asignado={}; Object.keys(impMap).forEach(function(k){asignado[impMap[k]]=k;});
+  var impIsReferenceHeader=function(h){ return !!(window.ImportWorkbook&&ImportWorkbook.isReferenceOnlyHeader&&ImportWorkbook.isReferenceOnlyHeader(h)); };
+  var visibleColumns=impHeaders.map(function(h,i){return {h:h,i:i};}).filter(function(column){return !impIsReferenceHeader(column.h);});
   var fieldLabel={}; IMP_FIELDS.forEach(function(fd){fieldLabel[fd[0]]=fd[1];});
   // 1) arriba: los botones REALES de lo que subió (sus columnas)
-  var cols=impHeaders.map(function(h,i){ return '<span class="impcol'+(asignado[i]!=null?' used':'')+'">'+(h||('col '+(i+1)))+'</span>'; }).join('');
+  var cols=visibleColumns.map(function(column){ var h=column.h,i=column.i; return '<span class="impcol'+(asignado[i]!=null?' used':'')+'">'+(h||('col '+(i+1)))+'</span>'; }).join('');
   // 2) tabla dos columnas: TU EXCEL (izq) -> A DÓNDE VA (der), una fila por columna del archivo, en su orden
-  var filas=impHeaders.map(function(h,i){
+  var filas=visibleColumns.map(function(column){
+    var h=column.h,i=column.i;
     var k=asignado[i];
     var der = k!=null
       ? '<span class="impcol" draggable="true" ondragstart="impDragField(event,\''+k+'\')" title="arrastrá para mover">'+fieldLabel[k]+'</span> <span class="sl-x" title="quitar (se ignora)" onclick="impClearSlot(\''+k+'\')">✕</span>'
@@ -1757,7 +1910,7 @@ function renderImpStep2(){
     return '<tr ondragover="event.preventDefault();this.style.outline=\'1px solid var(--green)\'" ondragleave="this.style.outline=\'\'" ondrop="this.style.outline=\'\';impDropField(event,'+i+')">'
       +'<td style="width:45%"><b>'+(h||('col '+(i+1)))+'</b></td><td>'+der+'</td></tr>';
   }).join('');
-  var nMap=Object.keys(impMap).length, nIgn=impHeaders.length-Object.keys(asignado).length;
+  var nMap=Object.keys(impMap).length, nIgn=visibleColumns.length-Object.keys(asignado).length;
   // 3) campos de la BD que quedaron libres (por si necesita asignar alguno a mano)
   var libres=IMP_FIELDS.filter(function(fd){return impMap[fd[0]]==null;}).map(function(fd){
     return '<span class="impcol" draggable="true" ondragstart="impDragField(event,\''+fd[0]+'\')">'+fd[1]+'</span>';
@@ -1863,9 +2016,10 @@ async function router(){
     else if(route==='correos')html=await viewCorreos();
     else if(route==='campanas')html=await viewCampanas();
     else if(route==='import')html=await viewImport();
-    else if(route==='ofertas')html=await viewOfertas();
-    else if(route==='prospeccion')html=await viewProspeccion();
-    else html=await viewClientes();
+        else if(route==='ofertas')html=await viewOfertas();
+        else if(route==='prospeccion')html=await viewProspeccion();
+        else if(route==='directorio')html=await viewDirectorioOperaciones();
+        else html=await viewClientes();
     $('view').innerHTML=html;
     if(route==='import')impInitDrop();
     if(route==='ofertas')ofRenderBody();
