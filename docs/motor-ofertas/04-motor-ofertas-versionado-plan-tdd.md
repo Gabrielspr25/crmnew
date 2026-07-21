@@ -6,7 +6,7 @@
 
 **Architecture:** Usar tablas nuevas en `public`, snapshots JSONB y referencias opcionales al catalogo actual `public.equipos_lista`. Mantener handlers HTTP en `backend/src/routes/`, logica pura en `backend/src/services/` y pruebas con `node:test`, respetando la estructura real del repositorio.
 
-**Tech Stack:** Node.js ESM, Express 4, PostgreSQL, `pg`, Multer, XLSX, `node:test` y `node:assert/strict`.
+**Tech Stack:** Node.js ESM, Express 4, PostgreSQL, `pg`, Multer, XLSX, Zod, `node:test` y `node:assert/strict`.
 
 ---
 
@@ -20,6 +20,9 @@
 - No ejecutar backfills.
 - No iniciar un servidor persistente.
 - No hacer deploy.
+- La linea base previa al motor es 90 pruebas: 80 pasan y 10 fallan. Esos diez fallos estan registrados en `docs/motor-ofertas/linea-base-pruebas-2026-07-12.md` y no se corrigen en este trabajo.
+- Durante la primera entrega de migracion y contratos, ejecutar solo `backend/test/motor-ofertas-migration.test.js` y `backend/test/motor-ofertas-contract.test.js`.
+- Fallar esta entrega solo por errores nuevos de esos dos contratos dirigidos.
 
 ## Mapa de archivos
 
@@ -46,6 +49,8 @@ Crear:
 
 Modificar:
 
+- `backend/package.json`
+- `backend/package-lock.json`
 - `backend/src/server.js`
 - `backend/.env.example`
 
@@ -360,6 +365,8 @@ git commit -m "feat(newcrm): definir schema versionado de ofertas"
 
 - Create: `backend/test/motor-ofertas-contract.test.js`
 - Create: `backend/src/services/motorOfertasContract.js`
+- Modify: `backend/package.json`
+- Modify: `backend/package-lock.json`
 
 - [ ] **Step 1: Escribir pruebas RED**
 
@@ -370,8 +377,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   VERSION_STATES,
-  validateEligibilityRequest,
-  validateOfferContract,
+  eligibilityRequestSchema,
+  offerContractSchema,
+  parseEligibilityRequest,
 } from '../src/services/motorOfertasContract.js';
 
 test('version expone solo los seis estados aprobados', () => {
@@ -386,7 +394,7 @@ test('version expone solo los seis estados aprobados', () => {
 });
 
 test('acepta LineaMovil con contexto BAN', () => {
-  const result = validateEligibilityRequest({
+  const result = eligibilityRequestSchema.safeParse({
     linea: {
       id: 'linea_005',
       indice: 5,
@@ -403,11 +411,11 @@ test('acepta LineaMovil con contexto BAN', () => {
       beneficios_usados_por_oferta: { oferta_gratis_35: 4 },
     },
   });
-  assert.equal(result.ok, true);
+  assert.equal(result.success, true);
 });
 
 test('rechaza evento y cantidad BAN invalidos', () => {
-  const result = validateEligibilityRequest({
+  const result = eligibilityRequestSchema.safeParse({
     linea: {
       id: 'l1',
       tipo: 'individual',
@@ -421,13 +429,13 @@ test('rechaza evento y cantidad BAN invalidos', () => {
       beneficios_usados_por_oferta: {},
     },
   });
-  assert.equal(result.ok, false);
-  assert.ok(result.errors.some((error) => error.path === 'linea.evento'));
-  assert.ok(result.errors.some((error) => error.path === 'contexto_ban.posicion_en_ban'));
+  assert.equal(result.success, false);
+  assert.ok(result.error.issues.some((issue) => issue.path.join('.') === 'linea.evento'));
+  assert.ok(result.error.issues.some((issue) => issue.path.join('.') === 'contexto_ban.posicion_en_ban'));
 });
 
 test('Oferta exige fuente, vigencia y reglas explicitas', () => {
-  const result = validateOfferContract({
+  const result = offerContractSchema.safeParse({
     id: 'oferta_gratis_35',
     nombre: 'Equipo gratis',
     estado: 'confirmada',
@@ -440,7 +448,21 @@ test('Oferta exige fuente, vigencia y reglas explicitas', () => {
     equipos: [],
     fuente: { tipo: 'tabla_financiamiento', hoja: 'Ofertas Equipos en Portafolio', fila: 4 },
   });
-  assert.equal(result.ok, true);
+  assert.equal(result.success, true);
+});
+
+test('parseEligibilityRequest devuelve el contrato normalizado', () => {
+  const parsed = parseEligibilityRequest({
+    linea: {
+      id: 'linea_001',
+      tipo: 'individual',
+      plan: { codigo: 'P35', nombre: 'Plan $35', monto: 35 },
+      evento: 'linea_nueva',
+      convergente: false,
+      trade_in: { estado: 'no_requiere', validado: false },
+    },
+  });
+  assert.equal(parsed.linea.id, 'linea_001');
 });
 ```
 
@@ -452,11 +474,19 @@ node --test test/motor-ofertas-contract.test.js
 
 Expected: FAIL por modulo inexistente.
 
-- [ ] **Step 3: Implementar validadores sin dependencia nueva**
+- [ ] **Step 3: Instalar Zod e implementar schemas**
 
-`motorOfertasContract.js` debe exportar constantes congeladas y dos funciones que devuelvan `{ ok, value, errors }`. Usar helpers pequenos:
+Instalar la dependencia desde `backend/`:
+
+```powershell
+npm install zod
+```
+
+`motorOfertasContract.js` debe exportar constantes congeladas, schemas Zod y funciones `parse*`:
 
 ```javascript
+import { z } from 'zod';
+
 export const VERSION_STATES = Object.freeze([
   'borrador',
   'pendiente_revision',
@@ -481,58 +511,95 @@ export const DOCUMENT_VALIDITY_STATES = Object.freeze([
   'pendiente_confirmacion',
 ]);
 
-const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-const issue = (errors, path, message) => errors.push({ path, message });
+export const versionStateSchema = z.enum(VERSION_STATES);
+export const documentValiditySchema = z.enum(DOCUMENT_VALIDITY_STATES);
+export const lineEventSchema = z.enum(LINE_EVENTS);
 
-function requiredString(value, path, errors) {
-  if (typeof value !== 'string' || !value.trim()) issue(errors, path, 'requerido');
-}
+const planSchema = z.object({
+  codigo: z.string().trim().min(1),
+  nombre: z.string().trim().min(1),
+  monto: z.number().finite().nonnegative(),
+}).strict();
 
-export function validateEligibilityRequest(input) {
-  const errors = [];
-  if (!isObject(input)) return { ok: false, value: null, errors: [{ path: '', message: 'objeto requerido' }] };
-  const line = input.linea;
-  if (!isObject(line)) issue(errors, 'linea', 'objeto requerido');
-  if (isObject(line)) {
-    requiredString(line.id, 'linea.id', errors);
-    if (!LINE_TYPES.includes(line.tipo)) issue(errors, 'linea.tipo', 'tipo invalido');
-    if (!LINE_EVENTS.includes(line.evento)) issue(errors, 'linea.evento', 'evento invalido');
-    if (typeof line.convergente !== 'boolean') issue(errors, 'linea.convergente', 'boolean requerido');
-    if (!isObject(line.plan)) issue(errors, 'linea.plan', 'objeto requerido');
-    else {
-      requiredString(line.plan.codigo, 'linea.plan.codigo', errors);
-      requiredString(line.plan.nombre, 'linea.plan.nombre', errors);
-      if (!Number.isFinite(line.plan.monto) || line.plan.monto < 0) issue(errors, 'linea.plan.monto', 'monto invalido');
-    }
-    if (line.tipo === 'multilinea_business_red') {
-      requiredString(line.familia_business_red, 'linea.familia_business_red', errors);
-    }
-    if (!isObject(line.trade_in)) issue(errors, 'linea.trade_in', 'objeto requerido');
-    else if (typeof line.trade_in.validado !== 'boolean') issue(errors, 'linea.trade_in.validado', 'boolean requerido');
+const mobileLineSchema = z.object({
+  id: z.string().trim().min(1),
+  indice: z.number().int().min(1).max(10).optional(),
+  ban: z.string().trim().min(1).nullable().optional(),
+  tipo: z.enum(LINE_TYPES),
+  familia_business_red: z.string().trim().min(1).nullable().optional(),
+  plan: planSchema,
+  evento: lineEventSchema,
+  convergente: z.boolean(),
+  trade_in: z.object({
+    estado: z.string().trim().min(1),
+    validado: z.boolean(),
+  }).passthrough(),
+}).strict().superRefine((line, ctx) => {
+  if (line.tipo === 'multilinea_business_red' && !line.familia_business_red) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['familia_business_red'],
+      message: 'familia requerida para Business RED',
+    });
   }
-  if (input.contexto_ban !== undefined) {
-    const context = input.contexto_ban;
-    if (!isObject(context)) issue(errors, 'contexto_ban', 'objeto requerido');
-    else {
-      if (!Number.isInteger(context.posicion_en_ban) || context.posicion_en_ban < 1 || context.posicion_en_ban > 10) {
-        issue(errors, 'contexto_ban.posicion_en_ban', 'debe estar entre 1 y 10');
-      }
-      if (!isObject(context.beneficios_usados_por_oferta)) {
-        issue(errors, 'contexto_ban.beneficios_usados_por_oferta', 'mapa requerido');
-      } else {
-        for (const [key, value] of Object.entries(context.beneficios_usados_por_oferta)) {
-          if (!key || !Number.isInteger(value) || value < 0) {
-            issue(errors, `contexto_ban.beneficios_usados_por_oferta.${key}`, 'cantidad invalida');
-          }
-        }
-      }
-    }
-  }
-  return { ok: errors.length === 0, value: errors.length ? null : input, errors };
-}
+});
+
+export const eligibilityRequestSchema = z.object({
+  linea: mobileLineSchema,
+  contexto_ban: z.object({
+    posicion_en_ban: z.number().int().min(1).max(10),
+    beneficios_usados_por_oferta: z.record(
+      z.string().trim().min(1),
+      z.number().int().nonnegative()
+    ),
+  }).strict().optional(),
+}).strict();
+
+export const offerContractSchema = z.object({
+  id: z.string().trim().min(1),
+  nombre: z.string().trim().min(1),
+  estado: z.enum([
+    'confirmada',
+    'confirmada_parcial',
+    'pendiente_fuente',
+    'pendiente_vigencia',
+    'pendiente_negocio',
+    'contradiccion',
+    'implementacion_referencia',
+    'archivada',
+  ]),
+  vigencia: z.object({
+    desde: z.iso.date().nullable().optional(),
+    hasta: z.iso.date().nullable().optional(),
+    estado: documentValiditySchema,
+  }).strict(),
+  tipos_plan: z.array(z.enum(LINE_TYPES)).min(1),
+  familias: z.array(z.string().trim().min(1)),
+  eventos: z.array(lineEventSchema).min(1),
+  plazos: z.array(z.number().int().positive()).min(1),
+  limite_ban: z.object({
+    aplica: z.boolean(),
+    cantidad: z.number().int().positive().nullable(),
+    fuera_limite: z.enum([
+      'no_aplica',
+      'financiado_si_fuente_lo_permite',
+      'pendiente_fuente',
+    ]),
+  }).strict(),
+  equipos: z.array(z.object({}).passthrough()),
+  fuente: z.object({
+    tipo: z.string().trim().min(1),
+    hoja: z.string().trim().min(1).optional(),
+    pagina: z.number().int().positive().optional(),
+    fila: z.number().int().positive().optional(),
+  }).strict(),
+}).strict();
+
+export const parseEligibilityRequest = (value) => eligibilityRequestSchema.parse(value);
+export const parseOfferContract = (value) => offerContractSchema.parse(value);
 ```
 
-`validateOfferContract` debe validar de forma equivalente: `id`, `nombre`, estado comercial, vigencia, arrays no ambiguos, limite BAN, equipos y fuente. Debe rechazar cualquier array que contenga `both`.
+Los enums Zod rechazan `both`, estados de version no aprobados y eventos no documentados antes de cualquier consulta.
 
 - [ ] **Step 4: Ejecutar GREEN**
 
@@ -546,7 +613,7 @@ Expected: PASS y sintaxis valida.
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add backend/src/services/motorOfertasContract.js backend/test/motor-ofertas-contract.test.js
+git add backend/package.json backend/package-lock.json backend/src/services/motorOfertasContract.js backend/test/motor-ofertas-contract.test.js
 git commit -m "feat(newcrm): validar contratos del motor de ofertas"
 ```
 
@@ -726,7 +793,7 @@ Algoritmo obligatorio:
 9. Buscar precio por SKU/SIF exacto cuando este disponible.
 10. Si la hoja de oferta solo tiene modelo, resolver por modelo normalizado univoco. Cero o mas de una coincidencia queda `pendiente` y crea contradiccion bloqueante.
 11. Preservar hoja, fila, texto original y celdas en el contrato.
-12. Validar cada oferta con `validateOfferContract`.
+12. Validar cada oferta con `offerContractSchema.safeParse` y persistir solo resultados validos.
 
 No implementar herencia por monto ni familia en el parser. La elegibilidad usa solo los alcances explicitamente normalizados.
 
