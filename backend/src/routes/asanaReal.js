@@ -24,6 +24,9 @@ async function withPublic(fn) {
 }
 
 const CLIENT_NAME = `COALESCE(NULLIF(TRIM(c.name),''), NULLIF(TRIM(c.business_name),''), '—')`;
+// Asana es una vista operativa: no debe mostrar oportunidades de clientes sin identidad usable.
+const VALID_ASANA_CLIENT_SQL = `(NULLIF(TRIM(COALESCE(c.name, c.business_name, '')), '') IS NOT NULL
+  AND LOWER(TRIM(COALESCE(c.name, c.business_name, ''))) NOT IN ('—', '-', 'null', 'sin nombre'))`;
 const QTY_KEYS = `('movil_ren','movil_new','claro_tv','cloud')`;   // columnas por cantidad de líneas
 const MONEY_KEYS = `('fijo_ren','fijo_new','mpls')`;               // columnas por dinero
 const VALID_LOG_TYPES = new Set(['llamada', 'nota']);
@@ -43,6 +46,11 @@ function productKeyParts(productKey) {
 
 function cleanText(value) {
   return String(value || '').trim();
+}
+
+function hasOperationalClientName(value) {
+  const name = cleanText(value).toLowerCase();
+  return Boolean(name) && !['—', '-', 'null', 'sin nombre'].includes(name);
 }
 
 function cleanDigits(value) {
@@ -207,6 +215,7 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
       ) o
       JOIN clients c ON c.id = o.client_id
       LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
+      WHERE ${VALID_ASANA_CLIENT_SQL}
       ORDER BY client_name`));
     res.json(r.rows);
   } catch (e) {
@@ -404,13 +413,14 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
   if (!client_id) return res.status(400).json({ error: 'Falta client_id' });
   try {
     const out = await withPublic(async c => {
+      const cli = await c.query(
+        `SELECT COALESCE(NULLIF(TRIM(name),''), NULLIF(TRIM(business_name),'')) AS name
+           FROM clients WHERE id = $1`, [client_id]);
+      if (!cli.rows[0]) return null;
+      if (!hasOperationalClientName(cli.rows[0].name)) return { invalid_client: true };
       const ex = await c.query(
         `SELECT id FROM sales_opportunities WHERE client_id = $1 AND archived_at IS NULL LIMIT 1`, [client_id]);
       if (ex.rows[0]) return { opportunity_id: ex.rows[0].id, already: true };
-      const cli = await c.query(
-        `SELECT COALESCE(NULLIF(TRIM(name),''), NULLIF(TRIM(business_name),''), 'Cliente') AS name
-           FROM clients WHERE id = $1`, [client_id]);
-      if (!cli.rows[0]) return null;
       const opp = await c.query(
         `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source)
          VALUES ($1,$2,'manual','activa','desde_cliente') RETURNING id`,
@@ -418,6 +428,9 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
       return { opportunity_id: opp.rows[0].id, already: false };
     });
     if (!out) return res.status(404).json({ error: 'Cliente no existe' });
+    if (out.invalid_client) {
+      return res.status(422).json({ error: 'El cliente no tiene empresa ni nombre. Complétalo antes de enviarlo a seguimiento.' });
+    }
     res.json(out);
   } catch (e) {
     console.error('[from-client]', e.message);

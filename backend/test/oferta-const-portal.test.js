@@ -20,6 +20,15 @@ test('Oferta const muestra version visible en el header', () => {
   assert.match(page, /Constructor de Ofertas - PYMES \(9-22 jun 2026\)/);
 });
 
+test('Oferta const permite volver al portal sin perder el contexto CRM', () => {
+  assert.match(page, /id="returnToOffersPortal"/);
+  assert.match(page, /Volver al portal/);
+  assert.match(page, /function returnToOffersPortal\(\)/);
+  assert.match(page, /new URL\('index\.html',location\.href\)/);
+  assert.match(page, /\['crm_client_id','return','crm_origin'\]/);
+  assert.match(page, /target\.hash=location\.hash/);
+});
+
 test('Oferta const implementa flujo progresivo de plan a propuesta', () => {
   assert.match(page, /1\. Escoger plan/);
   assert.match(page, /2\. Escoger equipo y oferta/);

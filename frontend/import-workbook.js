@@ -26,6 +26,8 @@
     sub_phone: ['SUB'],
     account_type: ['ACCTYPE'],
     status: ['SUBSTATUS'],
+    // Fecha en que se activó la línea; distinta al inicio del compromiso.
+    activation_date: ['SUBSTATUSDATE'],
     soc: ['SOC'],
     monthly_value: ['PRECIO'],
     product_type: ['PRODUCTTYPE'],
@@ -38,6 +40,12 @@
     equipment: ['ITEMLDESC', 'ITEMSDESC'],
     remaining_payments: ['PLAZOSRESTANTES'],
   };
+
+  const REFERENCE_ONLY_HEADERS = new Set(['GRUPOBANDA', 'CANTLINEASBAN']);
+
+  function isReferenceOnlyHeader(value) {
+    return REFERENCE_ONLY_HEADERS.has(headerKey(value));
+  }
 
   function headerIndex(headers) {
     const index = new Map();
@@ -152,5 +160,5 @@
     };
   }
 
-  return { parseOperationalWorkbook };
+  return { parseOperationalWorkbook, isReferenceOnlyHeader };
 }));

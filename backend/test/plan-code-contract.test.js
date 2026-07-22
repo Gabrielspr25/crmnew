@@ -28,6 +28,19 @@ test('no inventa contrato cuando el codigo no tiene sufijo de contrato', () => {
   ]);
 });
 
+test('conserva el numero final de un SOC movil aunque termine en 1 o 2', () => {
+  assert.deepEqual(applyPlanCodeDefaults({
+    plan: 'BREDP1',
+    price_code: 'BREDP1',
+    product_type: 'G',
+    line_kind: 'movil',
+  }), {
+    plan: 'BREDP1',
+    price_code: 'BREDP1',
+    contract_term: null,
+  });
+});
+
 test('aplica defaults sin perder el plan original visible', () => {
   assert.deepEqual(applyPlanCodeDefaults({ plan: 'A1692' }), {
     plan: 'A1692',

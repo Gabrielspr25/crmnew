@@ -5,6 +5,7 @@ import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { logAudit } from './misc.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
+import { normalizeImportedSubscriber } from '../services/subscriberClassification.js';
 
 export const importRouter = Router();
 const dig = (s) => String(s || '').replace(/\D/g, '');
@@ -43,12 +44,12 @@ function normMoney(v) {
   const amount = Number(cleaned);
   return Number.isFinite(amount) ? amount : null;
 }
-// estado BAN: produccion guarda un caracter (A/I/S); suscriptores usan textos largos.
+// Estado BAN: produccion solo acepta A (activo) o C (cancelado).
 function normBanStatus(s) {
   const x = String(s || '').toLowerCase().trim();
   if (!x) return null;
-  if (x === 'i' || x.includes('inactiv')) return 'I';
-  if (x === 's' || x.includes('suspend')) return 'S';
+  if (x === 'c' || x.includes('cancel') || x === 'i' || x.includes('inactiv')) return 'C';
+  if (x === 's' || x.includes('suspend')) return 'A';
   if (x === 'a' || x.includes('activ')) return 'A';
   return null;
 }
@@ -71,6 +72,8 @@ function appendSubscriberFieldsFromRow(r, vals, target, mode) {
     plan: txt(r.plan) || txt(r.soc),
     price_code: txt(r.soc),
     contract_term: txt(r.installment_total),
+    product_type: txt(r.product_type),
+    line_kind: txt(r.line_kind),
   });
   SUB.forEach(([k, col]) => {
     let v = txt(r[k]);
@@ -109,6 +112,26 @@ function appendPsRemainingPayments(r, vals, cols) {
   }
 }
 
+function subscriberValuesFromRow(r) {
+  const vals = [], cols = [];
+  appendSubscriberFieldsFromRow(r, vals, cols, 'col');
+  appendPsRemainingPayments(r, vals, cols);
+  return Object.fromEntries(cols.map((column, index) => [column, vals[index]]));
+}
+
+function comparableImportValue(value, column) {
+  if (value == null) return '';
+  if (SUB_DATES.has(column) && value instanceof Date) return value.toISOString().slice(0, 10);
+  if (SUB_DATES.has(column) && typeof value === 'string') return value.slice(0, 10);
+  return String(value).trim();
+}
+
+function changedSubscriberFields(current, desired) {
+  return Object.entries(desired)
+    .filter(([column, value]) => comparableImportValue(current[column], column) !== comparableImportValue(value, column))
+    .map(([campo, nuevo]) => ({ campo, anterior: current[campo] ?? null, nuevo }));
+}
+
 // POST /api/import/preview -> compara las filas con la BD (sin escribir): cuántas actualizan vs crean
 importRouter.post('/import/preview', requireAuth, async (req, res) => {
   const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
@@ -120,12 +143,25 @@ importRouter.post('/import/preview', requireAuth, async (req, res) => {
   try {
     const exNames = names.length ? new Set((await c.query(`SELECT DISTINCT lower(name) AS n FROM public.clients WHERE lower(name) = ANY($1)`, [names])).rows.map(x => x.n)) : new Set();
     const exBans = bans.length ? new Set((await c.query(`SELECT ban_number FROM public.bans WHERE ban_number = ANY($1)`, [bans])).rows.map(x => x.ban_number)) : new Set();
-    const exPhones = phones.length ? new Set((await c.query(`SELECT phone FROM public.subscribers WHERE phone = ANY($1)`, [phones])).rows.map(x => x.phone)) : new Set();
+    const currentSubscribers = phones.length ? (await c.query(`SELECT s.phone, b.ban_number
+        FROM public.subscribers s LEFT JOIN public.bans b ON b.id = s.ban_id
+       WHERE s.phone = ANY($1)`, [phones])).rows : [];
+    const subscribersByPhone = new Map(currentSubscribers.map(row => [row.phone, row]));
+    const exPhones = new Set(subscribersByPhone.keys());
+    // Suscriptores son líneas únicas. BAN y cliente se muestran como entidades
+    // únicas para que el resumen no multiplique un mismo BAN por cada línea.
+    out.sub_update = phones.filter(phone => exPhones.has(phone)).length;
+    out.sub_new = phones.filter(phone => !exPhones.has(phone)).length;
+    out.sub_move_ban = rows.filter(r => {
+      const phone = dig(r.sub_phone), ban = dig(r.ban), current = subscribersByPhone.get(phone);
+      return current && ban.length === 9 && current.ban_number !== ban;
+    }).length;
+    out.ban_match = bans.filter(ban => exBans.has(ban)).length;
+    out.ban_new = bans.filter(ban => !exBans.has(ban)).length;
+    out.cli_match = names.filter(name => exNames.has(name)).length;
+    out.cli_new = names.filter(name => !exNames.has(name)).length;
     for (const r of rows) {
       const name = String(r.name || '').trim(), ban = dig(r.ban), phone = dig(r.sub_phone);
-      if (name) { exNames.has(name.toLowerCase()) ? out.cli_match++ : out.cli_new++; }
-      if (ban.length === 9) { exBans.has(ban) ? out.ban_match++ : out.ban_new++; }
-      if (phone.length === 10) { exPhones.has(phone) ? out.sub_update++ : out.sub_new++; }
       if (!name && ban.length !== 9 && phone.length !== 10) out.sin_dato++;
     }
     // bajas: lo que está en la BD pero NO vino en el archivo (solo tiene sentido con archivos completos de cartera)
@@ -134,7 +170,7 @@ importRouter.post('/import/preview', requireAuth, async (req, res) => {
       out.subs_ausentes = ms.rows[0].n;
     }
     if (bans.length >= 100) {
-      const mb = await c.query(`SELECT COUNT(*)::int AS n FROM public.bans WHERE status IS DISTINCT FROM 'I' AND NOT (ban_number = ANY($1))`, [bans]);
+      const mb = await c.query(`SELECT COUNT(*)::int AS n FROM public.bans WHERE status IS DISTINCT FROM 'C' AND NOT (ban_number = ANY($1))`, [bans]);
       out.bans_ausentes = mb.rows[0].n;
     }
     res.json(out);
@@ -145,12 +181,20 @@ importRouter.post('/import/preview', requireAuth, async (req, res) => {
 importRouter.post('/import/apply', requireAuth, async (req, res) => {
   const rows = Array.isArray(req.body?.rows) ? req.body.rows : [];
   if (!rows.length) return res.status(400).json({ error: 'No hay filas para importar' });
-  const out = { clientes_creados: 0, clientes_actualizados: 0, bans_creados: 0, subs_creados: 0, subs_actualizados: 0, bans_estado_recalculado: 0, omitidas: 0, errores: [] };
+  const out = {
+    clientes_creados: 0, clientes_actualizados: 0,
+    bans_creados: 0, bans_actualizados: 0,
+    subs_creados: 0, subs_actualizados: 0,
+    subs_reasignados_ban: 0, sin_cambios: 0,
+    bans_estado_recalculado: 0, omitidas: 0,
+    detalles: [], errores: [],
+  };
   const bansTocados = new Set(); // para recalcular estado del BAN según sus líneas al final
   const c = await pool.connect();
   try {
+    await c.query('BEGIN');
     async function updateClientFromRow(clientId, r, displayName) {
-      if (!clientId) return false;
+      if (!clientId) return [];
       const valuesByColumn = new Map();
       const companyName = txt(r.company) || displayName;
       if (displayName) valuesByColumn.set('name', displayName);
@@ -159,22 +203,42 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
         const v = txt(r[k]);
         if (v != null) valuesByColumn.set(col, v);
       });
-      if (!valuesByColumn.size) return false;
+      if (!valuesByColumn.size) return [];
+      const current = (await c.query(
+        `SELECT ${[...valuesByColumn.keys()].join(', ')} FROM public.clients WHERE id = $1`, [clientId],
+      )).rows[0] || {};
+      const changes = changedSubscriberFields(current, Object.fromEntries(valuesByColumn));
+      if (!changes.length) return [];
       const sets = [], vals = [];
-      for (const [col, val] of valuesByColumn.entries()) {
-        vals.push(val);
-        sets.push(`${col} = $${vals.length}`);
+      for (const { campo, nuevo } of changes) {
+        vals.push(nuevo);
+        sets.push(`${campo} = $${vals.length}`);
       }
       vals.push(clientId);
       await c.query(`UPDATE public.clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals);
-      return true;
+      return changes;
     }
 
     for (let i = 0; i < rows.length; i++) {
-      const r = rows[i] || {};
+      // Una falla comercial o de datos de una fila no puede abortar la cartera completa.
+      // PostgreSQL marca la transaccion como fallida hasta volver al SAVEPOINT.
+      await c.query(`SAVEPOINT import_row_${i}`);
+      const countersBeforeRow = {
+        clientes_creados: out.clientes_creados,
+        clientes_actualizados: out.clientes_actualizados,
+        bans_creados: out.bans_creados,
+        bans_actualizados: out.bans_actualizados,
+        subs_creados: out.subs_creados,
+        subs_actualizados: out.subs_actualizados,
+        subs_reasignados_ban: out.subs_reasignados_ban,
+        sin_cambios: out.sin_cambios,
+        omitidas: out.omitidas,
+      };
+      const r = normalizeImportedSubscriber(rows[i] || {});
       try {
         const ban = dig(r.ban), subPhone = dig(r.sub_phone);
         const name = txt(r.name) || txt(r.company) || (ban.length === 9 && subPhone.length === 10 ? `SIN NOMBRE - BAN ${ban}` : null);
+        const rowChanges = [];
         let clientId = null;
 
         // ----- Cliente -----
@@ -187,7 +251,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             `SELECT b.client_id AS id
                FROM public.subscribers s
                JOIN public.bans b ON b.id = s.ban_id
-              WHERE s.phone = $1 OR s.phone_number = $1
+              WHERE s.phone = $1
               LIMIT 1`, [subPhone]);
           if (f.rows[0]) clientId = f.rows[0].id;
         }
@@ -197,12 +261,20 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
         }
 
         if (clientId) {
-          if (await updateClientFromRow(clientId, r, name)) out.clientes_actualizados++;
+          const changes = await updateClientFromRow(clientId, r, name);
+          if (changes.length) {
+            out.clientes_actualizados++;
+            rowChanges.push(...changes.map(change => ({ entidad: 'cliente', ...change })));
+          }
         } else if (name) {
           const f = await c.query(`SELECT id FROM public.clients WHERE name ILIKE $1 OR business_name ILIKE $1 LIMIT 1`, [name]);
           if (f.rows[0]) {
             clientId = f.rows[0].id;
-            if (await updateClientFromRow(clientId, r, name)) out.clientes_actualizados++;
+            const changes = await updateClientFromRow(clientId, r, name);
+            if (changes.length) {
+              out.clientes_actualizados++;
+              rowChanges.push(...changes.map(change => ({ entidad: 'cliente', ...change })));
+            }
           } else {
             const cols = ['name', 'business_name'], vals = [name, txt(r.company) || name];
             CLI.forEach(([k, col]) => {
@@ -212,6 +284,10 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             cols.push('pendiente_validacion'); const ph = cols.map((_, j) => (cols[j] === 'pendiente_validacion' ? 'true' : '$' + (j + 1)));
             const ins = await c.query(`INSERT INTO public.clients (${cols.join(',')}) VALUES (${ph.join(',')}) RETURNING id`, vals);
             clientId = ins.rows[0].id; out.clientes_creados++;
+            rowChanges.push(
+              { entidad: 'cliente', campo: 'name', anterior: null, nuevo: name },
+              { entidad: 'cliente', campo: 'business_name', anterior: null, nuevo: txt(r.company) || name },
+            );
           }
         }
 
@@ -224,50 +300,99 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
           else bf = await c.query(`SELECT id, client_id FROM public.bans WHERE ban_number=$1 LIMIT 1`, [ban]);
           if (bf.rows[0]) {
             banId = bf.rows[0].id; if (!clientId) clientId = bf.rows[0].client_id;
-            const sets = [], vals = [];
-            const at = txt(r.account_type); if (at != null) { vals.push(at); sets.push(`account_type = $${vals.length}`); }
-            const cc = txt(r.credit_class); if (cc != null) { vals.push(cc); sets.push(`credit_class = $${vals.length}`); }
-            if (banStatus) { vals.push(banStatus); sets.push(`status = $${vals.length}`); }
-            if (sets.length) { vals.push(banId); await c.query(`UPDATE public.bans SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals); }
+            const desired = {};
+            const at = txt(r.account_type); if (at != null) desired.account_type = at;
+            const cc = txt(r.credit_class); if (cc != null) desired.credit_class = cc;
+            if (banStatus) desired.status = banStatus;
+            const current = (await c.query(`SELECT account_type, credit_class, status FROM public.bans WHERE id = $1`, [banId])).rows[0] || {};
+            const changes = changedSubscriberFields(current, desired);
+            if (changes.length) {
+              const sets = [], vals = [];
+              for (const { campo, nuevo } of changes) { vals.push(nuevo); sets.push(`${campo} = $${vals.length}`); }
+              vals.push(banId);
+              await c.query(`UPDATE public.bans SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals);
+              out.bans_actualizados++;
+              rowChanges.push(...changes.map(change => ({ entidad: 'BAN', ...change })));
+            }
           } else if (clientId) {
             const ins = await c.query(`INSERT INTO public.bans (client_id, ban_number, status, account_type, credit_class) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [clientId, ban, banStatus || 'A', txt(r.account_type), txt(r.credit_class)]);
             banId = ins.rows[0].id; out.bans_creados++;
+            rowChanges.push(
+              { entidad: 'BAN', campo: 'ban_number', anterior: null, nuevo: ban },
+              { entidad: 'BAN', campo: 'status', anterior: null, nuevo: banStatus || 'A' },
+            );
           }
         }
 
         // ----- Suscriptor -----
+        let detalleSuscriptor = null;
         if (subPhone.length === 10) {
           const subStatus = normStatus(r.status);
-          const sf = await c.query(`SELECT id, ban_id FROM public.subscribers WHERE phone=$1 OR phone_number=$1 LIMIT 1`, [subPhone]);
-          if (sf.rows[0] && banId && sf.rows[0].ban_id !== banId) {
-            throw new Error(`Suscriptor ${subPhone} ya pertenece a otro BAN. No se duplicó ni se movió automáticamente.`);
-          }
+          const sf = await c.query(`SELECT s.*, b.ban_number AS ban_actual
+              FROM public.subscribers s
+              LEFT JOIN public.bans b ON b.id = s.ban_id
+             WHERE s.phone=$1 LIMIT 1`, [subPhone]);
           if (sf.rows[0]) {
+            const desired = subscriberValuesFromRow(r);
+            if (subStatus) desired.status = subStatus;
+            const changes = changedSubscriberFields(sf.rows[0], desired);
             const sets = [], vals = [];
-            appendSubscriberFieldsFromRow(r, vals, sets, 'set');
-            pushPsRemainingPayments(r, vals, sets);
-            if (subStatus) { vals.push(subStatus); sets.push(`status = $${vals.length}`); }
-            if (sets.length) { vals.push(sf.rows[0].id); await c.query(`UPDATE public.subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals); }
-            out.subs_actualizados++;
+            if (banId && sf.rows[0].ban_id !== banId) {
+              vals.push(banId);
+              sets.push(`ban_id = $${vals.length}`);
+              changes.unshift({ campo: 'BAN', anterior: sf.rows[0].ban_actual ?? null, nuevo: ban });
+              bansTocados.add(sf.rows[0].ban_id);
+              out.subs_reasignados_ban++;
+            }
+            for (const { campo, nuevo } of changes.filter(change => change.campo !== 'BAN')) {
+              vals.push(nuevo);
+              sets.push(`${campo} = $${vals.length}`);
+            }
+            if (sets.length) {
+              vals.push(sf.rows[0].id);
+              await c.query(`UPDATE public.subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals);
+              out.subs_actualizados++;
+              detalleSuscriptor = { fila: i + 1, BAN: ban || null, suscriptor: subPhone, accion: changes.some(change => change.campo === 'BAN') ? 'reasignado_BAN' : 'actualizado', cambios: changes.map(change => ({ entidad: 'suscriptor', ...change })) };
+            } else out.sin_cambios++;
           } else if (banId) {
             const cols = ['ban_id', 'phone', 'status'], vals = [banId, subPhone, subStatus || 'activo'];
-            appendSubscriberFieldsFromRow(r, vals, cols, 'col');
-            appendPsRemainingPayments(r, vals, cols);
+            const desired = subscriberValuesFromRow(r);
+            for (const [column, value] of Object.entries(desired)) { cols.push(column); vals.push(value); }
             await c.query(`INSERT INTO public.subscribers (${cols.join(',')}) VALUES (${cols.map((_, j) => '$' + (j + 1)).join(',')})`, vals);
             out.subs_creados++;
+            detalleSuscriptor = {
+              fila: i + 1, BAN: ban || null, suscriptor: subPhone, accion: 'creado',
+              cambios: [
+                { entidad: 'suscriptor', campo: 'BAN', anterior: null, nuevo: ban },
+                { entidad: 'suscriptor', campo: 'status', anterior: null, nuevo: subStatus || 'activo' },
+                ...Object.entries(desired).map(([campo, nuevo]) => ({ entidad: 'suscriptor', campo, anterior: null, nuevo })),
+              ],
+            };
           } else out.omitidas++;
         } else if (!name && ban.length !== 9) out.omitidas++;
         if (banId) bansTocados.add(banId);
-      } catch (e) { out.errores.push({ fila: i + 1, error: e.message }); }
+        if (detalleSuscriptor) {
+          detalleSuscriptor.cambios = [...rowChanges, ...detalleSuscriptor.cambios];
+          out.detalles.push(detalleSuscriptor);
+        } else if (rowChanges.length) {
+          out.detalles.push({ fila: i + 1, BAN: ban || null, suscriptor: subPhone || null, accion: 'actualizado', cambios: rowChanges });
+        }
+        await c.query(`RELEASE SAVEPOINT import_row_${i}`);
+      } catch (e) {
+        await c.query(`ROLLBACK TO SAVEPOINT import_row_${i}`).catch(() => {});
+        Object.assign(out, countersBeforeRow);
+        out.errores.push({ fila: i + 1, error: e.message });
+      }
     }
-    // Estado del BAN automático: activo si le queda alguna línea activa, si no inactivo.
+    // Estado del BAN automático: activo si le queda alguna línea activa, si no cancelado.
     if (bansTocados.size) {
       const rec = await c.query(`UPDATE public.bans b SET status = CASE
           WHEN EXISTS (SELECT 1 FROM public.subscribers s WHERE s.ban_id = b.id AND s.status = 'activo') THEN 'A'
-          ELSE 'I' END, updated_at = now()
+          ELSE 'C' END, updated_at = now()
         WHERE b.id = ANY($1)`, [[...bansTocados]]);
       out.bans_estado_recalculado = rec.rowCount;
     }
+    await c.query('COMMIT');
     try {
       await logAudit({
         user_name: req.user?.nombre || req.user?.nick || 'Sistema',
@@ -279,6 +404,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
           clientes_creados: out.clientes_creados,
           clientes_actualizados: out.clientes_actualizados,
           bans_creados: out.bans_creados,
+          bans_actualizados: out.bans_actualizados,
           subs_creados: out.subs_creados,
           subs_actualizados: out.subs_actualizados,
           bans_estado_recalculado: out.bans_estado_recalculado,
@@ -291,6 +417,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
     }
     res.json(out);
   } catch (e) {
+    await c.query('ROLLBACK').catch(() => {});
     console.error('[import/apply]', e);
     res.status(500).json({ error: e.message });
   }
@@ -311,16 +438,16 @@ importRouter.post('/import/bajas', requireAuth, async (req, res) => {
     await c.query('BEGIN');
     const rs = await c.query(`UPDATE public.subscribers SET status = 'cancelado', updated_at = now()
       WHERE status IS DISTINCT FROM 'cancelado' AND NOT (phone = ANY($1))`, [phones]);
-    const rb = await c.query(`UPDATE public.bans SET status = 'I', updated_at = now()
-      WHERE status IS DISTINCT FROM 'I' AND NOT (ban_number = ANY($1))`, [bans]);
+    const rb = await c.query(`UPDATE public.bans SET status = 'C', updated_at = now()
+      WHERE status IS DISTINCT FROM 'C' AND NOT (ban_number = ANY($1))`, [bans]);
     await c.query('COMMIT');
     try {
       await logAudit({
         user_name: req.user?.nombre || req.user?.nick || 'Sistema',
         type: 'import_bajas',
         entity: 'importador',
-        detail: `Bajas aplicadas desde importador: ${rs.rowCount} lineas canceladas, ${rb.rowCount} BANs inactivados.`,
-        meta: { subs_cancelados: rs.rowCount, bans_inactivados: rb.rowCount, archivo_telefonos: phones.length, archivo_bans: bans.length },
+        detail: `Bajas aplicadas desde importador: ${rs.rowCount} lineas canceladas, ${rb.rowCount} BANs cancelados.`,
+        meta: { subs_cancelados: rs.rowCount, bans_cancelados: rb.rowCount, archivo_telefonos: phones.length, archivo_bans: bans.length },
       });
     } catch (e) {
       console.warn('[import/audit] no se pudo registrar auditoria de bajas:', e.message);

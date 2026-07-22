@@ -27,7 +27,13 @@ export function applyPlanCodeDefaults(row = {}) {
   const plan = cleanPlanCode(row.plan);
   const explicitPriceCode = cleanPlanCode(row.price_code);
   const source = explicitPriceCode || plan;
-  const candidates = planCodeLookupCandidates(source);
+  const productType = cleanPlanCode(row.product_type);
+  const lineKind = cleanPlanCode(row.line_kind);
+  // En móvil el sufijo forma parte del SOC comercial: BREDP1, BREDP2, etc.
+  const isMobile = productType === 'G' || lineKind === 'MOVIL';
+  const candidates = isMobile
+    ? [{ code: source, contract_term: null, suffix_stripped: false }]
+    : planCodeLookupCandidates(source);
   const normalized = candidates.find(c => c.suffix_stripped) || candidates[0] || null;
   const contractTerm = Number(row.contract_term) || normalized?.contract_term || null;
 

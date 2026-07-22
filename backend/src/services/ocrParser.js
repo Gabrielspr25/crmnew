@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import { extractTextWithVision } from './ocrVisionService.js';
 
 const VALID_PR_PHONE = /^(787|939|989)\d{7}$/;
-const VALID_PREFIXES = ['787', '939', '989'];
 const OCR_CHAR_MAP = {
   O: '0',
   o: '0',
@@ -58,31 +57,6 @@ function normalizeOcrChars(value) {
     .join('');
 }
 
-function autocorrectPrefixIfNeeded(digits) {
-  if (!digits || digits.length !== 10) return { phone: null, corrected: false };
-  const prefix = digits.slice(0, 3);
-  if (VALID_PREFIXES.includes(prefix)) {
-    return { phone: digits, corrected: false };
-  }
-
-  let best = null;
-  for (const candidate of VALID_PREFIXES) {
-    let diff = 0;
-    for (let i = 0; i < 3; i += 1) {
-      if (candidate[i] !== prefix[i]) diff += 1;
-    }
-    if (best === null || diff < best.diff) {
-      best = { prefix: candidate, diff };
-    }
-  }
-
-  if (best && best.diff === 1) {
-    return { phone: `${best.prefix}${digits.slice(3)}`, corrected: true };
-  }
-
-  return { phone: null, corrected: false };
-}
-
 function extractStatusFromLine(line) {
   const match = line.match(STATUS_TOKEN_REGEX);
   return normalizeStatus(match ? match[1] : 'activo');
@@ -103,11 +77,6 @@ function normalizePhoneCandidate(raw) {
 
   if (VALID_PR_PHONE.test(digits)) {
     return { phone: digits, ignored100: false, prefixCorrected: false };
-  }
-
-  const corrected = autocorrectPrefixIfNeeded(digits);
-  if (corrected.phone && VALID_PR_PHONE.test(corrected.phone)) {
-    return { phone: corrected.phone, ignored100: false, prefixCorrected: corrected.corrected };
   }
 
   return { phone: null, ignored100: false, prefixCorrected: false };
@@ -215,18 +184,38 @@ function extractPhoneFromOcrLine(line) {
   const candidates = line.match(/(?:\+?1\s*)?(?:\(?\d{3}\)?[\s\-\.]*)\d{3}[\s\-\.]*\d{4}/g);
   if (candidates && candidates.length) {
     for (const candidate of candidates) {
-      const phone = normalizePhoneDigits(candidate);
-      if (phone) return phone;
+      const normalized = normalizePhoneCandidate(candidate);
+      if (normalized.ignored100) return null;
+      if (normalized.phone) return normalized.phone;
     }
   }
 
   const longRuns = line.match(/\d[\d\s\-\.]{8,}\d/g);
   if (longRuns && longRuns.length) {
     for (const run of longRuns) {
-      const phone = normalizePhoneDigits(run);
-      if (phone) return phone;
+      const normalized = normalizePhoneCandidate(run);
+      if (normalized.ignored100) return null;
+      if (normalized.phone) return normalized.phone;
     }
   }
+  return null;
+}
+
+// Regla operacional de Subscriber List: 989 / tipo K / CCPRO es un suscriptor
+// Cloud válido. No participa como móvil ni fijo, pero sí se guarda en subscribers.
+function normalizeOcrProductType(value) {
+  const type = String(value || '').trim().toUpperCase();
+  // En la columna Type el OCR suele confundir la letra O con el dígito 0.
+  return type === '0' ? 'O' : type;
+}
+
+function classifyOcrLineKind({ subscriber, type, pricePlan } = {}) {
+  const phone = String(subscriber || '').replace(/\D/g, '');
+  const sourceType = normalizeOcrProductType(type);
+  const plan = normalizePlanCodeKey(pricePlan);
+  if (phone.startsWith('989') || sourceType === 'K' || plan === 'CCPRO') return 'cloud';
+  if (sourceType === 'G') return 'movil';
+  if (['O', 'T', 'V'].includes(sourceType)) return 'fijo';
   return null;
 }
 
@@ -270,7 +259,7 @@ function parseLocalOcrText(text) {
         .trim();
       const tokens = lineNoPhone.split(' ').filter(Boolean);
       let type = '';
-      if (tokens.length && tokens[0].length <= 3) type = tokens.shift() || '';
+      if (tokens.length && tokens[0].length <= 3) type = normalizeOcrProductType(tokens.shift());
       const parsedStatus = parseOcrStatus(tokens);
       // inlinePlan: validamos como candidato real (descarta tokens basura tipo 'F' o duplicados de status).
       let inlinePlan = '';
@@ -327,6 +316,11 @@ function parseLocalOcrText(text) {
       type: e.type,
       status: e.status,
       pricePlan: e.inlinePlan || e.assignedPlan || '',
+      line_kind: classifyOcrLineKind({
+        subscriber: e.phone,
+        type: e.type,
+        pricePlan: e.inlinePlan || e.assignedPlan || '',
+      }),
       rawLine: e.rawLine
     }));
 
@@ -382,4 +376,4 @@ async function extractTextForSync(buffer) {
   const text = await ocrImageBuffer(buffer);
   return { text, engine: 'tesseract', ocr_warnings: ocrWarnings };
 }
-export { extractTextForSync, parseLocalOcrText, rowsToClipboardText, ocrImageBuffer, extractBanFromOcrText };
+export { extractTextForSync, parseLocalOcrText, rowsToClipboardText, ocrImageBuffer, extractBanFromOcrText, classifyOcrLineKind };

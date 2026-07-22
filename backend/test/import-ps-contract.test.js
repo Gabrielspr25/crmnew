@@ -28,6 +28,7 @@ test('auto-deteccion reconoce TODOS los encabezados utiles del formato PS de Cla
   assert.equal(map.email, 'Email');
   assert.equal(map.account_type, 'ACCTYPE');
   assert.equal(map.status, 'SUB_STATUS');
+  assert.equal(map.activation_date, 'SUB_STATUS_DATE');
   assert.equal(map.contract_start_date, 'COMMIT_START_DATE');
   assert.equal(map.contract_end_date, 'COMMIT_END_DATE');
   assert.equal(map.credit_class, 'CREDIT_CLASS');
@@ -40,15 +41,51 @@ test('auto-deteccion reconoce TODOS los encabezados utiles del formato PS de Cla
   // ITEM_LDESC es el modelo de equipo; ITEM_SDESC sigue fuera porque no tiene columna propia.
   const usados = new Set(Object.values(map));
   assert.ok(!usados.has('ITEM_SDESC'));
-  assert.ok(!usados.has('SUB_STATUS_DATE'));
   assert.ok(!usados.has('UNIT_ESN'));
 });
 
 test('apply recalcula el estado del BAN segun sus lineas (A si queda alguna activa)', () => {
   assert.match(routesSource, /bansTocados/);
   assert.match(routesSource, /WHEN EXISTS \(SELECT 1 FROM public\.subscribers s WHERE s\.ban_id = b\.id AND s\.status = 'activo'\) THEN 'A'/);
-  assert.match(routesSource, /ELSE 'I'/);
+  assert.match(routesSource, /ELSE 'C'/);
   assert.match(routesSource, /bans_estado_recalculado/);
+});
+
+test('estado del BAN solo usa A o C: suspendido queda activo y bajas quedan canceladas', () => {
+  const fn = routesSource.match(/function normBanStatus\(s\) \{[\s\S]*?\n\}/)?.[0] || '';
+  const normBanStatus = eval('(' + fn.replace('function normBanStatus', 'function') + ')');
+  assert.equal(normBanStatus('A'), 'A');
+  assert.equal(normBanStatus('S'), 'A');
+  assert.equal(normBanStatus('Suspendido'), 'A');
+  assert.equal(normBanStatus('C'), 'C');
+  assert.equal(normBanStatus('Inactivo'), 'C');
+  assert.doesNotMatch(routesSource, /ELSE 'I'/);
+});
+
+test('aplicar importacion es transaccional y revierte ante un error final', () => {
+  const applyRoute = routesSource.match(/importRouter\.post\('\/import\/apply',[\s\S]*?\n\}\);\n\n\/\/ POST \/api\/import\/bajas/)?.[0] || '';
+  assert.match(applyRoute, /await c\.query\('BEGIN'\)/);
+  assert.match(applyRoute, /await c\.query\('COMMIT'\)/);
+  assert.match(applyRoute, /await c\.query\('ROLLBACK'\)\.catch/);
+});
+
+test('una fila invalida no invalida el resto de la cartera', () => {
+  const applyRoute = routesSource.match(/importRouter\.post\('\/import\/apply',[\s\S]*?\n\}\);\n\n\/\/ POST \/api\/import\/bajas/)?.[0] || '';
+  assert.match(applyRoute, /SAVEPOINT import_row_\$\{i\}/);
+  assert.match(applyRoute, /ROLLBACK TO SAVEPOINT import_row_\$\{i\}/);
+  assert.match(applyRoute, /RELEASE SAVEPOINT import_row_\$\{i\}/);
+});
+
+test('el archivo reasigna un suscriptor al BAN indicado sin duplicarlo', () => {
+  const applyRoute = routesSource.match(/importRouter\.post\('\/import\/apply',[\s\S]*?\n\}\);\n\n\/\/ POST \/api\/import\/bajas/)?.[0] || '';
+  assert.match(applyRoute, /subs_reasignados_ban/);
+  assert.match(applyRoute, /sets\.push\(`ban_id = \$\$\{vals\.length\}`\)/);
+  assert.doesNotMatch(applyRoute, /throw new Error\(`Suscriptor \$\{subPhone\} ya pertenece a otro BAN/);
+});
+
+test('el resultado conserva detalle de cada cambio real de importacion', () => {
+  assert.match(routesSource, /detalles: \[\]/);
+  assert.match(routesSource, /out\.detalles\.push/);
 });
 
 test('backend escribe los campos PS: subscriber (product_type, item_id, soc, cuotas, fechas) y ban (credit_class)', () => {
@@ -61,7 +98,7 @@ test('backend escribe los campos PS: subscriber (product_type, item_id, soc, cuo
   assert.match(routesSource, /\['line_kind', 'line_kind'\]/);
   assert.doesNotMatch(routesSource, /status_date/);
   assert.match(routesSource, /\['contract_start_date', 'contract_start_date'\]/);
-  assert.match(routesSource, /credit_class = \$/);
+  assert.match(routesSource, /desired\.credit_class = cc/);
   assert.match(routesSource, /account_type, credit_class\)/);
 });
 
@@ -125,13 +162,26 @@ test('preview reporta ausentes solo con archivos grandes (cartera completa)', ()
   assert.match(routesSource, /bans_ausentes/);
 });
 
+test('la vista previa cuenta BAN y clientes únicos, no las filas repetidas de cada BAN', () => {
+  assert.match(routesSource, /out\.ban_match = bans\.filter\(ban => exBans\.has\(ban\)\)\.length/);
+  assert.match(routesSource, /out\.ban_new = bans\.filter\(ban => !exBans\.has\(ban\)\)\.length/);
+  assert.match(routesSource, /out\.cli_match = names\.filter\(name => exNames\.has\(name\)\)\.length/);
+  assert.match(routesSource, /out\.cli_new = names\.filter\(name => !exNames\.has\(name\)\)\.length/);
+});
+
+test('la vista previa usa el campo canonico phone sin depender de phone_number', () => {
+  const previewRoute = routesSource.match(/importRouter\.post\('\/import\/preview',[\s\S]*?\n\}\);\n\n\/\/ POST \/api\/import\/apply/)?.[0] || '';
+  assert.match(previewRoute, /s\.phone = ANY\(\$1\)/);
+  assert.doesNotMatch(previewRoute, /phone_number/);
+});
+
 test('endpoint de bajas existe, exige cartera completa y es transaccional', () => {
   assert.match(routesSource, /importRouter\.post\('\/import\/bajas', requireAuth/);
   assert.match(routesSource, /phones\.length < 100 \|\| bans\.length < 100/);
   assert.match(routesSource, /BEGIN/);
   assert.match(routesSource, /ROLLBACK/);
   assert.match(routesSource, /SET status = 'cancelado'/);
-  assert.match(routesSource, /SET status = 'I'/);
+  assert.match(routesSource, /SET status = 'C'/);
 });
 
 test('la UI muestra bajas como paso aparte y nunca dentro de Aplicar', () => {
@@ -140,4 +190,20 @@ test('la UI muestra bajas como paso aparte y nunca dentro de Aplicar', () => {
   assert.match(appHtml, /cartera COMPLETA/);
   const aplicar = appHtml.match(/async function impAplicar\(\)\{[\s\S]*?\n\}/)?.[0] || '';
   assert.doesNotMatch(aplicar, /bajas/i);
+});
+
+test('la UI conserva el importador abierto y entrega el detalle descargable de cambios y errores', () => {
+  const aplicar = appHtml.match(/async function impAplicar\(\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(aplicar, /erroresImport\.slice\(0,5\)/);
+  assert.match(aplicar, /Primeros errores reales/);
+  assert.match(aplicar, /impMostrarResultado\(\)/);
+  assert.match(appHtml, /function impDescargarDetalle\(\)/);
+  assert.match(appHtml, /valor anterior y valor nuevo/);
+});
+
+test('el resultado deja visible el primer error de importacion con su fila', () => {
+  const resultRenderer = appHtml.match(/function impMostrarResultado\(\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(resultRenderer, /Errores reales/);
+  assert.match(resultRenderer, /Fila '\+e\.fila/);
+  assert.match(resultRenderer, /e\.error/);
 });

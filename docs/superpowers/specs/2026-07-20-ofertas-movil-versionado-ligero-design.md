@@ -63,7 +63,7 @@ Ruta nueva `backend/src/routes/ofertasMovilRoutes.js`, montada en `backend/src/s
 
 - `GET /api/ofertas-movil/vigente` — requiere sesión. Devuelve la versión vigente: `numero`, `vigencia`, `estado_vigencia` calculado (`vigente` | `vencida_pendiente_reemplazo`), `datos`, `archivo_nombre`. Sin versión publicada responde `404 sin_version_vigente`.
 - `POST /api/ofertas-movil/preview` — admin/supervisor. Multipart con un solo campo `archivo` (.xlsx/.xls, Multer en memoria, límite 20 MB). Parsea, guarda `borrador` y devuelve: resumen (conteos), diferencias contra la vigente (ofertas nuevas/eliminadas, equipos nuevos/eliminados, cambios de precio), advertencias y vigencia detectada.
-- `POST /api/ofertas-movil/publicar` — admin/supervisor. Body: `{ version_id, vigencia_desde, vigencia_hasta }`. En una transacción: la vigente actual pasa a `reemplazada` y el borrador a `vigente`. Publicar un borrador con advertencias exige `confirmar_advertencias: true`.
+- `POST /api/ofertas-movil/publicar` — admin/supervisor. Body: `{ version_id, vigencia_desde, vigencia_hasta, confirmar_advertencias }`. En una transacción: la vigente actual pasa a `reemplazada` y el borrador a `vigente`. Publicar un borrador con advertencias exige `confirmar_advertencias: true`; sin advertencias el campo puede omitirse.
 - `GET /api/ofertas-movil/historial` — admin/supervisor. Lista versiones con número, estado, vigencia, archivo y fechas.
 
 Errores esperados: `400 archivo_requerido`, `400 tipo_archivo_invalido`, `401`, `403`, `404 sin_version_vigente`, `409 version_no_publicable` (no es borrador), `422 parser_error`, `422 vigencia_invalida` (desde > hasta o fechas faltantes al publicar).

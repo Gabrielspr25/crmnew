@@ -5,9 +5,12 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
+import { resolvePlanMonthlyValueFromTango } from '../tango.js';
+import { normalizeOperationalStatus } from '../services/subscriberClassification.js';
 
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
+const VALID_SUBSCRIBER_PHONE = /^(787|939|989)\d{7}$/;
 function contractEndFromRemainingPayments(v) {
   const n = Number.parseInt(String(v || ''), 10);
   if (!Number.isFinite(n) || n <= 0) return null;
@@ -61,7 +64,13 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
     contract_term: b.contract_term,
   });
   if (ph.length !== 10) return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos' });
+  if (ph.startsWith('100')) return res.status(422).json({ error: 'El codigo interno 100 no es un suscriptor y no se puede guardar' });
+  if (!VALID_SUBSCRIBER_PHONE.test(ph)) return res.status(422).json({ error: 'El suscriptor debe comenzar con 787, 939 o 989' });
   if (b.remaining_payments && !b.contract_end_date) b.contract_end_date = contractEndFromRemainingPayments(b.remaining_payments);
+  const suppliedMonthlyValue = Number(b.monthly_value);
+  const tangoPlanRate = Number.isFinite(suppliedMonthlyValue) && suppliedMonthlyValue > 0
+    ? { value: suppliedMonthlyValue, source: 'manual', ambiguous: false }
+    : await resolvePlanMonthlyValueFromTango(planDefaults.price_code);
   try {
     const r = await wp(async c => {
       const expectedBan = onlyDigits(b.expected_ban_number);
@@ -137,7 +146,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
         req.params.banId,
         ph,
         planDefaults.plan || null,
-        Number(b.monthly_value) || null,
+        tangoPlanRate.value,
         b.line_kind || null,
         b.line_type || null,
         b.equipment || null,
@@ -161,6 +170,7 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
     req.body.contract_end_date = contractEndFromRemainingPayments(req.body.remaining_payments);
   }
   const body = req.body || {};
+  if ('status' in body) body.status = normalizeOperationalStatus(body.status);
   if ('plan' in body || 'price_code' in body || 'contract_term' in body) {
     const planDefaults = applyPlanCodeDefaults(body);
     if ('plan' in body) body.plan = planDefaults.plan;
@@ -171,6 +181,8 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
   if ('phone' in body) {
     const ph = onlyDigits(body.phone);
     if (ph.length !== 10) return res.status(400).json({ error: 'El telefono debe tener 10 digitos' });
+    if (ph.startsWith('100')) return res.status(422).json({ error: 'El codigo interno 100 no es un suscriptor y no se puede guardar' });
+    if (!VALID_SUBSCRIBER_PHONE.test(ph)) return res.status(422).json({ error: 'El suscriptor debe comenzar con 787, 939 o 989' });
     vals.push(ph); sets.push(`phone = $${vals.length}`);
     vals.push(ph); sets.push(`phone_norm = $${vals.length}`);
   }

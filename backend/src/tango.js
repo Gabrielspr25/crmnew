@@ -3,6 +3,8 @@
 
 const BASE = (process.env.TANGO_API_BASE_URL || '').replace(/\/+$/, '');
 const KEY = process.env.TANGO_API_KEY || '';
+const planRateCache = new Map();
+const PLAN_RATE_CACHE_MS = 5 * 60 * 1000;
 
 function headers(extra = {}) {
   return {
@@ -11,6 +13,69 @@ function headers(extra = {}) {
     Accept: 'application/json',
     ...extra,
   };
+}
+
+function positiveRate(value) {
+  const rate = Number(value);
+  return Number.isFinite(rate) && rate > 0 ? rate : null;
+}
+
+function normalizePlanCode(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function tangoPlanCode(row) {
+  const raw = row?.codigovoz ?? row?.codigo ?? row?.code ?? row?.pricecode ?? '';
+  return normalizePlanCode(raw).split(/\s+/)[0] || null;
+}
+
+function tangoPlanRows(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.planes)) return payload.planes;
+  if (Array.isArray(payload?.plans)) return payload.plans;
+  return [];
+}
+
+export function resolvePlanRateFromTangoRows(planCode, rows = []) {
+  const target = normalizePlanCode(planCode);
+  if (!target) return { value: null, source: null, ambiguous: false };
+
+  const rates = new Set(
+    rows
+      .filter((row) => tangoPlanCode(row) === target && row?.activo !== false)
+      .map((row) => positiveRate(row?.rate ?? row?.monthly_value ?? row?.monthlyValue ?? row?.price ?? row?.precio))
+      .filter((rate) => rate != null)
+  );
+
+  if (rates.size !== 1) {
+    return { value: null, source: null, ambiguous: rates.size > 1 };
+  }
+
+  return { value: [...rates][0], source: 'tango-api-v2', ambiguous: false };
+}
+
+// Resuelve la renta del plan desde Tango V2. El sufijo 1/2 ya se quitó antes
+// mediante applyPlanCodeDefaults; aquí solo se consulta el código base.
+export async function resolvePlanMonthlyValueFromTango(planCode) {
+  const code = normalizePlanCode(planCode);
+  if (!code || !BASE || !KEY) return { value: null, source: null, ambiguous: false };
+
+  const cached = planRateCache.get(code);
+  if (cached && Date.now() - cached.at < PLAN_RATE_CACHE_MS) return cached.result;
+
+  try {
+    const resp = await fetch(`${BASE}/api/external/planes`, {
+      headers: headers(),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!resp.ok) return { value: null, source: null, ambiguous: false };
+    const result = resolvePlanRateFromTangoRows(code, tangoPlanRows(await resp.json()));
+    planRateCache.set(code, { at: Date.now(), result });
+    return result;
+  } catch {
+    return { value: null, source: null, ambiguous: false };
+  }
 }
 
 // --- Login con Tango (regla #38): valida nick + clave, devuelve el perfil. ---

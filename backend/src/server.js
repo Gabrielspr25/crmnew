@@ -23,6 +23,7 @@ import { planesRouter } from './routes/planesRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
+import { directorioOperacionesRouter } from './routes/directorioOperacionesRoutes.js';
 
 
 const app = express();
@@ -77,6 +78,7 @@ app.use('/api', prospectosRouter);        // Prospección masiva Google Places -
 app.use('/api', correosRouter);           // Correos: clientes con email + envío (mailto/SMTP)
 app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
+app.use('/api', directorioOperacionesRouter); // Directorio Operaciones Clientes Masivos
 
 
 const PORT = process.env.PORT || 4000;

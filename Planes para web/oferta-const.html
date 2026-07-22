@@ -12,7 +12,7 @@
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
 .topbar{background:#c81e28;border-bottom:2px solid #ffb703;padding:13px 24px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:50}
 .brand{font-size:21px;font-weight:950;color:#fff}.brand small{display:block;font-size:12px;font-weight:650;color:rgba(255,255,255,.82);margin-top:1px}
-.version-badge{margin-left:auto;border:1px solid rgba(255,255,255,.34);background:rgba(15,23,42,.28);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;white-space:nowrap}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}.portal-return{border:1px solid rgba(255,255,255,.5);background:rgba(15,23,42,.22);color:#fff;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}.portal-return:hover{background:rgba(15,23,42,.42)}.version-badge{border:1px solid rgba(255,255,255,.34);background:rgba(15,23,42,.28);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900;white-space:nowrap}
 .nav{display:flex;gap:4px;overflow:auto;background:#151821;border-bottom:1px solid rgba(110,231,249,.24);padding:0 24px}
 .nav a{color:#b9c7d6;text-decoration:none;padding:12px 14px;font-size:13px;font-weight:750;border-bottom:2px solid transparent;white-space:nowrap}.nav a.active{color:#7dd3fc;border-bottom-color:#67e8f9}
 .wrap{max-width:1260px;margin:0 auto;padding:22px 24px 48px}
@@ -65,7 +65,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 </style>
 </head>
 <body>
-<header class="topbar"><div class="brand">CLARO<small>Constructor de Ofertas - PYMES (9-22 jun 2026)</small></div><div class="version-badge">v2026.07.03.11</div></header>
+<header class="topbar"><div class="brand">CLARO<small>Constructor de Ofertas - PYMES (9-22 jun 2026)</small></div><div class="topbar-actions"><button class="portal-return" id="returnToOffersPortal" type="button" onclick="returnToOffersPortal()">← Volver al portal</button><div class="version-badge">v2026.07.03.11</div></div></header>
 <nav class="nav">
   <a href="index.html">Planes Fijos</a>
   <a href="claro-tv.html">Claro TV</a>
@@ -250,6 +250,15 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;',
 const CRM_PARAMS=new URLSearchParams(location.search);
 const CRM_CLIENT_ID=CRM_PARAMS.get('crm_client_id')||'';
 const CRM_RETURN=CRM_PARAMS.get('return')||'';
+function returnToOffersPortal(){
+  const target=new URL('index.html',location.href);
+  ['crm_client_id','return','crm_origin'].forEach(key=>{
+    const value=CRM_PARAMS.get(key);
+    if(value)target.searchParams.set(key,value);
+  });
+  target.hash=location.hash;
+  location.href=target.toString();
+}
 function crmToken(){try{return localStorage.getItem('vp_token')||''}catch(e){return ''}}
 async function crmApi(path,opts={}){
   const token=crmToken();
