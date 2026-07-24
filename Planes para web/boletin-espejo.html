@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boletin — espejo fiel</title>
+<style>
+  :root{--bg:#0b0d12;--panel:#141824;--line:#232a3a;--txt:#d6cfc4;--txt2:#8b93a7;--accent:#16a34a;--warn:#b45309;--red:#dc2626;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt)}
+  header{background:linear-gradient(90deg,#7f1d1d,#b91c1c);padding:14px 20px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;font-size:12px;color:#fddede}
+  .wrap{padding:16px 20px;max-width:1400px;margin:0 auto}
+  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;background:var(--panel);cursor:pointer}
+  .drop.over{border-color:var(--accent)}
+  .drop b{display:block;margin-bottom:4px}
+  .drop small{color:var(--txt2)}
+  .status{margin:10px 0;font-size:13px;color:var(--txt2)}
+  .status.err{color:var(--red)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:860px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:200px}
+  .card h2{margin:0;padding:12px 14px;font-size:14px;border-bottom:1px solid var(--line)}
+  .card h2 small{color:var(--txt2);font-weight:normal}
+  .card .body{padding:12px 14px;overflow:auto;max-height:66vh}
+  .pg{margin-bottom:14px}
+  .pg .pgn{font-size:11px;color:var(--txt2);margin-bottom:4px}
+  .line{padding:2px 6px;border-radius:6px;white-space:pre-wrap;font-size:13px;line-height:1.45;cursor:pointer}
+  .line:hover{background:#1c2333}
+  .searchbar{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .searchbar input{flex:1;background:#0e121b;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px}
+  .hit{padding:4px 6px;border-radius:6px;font-size:12px;white-space:pre-wrap;border-bottom:1px solid #1b2130;color:#cbd5e1}
+  .hit b{color:#fde047}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;margin-left:6px}
+  .badge.yes{background:#052e1a;color:#4ade80;border:1px solid #14532d}
+  .badge.no{background:#3f0d0d;color:#fca5a5;border:1px solid #7f1d1d}
+  .muted{color:var(--txt2);font-size:12px}
+  .note{background:#1a1206;border:1px solid var(--warn);border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12px;color:#fcd9a8}
+</style>
+</head>
+<body>
+<header>
+  <h1>Boletin — espejo fiel</h1>
+  <p>Sube un boletin PDF. La herramienta muestra el texto tal cual lo dice el documento (no interpreta ni memoriza datos) y te deja compararlo, en vivo, con lo que hay en el constructor.</p>
+</header>
+<div class="wrap">
+  <div class="drop" id="drop">
+    <b>Arrastra el PDF del boletin aqui, o toca para escoger</b>
+    <small>Se lee con pdfplumber en el servidor. No se guarda el archivo.</small>
+    <input type="file" id="file" accept="application/pdf,.pdf" style="display:none">
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Lo que dice el boletin <small id="pdfMeta"></small></h2>
+      <div class="body" id="pdfBody"><div class="muted">Aun no has subido un boletin.</div></div>
+    </div>
+    <div class="card">
+      <div class="searchbar">
+        <input id="q" placeholder="Buscar un termino en el constructor (o toca una linea del boletin)…">
+      </div>
+      <h2>Lo que hay en el constructor <small id="srcMeta">cargando fuente en vivo…</small></h2>
+      <div class="body" id="cmpBody"><div class="muted">Escribe un termino, o toca una linea del boletin de la izquierda, para ver si ese beneficio existe hoy en el constructor.</div></div>
+    </div>
+  </div>
+
+  <div class="note">Espejo fiel: ningun monto ni condicion vive en el codigo de esta herramienta. Todo lo de la izquierda sale del PDF que subes; todo lo de la derecha sale del codigo real del constructor que se descarga en vivo. Si Claro cambia un dato, subes el PDF nuevo y se refleja solo.</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function crmToken(){ try{ return localStorage.getItem('vp_token')||''; }catch(e){ return ''; } }
+
+// ---- Fuente viva del constructor (para la comparacion), descargada en vivo ----
+let constructorSource = '';
+async function loadConstructorSource(){
+  const files = ['/constructor/ofertas-logic.js','/constructor/oferta-const.html'];
+  try{
+    const parts = await Promise.all(files.map(f => fetch(f).then(r => r.ok ? r.text() : '')));
+    constructorSource = parts.join('\n');
+    $('srcMeta').textContent = 'fuente viva: ' + files.join('  +  ');
+  }catch(e){
+    $('srcMeta').textContent = 'no se pudo leer la fuente del constructor';
+  }
+}
+loadConstructorSource();
+
+// ---- Subida del PDF ----
+const drop = $('drop');
+drop.addEventListener('click', () => $('file').click());
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) subir(f); });
+$('file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if(f) subir(f); });
+
+function setStatus(msg, err){ const s = $('status'); s.textContent = msg||''; s.className = 'status' + (err?' err':''); }
+
+async function subir(file){
+  const token = crmToken();
+  if(!token){ setStatus('Inicia sesion en el CRM para poder leer el PDF (el endpoint exige sesion).', true); return; }
+  setStatus('Leyendo el PDF en el servidor…');
+  const fd = new FormData(); fd.append('pdf', file);
+  try{
+    const r = await fetch('/api/boletin/extraer-texto', { method:'POST', headers:{ Authorization:'Bearer '+token }, body: fd });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok || !j.ok){ setStatus((j && j.error) || ('Error ' + r.status), true); return; }
+    setStatus('');
+    renderPdf(j);
+  }catch(e){ setStatus('No se pudo leer el PDF: ' + (e.message||e), true); }
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function renderPdf(data){
+  $('pdfMeta').textContent = esc(data.archivo||'') + ' · ' + (data.total_paginas||0) + ' pagina(s)';
+  const body = $('pdfBody'); body.innerHTML = '';
+  (data.paginas||[]).forEach(p => {
+    const pg = document.createElement('div'); pg.className = 'pg';
+    const head = document.createElement('div'); head.className = 'pgn'; head.textContent = 'Pagina ' + p.n;
+    pg.appendChild(head);
+    (p.texto||'').split(/\r?\n/).forEach(linea => {
+      if(!linea.trim()) return;
+      const el = document.createElement('div'); el.className = 'line'; el.textContent = linea;
+      el.addEventListener('click', () => { const t = topTerm(linea); $('q').value = t; buscar(t); });
+      pg.appendChild(el);
+    });
+    body.appendChild(pg);
+  });
+}
+
+// Tokenizacion generica (no datos del boletin): toma la palabra mas larga y util de la linea
+const STOP = new Set(['para','como','desde','hasta','entre','sobre','otros','estos','todos','aplica','cliente','clientes','servicio','servicios','beneficio','beneficios','adelante','planes','plan','linea','lineas']);
+function topTerm(linea){
+  const palabras = String(linea).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').match(/[a-z]{5,}/g) || [];
+  const utiles = palabras.filter(w => !STOP.has(w));
+  utiles.sort((a,b) => b.length - a.length);
+  return utiles[0] || (palabras[0] || '');
+}
+
+// ---- Busqueda en la fuente viva del constructor ----
+$('q').addEventListener('input', () => buscar($('q').value));
+function buscar(term){
+  const cmp = $('cmpBody');
+  term = String(term||'').trim();
+  if(term.length < 3){ cmp.innerHTML = '<div class="muted">Escribe al menos 3 letras.</div>'; return; }
+  if(!constructorSource){ cmp.innerHTML = '<div class="muted">Fuente del constructor no disponible.</div>'; return; }
+  const lines = constructorSource.split(/\r?\n/);
+  const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+  const hits = [];
+  for(let i=0;i<lines.length && hits.length<60;i++){ if(re.test(lines[i])) hits.push(lines[i].trim().slice(0,220)); }
+  const present = hits.length > 0;
+  let html = '<div style="margin-bottom:8px">Termino <b>' + esc(term) + '</b>' +
+    '<span class="badge ' + (present?'yes':'no') + '">' + (present ? ('en el constructor · ' + hits.length + ' linea(s)') : 'NO esta en el constructor') + '</span></div>';
+  html += hits.map(h => '<div class="hit">' + esc(h).replace(re, m => '<b>'+esc(m)+'</b>') + '</div>').join('') ||
+    '<div class="muted">Este beneficio del boletin no aparece en el codigo del constructor: es parte del hueco.</div>';
+  cmp.innerHTML = html;
+}
+</script>
+</body>
+</html>
