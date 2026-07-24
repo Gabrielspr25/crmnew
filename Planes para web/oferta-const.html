@@ -273,6 +273,22 @@ async function crmApi(path,opts={}){
   if(!r.ok)throw new Error(path+' -> '+r.status);
   return r.json();
 }
+// Reglas y bonos: NO viven en el codigo. Se cargan del endpoint (editable en Admin).
+// Vacio = sin reglas configuradas; los bonos no se aplican y se avisa.
+let REGLAS_BONOS={};
+function reglasCargadas(){return REGLAS_BONOS&&Object.keys(REGLAS_BONOS).length>0;}
+function reglaNum(ruta){
+  const val=String(ruta).split('.').reduce((o,k)=>(o&&o[k]!=null?o[k]:null),REGLAS_BONOS);
+  const n=Number(val);
+  return Number.isFinite(n)?n:null;
+}
+async function cargarReglasBonos(){
+  try{
+    const r=await fetch('/api/beneficios-reglas');
+    if(r.ok){const j=await r.json();REGLAS_BONOS=(j&&j.reglas)||{};}
+  }catch(e){REGLAS_BONOS={};}
+  if(typeof renderLineRows==='function'){try{renderLineRows();renderSummary();}catch(e){}}
+}
 function setTipoPlan(tipo){
   state.tipo=tipo;
   document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(b=>b.classList.toggle('active',b.dataset.val===tipo));
@@ -538,34 +554,38 @@ function offerActionPills(row){
 }
 function portabilidadBaseAmount(selected){
   const portCount=selectedPortabilidadRows(selected).length;
-  if(state.convergente) return 150;
-  return portCount>=2?100:50;
+  if(state.convergente) return reglaNum('portabilidad.convergente');
+  return portCount>=2?reglaNum('portabilidad.dosLineas'):reglaNum('portabilidad.unaLinea');
 }
 function businessRedPortAmount(){
   if(state.tipo!=='multilinea') return null;
-  if(state.planMulti==='plus') return 175;
-  if(state.planMulti==='extreme') return 300;
-  return 500;
+  if(state.planMulti==='plus') return reglaNum('businessRedPort.plus');
+  if(state.planMulti==='extreme') return reglaNum('businessRedPort.extreme');
+  return reglaNum('businessRedPort.otros');
 }
+// Todos los montos/topes/plazos salen de REGLAS_BONOS (editable). Si falta el dato,
+// el bono no se aplica (no hay valor hardcodeado de respaldo).
 function lineBonusCredits(row,selected=state.cart.filter(i=>i.equipo&&i.oferta)){
   if(!row||!row.equipo||!row.oferta) return [];
   const plan=planAmount();
   const items=[];
-  if(state.convergente&&plan>=35&&row.oferta.bonoStreaming&&(row.evento==='nueva'||row.evento==='portabilidad'||row.evento==='adicional')){
-    items.push({kind:'stream',label:'Streaming $10/BAN',detail:'Bono Streaming: descuento de $10.00 por BAN por 12 meses. Requiere cliente convergente y terminos activos.'});
+  const strMonto=reglaNum('streaming.monto'),strMin=reglaNum('streaming.planMin'),strMeses=reglaNum('streaming.meses');
+  if(state.convergente&&strMonto!=null&&(strMin==null||plan>=strMin)&&row.oferta.bonoStreaming&&(row.evento==='nueva'||row.evento==='portabilidad'||row.evento==='adicional')){
+    items.push({kind:'stream',label:`Streaming ${money(strMonto)}/BAN`,detail:`Bono Streaming: descuento de ${money(strMonto)} por BAN${strMeses!=null?` por ${strMeses} meses`:''}. Requiere cliente convergente y terminos activos.`});
   }
   const portCreditEligible=row.evento==='portabilidad'&&row.oferta.beneficio!=='gratis';
-  if(portCreditEligible&&plan>=45){
-    const amount=portabilidadBaseAmount(selected);
-    items.push({kind:'port',label:`Portabilidad $${amount}`,amount,monthly:amount/24,detail:`Bono Portabilidad: $${amount} por linea portada, dividido en 24 creditos de ${money(amount/24)}. Aplica a ofertas que no sean equipo gratis; no aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.`});
+  const portMin=reglaNum('portabilidad.planMin'),cuotas=reglaNum('portabilidad.cuotas'),baseAmount=portabilidadBaseAmount(selected);
+  if(portCreditEligible&&baseAmount!=null&&cuotas&&(portMin==null||plan>=portMin)){
+    items.push({kind:'port',label:`Portabilidad ${money(baseAmount)}`,amount:baseAmount,monthly:baseAmount/cuotas,detail:`Bono Portabilidad: ${money(baseAmount)} por linea portada, dividido en ${cuotas} creditos de ${money(baseAmount/cuotas)}. Aplica a ofertas que no sean equipo gratis; no aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.`});
   }
-  if(portCreditEligible&&state.tipo==='multilinea'&&plan>=65&&row.linea<=3){
-    const amount=businessRedPortAmount();
-    items.push({kind:'port',label:`BR porta $${amount}`,amount,monthly:amount/24,detail:`Bono Business Red por portabilidad: $${amount} por linea portada, dividido en 24 creditos de ${money(amount/24)}. Maximo 3 lineas; sujeto a validacion del boletin.`});
+  const brMin=reglaNum('businessRedPort.planMin'),brMax=reglaNum('businessRedPort.maxLineas'),brCuotas=reglaNum('businessRedPort.cuotas'),brAmount=businessRedPortAmount();
+  if(portCreditEligible&&state.tipo==='multilinea'&&brAmount!=null&&brCuotas&&(brMin==null||plan>=brMin)&&(brMax==null||row.linea<=brMax)){
+    items.push({kind:'port',label:`BR porta ${money(brAmount)}`,amount:brAmount,monthly:brAmount/brCuotas,detail:`Bono Business Red por portabilidad: ${money(brAmount)} por linea portada, dividido en ${brCuotas} creditos de ${money(brAmount/brCuotas)}.${brMax!=null?` Maximo ${brMax} lineas;`:''} sujeto a validacion del boletin.`});
   }
-  if(portCreditEligible&&plan>=50&&row.linea<=5){
-    const debt=Math.min(Number(row.deudaPortabilidad||0),800);
-    items.push({kind:'balance',label:'Balance hasta $800',amount:debt,detail:`Pago de balance/deuda de equipo de la otra compania hasta $800. Monto indicado para esta linea: ${debt?money(debt):'pendiente de capturar'}. Maximo 5 lineas; solicitud dentro de 60 dias calendario con evidencia.`});
+  const balTope=reglaNum('balance.tope'),balMin=reglaNum('balance.planMin'),balMax=reglaNum('balance.maxLineas'),balDias=reglaNum('balance.dias');
+  if(portCreditEligible&&balTope!=null&&(balMin==null||plan>=balMin)&&(balMax==null||row.linea<=balMax)){
+    const debt=Math.min(Number(row.deudaPortabilidad||0),balTope);
+    items.push({kind:'balance',label:`Balance hasta ${money(balTope)}`,amount:debt,detail:`Pago de balance/deuda de equipo de la otra compania hasta ${money(balTope)}. Monto indicado para esta linea: ${debt?money(debt):'pendiente de capturar'}.${balMax!=null?` Maximo ${balMax} lineas;`:''}${balDias!=null?` solicitud dentro de ${balDias} dias calendario`:''} con evidencia.`});
   }
   return items;
 }
@@ -958,40 +978,44 @@ function applicableBonuses(selected=state.cart.filter(i=>i.equipo&&i.oferta)){
   const portabilidad=selectedPortabilidadRows(selected);
   const portabilidadCreditos=selectedPortabilidadCreditRows(selected);
   const bonuses={streaming:null,portabilidad:[],pagoBalance:null};
+  const strMonto=reglaNum('streaming.monto'),strMin=reglaNum('streaming.planMin'),strMeses=reglaNum('streaming.meses');
   const streamingLines=selected.filter(i=>i.oferta.bonoStreaming&&(i.evento==='nueva'||i.evento==='portabilidad'||i.evento==='adicional'));
-  if(state.convergente&&plan>=35&&streamingLines.length){
-    bonuses.streaming={nombre:'Bono Streaming',lineas:streamingLines};
+  if(state.convergente&&strMonto!=null&&(strMin==null||plan>=strMin)&&streamingLines.length){
+    bonuses.streaming={nombre:'Bono Streaming',lineas:streamingLines,monto:strMonto,meses:strMeses};
   }
-  if(portabilidadCreditos.length&&plan>=45){
+  const portMin=reglaNum('portabilidad.planMin'),portConv=reglaNum('portabilidad.convergente'),portCuotas=reglaNum('portabilidad.cuotas');
+  if(portabilidadCreditos.length&&portConv!=null&&(portMin==null||plan>=portMin)){
     bonuses.portabilidad.push({
-      nombre:'Bono Portabilidad $150',
+      nombre:`Bono Portabilidad ${money(portConv)}`,
       lineas:portabilidadCreditos,
       detalles:[
-        'Aplica a lineas marcadas como portabilidad en planes elegibles desde $45, excepto equipos gratis.',
-        'Cliente convergente: $150 por linea segun boletin; no convergente depende de cantidad de lineas portadas.',
-        'Se presenta como credito dividido en 24 cuotas mensuales. No aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.'
+        `Aplica a lineas marcadas como portabilidad${portMin!=null?` en planes desde ${money(portMin)}`:''}, excepto equipos gratis.`,
+        `Cliente convergente: ${money(portConv)} por linea segun boletin; no convergente depende de cantidad de lineas portadas.`,
+        `${portCuotas!=null?`Se presenta como credito dividido en ${portCuotas} cuotas mensuales. `:''}No aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.`
       ]
     });
   }
-  if(portabilidadCreditos.length&&state.tipo==='multilinea'&&plan>=65){
-    const amount=state.planMulti==='plus'?175:(state.planMulti==='extreme'?300:500);
+  const brMin=reglaNum('businessRedPort.planMin'),brMax=reglaNum('businessRedPort.maxLineas'),brCuotas=reglaNum('businessRedPort.cuotas'),brAmount=businessRedPortAmount();
+  if(portabilidadCreditos.length&&state.tipo==='multilinea'&&brAmount!=null&&(brMin==null||plan>=brMin)){
     bonuses.portabilidad.push({
-      nombre:`Bono Portabilidad hasta $${amount}`,
-      lineas:portabilidadCreditos.slice(0,3),
+      nombre:`Bono Portabilidad hasta ${money(brAmount)}`,
+      lineas:brMax!=null?portabilidadCreditos.slice(0,brMax):portabilidadCreditos,
       detalles:[
-        `Aplica en Business Red ${$('planMulti').selectedOptions[0].textContent}; maximo 3 lineas.`,
-        `Monto estimado: $${amount} por linea portada, sujeto a terminos y validacion. Se presenta dividido en 24 cuotas mensuales.`,
+        `Aplica en Business Red ${$('planMulti').selectedOptions[0].textContent}${brMax!=null?`; maximo ${brMax} lineas`:''}.`,
+        `Monto estimado: ${money(brAmount)} por linea portada, sujeto a terminos y validacion.${brCuotas!=null?` Se presenta dividido en ${brCuotas} cuotas mensuales.`:''}`,
         'Aplica a clientes convergentes y no convergentes si cumplen requisitos.'
       ]
     });
   }
-  if(portabilidadCreditos.length&&plan>=50){
+  const balTope=reglaNum('balance.tope'),balMin=reglaNum('balance.planMin'),balMax=reglaNum('balance.maxLineas'),balDias=reglaNum('balance.dias');
+  if(portabilidadCreditos.length&&balTope!=null&&(balMin==null||plan>=balMin)){
     bonuses.pagoBalance={
-      nombre:'Pago balance hasta $800',
-      lineas:portabilidadCreditos.slice(0,5),
+      nombre:`Pago balance hasta ${money(balTope)}`,
+      lineas:balMax!=null?portabilidadCreditos.slice(0,balMax):portabilidadCreditos,
+      tope:balTope,
       detalles:[
-        'Aplica a portabilidad en planes desde $50 y ofertas que no sean equipo gratis.',
-        'Maximo hasta 5 lineas y solicitud dentro de 60 dias calendario.',
+        `Aplica a portabilidad${balMin!=null?` en planes desde ${money(balMin)}`:''} y ofertas que no sean equipo gratis.`,
+        `${balMax!=null?`Maximo hasta ${balMax} lineas`:'Segun boletin'}${balDias!=null?` y solicitud dentro de ${balDias} dias calendario`:''}.`,
         'Solo cubre balance de equipo y/o accesorios; no cubre impuestos ni balances pendientes.'
       ]
     };
@@ -1001,9 +1025,9 @@ function applicableBonuses(selected=state.cart.filter(i=>i.equipo&&i.oferta)){
 function bonusProposalItems(selected){
   const b=applicableBonuses(selected);
   const items=[];
-  if(b.streaming) items.push(`Bono Streaming: $10.00 por BAN por 12 meses, sujeto a convergencia y terminos.`);
+  if(b.streaming) items.push(`Bono Streaming: ${money(b.streaming.monto)} por BAN${b.streaming.meses!=null?` por ${b.streaming.meses} meses`:''}, sujeto a convergencia y terminos.`);
   groupedCreditsByKind(selected,'port').forEach(x=>items.push(`${x.label}: ${x.lines}. ${x.detail}`));
-  if(b.pagoBalance) items.push(`Pago balance/deuda equipo otra compania: ${b.pagoBalance.lineas.map(i=>`Linea ${i.linea} ${money(Math.min(Number(i.deudaPortabilidad||0),800))}`).join(', ') || 'pendiente'}, sujeto a evidencia y validacion.`);
+  if(b.pagoBalance) items.push(`Pago balance/deuda equipo otra compania: ${b.pagoBalance.lineas.map(i=>`Linea ${i.linea} ${money(Math.min(Number(i.deudaPortabilidad||0),b.pagoBalance.tope))}`).join(', ') || 'pendiente'}, sujeto a evidencia y validacion.`);
   return items;
 }
 function renderOfferExtrasPanel(){
@@ -1014,7 +1038,7 @@ function renderOfferExtrasPanel(){
     blocks.push(`<div class="info-card"><b>Bono Streaming</b><ul>
       <li>Activo porque el cliente esta marcado como convergente.</li>
       <li>Aplica a ${bonuses.streaming.lineas.length} linea(s), sujeto a los terminos del boletin.</li>
-      <li>Descuento de $10.00 por BAN por 12 meses cuando cumpla requisitos.</li>
+      <li>Descuento de ${money(bonuses.streaming.monto)} por BAN${bonuses.streaming.meses!=null?` por ${bonuses.streaming.meses} meses`:''} cuando cumpla requisitos.</li>
       <li>Equipos/ofertas: ${esc(bonuses.streaming.lineas.map(i=>`${i.equipo.modelo} (${offerProposalLabel(i)})`).join(', '))}</li>
     </ul></div>`);
   }
@@ -1025,7 +1049,7 @@ function renderOfferExtrasPanel(){
     </ul></div>`);
   });
   if(bonuses.pagoBalance){
-    blocks.push(`<div class="info-card"><b>Pago balance hasta $800</b><ul>
+    blocks.push(`<div class="info-card"><b>${esc(bonuses.pagoBalance.nombre)}</b><ul>
       ${bonuses.pagoBalance.detalles.map(d=>`<li>${esc(d)}</li>`).join('')}
       <li>Lineas: ${esc(bonuses.pagoBalance.lineas.map(i=>`Linea ${i.linea}: ${i.equipo.modelo}`).join(' | '))}</li>
     </ul></div>`);
@@ -1269,11 +1293,13 @@ function cpBonusConditions(d){
   const portText=portCredits.length
     ? `<li><b>Bono Portabilidad:</b> ${portCredits.map(i=>`${esc(i.label)} (${esc(i.lines)}): ${esc(i.detail)}`).join(' ')}</li>`
     : '<li><b>Bono Portabilidad:</b> No aplica con el contexto actual. No aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.</li>';
+  const balTope=reglaNum('balance.tope');
   const balanceText=balanceCredits.length
     ? `<li><b>Pago de balance/deuda otra compania:</b> ${balanceCredits.map(i=>`${esc(i.lines)}: ${esc(i.detail)}`).join(' ')}</li>`
-    : '<li><b>Pago de balance hasta $800:</b> No aplica con el contexto actual.</li>';
+    : `<li><b>Pago de balance${balTope!=null?` hasta ${money(balTope)}`:''}:</b> No aplica con el contexto actual.</li>`;
+  const strMonto=reglaNum('streaming.monto'),strMeses=reglaNum('streaming.meses');
   const streamText=streamCredits.length
-    ? '<li><b>Bono Streaming:</b> $10 por BAN por 12 meses, sujeto a convergencia y terminos.</li>'
+    ? `<li><b>Bono Streaming:</b> ${strMonto!=null?money(strMonto):'segun boletin'} por BAN${strMeses!=null?` por ${strMeses} meses`:''}, sujeto a convergencia y terminos.</li>`
     : '<li><b>Credito de convergencia / streaming:</b> No aplica si el cliente no es convergente o si la oferta seleccionada no lo permite.</li>';
   const tradeText=tradeRows.length
     ? `<li><b>Trade-in requerido:</b> ${esc(tradeRows.join(' / '))}.</li><li><b>Equipos que se reciben:</b> ${esc(tradeInAcceptedSummary())}</li>`
@@ -1500,7 +1526,7 @@ function renderProposal(){
       const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
       summary.innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span><span class="pill">${state.convergente?'Convergente':'No convergente'}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
     }
-ensureLineRows();renderSummary();loadCrmClientContext();
+ensureLineRows();renderSummary();loadCrmClientContext();cargarReglasBonos();
 </script>
 </body>
 </html>

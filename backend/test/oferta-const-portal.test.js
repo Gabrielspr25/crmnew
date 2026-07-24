@@ -191,19 +191,20 @@ test('Oferta const muestra notas condicionales de streaming y portabilidad antes
   assert.match(page, /oferta\.bonoStreaming/);
 });
 
-test('Oferta const activa bonos por convergente y portabilidad sin mezclarlos con servicios', () => {
+test('Oferta const activa bonos desde reglas editables, sin montos hardcodeados', () => {
   assert.match(page, /id="convergenteBtn"/);
   assert.match(page, /function toggleConvergente/);
   assert.match(page, /convergente:false/);
   assert.match(page, /applicableBonuses/);
-  assert.match(page, /Bono Portabilidad \$150/);
-  assert.match(page, /Bono Portabilidad hasta \$\$\{amount\}/);
-  assert.match(page, /Pago balance hasta \$800/);
   assert.match(page, /Bonos aplicables/);
-  assert.match(page, /dividido en 24 cuotas mensuales/);
-  assert.match(page, /state\.convergente&&plan>=35/);
-  assert.match(page, /portabilidadCreditos\.length&&plan>=45/);
-  assert.match(page, /portabilidadCreditos\.length&&plan>=50/);
+  // Montos y umbrales salen de REGLAS_BONOS (endpoint editable), no del codigo.
+  assert.match(page, /reglaNum\('portabilidad\.convergente'\)/);
+  assert.match(page, /reglaNum\('balance\.tope'\)/);
+  assert.match(page, /reglaNum\('streaming\.planMin'\)/);
+  assert.doesNotMatch(page, /Bono Portabilidad \$150/);
+  assert.doesNotMatch(page, /Pago balance hasta \$800/);
+  assert.doesNotMatch(page, /dividido en 24 cuotas mensuales/);
+  assert.doesNotMatch(page, /plan>=\d/);
 });
 
 test('Oferta const muestra controles de plan compactos y consistentes', () => {
@@ -224,13 +225,15 @@ test('Oferta const muestra creditos de convergente y portabilidad por linea', ()
   assert.match(page, /function lineBonusPills/);
   assert.match(page, /function setLineDebt/);
   assert.match(page, /selectedPortabilidadCreditRows/);
-  assert.match(page, /Streaming \$10\/BAN/);
-  assert.match(page, /Portabilidad \$\$\{amount\}/);
-  assert.match(page, /BR porta \$\$\{amount\}/);
-  assert.match(page, /Balance hasta \$800/);
+  // Etiquetas y montos derivados de las reglas editables, no escritos a mano.
+  assert.match(page, /reglaNum\('streaming\.monto'\)/);
+  assert.match(page, /reglaNum\('portabilidad\.cuotas'\)/);
+  assert.match(page, /businessRedPortAmount\(\)/);
+  assert.match(page, /reglaNum\('balance\.tope'\)/);
+  assert.doesNotMatch(page, /Streaming \$10\/BAN/);
+  assert.doesNotMatch(page, /Balance hasta \$800/);
   assert.match(page, /row\.evento==='portabilidad'&&row\.oferta\.beneficio!=='gratis'/);
   assert.match(page, /excepto equipos gratis/);
-  assert.match(page, /selectedPortabilidadCreditRows/);
   assert.match(page, /Creditos\/bonos adicionales/);
   assert.match(page, /lineBonusCredits\(row\)/);
 });
@@ -278,8 +281,10 @@ test('Comparativa muestra pago de equipo y notas comerciales aplicables', () => 
   assert.match(page, /Bonos y condiciones/);
   assert.match(page, /function cpBonusConditions/);
   assert.match(page, /function groupedCreditsByKind/);
-  assert.match(page, /Bono Streaming:.*\$10\.00 por BAN por 12 meses/);
-  assert.match(page, /dividido en 24 creditos/);
+  // El bono streaming y los creditos usan montos/plazos de las reglas editables.
+  assert.match(page, /Bono Streaming: \$\{money\(b\.streaming\.monto\)\}/);
+  assert.match(page, /dividido en \$\{cuotas\} creditos/);
+  assert.doesNotMatch(page, /\$10\.00 por BAN por 12 meses/);
   assert.match(page, /Monto indicado para esta linea/);
   assert.match(page, /function tradeInAcceptedSummary/);
   assert.match(page, /Equipos que se reciben/);
