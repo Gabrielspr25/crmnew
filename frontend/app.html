@@ -892,7 +892,24 @@ const COM_FILTERS=[['todos','Todos'],['confirmadas','Confirmadas'],['revision','
 async function reComisiones(){ $('view').innerHTML=await viewComisiones(); }
 function setComMonth(m){ comMonth=m; reComisiones(); }
 function setComFilter(f){ comFilter=f; reComisiones(); }
+function tangoRangeForMonth(month){
+  const start=String(month||monthStart()).slice(0,10);
+  const date=new Date(start+'T12:00:00');
+  date.setMonth(date.getMonth()+1,0);
+  return {desde:start,hasta:date.toISOString().slice(0,10)};
+}
+async function syncTangoComisiones(month){
+  const range=tangoRangeForMonth(month);
+  const msg='Sincronizar Tango V2 del '+range.desde+' al '+range.hasta+'?\n\nSolo incorpora ventas PYMES con comision empresarial real. No borra clientes, BANs ni suscriptores.';
+  if(!confirm(msg)) return;
+  try{
+    const r=await api('/api/sales/sync',{method:'POST',body:range});
+    alert('Sincronizacion Tango terminada:\n\nVentas creadas: '+r.ventas_creadas+'\nVentas actualizadas: '+r.ventas_actualizadas+'\nClientes creados: '+r.clientes_creados+'\nBANs creados: '+r.bans_creados+'\nSuscriptores creados: '+r.suscriptores_creados+'\nReportes de comision: '+r.reportes_actualizados+'\nPendientes de revisar: '+r.pendientes+'\nExcluidas: '+r.excluidas+'\nErrores: '+(r.errores||[]).length);
+    await reComisiones();
+  }catch(e){ alert('No se pudo sincronizar Tango: '+e.message); }
+}
 async function viewComisiones(){
+  const canSync=['admin','supervisor'].includes(String(currentUser&&currentUser.rol||'').toLowerCase());
   const meses=await api('/api/comisiones/meses');
   const mon=comMonth||(meses[0]&&meses[0].mes)||null;
   const FIL={todos:()=>true,confirmadas:x=>x.validation_status==='confirmed',revision:x=>x.validation_status==='needs_review',sync:x=>x.validation_status!=='confirmed'&&x.validation_status!=='needs_review'};
@@ -920,7 +937,7 @@ async function viewComisiones(){
   });
   let head='<tr><th>Empresa</th><th>Vendedor</th>'; COLS.forEach(k=>head+='<th class="c">'+PN[k]+'</th>'); head+='<th class="c">Completado</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comisión$</th><th class="c">Bono</th><th class="c">Ventas</th></tr>';
   return '<div class="head"><div><h1>Comisiones y Ventas</h1><div class="s">'+rows.length+' ventas · '+Object.keys(groups).length+' clientes · data REAL de crm_pro · clic en la empresa para ver líneas</div></div>'
-    +'<select class="inp" style="max-width:170px" onchange="setComMonth(this.value)">'+(meses.length?meses.map(m=>'<option value="'+m.mes+'"'+(m.mes===mon?' selected':'')+'>'+m.mes+' ('+m.n+')</option>').join(''):'<option>sin meses</option>')+'</select></div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+(canSync?'<button class="btn green" onclick="syncTangoComisiones(\''+(mon||monthStart())+'\')">Sincronizar Tango</button>':'')+'<select class="inp" style="max-width:170px" onchange="setComMonth(this.value)">'+(meses.length?meses.map(m=>'<option value="'+m.mes+'"'+(m.mes===mon?' selected':'')+'>'+m.mes+' ('+m.n+')</option>').join(''):'<option>sin meses</option>')+'</select></div></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+COM_FILTERS.map(f=>'<button class="btn '+(comFilter===f[0]?'':'ghost')+'" style="padding:7px 14px" onclick="setComFilter(\''+f[0]+'\')">'+f[1]+'</button>').join('')+'</div>'
     +'<div class="kpis"><div class="kpi"><div class="l">Total ventas</div><div class="v" style="color:var(--violet)">'+rows.length+'</div></div><div class="kpi"><div class="l">Ganancia empresa</div><div class="v" style="color:var(--green)">'+money(emp)+'</div></div><div class="kpi"><div class="l">Comisión vendedores</div><div class="v" style="color:var(--primary)">'+money(ven)+'</div></div><div class="kpi"><div class="l">Pagado</div><div class="v" style="color:var(--amber)">'+money(pag)+'</div></div><div class="kpi"><div class="l">Balance pendiente</div><div class="v" style="color:var(--red)">'+money(emp-pag)+'</div></div></div>'
     +'<div class="card" style="overflow-x:auto"><table style="min-width:1180px"><thead>'+head+'</thead><tbody>'+(body||'<tr><td colspan="16" class="empty">Sin comisiones este mes</td></tr>')+'</tbody></table></div>';

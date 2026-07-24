@@ -125,6 +125,29 @@ export async function fetchVentas({ desde, hasta, limit = 200 }) {
   return all;
 }
 
+// Trae las comisiones de Tango V2 en el mismo rango que las ventas. La
+// paginacion replica el contrato de /ventas para no perder resultados.
+export async function fetchComisiones({ desde, hasta, limit = 200 }) {
+  if (!BASE || !KEY) throw new Error('Tango V2 no esta configurado en el servidor');
+  const all = [];
+  let offset = 0;
+  let guard = 0;
+  while (guard < 50) {
+    const url = `${BASE}/api/external/comisiones?desde=${encodeURIComponent(desde)}&hasta=${encodeURIComponent(hasta)}&limit=${limit}&offset=${offset}`;
+    const resp = await fetch(url, { headers: headers() });
+    if (!resp.ok) throw new Error(`Tango /comisiones respondio ${resp.status}`);
+    const payload = await resp.json().catch(() => null);
+    const rows = Array.isArray(payload) ? payload : payload?.data || payload?.comisiones || [];
+    all.push(...rows);
+    const pg = payload?.pagination || {};
+    const next = Number(pg.offset ?? offset) + Number(pg.limit ?? limit);
+    if (!pg.hasMore || rows.length === 0 || next <= offset) break;
+    offset = next;
+    guard++;
+  }
+  return all;
+}
+
 // Normaliza una venta de Tango a los campos que guardamos en `sales`.
 export function mapVenta(v) {
   const vendedor =
