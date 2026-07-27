@@ -168,7 +168,7 @@ test('devuelve solo plazos persistidos para una linea individual de $35', async 
   assert.equal(result.equipos[0].aplicacion_automatica, true);
 });
 
-test('normaliza fechas Date persistidas sin aceptar una vigencia realmente vencida', async () => {
+test('el ultimo boletin manda: vencido por fecha sigue visible con alerta, sin auto-aplicacion', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const offer = makeOffer({
     vigencia_desde: new Date('2026-07-04T00:00:00.000Z'),
@@ -193,7 +193,11 @@ test('normaliza fechas Date persistidas sin aceptar una vigencia realmente venci
     hasta: '2026-07-15',
     estado: 'vigente',
   });
-  assert.deepEqual(outside.equipos, []);
+  // Vencido por fecha: la combinacion sigue visible (el ultimo boletin manda),
+  // con alerta de vencimiento y sin aplicacion automatica.
+  assert.equal(outside.equipos.length, 1);
+  assert.equal(outside.equipos[0].aplicacion_automatica, false);
+  assert.ok(outside.equipos[0].validaciones.some((item) => item.codigo === 'oferta_fuera_vigencia'));
   assert.ok(outside.validaciones.some((item) => item.codigo === 'oferta_fuera_vigencia'));
 });
 

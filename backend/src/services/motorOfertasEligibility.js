@@ -127,17 +127,23 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
     addValidation(validation('oferta_no_vigente'));
     return false;
   }
-  if (!pendingValidity && !isWithinDocumentRange(offer, contract, today)) {
+  // El ultimo boletin manda: una version cuya fecha ya paso sigue sirviendo hasta
+  // que se publique una nueva. La fecha vencida solo dispara una alerta y bloquea
+  // la aplicacion automatica; no oculta los equipos.
+  const fueraDeVigencia = !pendingValidity && !isWithinDocumentRange(offer, contract, today);
+  if (fueraDeVigencia) {
     addValidation(validation('oferta_fuera_vigencia'));
-    return false;
   }
 
   const policy = {
     visible: true,
-    aplicacionAutomatica: true,
+    aplicacionAutomatica: !fueraDeVigencia,
     beneficio: undefined,
     validaciones: [],
   };
+  if (fueraDeVigencia) {
+    policy.validaciones.push(validation('oferta_fuera_vigencia'));
+  }
 
   if (pendingValidity || relatedSourceValidity === 'vencida_pendiente_reemplazo') {
     const sourceWarning = validation('fuente_vencida');
