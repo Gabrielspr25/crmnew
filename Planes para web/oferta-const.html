@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Oferta const.</title>
-<script src="fijos-data.js?v=2026070513"></script>
-<script src="ofertas-data.js?v=2026070311"></script>
-<script src="ofertas-logic.js?v=2026070311"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
@@ -166,8 +163,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
     </div>
   </div>
 </div>
+<script src="fijos-data.js?v=2026070513"></script>
 <script>
-const L=window.OfertasLogic;
 const CONST_CLARO_TV_DATA=[
   {key:'claro_tv_planes',titulo:'Claro TV - planes',filas:[
     {codigo:'PY2ULE',descripcion:'Clarotv+ ULTRA ESENCIAL (21c)',precio:15.99,tecnologia:'COBRE/VRAD/GPON'},
@@ -357,12 +354,6 @@ function syncPlan(){
 }
 function planLabel(){return state.tipo==='individual'?'Individual $'+state.planInd:'Multilinea '+$('planMulti').selectedOptions[0].textContent}
 function completePlan(){syncPlan();$('stepPlan').classList.add('done');$('stepEquipo').classList.remove('locked');$('planStatus').textContent=planLabel();renderSummary();renderLineRows();window.scrollTo({top:$('stepEquipo').offsetTop-80,behavior:'smooth'});}
-function lineState(index){const row=state.cart[index]||{};return {...state,lineEvent:row.evento||state.lineEvent};}
-function ofertasParaEquipo(eq,index=state.activeLineIndex){return L.getOfertasAplicables(lineState(index??0)).filter(o=>o.equipos.some(e=>e.marca===eq.marca&&e.modelo===eq.modelo));}
-function ofertaAplicaALinea(row,index){
-  if(!row||!row.equipo||!row.oferta)return false;
-  return ofertasParaEquipo(row.equipo,index).some(o=>o.id===row.oferta.id);
-}
 function ensureLineRows(){
   const rows=[];
   for(let i=0;i<state.lineas;i++){
@@ -438,6 +429,14 @@ function motorLineaPayload(index){
   if(state.tipo!=='individual') linea.familia_business_red=row.plan.familia;
   return {linea,contexto_ban:{posicion_en_ban:index+1,beneficios_usados_por_oferta:{}}};
 }
+// El motor usa 'descuento_porcentaje'; el constructor rotula con '50pct'. Normaliza.
+function normBeneficio(tipo){
+  const t=String(tipo||'').toLowerCase();
+  if(/gratis/.test(t)) return 'gratis';
+  if(/descuento|50|porcentaje/.test(t)) return '50pct';
+  if(/credito|financ/.test(t)) return 'credito';
+  return t||null;
+}
 function mapMotorEquipoToRow(item){
   const eq=item.equipo||{};
   const of=item.oferta||{};
@@ -494,44 +493,43 @@ function offerEligibilityNote(o){
   if(o.lineaLimit) return `Business RED / lineas 1-${o.lineaLimit} por BAN`;
   return 'Business RED segun terminos del boletin';
 }
+// --- Precios desde el MOTOR: la mensualidad por plazo la calcula el motor y viene
+// en row.equipo.plazos = [{meses, pago}]. No se usa logica estatica de precios.
+function motorPlazosDe(row){ return (row&&row.equipo&&Array.isArray(row.equipo.plazos))?row.equipo.plazos:[]; }
+function beneficioTipoDe(row){ return String((row&&row.equipo&&row.equipo.beneficio&&row.equipo.beneficio.tipo)||(row&&row.oferta&&row.oferta.beneficio)||''); }
+function motorMensualDe(row){
+  const pl=motorPlazosDe(row);
+  if(!pl.length) return null;
+  const sel=selectedPlazo(row);
+  const hit=pl.find(p=>Number(p.meses)===Number(sel))||pl[0];
+  return hit?(Number(hit.pago)||0):null;
+}
 function lineCostText(row){
   if(!row||!row.equipo||!row.oferta) return 'Pendiente';
-  const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
-  if(state.tipo==='multilinea'&&row.oferta.lineaLimit&&row.linea>row.oferta.lineaLimit&&row.oferta.beneficio==='gratis') return 'Fuera limite gratis';
-  if(t&&t.tipo==='gratis') return 'Pago '+money(0)+'/mes';
-  if(t&&t.tipo==='50pct') return '50% equipo: '+money(t.precioFinal)+' total / '+money(t.mensual30)+'/mes';
-  if(t&&t.tipo==='credito') return 'Pago '+money(paymentPerUnit(row))+'/mes';
+  const m=motorMensualDe(row);
+  if(m===0||/gratis/i.test(beneficioTipoDe(row))) return 'Pago '+money(0)+'/mes';
+  if(m!=null) return 'Pago '+money(m)+'/mes ('+selectedPlazo(row)+'m)';
   return money(row.equipo.precio);
 }
-function defaultPlazo(oferta){return oferta.plazos&&oferta.plazos.includes(30)?30:(oferta.plazos&&oferta.plazos[0])||30;}
+function defaultPlazo(oferta){return oferta&&oferta.plazos&&oferta.plazos.includes(30)?30:(oferta&&oferta.plazos&&oferta.plazos[0])||30;}
 function selectedPlazo(row){return row&&row.plazo?Number(row.plazo):defaultPlazo(row&&row.oferta);}
 function paymentPerUnit(row){
   if(!row||!row.equipo||!row.oferta) return 0;
-  const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
-  if(!t) return row.equipo.precio;
-  if(t.tipo==='gratis') return 0;
-  if(t.tipo==='50pct') return t.mensual30||0;
-  if(t.tipo==='credito'){
-    const plazo=selectedPlazo(row);
-    return t.plazos&&t.plazos[plazo]?t.plazos[plazo].mensual:(t.precioFinal||0)/plazo;
-  }
-  return t.precioFinal||row.equipo.precio;
+  const m=motorMensualDe(row);
+  return m==null?(Number(row.equipo.precio)||0):m;
 }
 function offerProposalLabel(row){
   if(!row||!row.oferta) return 'Pendiente';
   if(row.oferta.beneficio==='gratis') return 'EQUIPO GRATIS';
   if(row.oferta.beneficio==='50pct') return '50% del valor del equipo';
-  if(row.oferta.beneficio==='credito') return `Credito ${money(row.oferta.credito)} / ${selectedPlazo(row)} meses`;
+  if(row.oferta.beneficio==='credito') return `Credito / ${selectedPlazo(row)} meses`;
   return row.oferta.titulo;
 }
 function lineEquipmentPayTotal(row){
   if(!row||!row.equipo||!row.oferta) return 0;
-  const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
-  if(!t) return row.equipo.precio;
-  if(t.tipo==='gratis') return 0;
-  if(t.tipo==='50pct') return t.precioFinal||0;
-  if(t.tipo==='credito') return t.precioFinal||0;
-  return t.precioFinal||row.equipo.precio;
+  const m=motorMensualDe(row);
+  if(m==null) return Number(row.equipo.precio)||0;
+  return m*Number(selectedPlazo(row)||0);
 }
 function groupProposalEquipment(rows){
   const map=new Map();
@@ -548,8 +546,8 @@ function offerActionPills(row){
   const pills=[];
   if(row.oferta.beneficio==='gratis') pills.push('<span class="offer-pill free">Gratis</span>');
   if(row.oferta.beneficio==='50pct') pills.push('<span class="offer-pill half">50%</span>');
-  if(L.requiresTradein(row.oferta,row.evento)) pills.push('<span class="offer-pill trade">Trade-in</span>');
-  if(!pills.length&&row.oferta.beneficio==='credito') pills.push(`<span class="offer-pill">Credito ${money(row.oferta.credito)}</span>`);
+  if(requiresTradein(row.oferta,row.evento)) pills.push('<span class="offer-pill trade">Trade-in</span>');
+  if(!pills.length&&row.oferta.beneficio==='credito') pills.push('<span class="offer-pill">Credito</span>');
   return `<div class="offer-pills">${pills.join('')}</div>`;
 }
 function portabilidadBaseAmount(selected){
@@ -570,7 +568,7 @@ function lineBonusCredits(row,selected=state.cart.filter(i=>i.equipo&&i.oferta))
   const plan=planAmount();
   const items=[];
   const strMonto=reglaNum('streaming.monto'),strMin=reglaNum('streaming.planMin'),strMeses=reglaNum('streaming.meses');
-  if(state.convergente&&strMonto!=null&&(strMin==null||plan>=strMin)&&row.oferta.bonoStreaming&&(row.evento==='nueva'||row.evento==='portabilidad'||row.evento==='adicional')){
+  if(state.convergente&&strMonto!=null&&(strMin==null||plan>=strMin)&&(row.evento==='nueva'||row.evento==='portabilidad'||row.evento==='adicional')){
     items.push({kind:'stream',label:`Streaming ${money(strMonto)}/BAN`,detail:`Bono Streaming: descuento de ${money(strMonto)} por BAN${strMeses!=null?` por ${strMeses} meses`:''}. Requiere cliente convergente y terminos activos.`});
   }
   const portCreditEligible=row.evento==='portabilidad'&&row.oferta.beneficio!=='gratis';
@@ -612,25 +610,6 @@ function linePaymentText(row){
 function lineRegularText(row){
   if(!row||!row.equipo) return '-';
   return money(row.equipo.precio);
-}
-function recommendOffer(oferta,row){
-  const evento=row&&row.evento||state.lineEvent;
-  const linea=row&&row.linea||1;
-  const limited=state.tipo==='multilinea'&&oferta.lineaLimit&&linea>oferta.lineaLimit;
-  if(limited&&oferta.beneficio==='gratis') return {score:15,label:'Revisar limite',detail:'Linea fuera del limite gratis por BAN',warn:true};
-  if(evento==='nueva'||evento==='portabilidad'||evento==='adicional'){
-    if(oferta.beneficio==='gratis') return {score:100,label:'Recomendado',detail:'Nueva/Portabilidad: priorizar gratis'};
-    if(oferta.beneficio==='50pct') return {score:95,label:'Recomendado',detail:'Oferta regular: 50% disponible'};
-  }
-  if(evento==='renovacion'){
-    if(L.requiresTradein(oferta,evento)) return {score:100,label:'Recomendado',detail:'Renovacion: requiere trade-in'};
-    if(oferta.beneficio==='50pct') return {score:90,label:'Recomendado',detail:'Renovacion: 50% disponible'};
-    if(oferta.beneficio==='gratis') return {score:75,label:'Opcion',detail:'Renovacion: gratis si cumple terminos'};
-  }
-  return {score:50,label:'Disponible',detail:'Disponible segun boletin'};
-}
-function sortRecommendedOffers(ofertas,row){
-  return [...ofertas].sort((a,b)=>recommendOffer(b,row).score-recommendOffer(a,row).score);
 }
 function lineInsuranceCell(row,i){
   if(!row||!row.equipo)return '<span class="offer-pill pending">Pendiente</span>';
@@ -770,7 +749,7 @@ function assignOfferToLine(key,offerId){
   // Equipo y oferta provienen de la respuesta del motor para esta linea.
   const eq=(state.cart[index].motorEquipos||[]).find(e=>e.key===key);
   if(!eq) return;
-  const offer={...eq.oferta,plazos:(eq.plazos||[]).map(p=>p.meses),beneficio:(eq.beneficio&&eq.beneficio.tipo)||null};
+  const offer={...eq.oferta,plazos:(eq.plazos||[]).map(p=>p.meses),beneficio:normBeneficio(eq.beneficio&&eq.beneficio.tipo)};
   state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:(eq.plazos&&eq.plazos[0]&&eq.plazos[0].meses)||30,seguro:state.cart[index]?.seguro||false};
   state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
   renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
@@ -779,10 +758,9 @@ function selectOffer(key,offerId){
   state.activeLineIndex=state.activeLineIndex??0;
   assignOfferToLine(key,offerId);
 }
-function termsShort(o,eq){const t=L.calcularTablaComercial(o,eq.precio);if(t&&t.tipo==='gratis')return `${o.beneficio} / Equipo gratis / ${money(0)}/mes`;if(t&&t.tipo==='50pct')return `${o.beneficio} / ${money(t.precioFinal)} / ${money(t.mensual30)}/mes`;if(t&&t.tipo==='credito'){const current=state.cart[state.activeLineIndex??0]||{};const plazo=current.oferta&&current.oferta.id===o.id?selectedPlazo(current):defaultPlazo(o);const mensual=t.plazos&&t.plazos[plazo]?t.plazos[plazo].mensual:(t.precioFinal||0)/plazo;return `${o.beneficio} / ${money(t.precioFinal)} / ${plazo}m ${money(mensual)}/mes`; }return `${o.beneficio} / ${t?money(t.precioFinal):'Ver oferta'}`;}
 function renderTerms(eq,o,index=state.activeLineIndex??0){
   const row=state.cart[index]||{};
-  const trade=L.requiresTradein(o,row.evento||state.lineEvent);
+  const trade=requiresTradein(o,row.evento||state.lineEvent);
   const bonuses=lineBonusCredits(row).map(b=>`<li>${esc(b.detail)}</li>`).join('');
   $('termsBox').innerHTML=`<div class="terms"><h3>Terminos y condiciones de la oferta seleccionada</h3><ul>
     <li>Linea: <b>${index+1}</b></li>
@@ -970,7 +948,10 @@ function renderServicios(){
   }).join('');
   renderSelectedLineInsuranceSummary();
 }
-function planAmount(){return L.getPlanNum(state);}
+function planAmount(){return state.tipo==='individual'?Number(state.planInd)||0:planMultiMonto(state.planMulti);}
+// El motor ya excluye equipos que requieren trade-in no validado, asi que lo que
+// llega al constructor nunca tiene trade-in pendiente. Sin logica estatica.
+function requiresTradein(){return false;}
 function selectedPortabilidadRows(selected){return selected.filter(i=>i.evento==='portabilidad');}
 function selectedPortabilidadCreditRows(selected){return selectedPortabilidadRows(selected).filter(i=>i.oferta&&i.oferta.beneficio!=='gratis');}
 function applicableBonuses(selected=state.cart.filter(i=>i.equipo&&i.oferta)){
@@ -979,7 +960,7 @@ function applicableBonuses(selected=state.cart.filter(i=>i.equipo&&i.oferta)){
   const portabilidadCreditos=selectedPortabilidadCreditRows(selected);
   const bonuses={streaming:null,portabilidad:[],pagoBalance:null};
   const strMonto=reglaNum('streaming.monto'),strMin=reglaNum('streaming.planMin'),strMeses=reglaNum('streaming.meses');
-  const streamingLines=selected.filter(i=>i.oferta.bonoStreaming&&(i.evento==='nueva'||i.evento==='portabilidad'||i.evento==='adicional'));
+  const streamingLines=selected.filter(i=>(i.evento==='nueva'||i.evento==='portabilidad'||i.evento==='adicional'));
   if(state.convergente&&strMonto!=null&&(strMin==null||plan>=strMin)&&streamingLines.length){
     bonuses.streaming={nombre:'Bono Streaming',lineas:streamingLines,monto:strMonto,meses:strMeses};
   }
@@ -1161,7 +1142,7 @@ function linePaySummary(row){
   if(!row||!row.oferta)return 'Pendiente';
   if(row.oferta.beneficio==='gratis')return 'Equipo gratis';
   if(row.oferta.beneficio==='50pct')return `50% del equipo - paga ${money(lineEquipmentPayTotal(row))} total / ${money(paymentPerUnit(row))}/mes`;
-  if(row.oferta.credito)return `Credito ${money(row.oferta.credito)} - paga ${money(paymentPerUnit(row))}/mes`;
+  if(row.oferta.beneficio==='credito')return `Credito - paga ${money(paymentPerUnit(row))}/mes`;
   return `${money(paymentPerUnit(row))}/mes`;
 }
 function insuranceForPrice(price){
@@ -1286,7 +1267,7 @@ function cpBonusConditions(d){
   const streamCredits=groupedCreditsByKind(selected,'stream');
   const tradeRows=[];
   selected.forEach(row=>{
-    if(L.requiresTradein(row.oferta,row.evento)){
+    if(requiresTradein(row.oferta,row.evento)){
       tradeRows.push(`Linea ${row.linea}: ${row.equipo.modelo}`);
     }
   });
@@ -1432,7 +1413,7 @@ function downloadComparisonExcel(){
     });
   const bonusRows=[
     ...selected.flatMap(row=>lineBonusCredits(row,selected).filter(b=>b.kind==='port'||b.kind==='balance'||b.kind==='stream').map(b=>[`Linea ${row.linea}`,row.equipo.modelo,b.label,b.detail])),
-    ...selected.filter(row=>L.requiresTradein(row.oferta,row.evento)).map(row=>[`Linea ${row.linea}`,row.equipo.modelo,'Trade-in requerido',tradeInAcceptedSummary()])
+    ...selected.filter(row=>requiresTradein(row.oferta,row.evento)).map(row=>[`Linea ${row.linea}`,row.equipo.modelo,'Trade-in requerido',tradeInAcceptedSummary()])
   ];
   const style=`<style>
     body{font-family:Segoe UI,Arial,sans-serif;background:#fff;color:#111827}

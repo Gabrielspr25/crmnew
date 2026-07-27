@@ -136,14 +136,14 @@ test('Oferta const usa modal compacta con lista de equipos y panel de ofertas', 
   assert.doesNotMatch(page, /id="modalDeviceGrid"/);
 });
 
-test('Oferta const recomienda ofertas segun evento de la linea', () => {
-  assert.match(page, /recommendOffer/);
-  assert.match(page, /sortRecommendedOffers/);
-  assert.match(page, /Recomendado/);
-  assert.match(page, /Nueva\/Portabilidad/);
-  assert.match(page, /Renovacion/);
-  assert.match(page, /requiere trade-in/);
-  assert.match(page, /linea>oferta\.lineaLimit/);
+test('Oferta const muestra la oferta elegible que devuelve el motor por equipo', () => {
+  // La recomendacion estatica se elimino: el motor devuelve la oferta elegible por equipo.
+  assert.match(page, /renderModalOfferPanel/);
+  assert.match(page, /Elegible/);
+  assert.match(page, /assignOfferToLine/);
+  assert.doesNotMatch(page, /function recommendOffer/);
+  assert.doesNotMatch(page, /function sortRecommendedOffers/);
+  assert.doesNotMatch(page, /function termsShort/);
 });
 
 test('Oferta const muestra pago mensual por unidad en la propuesta', () => {
@@ -151,7 +151,7 @@ test('Oferta const muestra pago mensual por unidad en la propuesta', () => {
   assert.match(page, /function groupProposalEquipment/);
   assert.match(page, /Pago por unidad/);
   assert.match(page, /Precio regular/);
-  assert.match(page, /Credito \$\{money\(row\.oferta\.credito\)\} \/ \$\{selectedPlazo\(row\)\} meses/);
+  assert.match(page, /Credito \/ \$\{selectedPlazo\(row\)\} meses/);
   assert.match(page, /El IVU se calcula basado en el precio regular/);
 });
 
@@ -163,7 +163,7 @@ test('Oferta const muestra meses pago y precio regular en cada linea', () => {
   assert.match(page, /function setRowPlazo/);
   assert.match(page, /<th>Meses<\/th><th>Pago equipo<\/th><th>Regular<\/th>/);
   assert.match(page, /onchange="setRowPlazo\(\$\{index\},this\.value\)"/);
-  assert.match(page, /Credito \$\{money\(row\.oferta\.credito\)\}/);
+  assert.match(page, /Credito<\/span>/);
 });
 
 test('Oferta const hace escroleable la tabla de escoger equipo', () => {
@@ -188,7 +188,10 @@ test('Oferta const muestra notas condicionales de streaming y portabilidad antes
   assert.match(page, /Portabilidad/);
   assert.match(page, /conditional-panel show/);
   assert.match(page, /i\.evento==='portabilidad'/);
-  assert.match(page, /oferta\.bonoStreaming/);
+  // El bono streaming ya no depende de un flag por-oferta estatico; aplica por
+  // convergente + plan segun las reglas editables.
+  assert.match(page, /reglaNum\('streaming\.monto'\)/);
+  assert.doesNotMatch(page, /oferta\.bonoStreaming/);
 });
 
 test('Oferta const activa bonos desde reglas editables, sin montos hardcodeados', () => {
