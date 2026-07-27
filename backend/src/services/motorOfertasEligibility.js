@@ -94,18 +94,19 @@ function matchesOffer({ offer, contract, request, today, sources, addValidation 
 
   const minimum = offer.plan_monto_minimo;
   const maximum = offer.plan_monto_maximo;
-  if (
-    minimum === null
-    || minimum === undefined
-    || maximum === null
-    || maximum === undefined
-    || !Number.isFinite(Number(minimum))
-    || !Number.isFinite(Number(maximum))
-  ) {
+  // El minimo debe estar documentado. El maximo nulo/ausente es valido: significa
+  // rango abierto ("de ese monto en adelante"), no un dato faltante.
+  if (minimum === null || minimum === undefined || !Number.isFinite(Number(minimum))) {
     addValidation(validation('monto_plan_no_documentado'));
     return false;
   }
-  if (linea.plan.monto < Number(minimum) || linea.plan.monto > Number(maximum)) {
+  const rangoAbierto = maximum === null || maximum === undefined;
+  if (!rangoAbierto && !Number.isFinite(Number(maximum))) {
+    addValidation(validation('monto_plan_no_documentado'));
+    return false;
+  }
+  const tope = rangoAbierto ? Infinity : Number(maximum);
+  if (linea.plan.monto < Number(minimum) || linea.plan.monto > tope) {
     return false;
   }
 

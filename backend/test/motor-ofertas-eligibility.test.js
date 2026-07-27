@@ -201,6 +201,28 @@ test('el ultimo boletin manda: vencido por fecha sigue visible con alerta, sin a
   assert.ok(outside.validaciones.some((item) => item.codigo === 'oferta_fuera_vigencia'));
 });
 
+test('acepta un plan de rango abierto (maximo nulo = de ese monto en adelante)', async () => {
+  const { evaluateEligibleOffers } = await loadEligibility();
+  const dentro = evaluateEligibleOffers({
+    request: makeRequest({ linea: { plan: { codigo: 'PLAN-75', monto: 75 } } }),
+    snapshot: makeSnapshot({
+      offers: [makeOffer({ plan_monto_minimo: 50, plan_monto_maximo: null })],
+    }),
+    today: TODAY,
+  });
+  const debajo = evaluateEligibleOffers({
+    request: makeRequest({ linea: { plan: { codigo: 'PLAN-40', monto: 40 } } }),
+    snapshot: makeSnapshot({
+      offers: [makeOffer({ plan_monto_minimo: 50, plan_monto_maximo: null })],
+    }),
+    today: TODAY,
+  });
+  // $75 cae dentro de "$50 en adelante"; $40 queda por debajo del minimo.
+  assert.equal(dentro.equipos.length, 1);
+  assert.ok(!dentro.validaciones.some((item) => item.codigo === 'monto_plan_no_documentado'));
+  assert.equal(debajo.equipos.length, 0);
+});
+
 test('acepta una linea individual de $50 dentro del rango documentado', async () => {
   const { evaluateEligibleOffers } = await loadEligibility();
   const result = evaluateEligibleOffers({
