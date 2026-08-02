@@ -8,7 +8,7 @@ export const comisionesRouter = Router();
 
 const BASE = `
   SELECT sr.subscriber_id, to_char(sr.report_month,'YYYY-MM-DD') AS report_month,
-         cl.name AS empresa, COALESCE(sp.name,'—') AS vendedor,
+         cl.name AS empresa, COALESCE(sp.name, vs.vendor_name, '—') AS vendedor,
          b.ban_number, s.phone, s.monthly_value,
          CASE WHEN s.line_kind='fijo'  AND s.line_type='REN' THEN 'fijo_ren'
               WHEN s.line_kind='fijo'  THEN 'fijo_new'
@@ -24,7 +24,8 @@ const BASE = `
     JOIN public.subscribers s ON s.id = sr.subscriber_id
     JOIN public.bans b        ON b.id = s.ban_id
     JOIN public.clients cl    ON cl.id = b.client_id
-    LEFT JOIN public.salespeople sp ON sp.id = cl.salesperson_id`;
+    LEFT JOIN public.salespeople sp ON sp.id = cl.salesperson_id
+    LEFT JOIN ventaspro_nuevo.sales vs ON vs.tango_venta_id::text = sr.external_sale_id::text`;
 
 // GET /api/comisiones?month=YYYY-MM-01  (si no hay month, usa el último mes con datos)
 comisionesRouter.get('/comisiones', requireAuth, async (req, res) => {
@@ -35,7 +36,7 @@ comisionesRouter.get('/comisiones', requireAuth, async (req, res) => {
       WHERE date_trunc('month', sr.report_month) =
             COALESCE(date_trunc('month', $1::date),
                      (SELECT max(date_trunc('month', report_month)) FROM public.subscriber_reports))
-        AND ($2::text IS NULL OR sp.name ILIKE $2)
+        AND ($2::text IS NULL OR COALESCE(sp.name, vs.vendor_name) ILIKE $2)
       ORDER BY cl.name, b.ban_number`,
     [month || null, soloV ? `%${req.user.nombre}%` : null]);
   res.json(r.rows);
@@ -52,14 +53,15 @@ comisionesRouter.get('/comisiones/meses', requireAuth, async (_req, res) => {
 // Vendedores que vienen de Tango (los del campo vendedor de las comisiones) — REGLA: vendedores de Tango
 comisionesRouter.get('/vendedores', requireAuth, async (_req, res) => {
   const r = await query(
-    `SELECT DISTINCT sp.name
+    `SELECT DISTINCT COALESCE(sp.name, vs.vendor_name) AS name
        FROM public.subscriber_reports sr
        JOIN public.subscribers s ON s.id = sr.subscriber_id
        JOIN public.bans b        ON b.id = s.ban_id
        JOIN public.clients cl     ON cl.id = b.client_id
-       JOIN public.salespeople sp ON sp.id = cl.salesperson_id
-      WHERE NULLIF(TRIM(sp.name),'') IS NOT NULL
-      ORDER BY sp.name`);
+       LEFT JOIN public.salespeople sp ON sp.id = cl.salesperson_id
+       LEFT JOIN ventaspro_nuevo.sales vs ON vs.tango_venta_id::text = sr.external_sale_id::text
+      WHERE NULLIF(TRIM(COALESCE(sp.name, vs.vendor_name)),'') IS NOT NULL
+      ORDER BY name`);
   res.json(r.rows.map((x) => x.name));
 });
 

@@ -28,8 +28,20 @@ const CLIENT_NAME = `COALESCE(NULLIF(TRIM(c.name),''), NULLIF(TRIM(c.business_na
 const VALID_ASANA_CLIENT_SQL = `(NULLIF(TRIM(COALESCE(c.name, c.business_name, '')), '') IS NOT NULL
   AND LOWER(TRIM(COALESCE(c.name, c.business_name, ''))) NOT IN ('—', '-', 'null', 'sin nombre'))`;
 const QTY_KEYS = `('movil_ren','movil_new','claro_tv','cloud')`;   // columnas por cantidad de líneas
+// Misma regla de Clientes: suspendida sigue siendo una linea activa de cartera.
+const ACTIVE_OR_SUSPENDED_SUB_SQL = (alias) => `COALESCE(LOWER(${alias}.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
 const MONEY_KEYS = `('fijo_ren','fijo_new','mpls')`;               // columnas por dinero
 const VALID_LOG_TYPES = new Set(['llamada', 'nota']);
+// Una oportunidad solo existe si proviene de una linea real del cliente o si el
+// vendedor agrego cantidad, monto o telefono. Esto excluye marcadores viejos
+// vacios que antes creaban pasos para todos los productos.
+const MEANINGFUL_OPPORTUNITY_LINE_SQL = (alias) => `(
+  ${alias}.subscriber_id IS NOT NULL
+  OR NULLIF(TRIM(COALESCE(${alias}.phone,'')), '') IS NOT NULL
+  OR COALESCE(${alias}.quantity_value,0) > 0
+  OR COALESCE(${alias}.money_value,0) > 0
+  OR COALESCE(${alias}.target_monthly_value,0) > 0
+)`;
 
 function productKeyParts(productKey) {
   const parts = {
@@ -42,6 +54,19 @@ function productKeyParts(productKey) {
     mpls: { product_type: 'MPLS', sale_type: 'NEW' },
   };
   return parts[productKey] || null;
+}
+
+function productLineKind(productKey) {
+  if (productKey === 'fijo_ren' || productKey === 'fijo_new') return 'fijo';
+  if (productKey === 'movil_ren' || productKey === 'movil_new') return 'movil';
+  if (productKey === 'claro_tv') return 'tv';
+  if (productKey === 'cloud') return 'cloud';
+  if (productKey === 'mpls') return 'mpls';
+  return null;
+}
+
+function productLineType(productKey) {
+  return productKey && productKey.endsWith('_ren') ? 'REN' : 'NEW';
 }
 
 function cleanText(value) {
@@ -58,15 +83,94 @@ function cleanDigits(value) {
   return digits || null;
 }
 
+// Convierte la cartera activa del CRM al producto operativo de Asana.
+// Solo se usa al enviar un cliente existente a seguimiento: las líneas
+// manuales de la oportunidad nunca se reemplazan ni se duplican.
+const CLIENT_PORTFOLIO_PRODUCT_SQL = (alias) => `CASE
+  WHEN LOWER(COALESCE(${alias}.line_kind::text,'')) = 'cloud'
+       OR UPPER(COALESCE(${alias}.product_type::text,'')) = 'K' THEN 'cloud'
+  WHEN LOWER(COALESCE(${alias}.line_kind::text,'')) = 'mpls'
+       OR UPPER(COALESCE(${alias}.product_type::text,'')) = 'T' THEN 'mpls'
+  WHEN LOWER(COALESCE(${alias}.line_kind::text,'')) IN ('claro tv','clarotv','tv') THEN 'claro_tv'
+  WHEN LOWER(COALESCE(${alias}.line_kind::text,'')) = 'fijo'
+       OR UPPER(COALESCE(${alias}.product_type::text,'')) IN ('O','V') THEN 'fijo_ren'
+  WHEN LOWER(COALESCE(${alias}.line_kind::text,'')) IN ('movil','móvil','mobile')
+       OR UPPER(COALESCE(${alias}.product_type::text,'')) = 'G' THEN 'movil_ren'
+  ELSE NULL
+END`;
+
+async function seedClientActiveLines(c, opportunityId, clientId) {
+  await c.query(
+    `INSERT INTO opportunity_lines (
+       opportunity_id, client_id, ban_id, subscriber_id, line_mode, product_key,
+       phone, current_plan, target_plan, current_monthly_value, target_monthly_value,
+       quantity_value, money_value, product_type, sale_type, status
+     )
+     SELECT $1, $2, portfolio.ban_id, portfolio.subscriber_id, 'existente_renovar', portfolio.product_key,
+            portfolio.phone, portfolio.plan, portfolio.plan, portfolio.monthly_value, portfolio.monthly_value,
+            CASE WHEN portfolio.product_key IN ('movil_ren','claro_tv','cloud') THEN 1 ELSE NULL END,
+            CASE WHEN portfolio.product_key IN ('fijo_ren','mpls') THEN portfolio.monthly_value ELSE NULL END,
+            CASE portfolio.product_key
+              WHEN 'movil_ren' THEN 'MOVIL'
+              WHEN 'fijo_ren' THEN 'FIJO'
+              WHEN 'claro_tv' THEN 'CLARO_TV'
+              WHEN 'cloud' THEN 'CLOUD'
+              WHEN 'mpls' THEN 'MPLS'
+            END,
+            'REN', 'incluida'
+       FROM (
+         SELECT s.id AS subscriber_id, b.id AS ban_id, s.phone, s.plan, s.monthly_value,
+                ${CLIENT_PORTFOLIO_PRODUCT_SQL('s')} AS product_key
+           FROM bans b
+           JOIN subscribers s ON s.ban_id = b.id
+          WHERE b.client_id = $2
+            AND ${ACTIVE_OR_SUSPENDED_SUB_SQL('s')}
+       ) AS portfolio
+      WHERE portfolio.product_key IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1
+            FROM opportunity_lines ol
+           WHERE ol.opportunity_id = $1
+             AND ol.subscriber_id = portfolio.subscriber_id
+        )`,
+    [opportunityId, clientId]
+  );
+}
+
 function logPrefix(type) {
   if (type === 'llamada') return '[LLAMADA]';
   if (type === 'paso') return '[PASO]';
   return '[NOTA]';
 }
 
+function scheduledCallPrefix(scheduledCallAt) {
+  return `[LLAMADA_AGENDADA:${scheduledCallAt}]`;
+}
+
+function parseScheduledCall(note) {
+  const raw = String(note || '');
+  const match = raw.match(/^\[LLAMADA_AGENDADA:([^\]]+)\]\s*/i);
+  if (!match) return { scheduled_call_at: null, scheduled_status: null };
+  const date = new Date(match[1]);
+  return {
+    scheduled_call_at: Number.isNaN(date.getTime()) ? null : date.toISOString(),
+    scheduled_status: 'pendiente',
+  };
+}
+
+function normalizeLogRow(row) {
+  const scheduled = parseScheduledCall(row.note || row.body);
+  return {
+    ...row,
+    body: String(row.body || '').replace(/^\[LLAMADA_AGENDADA:[^\]]+\]\s*/i, ''),
+    scheduled_call_at: scheduled.scheduled_call_at,
+    scheduled_status: scheduled.scheduled_status,
+  };
+}
+
 function logTypeSql(noteExpr = 'n.note') {
   return `CASE
-    WHEN ${noteExpr} ILIKE '[LLAMADA]%' THEN 'llamada'
+    WHEN ${noteExpr} ILIKE '[LLAMADA%' THEN 'llamada'
     WHEN ${noteExpr} ILIKE '[PASO]%' THEN 'paso'
     ELSE 'nota'
   END`;
@@ -81,6 +185,8 @@ async function ensureOpportunityNotes(c) {
       step_id UUID NULL REFERENCES opportunity_steps(id) ON DELETE SET NULL,
       step_name TEXT NULL,
       note TEXT NOT NULL,
+      scheduled_call_at TIMESTAMP NULL,
+      scheduled_status TEXT NOT NULL DEFAULT 'pendiente',
       created_by_username TEXT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT now()
     )`);
@@ -104,10 +210,11 @@ async function fetchWorkflowTemplateSteps(c, productKey) {
 
 async function ensureOpportunityWorkflowSteps(c, opportunityId) {
   const products = await c.query(
-    `SELECT DISTINCT product_key
-       FROM opportunity_lines
-      WHERE opportunity_id = $1
-        AND product_key IS NOT NULL
+    `SELECT DISTINCT ol.product_key
+       FROM opportunity_lines ol
+      WHERE ol.opportunity_id = $1
+        AND ol.product_key IS NOT NULL
+        AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
       ORDER BY product_key`,
     [opportunityId]
   );
@@ -169,7 +276,7 @@ async function ensureOpportunityWorkflowSteps(c, opportunityId) {
 
 async function closeOpportunityToPool(c, opportunityId) {
   const o = await c.query(
-    `UPDATE sales_opportunities SET status='cerrada', archived_at=now(), closed_at=now()
+    `UPDATE sales_opportunities SET status='cerrada_no_trabajar', archived_at=now(), closed_at=now()
       WHERE id=$1 AND archived_at IS NULL RETURNING client_id`, [opportunityId]);
   if (!o.rows[0]) return false;
   await c.query(`UPDATE clients SET salesperson_id = NULL WHERE id = $1`, [o.rows[0].client_id]);
@@ -203,9 +310,10 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
             ) AS jb
             FROM opportunity_lines ol
             WHERE ol.opportunity_id = o.id AND ol.product_key IS NOT NULL
+              AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
             GROUP BY ol.product_key) t), '{}') AS products,
-        (SELECT COALESCE(SUM(COALESCE(ol.quantity_value,0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${QTY_KEYS}) AS total_lines,
-        (SELECT COALESCE(SUM(COALESCE(ol.money_value, ol.target_monthly_value, 0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${MONEY_KEYS}) AS total_money
+        (SELECT COALESCE(SUM(COALESCE(ol.quantity_value,0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${QTY_KEYS} AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}) AS total_lines,
+        (SELECT COALESCE(SUM(COALESCE(ol.money_value, ol.target_monthly_value, 0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${MONEY_KEYS} AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}) AS total_money
       FROM (
         SELECT DISTINCT ON (so.client_id) so.*
         FROM sales_opportunities so
@@ -225,6 +333,83 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
 });
 
 // DETALLE: oportunidad + pasos (caminito) + líneas (productos negociados)
+// BUSCADOR: cartera operativa que aun no esta en seguimiento.
+// Solo devuelve clientes identificables con lineas activas o suspendidas.
+asanaRealRouter.get('/asana-real/client-search', requireAuth, async (req, res) => {
+  const q = cleanText(req.query?.q);
+  if (q.length < 2) return res.json([]);
+  try {
+    const pattern = `%${q}%`;
+    const r = await withPublic(c => c.query(
+      `SELECT c.id,
+              ${CLIENT_NAME} AS client_name,
+              string_agg(DISTINCT b.ban_number::text, ', ' ORDER BY b.ban_number::text) AS ban_numbers,
+              COUNT(DISTINCT s.id)::int AS active_subscriber_count,
+              (
+                SELECT so.id
+                  FROM sales_opportunities so
+                 WHERE so.client_id = c.id
+                   AND so.archived_at IS NULL
+                   AND COALESCE(LOWER(so.status), 'activa') = 'activa'
+                 ORDER BY so.updated_at DESC NULLS LAST, so.created_at DESC NULLS LAST, so.id
+                 LIMIT 1
+              ) AS opportunity_id
+         FROM clients c
+         JOIN bans b ON b.client_id = c.id
+         JOIN subscribers s ON s.ban_id = b.id
+        WHERE ${VALID_ASANA_CLIENT_SQL}
+          AND ${ACTIVE_OR_SUSPENDED_SUB_SQL('s')}
+          AND (
+            c.name ILIKE $1
+            OR c.business_name ILIKE $1
+            OR c.email ILIKE $1
+            OR b.ban_number::text ILIKE $1
+            OR s.phone::text ILIKE $1
+          )
+        GROUP BY c.id, c.name, c.business_name
+        ORDER BY client_name
+        LIMIT 12`,
+      [pattern]
+    ));
+    res.json(r.rows);
+  } catch (e) {
+    console.error('[asana-real/client-search]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+asanaRealRouter.get('/asana-real/alerts/calls', requireAuth, async (_req, res) => {
+  try {
+    const rows = await withPublic(async c => {
+      await ensureOpportunityNotes(c);
+      const r = await c.query(
+        `SELECT n.id, n.opportunity_id, n.note,
+                regexp_replace(n.note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
+                COALESCE(n.created_by_username, 'Sistema') AS user_name,
+                n.created_at,
+                ${CLIENT_NAME} AS client_name,
+                COALESCE(sp.name,'Sin asignar') AS salesperson
+           FROM opportunity_notes n
+           JOIN sales_opportunities o ON o.id = n.opportunity_id
+           JOIN clients c ON c.id = o.client_id
+           LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
+          WHERE o.archived_at IS NULL
+            AND n.note ILIKE '[LLAMADA_AGENDADA:%'
+          ORDER BY n.created_at DESC, n.id DESC
+          LIMIT 100`
+      );
+      return r.rows.map(normalizeLogRow)
+        .filter(row => row.scheduled_call_at)
+        .sort((a, b) => new Date(a.scheduled_call_at) - new Date(b.scheduled_call_at))
+        .slice(0, 20);
+    });
+    res.json(rows);
+  } catch (e) {
+    console.error('[asana-real/alerts/calls]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
   try {
     const data = await withPublic(async c => {
@@ -238,24 +423,39 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
       if (!o.rows[0]) return null;
       await ensureOpportunityWorkflowSteps(c, req.params.id);
       const steps = await c.query(
-        `SELECT id, product_key, name, step_order, (completed_at IS NOT NULL) AS done
-           FROM opportunity_steps WHERE opportunity_id = $1 ORDER BY product_key NULLS LAST, step_order, created_at`, [req.params.id]);
+        `SELECT os.id, os.product_key, os.name, os.step_order, (os.completed_at IS NOT NULL) AS done
+           FROM opportunity_steps os
+          WHERE os.opportunity_id = $1
+            AND (
+              os.product_key IS NULL
+              OR EXISTS (
+                SELECT 1
+                  FROM opportunity_lines ol
+                 WHERE ol.opportunity_id = os.opportunity_id
+                   AND ol.product_key = os.product_key
+                   AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
+              )
+            )
+          ORDER BY os.product_key NULLS LAST, os.step_order, os.created_at`, [req.params.id]);
       const lines = await c.query(
-        `SELECT id, product_key, phone, COALESCE(quantity_value,1)::int AS qty,
-                COALESCE(money_value, target_monthly_value, 0)::numeric AS amount,
-                current_plan, target_plan, status
-           FROM opportunity_lines WHERE opportunity_id = $1 ORDER BY created_at`, [req.params.id]);
+        `SELECT ol.id, ol.product_key, ol.phone, COALESCE(ol.quantity_value,1)::int AS qty,
+                COALESCE(ol.money_value, ol.target_monthly_value, 0)::numeric AS amount,
+                ol.current_plan, ol.target_plan, ol.status
+           FROM opportunity_lines ol
+          WHERE ol.opportunity_id = $1
+            AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
+          ORDER BY ol.created_at`, [req.params.id]);
       await ensureOpportunityNotes(c);
       const log = await c.query(
         `SELECT id, opportunity_id, product_key, step_id, step_name,
                 ${logTypeSql('note')} AS type,
-                regexp_replace(note, '^\\[(LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
+                regexp_replace(note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
                 COALESCE(created_by_username, 'Sistema') AS user_name,
                 created_at
            FROM opportunity_notes
           WHERE opportunity_id = $1
           ORDER BY created_at DESC, id DESC`, [req.params.id]);
-      return { ...o.rows[0], steps: steps.rows, lines: lines.rows, log: log.rows };
+      return { ...o.rows[0], steps: steps.rows, lines: lines.rows, log: log.rows.map(normalizeLogRow) };
     });
     if (!data) return res.status(404).json({ error: 'Oportunidad no existe' });
     res.json(data);
@@ -294,23 +494,31 @@ asanaRealRouter.post('/asana-real/:id/log', requireAuth, async (req, res) => {
   try {
     const type = cleanText(req.body?.type).toLowerCase();
     const body = cleanText(req.body?.body || req.body?.note);
+    const scheduled_call_at = cleanText(req.body?.scheduled_call_at);
     if (!VALID_LOG_TYPES.has(type)) return res.status(400).json({ error: 'type debe ser llamada o nota' });
     if (!body) return res.status(400).json({ error: 'Escribe una nota o resumen de llamada' });
+    let scheduledIso = null;
+    if (scheduled_call_at) {
+      if (type !== 'llamada') return res.status(400).json({ error: 'Solo las llamadas se pueden agendar' });
+      const scheduledDate = new Date(scheduled_call_at);
+      if (Number.isNaN(scheduledDate.getTime())) return res.status(400).json({ error: 'Fecha de llamada inválida' });
+      scheduledIso = scheduledDate.toISOString();
+    }
     const row = await withPublic(async c => {
       const exists = await c.query(
         `SELECT id FROM sales_opportunities WHERE id = $1 AND archived_at IS NULL`, [req.params.id]);
       if (!exists.rows[0]) return null;
       await ensureOpportunityNotes(c);
       const r = await c.query(
-        `INSERT INTO opportunity_notes (
-           id, opportunity_id, note, created_by_username, created_at
-         ) VALUES ($1,$2,$3,$4,now())
-         RETURNING id, opportunity_id, ${logTypeSql('note')} AS type,
-                   regexp_replace(note, '^\\[(LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
-                   COALESCE(created_by_username, 'Sistema') AS user_name, created_at`,
-        [randomUUID(), req.params.id, `${logPrefix(type)} ${body}`, req.user?.nombre || 'Sistema']);
+          `INSERT INTO opportunity_notes (
+             id, opportunity_id, note, created_by_username, created_at
+           ) VALUES ($1,$2,$3,$4,now())
+           RETURNING id, opportunity_id, ${logTypeSql('note')} AS type,
+                     regexp_replace(note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
+                     COALESCE(created_by_username, 'Sistema') AS user_name, created_at`,
+        [randomUUID(), req.params.id, `${scheduledIso ? scheduledCallPrefix(scheduledIso) : logPrefix(type)} ${body}`, req.user?.nombre || 'Sistema']);
       await c.query(`UPDATE sales_opportunities SET updated_at = now() WHERE id = $1`, [req.params.id]);
-      return r.rows[0];
+      return normalizeLogRow(r.rows[0]);
     });
     if (!row) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
     res.status(201).json(row);
@@ -336,13 +544,21 @@ asanaRealRouter.delete('/asana-real/:id', requireAuth, async (req, res) => {
 
 // CLIENTE VOZ: crea cliente provisional + oportunidad + línea + nota (desde el dictado parseado)
 asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
-  const { empresa, telefono, product_key, qty, monto, nota } = req.body || {};
+  const { empresa, telefono, ban_number, subscriber, product_key, qty, monto, nota } = req.body || {};
   const name = cleanText(empresa || '');
   if (!name) return res.status(400).json({ error: 'Falta la empresa o nombre del cliente' });
-  const phoneDigits = cleanDigits(telefono);
   const PK = ['fijo_ren', 'fijo_new', 'movil_ren', 'movil_new', 'claro_tv', 'cloud', 'mpls'];
   const pk = PK.includes(product_key) ? product_key : null;
+  if (!pk) return res.status(400).json({ error: 'Selecciona el producto de la oportunidad' });
+  const banDigits = cleanDigits(ban_number);
+  if (!banDigits || banDigits.length !== 9) return res.status(400).json({ error: 'El BAN debe tener 9 digitos' });
+  const subscriberDigits = cleanDigits(subscriber || telefono);
+  if (!subscriberDigits || subscriberDigits.length !== 10) return res.status(400).json({ error: 'El suscriptor debe tener 10 digitos' });
+  if (subscriberDigits.startsWith('100')) return res.status(422).json({ error: 'El codigo interno 100 no es un suscriptor valido' });
+  if (!/^(787|939|989)\d{7}$/.test(subscriberDigits)) return res.status(422).json({ error: 'El suscriptor debe comenzar con 787, 939 o 989' });
   const isMoney = ['fijo_ren', 'fijo_new', 'mpls'].includes(pk);
+  const lineKind = productLineKind(pk);
+  const lineType = productLineType(pk);
   try {
     const out = await withPublic(async c => {
       const existing = await c.query(
@@ -358,11 +574,16 @@ asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
            FROM clients c
           WHERE LOWER(TRIM(COALESCE(c.name,''))) = LOWER(TRIM($1))
              OR LOWER(TRIM(COALESCE(c.business_name,''))) = LOWER(TRIM($1))
-             OR ($2::text IS NOT NULL AND regexp_replace(COALESCE(c.phone,''), '\\D', '', 'g') = $2)
-             OR ($2::text IS NOT NULL AND regexp_replace(COALESCE(c.cellular,''), '\\D', '', 'g') = $2)
+             OR EXISTS (
+               SELECT 1
+                 FROM bans b
+                 JOIN subscribers s ON s.ban_id = b.id
+                WHERE b.client_id = c.id
+                  AND (b.ban_number = $2 OR regexp_replace(COALESCE(s.phone,''), '\\D', '', 'g') = $3)
+             )
           ORDER BY c.created_at DESC NULLS LAST, c.id
           LIMIT 1`,
-        [name, phoneDigits]);
+        [name, banDigits, subscriberDigits]);
       if (existing.rows[0]) {
         const displayName = existing.rows[0].name || existing.rows[0].business_name || name;
         return {
@@ -376,19 +597,36 @@ asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
       }
       const cli = await c.query(
         `INSERT INTO clients (name, phone, pendiente_validacion) VALUES ($1,$2,true) RETURNING id`,
-        [name, telefono ? cleanText(telefono) : null]);
+        [name, subscriberDigits]);
       const clientId = cli.rows[0].id;
+      const ban = await c.query(
+        `INSERT INTO bans (client_id, ban_number, status, source)
+         VALUES ($1,$2,'A','cliente_voz') RETURNING id`,
+        [clientId, banDigits]);
+      const banId = ban.rows[0].id;
+      const sub = await c.query(
+        `INSERT INTO subscribers (ban_id, phone, phone_norm, status, line_kind, line_type)
+         VALUES ($1,$2,$2,'activo',$3,$4) RETURNING id`,
+        [banId, subscriberDigits, lineKind, lineType]);
+      const subscriberId = sub.rows[0].id;
       const opp = await c.query(
-        `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source)
-         VALUES ($1,$2,'manual','activa','cliente_voz') RETURNING id`,
-        [clientId, 'Oportunidad por voz · ' + name]);
+        `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source, created_by)
+         VALUES ($1,$2,'manual','activa','cliente_voz',$3) RETURNING id`,
+        [clientId, 'Oportunidad por voz - ' + name, req.user?.nombre || req.user?.nick || 'Cliente Voz']);
       const oppId = opp.rows[0].id;
-      if (pk) {
-        await c.query(
-          `INSERT INTO opportunity_lines (opportunity_id, client_id, line_mode, product_key, quantity_value, money_value)
-           VALUES ($1,$2,'nueva_sin_numero',$3,$4,$5)`,
-          [oppId, clientId, pk, isMoney ? null : (Number(qty) || null), isMoney ? (Number(monto) || null) : null]);
-      }
+      await c.query(
+        `INSERT INTO opportunity_lines (
+           opportunity_id, client_id, ban_id, subscriber_id, line_mode, phone,
+           product_key, quantity_value, money_value, product_type, sale_type
+         )
+         VALUES ($1,$2,$3,$4,'manual_con_ban_suscriptor',$5,$6,$7,$8,$9,$10)`,
+        [
+          oppId, clientId, banId, subscriberId, subscriberDigits, pk,
+          isMoney ? null : (Number(qty) || 1),
+          isMoney ? (Number(monto) || null) : null,
+          productKeyParts(pk)?.product_type || null,
+          productKeyParts(pk)?.sale_type || null,
+        ]);
       await ensureOpportunityNotes(c);
       const notaTxt = cleanText(nota || '');
       if (notaTxt) {
@@ -419,12 +657,20 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
       if (!cli.rows[0]) return null;
       if (!hasOperationalClientName(cli.rows[0].name)) return { invalid_client: true };
       const ex = await c.query(
-        `SELECT id FROM sales_opportunities WHERE client_id = $1 AND archived_at IS NULL LIMIT 1`, [client_id]);
-      if (ex.rows[0]) return { opportunity_id: ex.rows[0].id, already: true };
+        `SELECT id, source FROM sales_opportunities WHERE client_id = $1 AND archived_at IS NULL LIMIT 1`, [client_id]);
+      if (ex.rows[0]) {
+        if (String(ex.rows[0].source || '').toLowerCase() === 'desde_cliente') {
+          await seedClientActiveLines(c, ex.rows[0].id, client_id);
+          await ensureOpportunityWorkflowSteps(c, ex.rows[0].id);
+        }
+        return { opportunity_id: ex.rows[0].id, already: true };
+      }
       const opp = await c.query(
         `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source)
          VALUES ($1,$2,'manual','activa','desde_cliente') RETURNING id`,
         [client_id, 'Seguimiento · ' + cli.rows[0].name]);
+      await seedClientActiveLines(c, opp.rows[0].id, client_id);
+      await ensureOpportunityWorkflowSteps(c, opp.rows[0].id);
       return { opportunity_id: opp.rows[0].id, already: false };
     });
     if (!out) return res.status(404).json({ error: 'Cliente no existe' });

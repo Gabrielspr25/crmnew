@@ -14,3 +14,10 @@ test('OCR exige BAN detectado o escrito antes de guardar suscriptores', () => {
   assert.match(writeRoutesSource, /expectedBan/);
   assert.match(writeRoutesSource, /targetBanNumber !== expectedBan/);
 });
+
+test('OCR amplia imagenes pequenas antes de enviarlas al motor', () => {
+  assert.match(appHtml, /async function ocrImageToReadableDataUrl/);
+  assert.match(appHtml, /canvas\.width=Math\.round\(img\.naturalWidth\*scale\)/);
+  assert.match(appHtml, /Math\.min\(4,Math\.max\(1,1100\/Math\.max\(img\.naturalWidth,img\.naturalHeight\)\)\)/);
+  assert.match(appHtml, /image_base64:prepared\.dataUrl/);
+});

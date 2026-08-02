@@ -8,9 +8,10 @@ const appHtml = readFileSync(new URL('../../frontend/app.html', import.meta.url)
 test('Asana permite eliminar oportunidad de seguimiento y devolver al pool', () => {
   assert.match(asanaSource, /async function closeOpportunityToPool/);
   assert.match(asanaSource, /asanaRealRouter\.delete\('\/asana-real\/:id'/);
+  assert.match(asanaSource, /status='cerrada_no_trabajar'/);
   assert.match(asanaSource, /archived_at=now\(\)/);
   assert.match(asanaSource, /salesperson_id = NULL/);
-  assert.match(appHtml, /Eliminar seg\./);
+  assert.match(appHtml, /Eliminar de seguimiento/);
   assert.match(appHtml, /method:'DELETE'/);
   assert.match(appHtml, /No se pudo eliminar de seguimiento/);
 });

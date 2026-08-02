@@ -11,11 +11,11 @@ test('nuevo BAN escribe estado compatible con produccion varchar(1)', () => {
 });
 
 test('importador usa estados cortos para BAN y mantiene estados largos para suscriptores', () => {
-  assert.match(importRoutesSource, /function normBanStatus\(s\) \{[\s\S]*return 'I';[\s\S]*return 'S';[\s\S]*return 'A';/);
+  assert.match(importRoutesSource, /function normBanStatus\(s\) \{[\s\S]*return 'C';[\s\S]*return 'A';/);
   assert.match(importRoutesSource, /banStatus \|\| 'A'/);
   assert.match(importRoutesSource, /THEN 'A'/);
-  assert.match(importRoutesSource, /ELSE 'I'/);
-  assert.match(importRoutesSource, /status IS DISTINCT FROM 'I'/);
-  assert.match(importRoutesSource, /SET status = 'I'/);
+  assert.match(importRoutesSource, /ELSE 'C'/);
+  assert.match(importRoutesSource, /status IS DISTINCT FROM 'C'/);
+  assert.match(importRoutesSource, /SET status = 'C'/);
   assert.match(importRoutesSource, /function normStatus\(s\) \{[\s\S]*return 'activo';/);
 });

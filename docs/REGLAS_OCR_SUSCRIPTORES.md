@@ -52,9 +52,10 @@ inferir el producto solamente por la forma del SOC.
 - Un cliente incompleto tiene al menos un BAN con una lÃ­nea activa y no tiene
   ni empresa ni nombre vÃ¡lidos. Se muestra en la pestaÃ±a `Incompletos` y no
   aparece en `Activos` ni en `Seguimiento`.
-- La lista operativa de Clientes ordena primero el vencimiento mÃ¡s cercano o
-  ya vencido; ante empate prioriza mayor mensualidad fija y luego mayor cantidad
-  de lÃ­neas activas.
+- La lista operativa de Clientes ordena primero las lÃ­neas ya vencidas, luego
+  las prÃ³ximas a vencer y por Ãºltimo las sin fecha. Dentro de cada grupo
+  prioriza el mayor valor de oportunidad activa, luego vencimiento, mensualidad
+  fija y cantidad de lÃ­neas activas.
 
 ### SOC y plazos
 

@@ -5,6 +5,7 @@ import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { logAudit } from './misc.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
+import { resolvePlanMonthlyValueFromCatalog } from '../services/planRateCatalog.js';
 import { normalizeImportedSubscriber } from '../services/subscriberClassification.js';
 
 export const importRouter = Router();
@@ -81,7 +82,12 @@ function appendSubscriberFieldsFromRow(r, vals, target, mode) {
     if (col === 'price_code') v = defaults.price_code;
     if (col === 'contract_term') v = txt(r.installment_total) || defaults.contract_term;
     if (v != null) {
-      if (col === 'monthly_value') v = normMoney(v);
+      if (col === 'monthly_value') {
+        const amount = normMoney(v);
+        // El archivo no gobierna precios: cero o vacio significan sin precio,
+        // no deben reemplazar una renta valida ya almacenada.
+        v = Number.isFinite(amount) && amount > 0 ? amount : null;
+      }
       if (SUB_INTS.has(col)) v = Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : null;
       if (SUB_DATES.has(col)) v = normDate(v);
       if (v != null) {
@@ -117,6 +123,25 @@ function subscriberValuesFromRow(r) {
   appendSubscriberFieldsFromRow(r, vals, cols, 'col');
   appendPsRemainingPayments(r, vals, cols);
   return Object.fromEntries(cols.map((column, index) => [column, vals[index]]));
+}
+
+function positiveMonthlyValue(value) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+async function fillMissingMonthlyValueFromCatalog(r, desired, current = null) {
+  const currentMonthlyValue = positiveMonthlyValue(current?.monthly_value);
+  if (desired.monthly_value == null && currentMonthlyValue == null) {
+    const catalogRate = await resolvePlanMonthlyValueFromCatalog([
+      txt(r.soc) || txt(r.plan),
+      desired.price_code,
+      current?.price_code,
+      current?.plan,
+    ]);
+    if (catalogRate.value != null) desired.monthly_value = catalogRate.value;
+  }
+  return desired;
 }
 
 function comparableImportValue(value, column) {
@@ -333,7 +358,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
               LEFT JOIN public.bans b ON b.id = s.ban_id
              WHERE s.phone=$1 LIMIT 1`, [subPhone]);
           if (sf.rows[0]) {
-            const desired = subscriberValuesFromRow(r);
+                const desired = await fillMissingMonthlyValueFromCatalog(r, subscriberValuesFromRow(r), sf.rows[0]);
             if (subStatus) desired.status = subStatus;
             const changes = changedSubscriberFields(sf.rows[0], desired);
             const sets = [], vals = [];
@@ -356,7 +381,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             } else out.sin_cambios++;
           } else if (banId) {
             const cols = ['ban_id', 'phone', 'status'], vals = [banId, subPhone, subStatus || 'activo'];
-            const desired = subscriberValuesFromRow(r);
+                const desired = await fillMissingMonthlyValueFromCatalog(r, subscriberValuesFromRow(r));
             for (const [column, value] of Object.entries(desired)) { cols.push(column); vals.push(value); }
             await c.query(`INSERT INTO public.subscribers (${cols.join(',')}) VALUES (${cols.map((_, j) => '$' + (j + 1)).join(',')})`, vals);
             out.subs_creados++;

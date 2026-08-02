@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulacion - Business Red Plus 7 lineas</title>
+  <style>
+    :root {
+      --page: #0e1116;
+      --panel: #171c25;
+      --panel-2: #101727;
+      --line: #2a3444;
+      --text: #f5e4c5;
+      --muted: #b5a98f;
+      --cyan: #34c6e9;
+      --green: #32d19a;
+      --orange: #f2b449;
+      --red: #e3292b;
+      --purple: #a98cff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.4 Arial, Helvetica, sans-serif;
+    }
+    button, select { font: inherit; }
+    .topbar {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 13px max(24px, calc((100vw - 1360px) / 2));
+      background: #cb2026;
+      border-bottom: 3px solid #f1b937;
+    }
+    .brand { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0; }
+    .brand small { display:block; font-size: 11px; font-weight: 700; margin-top: -3px; }
+    .heading { border-left: 1px solid rgba(255,255,255,.55); padding-left: 18px; }
+    .heading strong { font-size: 18px; color:#fff; }
+    .heading span { display:block; font-size: 12px; color:#fff3df; }
+    .demo { margin-left:auto; border:1px solid rgba(255,255,255,.55); padding:7px 10px; border-radius:5px; font-size:12px; color:#fff; }
+
+    main { max-width: 1360px; margin: 0 auto; padding: 24px; }
+    .crumb { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    h1 { margin:0; font-size: 25px; color:#fff0db; }
+    .intro { margin:5px 0 20px; color: var(--muted); }
+    .context {
+      display:grid;
+      grid-template-columns: 1.25fr 1fr 1fr auto;
+      gap:12px;
+      padding:14px;
+      border:1px solid #0b7483;
+      background:#111a2a;
+      border-radius:7px;
+      margin-bottom:16px;
+    }
+    .field-label { display:block; color:#78d9ee; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:5px; }
+    .field-value { color:#fff0dc; font-weight:700; }
+    .tag { display:inline-flex; align-items:center; gap:6px; padding:5px 9px; border:1px solid #256e83; background:#102133; color:#9eeaff; border-radius:999px; font-size:12px; font-weight:700; }
+    .tag.green { color:#58e9ac; border-color:#237a60; background:#102a26; }
+
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:18px; align-items:start; }
+    .section, .summary { background:var(--panel); border:1px solid var(--line); border-radius:7px; }
+    .section-header { padding:15px 16px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .section-header h2 { margin:0; font-size:18px; color:#fff0dc; }
+    .section-header p { margin:3px 0 0; color:var(--muted); font-size:13px; }
+    .pill { white-space:nowrap; padding:5px 8px; border:1px solid #356a83; color:#80e1fa; border-radius:99px; font-size:12px; font-weight:700; }
+
+    .plan-strip { display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:10px; padding:14px 16px; background:#141c2c; border-bottom:1px solid var(--line); }
+    .plan-metric { padding:10px; background:#0f1829; border:1px solid #29485e; border-radius:5px; }
+    .plan-metric b { display:block; color:#fff0dc; font-size:16px; }
+    .plan-metric span { color:var(--muted); font-size:12px; }
+    .toggle { display:flex; align-items:center; justify-content:space-between; gap:9px; }
+    .switch { position:relative; width:42px; height:23px; border:0; border-radius:99px; background:#4a5667; cursor:pointer; padding:0; }
+    .switch::after { content:""; position:absolute; width:17px; height:17px; background:#fff; border-radius:50%; top:3px; left:3px; transition:.18s; }
+    .switch.on { background:#19875f; }
+    .switch.on::after { left:22px; }
+
+    .lines { padding:10px 16px 16px; }
+    .line-card { display:grid; grid-template-columns: 56px 1.25fr 1fr 1fr 120px; gap:10px; align-items:center; padding:11px 0; border-bottom:1px solid #273142; }
+    .line-card:last-child { border-bottom:0; }
+    .line-no { color:#86ddf4; font-weight:800; }
+    .device strong { color:#fff0dc; display:block; }
+    .device small, .benefit small { color:var(--muted); font-size:12px; display:block; }
+    .benefit b { display:block; font-size:13px; }
+    .benefit.free b { color:#52e9ad; }
+    .benefit.trade b { color:#f6be57; }
+    .benefit.credit b { color:#ae95ff; }
+    .money { color:#52e9ad; font-weight:800; white-space:nowrap; }
+    .action { text-align:right; }
+    .btn { border:1px solid #2d6e85; background:#14233b; color:#c6effa; padding:8px 10px; border-radius:5px; cursor:pointer; font-weight:700; font-size:12px; }
+    .btn:hover { background:#1b3150; }
+    .btn.free-select { background:#176b42; border-color:#2dc47f; color:#eafff3; }
+
+    .terms { margin:0 16px 16px; padding:12px 13px; border-left:3px solid var(--orange); background:#231e12; color:#e8d9ba; font-size:13px; }
+    .terms strong { color:#ffc553; }
+    .summary { position:sticky; top:14px; overflow:hidden; }
+    .summary h2 { font-size:17px; margin:0; padding:15px 16px; color:#fff0dc; border-bottom:1px solid var(--line); }
+    .summary-body { padding:14px 16px 16px; }
+    .summary-row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #293344; color:var(--muted); }
+    .summary-row b { color:#fff0dc; }
+    .summary-row.emphasis { margin-top:8px; border-bottom:0; padding:12px; background:#102a26; border:1px solid #257354; border-radius:5px; }
+    .summary-row.emphasis span { color:#8ef1bd; font-weight:800; }
+    .summary-row.emphasis b { color:#8ef1bd; font-size:22px; }
+    .source-note { margin-top:14px; color:#9e9786; font-size:11px; }
+
+    dialog { border:1px solid #2f8da2; border-radius:8px; background:#171c25; color:var(--text); width:min(520px, calc(100vw - 32px)); padding:0; box-shadow:0 18px 70px rgba(0,0,0,.65); }
+    dialog::backdrop { background:rgba(0,0,0,.67); }
+    .dialog-head { padding:15px 16px; background:#10233a; border-bottom:1px solid #2e5571; display:flex; justify-content:space-between; align-items:center; }
+    .dialog-head h3 { margin:0; color:#fff0dc; }
+    .icon-btn { border:0; color:#fff0dc; background:transparent; font-size:21px; cursor:pointer; }
+    .options { padding:12px; display:grid; gap:8px; }
+    .family-tabs { display:flex; gap:8px; border-bottom:1px solid #344257; padding-bottom:10px; }
+    .family-tab { border:1px solid #3b556e; color:#c9e9f4; background:#122039; border-radius:99px; padding:7px 12px; cursor:pointer; font-weight:700; }
+    .family-tab.active { background:#136c63; border-color:#3de0bc; color:#e8fff7; }
+    .picker-grid { display:grid; grid-template-columns: minmax(180px,.85fr) 1.3fr; gap:12px; }
+    .model-list, .offer-list { display:grid; gap:7px; }
+    .model-option, .offer-option { text-align:left; border:1px solid #35445a; border-radius:5px; background:#101727; color:var(--text); padding:10px; cursor:pointer; }
+    .model-option:hover, .model-option.selected { background:#172a43; border-color:#34c6e9; }
+    .model-option strong, .offer-option b { display:block; color:#fff0dc; }
+    .model-option span, .offer-option small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .offer-option { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .offer-option.free { border-left:3px solid var(--green); }
+    .offer-option.trade { border-left:3px solid var(--orange); }
+    .offer-option.credit { border-left:3px solid var(--purple); }
+    .offer-option > strong { white-space:nowrap; color:#f0dfbf; font-size:12px; }
+    .modal-note { color:#aba08a; font-size:11px; margin:4px 0 0; }
+    .option { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border:1px solid #334359; background:#101727; border-radius:5px; }
+    .option strong { display:block; color:#fff0dc; }
+    .option span { color:var(--muted); font-size:12px; }
+    .option button { background:#176b42; border:1px solid #2dc47f; color:#eafff3; border-radius:4px; padding:7px 9px; cursor:pointer; font-weight:700; }
+
+    @media (max-width: 940px) {
+      .context { grid-template-columns:1fr 1fr; }
+      .layout { grid-template-columns:1fr; }
+      .summary { position:static; }
+    }
+    @media (max-width: 690px) {
+      .topbar { padding:10px 15px; gap:10px; }
+      .heading { padding-left:10px; }
+      .heading strong { font-size:15px; }
+      .demo { display:none; }
+      main { padding:16px 12px; }
+      h1 { font-size:21px; }
+      .context, .plan-strip { grid-template-columns:1fr; }
+      .line-card { grid-template-columns:48px 1fr; gap:5px 10px; }
+      .benefit, .money, .action { grid-column:2; }
+      .action { text-align:left; margin-top:4px; }
+      .picker-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">CLARO<small>empresas</small></div>
+    <div class="heading"><strong>Comparativa comercial</strong><span>Simulacion de oferta multilínea</span></div>
+    <div class="demo">DEMO - no guarda ni publica</div>
+  </header>
+
+  <main>
+    <div class="crumb">Comparativa / Movil / Business Red Plus</div>
+    <h1>Business Red Plus para 7 lineas</h1>
+    <p class="intro">Escenario de venta: dos iPhone 17, dos iPhone 17 Pro Max, dos Galaxy S25 FE y un equipo gratis a escoger.</p>
+
+    <section class="context">
+      <div><span class="field-label">Tipo de propuesta</span><span class="field-value">Multilinea - 7 lineas</span></div>
+      <div><span class="field-label">Plan</span><span class="tag">Business Red Plus</span></div>
+      <div><span class="field-label">Evento</span><span class="tag green">Linea nueva / portabilidad</span></div>
+      <div><span class="field-label">Estado</span><span class="field-value">Lista para revisar</span></div>
+    </section>
+
+    <div class="layout">
+      <section class="section">
+        <div class="section-header">
+          <div><h2>Lineas y equipos</h2><p>El beneficio se decide por linea. Trade-in solo se muestra donde corresponde.</p></div>
+          <span class="pill">7 / 7 lineas</span>
+        </div>
+
+        <div class="plan-strip">
+          <div class="plan-metric"><span>Plan regular</span><b id="regularPlan">$245.00/mes</b><span>7 lineas Business Red Plus</span></div>
+          <div class="plan-metric"><span>Plan con AutoPay</span><b id="autopayPlan">$175.00/mes</b><span>Descuento de $10 por linea</span></div>
+          <div class="plan-metric toggle"><div><span>Calcular con AutoPay</span><b id="planSelected">$175.00/mes</b></div><button id="autopaySwitch" class="switch on" aria-label="Alternar AutoPay"></button></div>
+        </div>
+
+        <div class="lines">
+          <div class="line-card">
+            <div class="line-no">Linea 1</div>
+            <div class="device"><strong>iPhone 17 256GB</strong><small>Apple · precio regular $829.99</small></div>
+            <div class="benefit free"><b>Equipo gratis</b><small>Financiamiento 30 meses</small></div>
+            <div class="money">$0.00/mes</div><div class="action"><button class="btn open-selector" data-line="1">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 2</div>
+            <div class="device"><strong>iPhone 17 256GB</strong><small>Apple · precio regular $829.99</small></div>
+            <div class="benefit free"><b>Equipo gratis</b><small>Financiamiento 30 meses</small></div>
+            <div class="money">$0.00/mes</div><div class="action"><button class="btn open-selector" data-line="2">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 3</div>
+            <div class="device"><strong>iPhone 17 Pro Max 256GB</strong><small>Apple · precio regular $1,199.99</small></div>
+            <div class="benefit trade"><b>50% con trade-in</b><small>Entrega de equipo elegible</small></div>
+            <div class="money">$20.00/mes</div><div class="action"><button class="btn open-selector" data-line="3">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 4</div>
+            <div class="device"><strong>iPhone 17 Pro Max 256GB</strong><small>Apple · precio regular $1,199.99</small></div>
+            <div class="benefit trade"><b>50% con trade-in</b><small>Entrega de equipo elegible</small></div>
+            <div class="money">$20.00/mes</div><div class="action"><button class="btn open-selector" data-line="4">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 5</div>
+            <div class="device"><strong>Galaxy S25 FE</strong><small>Samsung · precio regular $589.99</small></div>
+            <div class="benefit credit"><b>Credito $250</b><small>Financiamiento a 30 meses</small></div>
+            <div class="money">$11.33/mes</div><div class="action"><button class="btn open-selector" data-line="5">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 6</div>
+            <div class="device"><strong>Galaxy S25 FE</strong><small>Samsung · precio regular $589.99</small></div>
+            <div class="benefit credit"><b>Credito $250</b><small>Financiamiento a 30 meses</small></div>
+            <div class="money">$11.33/mes</div><div class="action"><button class="btn open-selector" data-line="6">Escoger equipo</button></div>
+          </div>
+          <div class="line-card">
+            <div class="line-no">Linea 7</div>
+            <div class="device"><strong id="freeDevice">Galaxy A26</strong><small id="freeDeviceMeta">Samsung · precio regular $259.99</small></div>
+            <div class="benefit free"><b>Equipo gratis</b><small>Seleccionable para esta linea</small></div>
+            <div class="money">$0.00/mes</div><div class="action"><button class="btn free-select open-selector" data-line="7">Escoger equipo</button></div>
+          </div>
+        </div>
+
+        <aside class="terms"><strong>Validacion comercial pendiente:</strong> taxes/IVU se cobran al activar. El trade-in debe verificar modelo y condicion del equipo entregado. Esta maqueta sirve para definir el flujo; la aplicacion final debe leer el boletin y la tabla vigentes.</aside>
+      </section>
+
+      <aside class="summary">
+        <h2>Resumen mensual</h2>
+        <div class="summary-body">
+          <div class="summary-row"><span>Plan Business Red Plus</span><b id="summaryPlan">$175.00</b></div>
+          <div class="summary-row"><span>Equipos</span><b>$62.66</b></div>
+          <div class="summary-row"><span>Servicios adicionales</span><b>-</b></div>
+          <div class="summary-row"><span>Seguro</span><b>-</b></div>
+          <div class="summary-row emphasis"><span>Total mensual</span><b id="total">$237.66</b></div>
+          <div class="source-note">Los precios y beneficios de equipo se muestran como escenario de practica. Antes de cotizar, el motor debe validar vigencia, evento, limite por BAN y regla de trade-in.</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="equipmentDialog">
+    <div class="dialog-head"><h3 id="dialogTitle">Escoger equipo</h3><button class="icon-btn" aria-label="Cerrar" id="closeDialog">x</button></div>
+    <div class="options">
+      <div class="family-tabs" role="tablist">
+        <button class="family-tab active" data-family="iphone">iPhone</button>
+        <button class="family-tab" data-family="android">Android</button>
+      </div>
+      <div class="picker-grid">
+        <div>
+          <span class="field-label">1. Modelo</span>
+          <div class="model-list" id="modelList"></div>
+        </div>
+        <div>
+          <span class="field-label">2. Oferta para el modelo</span>
+          <div class="offer-list" id="offerList"></div>
+        </div>
+      </div>
+      <p class="modal-note">La oferta final debe venir del boletin vigente. Esta maqueta solo muestra el orden de seleccion: familia, modelo y beneficio.</p>
+    </div>
+  </dialog>
+
+  <script>
+    const autopaySwitch = document.getElementById('autopaySwitch');
+    const planSelected = document.getElementById('planSelected');
+    const summaryPlan = document.getElementById('summaryPlan');
+    const total = document.getElementById('total');
+    const deviceTotal = 62.66;
+    let autopay = true;
+
+    function updateTotals() {
+      const plan = autopay ? 175 : 245;
+      planSelected.textContent = `$${plan.toFixed(2)}/mes`;
+      summaryPlan.textContent = `$${plan.toFixed(2)}`;
+      total.textContent = `$${(plan + deviceTotal).toFixed(2)}`;
+      autopaySwitch.classList.toggle('on', autopay);
+    }
+
+    autopaySwitch.addEventListener('click', () => { autopay = !autopay; updateTotals(); });
+
+    const dialog = document.getElementById('equipmentDialog');
+    const modelList = document.getElementById('modelList');
+    const offerList = document.getElementById('offerList');
+    let selectedLine = 1;
+    let selectedFamily = 'iphone';
+    let selectedModel = null;
+
+    const catalog = {
+      iphone: [
+        { name: 'iPhone 17 256GB', meta: 'Apple · regular $829.99', offers: [
+          { title: 'Equipo gratis', detail: 'Cuando la oferta vigente lo permita', amount: '$0.00/mes', tone: 'free' },
+          { title: '50% descuento', detail: 'Sin trade-in si la fila oficial lo indica', amount: 'A validar', tone: 'trade' }
+        ] },
+        { name: 'iPhone 17 Pro Max 256GB', meta: 'Apple · regular $1,199.99', offers: [
+          { title: '50% con trade-in', detail: 'Solo cuando la oferta y el evento lo permitan', amount: '$20.00/mes', tone: 'trade' },
+          { title: 'Financiado regular', detail: 'Cuando no aplica otro beneficio', amount: '$40.00/mes', tone: 'credit' }
+        ] }
+      ],
+      android: [
+        { name: 'Galaxy S25 FE', meta: 'Samsung · regular $589.99', offers: [
+          { title: 'Equipo gratis', detail: 'Cuando la oferta vigente lo permita', amount: '$0.00/mes', tone: 'free' },
+          { title: '50% con trade-in', detail: 'Solo cuando se requiera y el cliente lo entregue', amount: 'A validar', tone: 'trade' },
+          { title: 'Financiado regular', detail: 'Cuando no aplica otro beneficio', amount: 'A validar', tone: 'credit' }
+        ] },
+        { name: 'Galaxy A26', meta: 'Samsung · regular $259.99', offers: [
+          { title: 'Equipo gratis', detail: 'Alternativa gratuita para esta linea', amount: '$0.00/mes', tone: 'free' },
+          { title: 'Financiado regular', detail: 'Cuando ya se uso el limite gratuito', amount: 'A validar', tone: 'credit' }
+        ] }
+      ]
+    };
+
+    function renderModels() {
+      const models = catalog[selectedFamily];
+      if (!selectedModel || !models.includes(selectedModel)) selectedModel = models[0];
+      modelList.innerHTML = models.map((model, index) => `
+        <button class="model-option ${model === selectedModel ? 'selected' : ''}" data-model="${index}">
+          <strong>${model.name}</strong><span>${model.meta}</span>
+        </button>`).join('');
+      modelList.querySelectorAll('[data-model]').forEach((button) => button.addEventListener('click', () => {
+        selectedModel = models[Number(button.dataset.model)];
+        renderModels();
+      }));
+      renderOffers();
+    }
+
+    function renderOffers() {
+      offerList.innerHTML = selectedModel.offers.map((offer, index) => `
+        <button class="offer-option ${offer.tone}" data-offer="${index}">
+          <span><b>${offer.title}</b><small>${offer.detail}</small></span><strong>${offer.amount}</strong>
+        </button>`).join('');
+      offerList.querySelectorAll('[data-offer]').forEach((button) => button.addEventListener('click', () => {
+        const offer = selectedModel.offers[Number(button.dataset.offer)];
+        applySelection(selectedModel, offer);
+      }));
+    }
+
+    function applySelection(model, offer) {
+      const row = document.querySelectorAll('.line-card')[selectedLine - 1];
+      row.querySelector('.device strong').textContent = model.name;
+      row.querySelector('.device small').textContent = model.meta;
+      const benefit = row.querySelector('.benefit');
+      benefit.className = `benefit ${offer.tone}`;
+      benefit.innerHTML = `<b>${offer.title}</b><small>${offer.detail}</small>`;
+      row.querySelector('.money').textContent = offer.amount;
+      dialog.close();
+    }
+
+    document.querySelectorAll('.open-selector').forEach((button) => button.addEventListener('click', () => {
+      selectedLine = Number(button.dataset.line);
+      document.getElementById('dialogTitle').textContent = `Escoger equipo - Linea ${selectedLine}`;
+      selectedFamily = 'iphone';
+      selectedModel = null;
+      document.querySelectorAll('.family-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.family === selectedFamily));
+      renderModels();
+      dialog.showModal();
+    }));
+    document.querySelectorAll('.family-tab').forEach((tab) => tab.addEventListener('click', () => {
+      selectedFamily = tab.dataset.family;
+      selectedModel = null;
+      document.querySelectorAll('.family-tab').forEach((item) => item.classList.toggle('active', item === tab));
+      renderModels();
+    }));
+    document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
+  </script>
+</body>
+</html>

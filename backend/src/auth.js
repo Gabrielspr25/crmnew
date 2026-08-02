@@ -4,6 +4,13 @@ import { verifyLogin } from './tango.js';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret-cambiar';
 
+export function normalizeRole(value) {
+  const role = String(value || '').trim().toLowerCase();
+  if (['admin', 'administrador', 'administrator', 'super admin', 'super_admin', 'superadmin'].includes(role)) return 'admin';
+  if (role === 'supervisor') return 'supervisor';
+  return 'vendedor';
+}
+
 // POST /api/auth/login  { usuario, password }
 export async function login(req, res) {
   const usuario = String(req.body?.usuario || req.body?.username || '').trim();
@@ -40,7 +47,7 @@ export async function login(req, res) {
     nick: perfil.nick || perfil.username || perfil.usuario || usuario,
     nombre: [perfil.nombre || perfil.name, perfil.apellido || perfil.lastName].filter(Boolean).join(' ').trim(),
     email: perfil.email || null,
-    rol: (perfil.rol || perfil.role || 'vendedor').toLowerCase(),
+    rol: normalizeRole(perfil.rol || perfil.role),
     tienda_id: perfil.tienda_id || perfil.tiendaId || null,
   };
   const token = jwt.sign(user, SECRET, { expiresIn: '12h' });
@@ -73,10 +80,26 @@ export function requireAuth(req, res, next) {
   return res.status(401).json({ error: header ? 'Sesión inválida o vencida' : 'No autenticado' });
 }
 
+// Middleware estricto para flujos que nunca pueden usar DEV_LOGIN.
+export function requireStrictAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+  try {
+    req.user = jwt.verify(header.slice(7), SECRET);
+    return next();
+  } catch {
+    return res.status(401).json({ error: 'Sesion invalida o vencida' });
+  }
+}
+
 // Middleware: exige rol admin o supervisor.
 export function requireAdmin(req, res, next) {
-  if (!['admin', 'supervisor'].includes(req.user?.rol)) {
+  const role = normalizeRole(req.user?.rol);
+  if (!['admin', 'supervisor'].includes(role)) {
     return res.status(403).json({ error: 'Solo admin/supervisor' });
   }
+  req.user.rol = role;
   next();
 }

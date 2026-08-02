@@ -30,7 +30,7 @@ const ACTIVE_CLIENT_RELATION_SQL = `
             AND COALESCE(LOWER(b.status::text),'') IN ('a','activo','active')
             AND (NOT EXISTS (SELECT 1 FROM subscribers s_any WHERE s_any.ban_id = b.id)
                  OR EXISTS (SELECT 1 FROM subscribers s WHERE s.ban_id = b.id
-                             AND ${ACTIVE_SUB_STATUS('s')}))))`;
+                             AND ${ACTIVE_SUB_STATUS('s')})))`;
 const MISSING_CLIENT_IDENTITY_SQL = `(
   (NULLIF(TRIM(COALESCE(c.name,'')),'') IS NULL OR c.name ILIKE 'SIN NOMBRE - BAN %')
   AND (NULLIF(TRIM(COALESCE(c.business_name,'')),'') IS NULL OR c.business_name ILIKE 'SIN NOMBRE - BAN %')
@@ -42,15 +42,16 @@ const INCOMPLETE_CLIENT_SQL = `(
     FROM bans b_incomplete
     JOIN subscribers s_incomplete ON s_incomplete.ban_id = b_incomplete.id
     WHERE b_incomplete.client_id = c.id
+      AND COALESCE(LOWER(b_incomplete.status::text),'') IN ('a','activo','active')
       AND ${ACTIVE_SUB_STATUS('s_incomplete')}
   )
 )`;
 const ACTIVE_CLIENT_SQL = `(${VALID_CLIENT_NAME_SQL} AND ${ACTIVE_CLIENT_RELATION_SQL} AND NOT (${ACTIVE_FOLLOW_UP_EXISTS_SQL}) AND NOT (${INCOMPLETE_CLIENT_SQL}))`;
 const FOLLOWING_CLIENT_SQL = `(${ACTIVE_FOLLOW_UP_EXISTS_SQL} AND NOT (${INCOMPLETE_CLIENT_SQL}))`;
 const CANCELLED_CLIENT_SQL = `(
-  ${VALID_CLIENT_NAME_SQL}
-  AND EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
+  EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
   AND NOT (${ACTIVE_CLIENT_RELATION_SQL}))`;
+const ALL_CLIENT_SQL = `((${ACTIVE_CLIENT_SQL}) OR (${CANCELLED_CLIENT_SQL}) OR (${FOLLOWING_CLIENT_SQL}) OR (${INCOMPLETE_CLIENT_SQL}))`;
 const EMPTY_DUPLICATE_CLIENT_SQL = `(
   NOT EXISTS (SELECT 1 FROM bans b_empty WHERE b_empty.client_id = c.id)
   AND EXISTS (
@@ -78,6 +79,10 @@ const SERVICE_KIND_SQL = (subscriberAlias) => `LOWER(COALESCE(
 ))`;
 const SERVICE_MOBILE_SQL = (subscriberAlias) => `${SERVICE_KIND_SQL(subscriberAlias)} = 'movil'`;
 const SERVICE_FIXED_SQL = (subscriberAlias) => `${SERVICE_KIND_SQL(subscriberAlias)} = 'fijo'`;
+const REN_LINE_SQL = (subscriberAlias) => `UPPER(COALESCE(${subscriberAlias}.line_type::text,'')) IN ('REN','RENEWAL','RENOVACION','RENOVACIÓN')`;
+const CLIENT_PRODUCT_COUNT_SQL = (subscriberAlias, condition) => `(SELECT COUNT(*)::int
+          FROM subscribers ${subscriberAlias} JOIN bans b_${subscriberAlias} ON ${subscriberAlias}.ban_id=b_${subscriberAlias}.id
+         WHERE b_${subscriberAlias}.client_id=c.id AND ${ACTIVE_SUB_STATUS(subscriberAlias)} AND ${condition})`;
 const SERVICE_CLIENT_SQL = {
   movil: `(EXISTS (SELECT 1 FROM bans b_service JOIN subscribers s_service ON s_service.ban_id=b_service.id
                     WHERE b_service.client_id=c.id AND ${ACTIVE_SUB_STATUS('s_service')}
@@ -143,17 +148,20 @@ const lineMetricJson = (tabCond) => `(
     'incomplete_lines', COUNT(*) FILTER (WHERE ${incompleteSql('l')})::int)
   FROM scoped_lines l JOIN clients c ON c.id = l.client_id WHERE ${tabCond})`;
 
-// GET /api/clients-real?tab=active|cancelled|following|incomplete&q=texto
+// GET /api/clients-real?tab=all|active|cancelled|following|incomplete&q=texto
 clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   const { tab, q, service, renewal } = req.query;
+  // Durante la búsqueda solo cambia la tabla. Las tarjetas globales se mantienen
+  // desde la última carga completa y no se recalculan por cada tecla.
+  const includeStats = String(req.query.summary || '1') !== '0';
+  const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+  const per = Math.min(100, Math.max(1, parseInt(String(req.query.per || '50'), 10) || 50));
+  const offset = (page - 1) * per;
   const conds = [];
   const params = [];
   const hasSearch = Boolean(q && q.trim());
-  if (tab === 'cancelled') conds.push(CANCELLED_CLIENT_SQL);
-  else if (tab === 'following') conds.push(FOLLOWING_CLIENT_SQL);
-  else if (tab === 'incomplete') conds.push(INCOMPLETE_CLIENT_SQL);
-  else conds.push(ACTIVE_CLIENT_SQL); // default = activos
   if (hasSearch) {
+    conds.push(ALL_CLIENT_SQL);
     params.push(`%${q.trim()}%`);
     conds.push(`(
       c.name ILIKE $${params.length}
@@ -167,13 +175,35 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
       OR EXISTS (SELECT 1 FROM subscribers sq JOIN bans bqs ON sq.ban_id = bqs.id WHERE bqs.client_id = c.id AND CAST(sq.phone AS text) ILIKE $${params.length})
     )`);
     conds.push(`NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`);
+  } else if (tab === 'all') {
+    conds.push(ALL_CLIENT_SQL);
+  } else if (tab === 'cancelled') {
+    conds.push(CANCELLED_CLIENT_SQL);
+  } else if (tab === 'following') {
+    conds.push(FOLLOWING_CLIENT_SQL);
+  } else if (tab === 'incomplete') {
+    conds.push(INCOMPLETE_CLIENT_SQL);
+  } else {
+    conds.push(ACTIVE_CLIENT_SQL); // default = activos
   }
-  if (SERVICE_CLIENT_SQL[service]) conds.push(SERVICE_CLIENT_SQL[service]);
+  if (!hasSearch && SERVICE_CLIENT_SQL[service]) conds.push(SERVICE_CLIENT_SQL[service]);
   if (!hasSearch && tab !== 'cancelled' && RENEWAL_CLIENT_SQL[renewal]) conds.push(RENEWAL_CLIENT_SQL[renewal]);
   const whereClause = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
-  const clientOrderSql = tab === 'cancelled'
-    ? 'last_activity DESC NULLS LAST, c.created_at DESC'
-    : 'primary_contract_end_date ASC NULLS LAST, fixed_monthly_value DESC NULLS LAST, active_subscriber_count DESC, primary_sale_date ASC NULLS LAST, c.created_at DESC';
+  const clientOrderSql = hasSearch || tab === 'all'
+    ? 'created_at DESC'
+    : tab === 'cancelled'
+    ? 'last_activity DESC NULLS LAST, created_at DESC'
+    : `CASE
+         WHEN primary_contract_end_date < CURRENT_DATE THEN 0
+         WHEN primary_contract_end_date IS NOT NULL THEN 1
+         ELSE 2
+       END,
+       active_opportunity_value DESC NULLS LAST,
+       primary_contract_end_date ASC NULLS LAST,
+        fixed_monthly_value DESC NULLS LAST,
+        active_subscriber_count DESC,
+        primary_sale_date ASC NULLS LAST,
+        created_at DESC`;
 
   const conn = await pool.connect();
   try {
@@ -182,9 +212,14 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
     await conn.query('BEGIN');
     await conn.query('SET LOCAL search_path TO public'); // leer tablas REALES
 
+    const total = await conn.query(
+      `SELECT COUNT(*)::int AS total FROM clients c ${whereClause}`,
+      params);
+
     const clients = await conn.query(
-      `SELECT c.id, c.name, c.business_name, c.business_name AS company,
-              c.owner_name, c.contact_person,
+      `SELECT * FROM (
+         SELECT c.id, c.name, c.business_name, c.business_name AS company,
+              c.email, c.owner_name, c.contact_person,
               c.phone, c.cellular AS mobile, c.cellular,
               c.city, c.source AS base, c.created_at, c.salesperson_id,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id) AS ban_count,
@@ -201,18 +236,35 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
         (SELECT COALESCE(SUM(s.monthly_value) FILTER (WHERE ${fixedSql('s')}),0)::numeric
            FROM subscribers s JOIN bans b ON s.ban_id=b.id
           WHERE b.client_id=c.id AND ${ACTIVE_SUB_STATUS('s')}) AS fixed_monthly_value,
+        (SELECT COALESCE(SUM(COALESCE(so.expected_monthly_value,0)),0)::numeric
+           FROM sales_opportunities so
+          WHERE so.client_id=c.id
+            AND so.archived_at IS NULL
+            AND COALESCE(LOWER(so.status),'activa') = 'activa') AS active_opportunity_value,
+        (SELECT COUNT(*)::int FROM sales_opportunities so
+          WHERE so.client_id=c.id AND so.archived_at IS NULL
+            AND COALESCE(LOWER(so.status),'activa') = 'activa') AS active_opportunity_count,
         (SELECT b.account_type FROM bans b WHERE b.client_id=c.id AND COALESCE(LOWER(b.status::text),'') IN ('a','activo','active') LIMIT 1) AS primary_service_type,
         (SELECT string_agg(DISTINCT b.account_type, ', ') FROM bans b WHERE b.client_id=c.id AND b.account_type IS NOT NULL) AS all_service_types,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_mnew', `${SERVICE_MOBILE_SQL('s_mnew')} AND NOT ${REN_LINE_SQL('s_mnew')}`)} AS mobile_new_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_mren', `${SERVICE_MOBILE_SQL('s_mren')} AND ${REN_LINE_SQL('s_mren')}`)} AS mobile_ren_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_fnew', `${SERVICE_FIXED_SQL('s_fnew')} AND NOT ${REN_LINE_SQL('s_fnew')}`)} AS fixed_new_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_fren', `${SERVICE_FIXED_SQL('s_fren')} AND ${REN_LINE_SQL('s_fren')}`)} AS fixed_ren_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_tv', `LOWER(COALESCE(s_tv.line_kind::text,'')) IN ('tv','claro tv','clarotv')`)} AS claro_tv_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_cloud', `${SERVICE_KIND_SQL('s_cloud')} = 'cloud'`)} AS cloud_count,
+        ${CLIENT_PRODUCT_COUNT_SQL('s_mpls', `LOWER(COALESCE(s_mpls.line_kind::text,'')) = 'mpls'`)} AS mpls_count,
         sp.name AS vendor_name,
         (SELECT MAX(GREATEST(COALESCE(s2.updated_at,s2.created_at), COALESCE(b2.updated_at,b2.created_at)))
            FROM subscribers s2 JOIN bans b2 ON s2.ban_id=b2.id WHERE b2.client_id=c.id) AS last_activity
-       FROM clients c
-       LEFT JOIN salespeople sp ON sp.id = c.salesperson_id
-       ${whereClause}
-       ORDER BY ${clientOrderSql}`,
-      params);
+        FROM clients c
+        LEFT JOIN salespeople sp ON sp.id = c.salesperson_id
+        ${whereClause}
+       ) AS client_rows
+        ORDER BY ${clientOrderSql}
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, per, offset]);
 
-    const stats = await conn.query(
+    const stats = includeStats ? await conn.query(
       `WITH scoped_lines AS (
          SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type,
                 s_metric.status AS line_status, s_metric.monthly_value, s_metric.contract_end_date, b_metric.account_type
@@ -236,10 +288,11 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
           'active',     ${lineMetricJson(ACTIVE_CLIENT_SQL)},
           'cancelled',  ${lineMetricJson(CANCELLED_CLIENT_SQL)},
           'following',  ${lineMetricJson(FOLLOWING_CLIENT_SQL)},
-          'incomplete', ${lineMetricJson(INCOMPLETE_CLIENT_SQL)}) AS line_metrics`);
+            'incomplete', ${lineMetricJson(INCOMPLETE_CLIENT_SQL)}) AS line_metrics`)
+      : { rows: [] };
 
     await conn.query('COMMIT');
-    res.json({ clients: clients.rows, stats: stats.rows[0] });
+    res.json({ clients: clients.rows, total: total.rows[0]?.total || 0, page, per, stats: includeStats ? stats.rows[0] : null });
   } catch (e) {
     try { await conn.query('ROLLBACK'); } catch {}
     console.error('[clients-real]', e.message);
@@ -274,8 +327,10 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
       `SELECT s.id, s.phone, s.plan, s.monthly_value, s.status, s.line_kind, s.line_type,
               s.activation_date, s.contract_start_date, s.contract_term, s.remaining_payments, s.contract_end_date,
               s.cancel_reason, s.tango_ventaid, s.equipment, s.product_type, s.price_code, s.item_id, s.payments_made,
+              gr.gpon_applies, gr.gpon_note, gr.reviewed_at AS gpon_reviewed_at,
               b.ban_number, b.id AS ban_id
          FROM subscribers s JOIN bans b ON b.id = s.ban_id
+         LEFT JOIN subscriber_gpon_reviews gr ON gr.subscriber_id = s.id
         WHERE b.client_id = $1 ORDER BY b.ban_number, s.phone`, [req.params.id]);
     let ventasTango = { rows: [] };
     const salesTable = await conn.query(`

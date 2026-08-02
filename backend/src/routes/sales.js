@@ -6,7 +6,10 @@ import { fetchComisiones, fetchVentas } from '../tango.js';
 import { requireAuth, requireAdmin } from '../auth.js';
 import {
   classifyTangoCommissionSale,
+  isClaroTvTangoType,
+  isPymesTangoType,
   mapTangoCommissionSale,
+  PYMES_TANGO_TYPE_NAMES,
 } from '../services/tangoCommissionSync.js';
 
 export const salesRouter = Router();
@@ -54,7 +57,7 @@ async function resolveClientAndBan(db, mapped) {
   const existingBan = await db.query(
     `SELECT b.id, b.client_id
        FROM public.bans b
-      WHERE b.number = $1
+      WHERE b.ban_number = $1
       FOR UPDATE`,
     [mapped.banNumber]
   );
@@ -68,10 +71,10 @@ async function resolveClientAndBan(db, mapped) {
   }
 
   const existingClient = await db.query(
-    `SELECT id
-       FROM public.clients
-      WHERE LOWER(TRIM(name)) = LOWER(TRIM($1))
-         OR LOWER(TRIM(COALESCE(company, ''))) = LOWER(TRIM($1))
+      `SELECT id
+         FROM public.clients
+        WHERE LOWER(TRIM(name)) = LOWER(TRIM($1))
+         OR LOWER(TRIM(COALESCE(business_name, ''))) = LOWER(TRIM($1))
       ORDER BY created_at ASC
       LIMIT 1`,
     [mapped.clientName]
@@ -82,7 +85,7 @@ async function resolveClientAndBan(db, mapped) {
   if (!clientId) {
     const salespersonId = await resolveSalespersonId(db, mapped.vendorName);
     const created = await db.query(
-      `INSERT INTO public.clients (name, company, salesperson_id, source, pendiente_validacion)
+      `INSERT INTO public.clients (name, business_name, salesperson_id, source, pendiente_validacion)
        VALUES ($1, $1, $2, 'tango_v2', false)
        RETURNING id`,
       [mapped.clientName, salespersonId]
@@ -92,8 +95,8 @@ async function resolveClientAndBan(db, mapped) {
   }
 
   const createdBan = await db.query(
-    `INSERT INTO public.bans (client_id, number, ban_number, status, account_type, source)
-     VALUES ($1, $2, $2, 'activo', $3, 'tango_v2')
+    `INSERT INTO public.bans (client_id, ban_number, status, account_type, source)
+     VALUES ($1, $2, 'A', $3, 'tango_v2')
      RETURNING id`,
     [clientId, mapped.banNumber, accountTypeFor(mapped)]
   );
@@ -165,10 +168,10 @@ async function resolveSubscriber(db, mapped, relation) {
   }
 
   const byPhone = await db.query(
-    `SELECT id, ban_id
-       FROM public.subscribers
-      WHERE phone_norm = $1
-         OR regexp_replace(COALESCE(phone_number, ''), '\\D', '', 'g') = $1
+      `SELECT id, ban_id
+         FROM public.subscribers
+       WHERE phone_norm = $1
+         OR regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') = $1
       LIMIT 1
       FOR UPDATE`,
     [mapped.phone]
@@ -206,12 +209,13 @@ async function resolveSubscriber(db, mapped, relation) {
 
   const inserted = await db.query(
     `INSERT INTO public.subscribers
-       (ban_id, phone_number, phone_norm, phone, status, tango_ventaid, price_code,
+       (ban_id, phone, phone_norm, status, tango_ventaid, price_code,
         plan, monthly_value, line_kind, line_type, activation_date, contract_start_date)
-     VALUES ($1,$2,$2,$2,'activo',$3,$4,$4,$5,$6,$7,$8,$8)
+     VALUES ($1,$2,$3,'activo',$4,$5,$5,$6,$7,$8,$9,$9)
      RETURNING id`,
     [
       relation.banId,
+      mapped.phone,
       mapped.phone,
       mapped.tangoVentaId,
       mapped.priceCode,
@@ -256,15 +260,15 @@ async function saveCommissionReport(db, subscriberId, mapped, hasta) {
   );
 }
 
-async function syncOneSale(mapped, hasta) {
+async function syncOneSale(mapped, hasta, eligibility) {
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
-    const eligibility = classifyTangoCommissionSale(mapped);
-    if (!eligibility.accepted) {
-      const action = await saveSalesTrace(db, mapped, null, eligibility.reason);
+    const operationalEligibility = eligibility || classifyTangoCommissionSale(mapped);
+    if (!operationalEligibility.accepted) {
+      const action = await saveSalesTrace(db, mapped, null, operationalEligibility.reason);
       await db.query('COMMIT');
-      return { action, pending: true, reason: eligibility.reason };
+      return { action, pending: true, reason: operationalEligibility.reason };
     }
 
     const relation = await resolveClientAndBan(db, mapped);
@@ -294,6 +298,47 @@ function saleIdOf(row) {
   return String(row?.ventaid ?? row?.venta_id ?? row?.id ?? '');
 }
 
+function clientEvidenceKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function addPymesEvidence(evidence, mapped) {
+  if (mapped?.banNumber) evidence.bans.add(mapped.banNumber);
+  const clientKey = clientEvidenceKey(mapped?.clientName);
+  if (clientKey) evidence.clients.add(clientKey);
+}
+
+function hasBatchPymesEvidence(evidence, mapped) {
+  return Boolean(
+    evidence.bans.has(mapped?.banNumber) ||
+    evidence.clients.has(clientEvidenceKey(mapped?.clientName))
+  );
+}
+
+async function hasHistoricalPymesEvidence(mapped) {
+  const clientKey = clientEvidenceKey(mapped?.clientName);
+  if (!mapped?.banNumber && !clientKey) return false;
+  const result = await query(
+    `SELECT 1
+      FROM sales s
+       LEFT JOIN public.clients c ON c.id = s.client_id
+      WHERE s.review_reason IS NULL
+        AND LOWER(TRIM(regexp_replace(COALESCE(s.ventatipo_nombre, ''), '\\s+', ' ', 'g'))) = ANY($3::text[])
+        AND (
+          ($1::text IS NOT NULL AND s.ban_number = $1)
+          OR ($2::text IS NOT NULL AND LOWER(TRIM(COALESCE(c.name, ''))) = $2)
+        )
+      LIMIT 1`,
+    [mapped?.banNumber || null, clientKey || null, PYMES_TANGO_TYPE_NAMES]
+  );
+  return Boolean(result.rows[0]);
+}
+
 // POST /api/sales/sync { desde, hasta }. Solo admin/supervisor. No elimina ni
 // cancela registros: Tango completa el CRM y deja trazabilidad en sales/reports.
 salesRouter.post('/sync', requireAuth, requireAdmin, async (req, res) => {
@@ -307,6 +352,11 @@ salesRouter.post('/sync', requireAuth, requireAdmin, async (req, res) => {
       fetchComisiones({ desde, hasta }),
     ]);
     const commissionBySale = new Map(comisiones.map((row) => [saleIdOf(row), row]).filter(([id]) => id));
+    const mappedSales = ventas.map((sale) => mapTangoCommissionSale(sale, commissionBySale.get(saleIdOf(sale)) || null));
+    const pymesEvidence = { bans: new Set(), clients: new Set() };
+    for (const mapped of mappedSales) {
+      if (isPymesTangoType(mapped.saleTypeName)) addPymesEvidence(pymesEvidence, mapped);
+    }
     const summary = {
       ok: true,
       desde,
@@ -321,22 +371,30 @@ salesRouter.post('/sync', requireAuth, requireAdmin, async (req, res) => {
       reportes_actualizados: 0,
       pendientes: 0,
       excluidas: 0,
+      claro_tv_pymes: 0,
+      claro_tv_excluidas: 0,
       errores: [],
     };
 
-    for (const sale of ventas) {
-      const mapped = mapTangoCommissionSale(sale, commissionBySale.get(saleIdOf(sale)) || null);
+    for (const mapped of mappedSales) {
       if (!mapped.tangoVentaId) {
         summary.excluidas++;
         continue;
       }
-      const eligibility = classifyTangoCommissionSale(mapped);
-      if (['tipo_no_pymes', 'sin_comision_real'].includes(eligibility.reason)) {
+      const isClaroTv = isClaroTvTangoType(mapped.saleTypeName);
+      const pymesClient = isClaroTv && (
+        hasBatchPymesEvidence(pymesEvidence, mapped) ||
+        await hasHistoricalPymesEvidence(mapped)
+      );
+      const eligibility = classifyTangoCommissionSale(mapped, { pymesClient });
+      if (!eligibility.accepted) {
         summary.excluidas++;
+        if (eligibility.reason === 'claro_tv_cliente_no_pymes') summary.claro_tv_excluidas++;
         continue;
       }
+      if (isClaroTv) summary.claro_tv_pymes++;
       try {
-        const result = await syncOneSale(mapped, hasta);
+        const result = await syncOneSale(mapped, hasta, eligibility);
         if (result.action === 'created') summary.ventas_creadas++;
         else summary.ventas_actualizadas++;
         if (result.clientCreated) summary.clientes_creados++;
@@ -364,7 +422,7 @@ salesRouter.get('/', requireAuth, async (req, res) => {
     `SELECT s.*, COALESCE(c.name, c2.name) AS client_name
        FROM sales s
        LEFT JOIN public.clients c ON c.id = s.client_id
-       LEFT JOIN public.bans b ON b.number = s.ban_number
+       LEFT JOIN public.bans b ON b.ban_number = s.ban_number
        LEFT JOIN public.clients c2 ON c2.id = b.client_id
       WHERE ($1::date IS NULL OR s.sale_date >= $1)
         AND ($2::date IS NULL OR s.sale_date <= $2)

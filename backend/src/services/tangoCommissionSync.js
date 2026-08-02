@@ -1,4 +1,4 @@
-const PYMES_TANGO_TYPES = new Set([
+export const PYMES_TANGO_TYPE_NAMES = Object.freeze([
   'ba corp new',
   'ba corp ren',
   'cloud negocios',
@@ -12,6 +12,8 @@ const PYMES_TANGO_TYPES = new Set([
   'telemetria new',
   'telemetria ren',
 ]);
+
+const PYMES_TANGO_TYPES = new Set(PYMES_TANGO_TYPE_NAMES);
 
 function firstValue(...values) {
   return values.find((value) => value !== undefined && value !== null && String(value).trim() !== '') ?? null;
@@ -36,6 +38,14 @@ function normalizeType(value) {
     .replace(/\s+/g, ' ');
 }
 
+export function isPymesTangoType(value) {
+  return PYMES_TANGO_TYPES.has(normalizeType(value));
+}
+
+export function isClaroTvTangoType(value) {
+  return /\bclaro\s*tv\b|\btelevision\b/.test(normalizeType(value));
+}
+
 function normalizeDigits(value) {
   const digits = String(value || '').replace(/\D/g, '');
   return digits || null;
@@ -51,8 +61,12 @@ function dateValue(value) {
 
 function readClientName(row) {
   if (typeof row?.cliente === 'string') return row.cliente.trim();
+  const personName = [row?.cliente?.nombre, row?.cliente?.apellido]
+    .filter((value) => value && !/^(null|undefined|n\/a|-)$/i.test(String(value).trim()))
+    .join(' ')
+    .trim();
   return firstValue(
-    [row?.cliente?.nombre, row?.cliente?.apellido].filter(Boolean).join(' ').trim(),
+    personName,
     row?.cliente_nombre,
     row?.nombre_cliente,
     row?.nombre,
@@ -138,16 +152,18 @@ export function mapTangoCommissionSale(sale = {}, commission = null) {
   };
 }
 
-export function classifyTangoCommissionSale(mapped) {
-  if (!PYMES_TANGO_TYPES.has(normalizeType(mapped?.saleTypeName))) return { accepted: false, reason: 'tipo_no_pymes' };
-  if (!(Number(mapped?.companyEarnings) > 0)) return { accepted: false, reason: 'sin_comision_real' };
+export function classifyTangoCommissionSale(mapped, { pymesClient = false } = {}) {
+  const isPymesType = isPymesTangoType(mapped?.saleTypeName);
+  const isClaroTv = isClaroTvTangoType(mapped?.saleTypeName);
+  if (!isPymesType && !isClaroTv) return { accepted: false, reason: 'tipo_no_pymes' };
+  if (isClaroTv && !pymesClient) return { accepted: false, reason: 'claro_tv_cliente_no_pymes' };
   if (!mapped?.banNumber) return { accepted: false, reason: 'ban_tango_invalido' };
   if (!validClientName(mapped?.clientName)) return { accepted: false, reason: 'cliente_tango_sin_nombre' };
   return { accepted: true, reason: null };
 }
 
-export function shouldCreateOperationalRelation(mapped) {
-  return classifyTangoCommissionSale(mapped).accepted;
+export function shouldCreateOperationalRelation(mapped, options) {
+  return classifyTangoCommissionSale(mapped, options).accepted;
 }
 
 export { validClientName };

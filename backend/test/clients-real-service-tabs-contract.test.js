@@ -31,11 +31,28 @@ test('Incompletos queda separado de Activos y exige BAN con linea activa sin ide
   assert.match(source, /NOT \(\$\{INCOMPLETE_CLIENT_SQL\}\)/);
 });
 
+test('Clientes sin identidad con BAN cancelado salen de incompletos y entran en canceladas', async () => {
+  const source = await readFile(routePath, 'utf8');
+  const incompleteBlock = source.slice(
+    source.indexOf('const INCOMPLETE_CLIENT_SQL ='),
+    source.indexOf('const ACTIVE_CLIENT_SQL =')
+  );
+  const cancelledBlock = source.slice(
+    source.indexOf('const CANCELLED_CLIENT_SQL ='),
+    source.indexOf('const ALL_CLIENT_SQL =')
+  );
+
+  assert.match(incompleteBlock, /COALESCE\(LOWER\(b_incomplete\.status::text\),''\) IN \('a','activo','active'\)/);
+  assert.doesNotMatch(cancelledBlock, /VALID_CLIENT_NAME_SQL/);
+  assert.match(cancelledBlock, /EXISTS \(SELECT 1 FROM bans b WHERE b\.client_id = c\.id\)/);
+  assert.match(cancelledBlock, /NOT \(\$\{ACTIVE_CLIENT_RELATION_SQL\}\)/);
+});
+
 test('Clientes usa los conteos del endpoint y no filtra solo la lista visible', async () => {
   const html = await readFile(appPath, 'utf8');
 
-  assert.match(html, /const service=cliTab==='active'\?cliServiceFilter:'todas';/);
-  assert.match(html, /\/api\/clients-real\?tab=\$\{cliTab\}[^`]*service=\$\{service\}/);
+  assert.match(html, /const service=\(cliTab==='active'\|\|cliTab==='all'\|\|cliQ\)\?cliServiceFilter:'todas';/);
+  assert.match(html, /\/api\/clients-real\?tab=\$\{searchScope\}[^`]*service=\$\{service\}/);
   assert.match(html, /const serviceCounts=st\.service_counts\|\|\{\}/);
   assert.match(html, /serviceCounts\[value\]\?\?0/);
   assert.doesNotMatch(html, /listed\.filter\(c=>cliClientServiceType\(c\)===value\)\.length/);

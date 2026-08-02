@@ -34,7 +34,8 @@ test('Oferta const implementa flujo progresivo de plan a propuesta', () => {
   assert.match(page, /2\. Escoger equipo y oferta/);
   assert.match(page, /Terminos y condiciones de la oferta seleccionada/);
   assert.match(page, /3\. Servicios y seguro/);
-  assert.match(page, /4\. Comparativa/);
+  assert.match(page, /4\. Productos fijos y Claro TV/);
+  assert.match(page, /5\. Comparativa/);
 });
 
 test('Oferta const protege reglas de cierre individual y multilinea', () => {
@@ -260,7 +261,7 @@ test('Oferta const arma comparativa editable antes del documento final', () => {
   assert.match(page, /Plan regular sin debito/);
   assert.match(page, /Plan con AutoPay/);
   assert.match(page, /Total mensual propuesta/);
-  assert.match(page, /plan \+ equipos \+ servicios \+ seguro/);
+  assert.match(page, /Plan \+ equipos \+ servicios \+ seguro \+ fijo\/TV/);
   assert.doesNotMatch(page, /<span>Diferencia<\/span>/);
 });
 
@@ -275,7 +276,7 @@ test('Comparativa usa precios automaticos y descuento de debito automatico', () 
   assert.match(page, /planAutopayTotal\(\)-planRegularTotal\(\)/);
   assert.match(page, /Plan regular sin debito/);
   assert.match(page, /Total mensual propuesta/);
-  assert.match(page, /plan \+ equipos \+ servicios \+ seguro/);
+  assert.match(page, /Plan \+ equipos \+ servicios \+ seguro \+ fijo\/TV/);
   assert.doesNotMatch(page, /<span>Diferencia<\/span>/);
 });
 

@@ -5,12 +5,16 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
-import { resolvePlanMonthlyValueFromTango } from '../tango.js';
+import { resolvePlanRateWithFallback } from '../services/planRateCatalog.js';
 import { normalizeOperationalStatus } from '../services/subscriberClassification.js';
 
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
 const VALID_SUBSCRIBER_PHONE = /^(787|939|989)\d{7}$/;
+function isMissingClientIdentityValue(value) {
+  const v = String(value || '').trim();
+  return !v || /^SIN NOMBRE - BAN\s+/i.test(v);
+}
 function contractEndFromRemainingPayments(v) {
   const n = Number.parseInt(String(v || ''), 10);
   if (!Number.isFinite(n) || n <= 0) return null;
@@ -27,16 +31,30 @@ async function wp(fn) {
 
 // EDITAR cliente
 writeRouter.put('/clients-real/:id', requireAuth, async (req, res) => {
+  const body = req.body || {};
   const allowed = [
     'name', 'owner_name', 'contact_person', 'email',
     'phone', 'additional_phone', 'cellular',
     'address', 'city', 'zip_code', 'tax_id', 'business_name'
   ];
   const sets = [], vals = [];
-  for (const k of allowed) if (k in (req.body || {})) { vals.push(req.body[k] === '' ? null : req.body[k]); sets.push(`${k} = $${vals.length}`); }
+  for (const k of allowed) if (k in body) { vals.push(body[k] === '' ? null : body[k]); sets.push(`${k} = $${vals.length}`); }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
-  vals.push(req.params.id);
-  try { const r = await wp(c => c.query(`UPDATE clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals)); if (!r.rows[0]) return res.status(404).json({ error: 'Cliente no existe' }); res.json({ ok: true }); }
+  try {
+    const r = await wp(async c => {
+      if (body.name && !('business_name' in body)) {
+        const current = await c.query(`SELECT business_name FROM clients WHERE id = $1 FOR UPDATE`, [req.params.id]);
+        if (isMissingClientIdentityValue(current.rows[0]?.business_name)) {
+          vals.push(body.name);
+          sets.push(`business_name = $${vals.length}`);
+        }
+      }
+      vals.push(req.params.id);
+      return c.query(`UPDATE clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals);
+    });
+    if (!r.rows[0]) return res.status(404).json({ error: 'Cliente no existe' });
+    res.json({ ok: true });
+  }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -68,9 +86,12 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
   if (!VALID_SUBSCRIBER_PHONE.test(ph)) return res.status(422).json({ error: 'El suscriptor debe comenzar con 787, 939 o 989' });
   if (b.remaining_payments && !b.contract_end_date) b.contract_end_date = contractEndFromRemainingPayments(b.remaining_payments);
   const suppliedMonthlyValue = Number(b.monthly_value);
-  const tangoPlanRate = Number.isFinite(suppliedMonthlyValue) && suppliedMonthlyValue > 0
+  const resolvedPlanRate = Number.isFinite(suppliedMonthlyValue) && suppliedMonthlyValue > 0
     ? { value: suppliedMonthlyValue, source: 'manual', ambiguous: false }
-    : await resolvePlanMonthlyValueFromTango(planDefaults.price_code);
+    : await resolvePlanRateWithFallback({
+      originalCode: b.price_code || b.plan,
+      lookupCode: planDefaults.price_code,
+    });
   try {
     const r = await wp(async c => {
       const expectedBan = onlyDigits(b.expected_ban_number);
@@ -146,7 +167,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
         req.params.banId,
         ph,
         planDefaults.plan || null,
-        tangoPlanRate.value,
+        resolvedPlanRate.value,
         b.line_kind || null,
         b.line_type || null,
         b.equipment || null,
@@ -197,6 +218,56 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Ese telefono ya existe en otro suscriptor' });
     res.status(500).json({ error: e.message });
+  }
+});
+
+// REVISION GPON / aumento aplicable por linea fija.
+writeRouter.put('/subscribers-real/:id/gpon-review', requireAuth, async (req, res) => {
+  const body = req.body || {};
+  const gponApplies = body.gpon_applies === true ? true : body.gpon_applies === false ? false : null;
+  const note = String(body.gpon_note || '').trim().slice(0, 80) || null;
+  const reviewedAt = body.reviewed_at || body.gpon_reviewed_at || new Date().toISOString().slice(0, 10);
+  try {
+    const r = await wp(async c => {
+      const sub = await c.query(
+        `SELECT id, COALESCE(LOWER(line_kind::text),
+                CASE UPPER(COALESCE(product_type::text,''))
+                  WHEN 'O' THEN 'fijo'
+                  WHEN 'T' THEN 'fijo'
+                  WHEN 'V' THEN 'fijo'
+                END,
+                '') AS kind
+           FROM subscribers
+          WHERE id = $1`,
+        [req.params.id],
+      );
+      if (!sub.rows[0]) {
+        const err = new Error('Suscriptor no existe');
+        err.statusCode = 404;
+        throw err;
+      }
+      if (sub.rows[0].kind !== 'fijo') {
+        const err = new Error('La revision GPON solo aplica a lineas fijas');
+        err.statusCode = 422;
+        throw err;
+      }
+      return c.query(
+        `INSERT INTO subscriber_gpon_reviews (
+           subscriber_id, gpon_applies, gpon_note, reviewed_at, reviewed_by
+         ) VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (subscriber_id) DO UPDATE
+           SET gpon_applies = EXCLUDED.gpon_applies,
+               gpon_note = EXCLUDED.gpon_note,
+               reviewed_at = EXCLUDED.reviewed_at,
+               reviewed_by = EXCLUDED.reviewed_by,
+               updated_at = now()
+         RETURNING subscriber_id, gpon_applies, gpon_note, reviewed_at`,
+        [req.params.id, gponApplies, note, reviewedAt, req.user?.usuario || req.user?.nombre || null],
+      );
+    });
+    res.json({ ok: true, review: r.rows[0] });
+  } catch (e) {
+    res.status(e.statusCode || 500).json({ error: e.message });
   }
 });
 

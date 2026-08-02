@@ -15,8 +15,10 @@ test('agregar y editar suscriptor aplican defaults de plan, price_code y contrat
   assert.match(writeRoutesSource, /body\.contract_term = planDefaults\.contract_term/);
 });
 
-test('alta de suscriptor consulta Tango cuando llega un plan sin mensualidad', () => {
-  assert.match(writeRoutesSource, /import \{ resolvePlanMonthlyValueFromTango \} from '..\/tango\.js'/);
-  assert.match(writeRoutesSource, /await resolvePlanMonthlyValueFromTango\(planDefaults\.price_code\)/);
-  assert.match(writeRoutesSource, /tangoPlanRate\.value/);
+test('alta de suscriptor consulta Tango y luego catalogo cuando llega un plan sin mensualidad', () => {
+  assert.match(writeRoutesSource, /import \{ resolvePlanRateWithFallback \} from '..\/services\/planRateCatalog\.js'/);
+  assert.match(writeRoutesSource, /await resolvePlanRateWithFallback\(\{/);
+  assert.match(writeRoutesSource, /originalCode: b\.price_code \|\| b\.plan/);
+  assert.match(writeRoutesSource, /lookupCode: planDefaults\.price_code/);
+  assert.match(writeRoutesSource, /resolvedPlanRate\.value/);
 });

@@ -18,3 +18,18 @@ filas en blanco, sin BAN o sin suscriptores.
 
 Esta regla no elimina ni actualiza clientes, BAN, suscriptores, oportunidades,
 ventas, tareas o notas existentes.
+
+## Cartera al enviar desde Cliente
+
+Cuando un cliente existente se envia a Seguimiento desde su ficha, la oportunidad
+de origen `desde_cliente` incorpora sus lineas activas y suspendidas como lineas
+de renovacion. Las suspendidas se tratan como activas para este flujo.
+
+La clasificacion se obtiene de la linea real: tipo `G` es movil, `O` y `V` son
+fijo, `T` es MPLS y `K` es Cloud. Cada suscriptor se agrega una sola vez a la
+oportunidad; volver a enviar el mismo cliente completa solamente las lineas que
+faltan y nunca reemplaza lineas agregadas manualmente por el vendedor.
+
+Las lineas canceladas no entran automaticamente a Asana. Esta carga no modifica
+clientes, BAN, suscriptores ni estados: solo materializa la cartera existente en
+la oportunidad para que sus contadores y pasos de seguimiento reflejen la realidad.

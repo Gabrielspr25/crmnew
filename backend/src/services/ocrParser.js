@@ -29,6 +29,16 @@ function normalizePlanCodeKey(value) {
   return cleaned;
 }
 
+function normalizeOcrPricePlan(value) {
+  const cleaned = normalizePlanCodeKey(value);
+  if (!cleaned) return '';
+  if (cleaned === 'CCPPRO' || cleaned === 'CLCPRO' || cleaned === 'CLCPPRO') return 'CCPRO';
+  if (cleaned === 'ABT42' || cleaned === 'A8T42' || cleaned === 'AB742') return 'A8742';
+  if (cleaned === 'HOCVO002V' || cleaned === 'HOCV0002V' || cleaned === 'HOCV02V') return 'HOCV002V';
+  if (cleaned === '15PEMP1' || cleaned === '1SPEMP1') return 'ISP_EMP1';
+  return cleaned;
+}
+
 function normalizeStatus(value) {
   const raw = String(value || '').toLowerCase();
   if (raw.includes('cancel')) return 'cancelado';
@@ -125,10 +135,11 @@ const NON_PLAN_WORDS = new Set([
 // Patrones aceptados: solo dígitos largos (1461, 69912), mezcla letras+dígitos (A1492, AUS3M, BAHOT40L),
 // con guion bajo (ISP_EMP1). Rechaza palabras puras de letras (Please, Active) y tokens >12 chars (BAN-NNNNNNN).
 function looksLikePlanCandidate(token) {
-  const upper = String(token || '').toUpperCase();
+  const upper = normalizeOcrPricePlan(token) || String(token || '').toUpperCase();
   if (!upper || upper.length < 3 || upper.length > 12) return false;
   if (NON_PLAN_WORDS.has(upper)) return false;
   if (/^BAN[-\s]?\d/.test(upper)) return false;
+  if (upper === 'CCPRO') return true;
   if (/^\d{3,}$/.test(upper)) return true;
   if (/[A-Z]/.test(upper) && /\d/.test(upper)) return true;
   if (upper.includes('_')) return true;
@@ -138,6 +149,7 @@ function looksLikePlanCandidate(token) {
 function extractPlanFromStandaloneLine(line) {
   const cleaned = String(line || '').trim();
   if (!cleaned) return null;
+  if (/\bBAN\b/i.test(cleaned)) return null;
   if (extractStatusOnlyLine(cleaned)) return null;
   const phoneCheck = extractPhoneFromLine(cleaned);
   if (phoneCheck.phone || phoneCheck.ignored100) return null;
@@ -315,11 +327,11 @@ function parseLocalOcrText(text) {
       subscriber: e.phone,
       type: e.type,
       status: e.status,
-      pricePlan: e.inlinePlan || e.assignedPlan || '',
+      pricePlan: normalizeOcrPricePlan(e.inlinePlan || e.assignedPlan || ''),
       line_kind: classifyOcrLineKind({
         subscriber: e.phone,
         type: e.type,
-        pricePlan: e.inlinePlan || e.assignedPlan || '',
+        pricePlan: normalizeOcrPricePlan(e.inlinePlan || e.assignedPlan || ''),
       }),
       rawLine: e.rawLine
     }));

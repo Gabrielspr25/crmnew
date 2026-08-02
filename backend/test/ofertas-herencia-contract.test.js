@@ -56,22 +56,22 @@ test('trade-in solo aplica a renovacion cuando la oferta lo exige', () => {
 
 test('modems mifi y tablets se manejan como lineas Business RED multilinea', () => {
   const L = loadLogic();
-  const individual = L.getOfertasAplicables({ tipo: 'individual', planInd: 100, planMulti: 'supreme', beneficio: 'todos' }).map((o) => o.id);
+  const individual = L.getOfertasAplicables({ tipo: 'individual', planInd: 100, planMulti: 'supreme', beneficio: 'todos', lineEvent: 'renovacion' }).map((o) => o.id);
   assert.ok(!individual.includes('br-mifi-tablet-130-plus'));
   assert.ok(!individual.includes('br-mifi-tablet-500-supreme'));
 
-  const plus = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'plus', beneficio: 'todos' });
+  const plus = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'plus', beneficio: 'todos', lineEvent: 'renovacion' });
   assert.ok(plus.some((o) => o.id === 'br-mifi-tablet-130-plus'));
   assert.ok(!plus.some((o) => o.id === 'br-mifi-tablet-300-extreme-24'));
 
-  const extreme = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'extreme', beneficio: 'todos' });
+  const extreme = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'extreme', beneficio: 'todos', lineEvent: 'renovacion' });
   assert.ok(extreme.some((o) => o.id === 'br-mifi-tablet-300-extreme-24'));
   assert.ok(extreme.some((o) => o.id === 'br-mifi-tablet-400-extreme-30'));
 
-  const supreme = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos' });
+  const supreme = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos', lineEvent: 'renovacion' });
   assert.ok(supreme.some((o) => o.id === 'br-mifi-tablet-500-supreme'));
 
-  const equipos = L.getEquiposFiltrados({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos' });
+  const equipos = L.getEquiposFiltrados({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos', lineEvent: 'renovacion' });
   assert.ok(equipos.some((e) => e.modelo === 'JEXstream RG2100 5G'));
   assert.ok(equipos.some((e) => e.modelo === 'iPad Pro 13 WIFI+CELL 256GB'));
 });
@@ -103,21 +103,21 @@ test('descuentos de la hoja Ofertas con desc respetan plan y familia seleccionad
 test('modems mifi y tablets aplican tambien en planes individuales por rango', () => {
   const L = loadLogic();
 
-  const ids35 = L.getOfertasAplicables({ tipo: 'individual', planInd: 35, planMulti: 'plus', beneficio: 'todos' }).map((o) => o.id);
+  const ids35 = L.getOfertasAplicables({ tipo: 'individual', planInd: 35, planMulti: 'plus', beneficio: 'todos', lineEvent: 'renovacion' }).map((o) => o.id);
   assert.ok(ids35.includes('ind-mifi-tablet-130-35'));
   assert.ok(!ids35.includes('ind-mifi-tablet-250-40'));
 
-  const ids40 = L.getOfertasAplicables({ tipo: 'individual', planInd: 40, planMulti: 'plus', beneficio: 'todos' }).map((o) => o.id);
+  const ids40 = L.getOfertasAplicables({ tipo: 'individual', planInd: 40, planMulti: 'plus', beneficio: 'todos', lineEvent: 'renovacion' }).map((o) => o.id);
   assert.ok(!ids40.includes('ind-mifi-tablet-130-35'));
   assert.ok(ids40.includes('ind-mifi-tablet-250-40'));
 
-  const ids50 = L.getOfertasAplicables({ tipo: 'individual', planInd: 50, planMulti: 'plus', beneficio: 'todos' }).map((o) => o.id);
+  const ids50 = L.getOfertasAplicables({ tipo: 'individual', planInd: 50, planMulti: 'plus', beneficio: 'todos', lineEvent: 'renovacion' }).map((o) => o.id);
   assert.ok(!ids50.includes('ind-mifi-tablet-130-35'));
   assert.ok(!ids50.includes('ind-mifi-tablet-250-40'));
   assert.ok(ids50.includes('ind-mifi-tablet-300-50-24'));
   assert.ok(ids50.includes('ind-mifi-tablet-400-50-30'));
 
-  const equipos = L.getEquiposFiltrados({ tipo: 'individual', planInd: 50, planMulti: 'plus', beneficio: 'todos' });
+  const equipos = L.getEquiposFiltrados({ tipo: 'individual', planInd: 50, planMulti: 'plus', beneficio: 'todos', lineEvent: 'renovacion' });
   assert.ok(equipos.some((e) => e.modelo === 'JEXstream RG2100 5G'));
   assert.ok(equipos.some((e) => e.modelo === 'iPad 11 WIFI+CELL 128GB'));
   assert.ok(equipos.some((e) => e.modelo === 'Galaxy Tab S10 FE 128GB'));
@@ -125,7 +125,7 @@ test('modems mifi y tablets aplican tambien en planes individuales por rango', (
 
 test('ofertas Business RED de modems y tablets no requieren trade-in en renovacion', () => {
   const L = loadLogic();
-  const offers = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos' });
+  const offers = L.getOfertasAplicables({ tipo: 'multilinea', planInd: 75, planMulti: 'supreme', beneficio: 'todos', lineEvent: 'renovacion' });
   const offer = offers.find((o) => o.id === 'br-mifi-tablet-500-supreme');
   assert.equal(L.requiresTradein(offer, 'renovacion'), false);
   assert.equal(offer.lineaLimit, 10);
