@@ -1566,7 +1566,7 @@ async function viewVendedores(){
 }
 
 // ---------------- CORREOS ----------------
-let coClientes=[], coSel=new Set(), coTab='activo';
+let coClientes=[], coSel=new Set(), coTab='activo', coMode='one';
 const CO_FIRMA=`
 
 Gabriel Sanchez
@@ -1593,15 +1593,18 @@ copies of the original message. By receiving this e-mail, you acknowledge that a
 representatives of the above provisions may entitle Claro to seek for damages.`;
 async function viewCorreos(){
   return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook</div></div></div>
+  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ${coMode==='one'?'':'ghost'}" onclick="coSetMode('one')">Correo 1 a 1</button><button class="btn ${coMode==='campaign'?'':'ghost'}" onclick="coSetMode('campaign')">Campañas</button></div><div class="s" style="margin-top:8px">${coMode==='one'?'Seleccioná un cliente, editá el borrador y abrilo manualmente en Outlook.':'Cada campaña tiene asunto, contenido, fechas y programación propios.'}</div></div>
   <div class="panel" id="coCtrl"><div class="s">Cargando…</div></div>
   <div class="grid2"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Clientes con email</h3><input class="inp" id="coSearch" placeholder="Buscar cliente o email..." style="max-width:220px" oninput="coRenderList()"></div><div id="coList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>
-  <div class="panel"><h3>Redactar</h3>
+  <div class="panel"><h3>${coMode==='one'?'Borrador 1 a 1':'Contenido de campaña'}</h3>
     <div class="flbl">Asunto</div><input class="inp" id="coSubj" placeholder="Asunto del correo" style="margin-bottom:10px">
-    <div class="flbl">Mensaje</div><textarea class="inp" id="coBody" style="width:100%;min-height:200px" placeholder="Escribí el mensaje…"></textarea>
+    <div class="flbl">Mensaje</div><div id="coBody" class="inp" contenteditable="true" style="width:100%;min-height:200px;white-space:pre-wrap;overflow:auto" data-placeholder="Escribí el mensaje…"></div>
     <div id="coCount" class="s" style="margin:8px 0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn green" onclick="coCreateDraft()">Guardar borrador CRM</button><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div>
     <div class="s" style="margin-top:8px;color:var(--txt3)">Escritorio oculta destinatarios en BCC. Outlook Web usa Para visible.</div></div></div>`;
 }
+function coSetMode(mode){ coMode=mode; router(); }
+function coBodyHtml(){ var el=$('coBody'); return el ? el.innerHTML : ''; }
 async function coInit(){
   try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
   coRenderCtrl(); coRenderList();
@@ -1630,13 +1633,21 @@ function coRenderList(){
 }
 function coToggle(email){ if(coSel.has(email))coSel.delete(email); else coSel.add(email); coRenderList(); }
 function coSelAll(on){ if(on){ coFiltered().forEach(function(c){coSel.add(c.email);}); } else { coFiltered().forEach(function(c){coSel.delete(c.email);}); } coRenderList(); }
-function coUpdCount(){ var el=$('coCount'); if(el)el.innerHTML='<b>'+coSel.size+'</b> destinatarios seleccionados'; }
+function coUpdCount(){ var el=$('coCount'); if(el)el.innerHTML='<b>'+coSel.size+'</b> destinatarios seleccionados'+(coMode==='one'?' · para 1 a 1 seleccioná solo uno':''); }
+async function coCreateDraft(){
+  if(coMode==='campaign'){ alert('El guardado de campañas se habilita al completar fechas y programación.'); return; }
+  if(coSel.size!==1){ alert('Para correo 1 a 1 seleccioná un solo cliente'); return; }
+  var email=[...coSel][0], client=coClientes.find(function(c){return c.email===email;});
+  if(!client){ alert('Cliente no encontrado'); return; }
+  try{ var r=await api('/api/correos/clients/'+client.id+'/drafts',{method:'POST',body:{subject:(($('coSubj')||{}).value||''),html:coBodyHtml()}}); $('coSubj').value=r.data.subject; $('coBody').innerHTML=r.data.html_body; alert('Borrador guardado con código '+r.data.draft_code); }
+  catch(e){ alert('No se pudo guardar el borrador: '+e.message); }
+}
 // Idéntico al viejo: abre el cliente de correo predeterminado con los destinatarios en CCO.
 function coOutlook(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var p=new URLSearchParams();
   var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
-  var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
+  var body=(($('coBody')&&$('coBody').innerText)||'')+CO_FIRMA; if(body)p.set('body',body);
   var url='mailto:?bcc='+encodeURIComponent([...coSel].join(';'))+'&'+p.toString();
   if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); el enlace puede quedar muy largo para abrir de una. ¿Intentar igual? Si no abre, mandá en lotes más chicos.'))return; }
   window.location.href=url;
@@ -1646,7 +1657,7 @@ function coOutlookWeb(){
   var p=new URLSearchParams();
   p.set('to',[...coSel].join(','));
   var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
-  var body=(($('coBody')&&$('coBody').value)||'')+CO_FIRMA; if(body)p.set('body',body);
+  var body=(($('coBody')&&$('coBody').innerText)||'')+CO_FIRMA; if(body)p.set('body',body);
   var url='https://outlook.office.com/mail/deeplink/compose?'+p.toString();
   if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); Outlook Web puede rechazar enlaces largos. ¿Intentar igual?'))return; }
   window.open(url,'_blank','noopener');

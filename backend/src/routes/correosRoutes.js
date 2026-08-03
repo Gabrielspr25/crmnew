@@ -54,6 +54,25 @@ correosRouter.get('/correos/campaigns', requireAuth, async (_req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+correosRouter.post('/correos/clients/:id/drafts', requireAuth, async (req, res) => {
+  const { subject = 'Revisión de su cuenta Claro Empresas', html = '' } = req.body || {};
+  try {
+    const { rows } = await pool.query(`SELECT c.id, COALESCE(NULLIF(TRIM(c.name),''),NULLIF(TRIM(c.business_name),'')) AS name, c.email,
+      COALESCE(string_agg(DISTINCT b.ban_number::text, ', '), '') AS bans,
+      COUNT(s.id) FILTER (WHERE ${ACTIVE_SUB})::int AS active_subscribers,
+      COALESCE(SUM(s.monthly_value) FILTER (WHERE ${ACTIVE_SUB}), 0) AS monthly_value
+      FROM public.clients c LEFT JOIN public.bans b ON b.client_id=c.id LEFT JOIN public.subscribers s ON s.ban_id=b.id
+      WHERE c.id=$1 GROUP BY c.id`, [req.params.id]);
+    const client = rows[0];
+    if (!client) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
+    const code = `CRM-CLI-${String(client.id).replace(/-/g, '').slice(0, 10).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    const body = html || `<p>Hola,</p><p>Mi nombre es Gabriel Sánchez y soy el coordinador de Claro Empresas.</p><p>Estamos revisando la cuenta <strong>${client.name}</strong>${client.bans ? `, BAN ${client.bans}` : ''}, que actualmente incluye <strong>${client.active_subscribers}</strong> suscriptores activos.</p><p>Deseamos coordinar una conversación para revisar beneficios y alternativas para esta cuenta.</p><p>Saludos cordiales,</p>`;
+    const { rows: draftRows } = await pool.query(`INSERT INTO public.email_client_drafts (client_id,draft_code,subject,html_body,created_by)
+      VALUES ($1,$2,$3,$4,$5) RETURNING *`, [client.id, code, campaignSubject(subject, code), body, req.user?.email || req.user?.nick || 'crm']);
+    res.status(201).json({ ok: true, data: { ...draftRows[0], client } });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 correosRouter.post('/correos/campaigns', requireAuth, async (req, res) => {
   const { name, subject, html, starts_at, ends_at, batch_size = 100, interval_minutes = 30 } = req.body || {};
   if (!name || !subject || !html || !starts_at || !ends_at) return res.status(400).json({ ok: false, error: 'Faltan nombre, asunto, contenido o fechas' });
@@ -98,6 +117,21 @@ correosRouter.get('/correos/agent/queue', agentAuth, async (req, res) => {
     res.json({ ok: true, data: rows });
   } catch (e) { await client.query('ROLLBACK'); res.status(500).json({ ok: false, error: e.message }); }
   finally { client.release(); }
+});
+
+correosRouter.get('/correos/agent/tracking/:code', agentAuth, async (req, res) => {
+  const code = String(req.params.code || '').toUpperCase();
+  try {
+    if (code.startsWith('CRM-CAMP-')) {
+      const { rows } = await pool.query('SELECT id AS campaign_id FROM public.email_campaigns WHERE campaign_code=$1', [code]);
+      if (rows[0]) return res.json({ ok: true, data: rows[0] });
+    }
+    if (code.startsWith('CRM-CLI-')) {
+      const { rows } = await pool.query('SELECT id AS draft_id, client_id FROM public.email_client_drafts WHERE draft_code=$1', [code]);
+      if (rows[0]) return res.json({ ok: true, data: rows[0] });
+    }
+    res.status(404).json({ ok: false, error: 'Código CRM no registrado' });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 correosRouter.post('/correos/agent/events', agentAuth, async (req, res) => {
