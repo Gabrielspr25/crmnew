@@ -2,5 +2,6 @@
 .local-backups/
 outputs/
 tmp/
+.worktrees/
 backend/eng.traineddata
 documentos-ofertas/
