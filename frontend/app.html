@@ -1688,7 +1688,7 @@ function abrirPortalOfertas(){
 }
 const OF_TABS=[['fuentes','Fuentes comerciales'],['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['servicios','🧾 Servicios'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
 let ofTab='fuentes', ofEquiposPreview=null, ofEquiposItems=null;
-let fcSeleccionadas=[], fcPreviewPlanesFijos=null, fcSeleccionInicializada=false;
+let fcSeleccionadas=[], fcPreviewPlanesFijosData=null, fcSeleccionInicializada=false;
 const FC_FAMILIAS=[
   ['equipos','Equipos'],['fijos','Fijos'],['moviles','Móviles'],['inalambrico_iot','Inalámbrico / IoT'],
   ['servicios','Servicios'],['cloud_sva','Cloud / SVA'],['claro_tv','Claro TV'],['ofertas_moviles','Ofertas móviles'],['ofertas_fijo','Ofertas fijo'],['beneficios','Beneficios']
@@ -1808,14 +1808,14 @@ async function fcLoadFuentes(){
 function fcToggleFuente(id,checked){id=String(id);if(checked&&!fcSeleccionadas.includes(id))fcSeleccionadas.push(id);if(!checked)fcSeleccionadas=fcSeleccionadas.filter(function(x){return x!==id;});}
 async function fcPreviewPlanesFijos(){
   var el=$('fcPreviewPlanesFijos');if(!el||!fcSeleccionadas.length)return;el.innerHTML='<div class="card" style="margin-top:10px;padding:12px">Analizando los boletines...</div>';
-  try{var r=await api('/api/fuentes-comerciales/planes-fijos/preview',{method:'POST',body:{fuente_ids:fcSeleccionadas}});fcPreviewPlanesFijos=r;
+  try{var r=await api('/api/fuentes-comerciales/planes-fijos/preview',{method:'POST',body:{fuente_ids:fcSeleccionadas}});fcPreviewPlanesFijosData=r;
     var fuentes=(r.fuentes||[]).map(function(f){return '<li>'+esc(f.nombre_original)+' <span class="s">'+esc(f.familia)+'</span></li>';}).join('');
     var resumen=(r.resumen||[]).map(function(x){return '<tr><td>'+esc(x.seccion)+'</td><td>'+x.filas_publicadas+'</td><td>'+x.filas_doc+'</td><td>'+x.nuevos+'</td><td>'+x.modificados+'</td><td>'+x.ausentes+'</td></tr>';}).join('');
     var warnings=(r.advertencias||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
     el.innerHTML='<div class="card" style="margin-top:10px;padding:12px"><b>Vista previa conjunta</b><div class="s">Fuentes usadas:</div><ul>'+fuentes+'</ul>'+(warnings?'<div class="pill amber">Advertencias</div><ul>'+warnings+'</ul>':'')+'<div style="overflow-x:auto"><table><thead><tr><th>Sección</th><th>Actual</th><th>Documento</th><th>Nuevos</th><th>Cambios</th><th>Ausentes</th></tr></thead><tbody>'+(resumen||'<tr><td colspan="6">No hay filas estructuradas para comparar.</td></tr>')+'</tbody></table></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn green" onclick="fcPublicarPlanesFijos()" '+(r.publicable?'':'disabled')+'>Publicar versión</button><span class="s">La publicación requiere confirmación explícita.</span></div></div>';
   }catch(e){el.innerHTML='<div class="card" style="margin-top:10px;padding:12px;color:var(--red)">No se pudo generar la vista previa: '+esc(e.message)+'</div>';}
 }
-async function fcPublicarPlanesFijos(){if(!fcPreviewPlanesFijos||!fcPreviewPlanesFijos.preview_id)return;if(!confirm('¿Publicar esta versión usando los dos boletines seleccionados?'))return;try{await api('/api/fuentes-comerciales/planes-fijos/publicar',{method:'POST',body:{preview_id:fcPreviewPlanesFijos.preview_id}});alert('Versión publicada');fcPreviewPlanesFijos=null;fcLoadFuentes();}catch(e){alert('No se pudo publicar: '+e.message);}}
+async function fcPublicarPlanesFijos(){if(!fcPreviewPlanesFijosData||!fcPreviewPlanesFijosData.preview_id)return;if(!confirm('¿Publicar esta versión usando los dos boletines seleccionados?'))return;try{await api('/api/fuentes-comerciales/planes-fijos/publicar',{method:'POST',body:{preview_id:fcPreviewPlanesFijosData.preview_id}});alert('Versión publicada');fcPreviewPlanesFijosData=null;fcLoadFuentes();}catch(e){alert('No se pudo publicar: '+e.message);}}
 // Tab "Ofertas" (Excel móviles) = lo maneja el programador
 async function ofRenderOfertasTienda(){
   var b=$('ofBody'); if(!b)return;
