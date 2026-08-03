@@ -1592,6 +1592,7 @@ prohibited. If you are not the intended recipient, please contact the sender by 
 copies of the original message. By receiving this e-mail, you acknowledge that any breach by you and/or your
 representatives of the above provisions may entitle Claro to seek for damages.`;
 async function viewCorreos(){
+  var campaignForm=coMode==='campaign'?`<div class="panel"><h3>Programar campaña</h3><div class="grid2"><div><div class="flbl">Nombre de campaña</div><input class="inp" id="coCampaignName" placeholder="Ej. Renovaciones agosto"><div class="flbl" style="margin-top:8px">Inicio de campaña</div><input class="inp" id="coCampaignStart" type="datetime-local"><div class="flbl" style="margin-top:8px">Fin de campaña</div><input class="inp" id="coCampaignEnd" type="datetime-local"></div><div><div class="flbl">Correos por lote</div><input class="inp" id="coCampaignBatch" type="number" min="1" max="100" value="100"><div class="flbl" style="margin-top:8px">Intervalo (minutos)</div><input class="inp" id="coCampaignInterval" type="number" min="5" value="30"></div></div><div style="margin-top:12px"><button class="btn green" onclick="coSaveCampaign()">Guardar y programar campaña</button></div><div id="coCampaigns" style="margin-top:12px"></div></div>`:'';
   return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook</div></div></div>
   <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ${coMode==='one'?'':'ghost'}" onclick="coSetMode('one')">Correo 1 a 1</button><button class="btn ${coMode==='campaign'?'':'ghost'}" onclick="coSetMode('campaign')">Campañas</button></div><div class="s" style="margin-top:8px">${coMode==='one'?'Seleccioná un cliente, editá el borrador y abrilo manualmente en Outlook.':'Cada campaña tiene asunto, contenido, fechas y programación propios.'}</div></div>
   <div class="panel" id="coCtrl"><div class="s">Cargando…</div></div>
@@ -1607,8 +1608,9 @@ function coSetMode(mode){ coMode=mode; router(); }
 function coBodyHtml(){ var el=$('coBody'); return el ? el.innerHTML : ''; }
 async function coInit(){
   try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
-  coRenderCtrl(); coRenderList();
+  coRenderCtrl(); coRenderList(); if(coMode==='campaign')coRenderCampaignComposer();
 }
+function coRenderCampaignComposer(){ var ctrl=$('coCtrl'); if(!ctrl)return; ctrl.insertAdjacentHTML('beforebegin','<div class="panel" id="coCampaignComposer"><h3>Programar campaña</h3><div class="grid2"><div><div class="flbl">Nombre de campaña</div><input class="inp" id="coCampaignName" placeholder="Ej. Renovaciones agosto"><div class="flbl" style="margin-top:8px">Inicio de campaña</div><input class="inp" id="coCampaignStart" type="datetime-local"><div class="flbl" style="margin-top:8px">Fin de campaña</div><input class="inp" id="coCampaignEnd" type="datetime-local"></div><div><div class="flbl">Correos por lote</div><input class="inp" id="coCampaignBatch" type="number" min="1" max="100" value="100"><div class="flbl" style="margin-top:8px">Intervalo (minutos)</div><input class="inp" id="coCampaignInterval" type="number" min="5" value="30"></div></div><button class="btn green" style="margin-top:12px" onclick="coSaveCampaign()">Guardar y programar campaña</button><div id="coCampaigns" style="margin-top:12px"></div></div>'); coRenderCampaigns(); }
 function coRenderCtrl(){
   var el=$('coCtrl'); if(!el)return;
   var act=coClientes.filter(function(c){return c.activo;}).length, can=coClientes.length-act;
@@ -1643,6 +1645,8 @@ async function coCreateDraft(){
   catch(e){ alert('No se pudo guardar el borrador: '+e.message); }
 }
 // Idéntico al viejo: abre el cliente de correo predeterminado con los destinatarios en CCO.
+async function coSaveCampaign(){ var name=($('coCampaignName').value||'').trim(),subject=($('coSubj').value||'').trim(),html=coBodyHtml(),starts_at=$('coCampaignStart').value,ends_at=$('coCampaignEnd').value;if(!name||!subject||!html||!starts_at||!ends_at||!coSel.size){alert('Completá la campaña y seleccioná clientes');return;}try{var r=await api('/api/correos/campaigns',{method:'POST',body:{name:name,subject:subject,html:html,starts_at:starts_at,ends_at:ends_at,batch_size:Number($('coCampaignBatch').value||100),interval_minutes:Number($('coCampaignInterval').value||30),status:'scheduled'}});var recipients=[...coSel].map(function(e){var c=coClientes.find(function(x){return x.email===e;});return c&&{client_id:c.id,email:c.email};}).filter(Boolean);await api('/api/correos/campaigns/'+r.data.id+'/recipients',{method:'POST',body:{recipients:recipients}});alert('Campaña programada: '+r.data.campaign_code);coRenderCampaigns();}catch(e){alert('No se pudo programar: '+e.message);}}
+async function coRenderCampaigns(){var el=$('coCampaigns');if(!el)return;try{var r=await api('/api/correos/campaigns'),d=r.data||[];el.innerHTML='<div class="card" style="overflow-x:auto"><table><thead><tr><th>Campaña</th><th>Estado</th><th>Destinatarios</th><th>Enviados</th><th>Fallidos</th></tr></thead><tbody>'+d.map(function(c){return '<tr><td><b>'+esc(c.name)+'</b><div class="s">'+esc(c.campaign_code)+'</div></td><td>'+esc(c.status)+'</td><td>'+c.recipients+'</td><td>'+c.sent+'</td><td>'+c.failed+'</td></tr>';}).join('')+'</tbody></table></div>';}catch(e){el.innerHTML='<div class="s">No se pudo cargar campañas.</div>';}}
 function coOutlook(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
   var p=new URLSearchParams();

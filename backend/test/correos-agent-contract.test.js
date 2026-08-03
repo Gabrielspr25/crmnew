@@ -49,6 +49,17 @@ test('Correos ofrece edición enriquecida para el flujo 1 a 1 y para campañas',
   assert.match(readFileSync(routePath, 'utf8'), /\/correos\/clients\/:id\/drafts/);
 });
 
+test('Campañas permite configurar contenido, fechas y ritmo de envío antes de programar', () => {
+  const html = readFileSync(appPath, 'utf8');
+  assert.match(html, /Nombre de campaña/);
+  assert.match(html, /Inicio de campaña/);
+  assert.match(html, /Fin de campaña/);
+  assert.match(html, /Correos por lote/);
+  assert.match(html, /Intervalo \(minutos\)/);
+  assert.match(html, /coSaveCampaign/);
+  assert.match(html, /coRenderCampaigns/);
+});
+
 test('el agente Outlook procesa solamente mensajes con código CRM', () => {
   const agent = readFileSync(agentPath, 'utf8');
   assert.match(agent, /Get-OutlookApplication/);

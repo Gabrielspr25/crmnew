@@ -74,15 +74,15 @@ correosRouter.post('/correos/clients/:id/drafts', requireAuth, async (req, res) 
 });
 
 correosRouter.post('/correos/campaigns', requireAuth, async (req, res) => {
-  const { name, subject, html, starts_at, ends_at, batch_size = 100, interval_minutes = 30 } = req.body || {};
+  const { name, subject, html, starts_at, ends_at, batch_size = 100, interval_minutes = 30, status = 'draft' } = req.body || {};
   if (!name || !subject || !html || !starts_at || !ends_at) return res.status(400).json({ ok: false, error: 'Faltan nombre, asunto, contenido o fechas' });
-  if (Number(batch_size) < 1 || Number(batch_size) > 100 || Number(interval_minutes) < 5) return res.status(400).json({ ok: false, error: 'Programación inválida' });
+  if (Number(batch_size) < 1 || Number(batch_size) > 100 || Number(interval_minutes) < 5 || !['draft', 'scheduled'].includes(status)) return res.status(400).json({ ok: false, error: 'Programación inválida' });
   const code = campaignCode();
   try {
     const { rows } = await pool.query(`INSERT INTO public.email_campaigns
-      (campaign_code,name,subject_template,html_template,starts_at,ends_at,batch_size,interval_minutes,created_by)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    [code, String(name).trim(), campaignSubject(subject, code), html, starts_at, ends_at, Number(batch_size), Number(interval_minutes), req.user?.email || req.user?.nick || 'crm']);
+      (campaign_code,name,subject_template,html_template,starts_at,ends_at,batch_size,interval_minutes,status,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+    [code, String(name).trim(), campaignSubject(subject, code), html, starts_at, ends_at, Number(batch_size), Number(interval_minutes), status, req.user?.email || req.user?.nick || 'crm']);
     res.status(201).json({ ok: true, data: rows[0] });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
