@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
+import { classifyReply, extractCrmCode, folderForClassification } from '../src/services/correosCampaigns.js';
+
+const migrationPath = new URL('../migrations/2026-08-02-correos-agente.sql', import.meta.url);
+const routePath = new URL('../src/routes/correosRoutes.js', import.meta.url);
+
+test('la migración crea la persistencia de campañas y eventos de Outlook', () => {
+  const migration = readFileSync(migrationPath, 'utf8');
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.email_campaigns/i);
+  assert.match(migration, /campaign_code TEXT NOT NULL UNIQUE/i);
+  assert.match(migration, /CHECK \(batch_size BETWEEN 1 AND 100\)/i);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.email_events/i);
+  assert.match(migration, /outlook_entry_id text UNIQUE/i);
+});
+
+test('solo identifica respuestas con un código CRM y las clasifica de forma segura', () => {
+  assert.equal(extractCrmCode('RE: Revisión de cuenta [CRM-CAMP-024]'), 'CRM-CAMP-024');
+  assert.equal(extractCrmCode('Consulta general'), null);
+  assert.equal(classifyReply('No deseo recibir más mensajes.'), 'no_contactar');
+  assert.equal(classifyReply('Podemos reunirnos el jueves.'), 'meeting');
+  assert.equal(classifyReply('Me interesa revisar la propuesta.'), 'interested');
+  assert.equal(classifyReply('Gracias por la información.'), 'pending_review');
+  assert.equal(folderForClassification('meeting'), 'Reunión / llamada agendada');
+});
+
+test('la API reserva una cola limitada y recibe eventos idempotentes del agente local', () => {
+  const route = readFileSync(routePath, 'utf8');
+
+  assert.match(route, /correosRouter\.post\('\/correos\/campaigns'/);
+  assert.match(route, /correosRouter\.get\('\/correos\/agent\/queue'/);
+  assert.match(route, /correosRouter\.post\('\/correos\/agent\/events'/);
+  assert.match(route, /CORREOS_AGENT_TOKEN/);
+  assert.match(route, /FOR UPDATE SKIP LOCKED/);
+  assert.match(route, /ON CONFLICT \(outlook_entry_id\) DO NOTHING/);
+});
