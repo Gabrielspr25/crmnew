@@ -1673,9 +1673,10 @@ function abrirPortalOfertas(){
 }
 const OF_TABS=[['fuentes','Fuentes comerciales'],['equipos','🖥 Lista de Equipos'],['ofertas','🛍 Ofertas'],['servicios','🧾 Servicios'],['fijos','📞 Planes Fijos'],['moviles','📱 Planes Móviles'],['inalambrico','📡 Inalámbrico / IT']];
 let ofTab='fuentes', ofEquiposPreview=null, ofEquiposItems=null;
+let fcSeleccionadas=[], fcPreviewPlanesFijos=null, fcSeleccionInicializada=false;
 const FC_FAMILIAS=[
   ['equipos','Equipos'],['fijos','Fijos'],['moviles','Móviles'],['inalambrico_iot','Inalámbrico / IoT'],
-  ['servicios','Servicios'],['cloud_sva','Cloud / SVA'],['claro_tv','Claro TV'],['ofertas_moviles','Ofertas móviles'],['convergencia','Convergencia']
+  ['servicios','Servicios'],['cloud_sva','Cloud / SVA'],['claro_tv','Claro TV'],['ofertas_moviles','Ofertas móviles'],['ofertas_fijo','Ofertas fijo'],['beneficios','Beneficios']
 ];
 const OF_SERVICIOS=[
   {id:'rescate-residencia-6m',titulo:'6 meses gratis Claro Rescate / Claro Residencia',archivo:'Featires oerta.pdf',vigencia:'Desde el 5 de noviembre de 2025',estado:'Sin fecha final indicada',estadoClass:'amber',soloResumen:true,
@@ -1773,15 +1774,33 @@ async function fcLoadFuentes(){
   try{
     var r=await api('/api/fuentes-comerciales'), rows=(r&&r.fuentes)||[];
     if(!rows.length){el.innerHTML='<div class="empty">No hay fuentes comerciales archivadas todavía.</div>';return;}
+    if(!fcSeleccionInicializada){
+      fcSeleccionadas=rows.filter(function(f){return f.familia==='ofertas_fijo'||f.familia==='beneficios';}).slice(0,2).map(function(f){return String(f.id);});
+      fcSeleccionInicializada=true;
+    }
     var body=rows.map(function(f){
       var pendiente=f.vigencia_documental==='pendiente_confirmacion'&&!f.vigencia_desde&&!f.vigencia_hasta;
       var vigencia=pendiente?'Pendiente de extracción':(f.vigencia_documental||'');
       var fechas=(f.vigencia_desde||f.vigencia_hasta)?(esc(f.vigencia_desde||'')+' - '+esc(f.vigencia_hasta||'')):'Pendiente';
-      return `<tr><td><b>${esc(f.titulo||'')}</b><div class="s">${esc(f.nombre_original||'')}</div></td><td>${esc(f.familia||'')}</td><td><span class="pill ${f.vigencia_documental==='vigente'?'green':(f.vigencia_documental==='vencida'?'red':'amber')}">${esc(vigencia)}</span></td><td>${fechas}</td><td class="s">${esc((f.sha256||'').slice(0,12))}</td><td class="s">${esc(f.subido_por||'')}</td></tr>`;
+      var usable=f.familia==='ofertas_fijo'||f.familia==='beneficios';
+      var check=usable?`<input type="checkbox" ${fcSeleccionadas.includes(String(f.id))?'checked':''} onchange="fcToggleFuente('${f.id}',this.checked)" aria-label="Usar documento">`:'';
+      return `<tr><td>${check} <b>${esc(f.titulo||'')}</b><div class="s">${esc(f.nombre_original||'')}</div></td><td>${esc(f.familia||'')}</td><td><span class="pill ${f.vigencia_documental==='vigente'?'green':(f.vigencia_documental==='vencida'?'red':'amber')}">${esc(vigencia)}</span></td><td>${fechas}</td><td class="s">${esc((f.sha256||'').slice(0,12))}</td><td class="s">${esc(f.subido_por||'')}</td></tr>`;
     }).join('');
-    el.innerHTML='<div style="overflow-x:auto"><table style="min-width:860px"><thead><tr><th>Documento</th><th>Familia</th><th>Vigencia</th><th>Fechas</th><th>Hash</th><th>Subido por</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    var action='<div class="card" style="margin-top:12px;padding:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>Planes fijos</b><div class="s">Seleccioná los dos boletines para compararlos juntos. No se publica automáticamente.</div></div><button class="btn" onclick="fcPreviewPlanesFijos()" '+(fcSeleccionadas.length?'':'disabled')+'>Vista previa ('+fcSeleccionadas.length+')</button></div><div id="fcPreviewPlanesFijos"></div>';
+    el.innerHTML='<div style="overflow-x:auto"><table style="min-width:860px"><thead><tr><th>Documento</th><th>Familia</th><th>Vigencia</th><th>Fechas</th><th>Hash</th><th>Subido por</th></tr></thead><tbody>'+body+'</tbody></table></div>'+action;
   }catch(e){el.innerHTML='<div class="empty">No se pudo cargar: '+e.message+'</div>';}
 }
+function fcToggleFuente(id,checked){id=String(id);if(checked&&!fcSeleccionadas.includes(id))fcSeleccionadas.push(id);if(!checked)fcSeleccionadas=fcSeleccionadas.filter(function(x){return x!==id;});}
+async function fcPreviewPlanesFijos(){
+  var el=$('fcPreviewPlanesFijos');if(!el||!fcSeleccionadas.length)return;el.innerHTML='<div class="card" style="margin-top:10px;padding:12px">Analizando los boletines...</div>';
+  try{var r=await api('/api/fuentes-comerciales/planes-fijos/preview',{method:'POST',body:{fuente_ids:fcSeleccionadas}});fcPreviewPlanesFijos=r;
+    var fuentes=(r.fuentes||[]).map(function(f){return '<li>'+esc(f.nombre_original)+' <span class="s">'+esc(f.familia)+'</span></li>';}).join('');
+    var resumen=(r.resumen||[]).map(function(x){return '<tr><td>'+esc(x.seccion)+'</td><td>'+x.filas_publicadas+'</td><td>'+x.filas_doc+'</td><td>'+x.nuevos+'</td><td>'+x.modificados+'</td><td>'+x.ausentes+'</td></tr>';}).join('');
+    var warnings=(r.advertencias||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    el.innerHTML='<div class="card" style="margin-top:10px;padding:12px"><b>Vista previa conjunta</b><div class="s">Fuentes usadas:</div><ul>'+fuentes+'</ul>'+(warnings?'<div class="pill amber">Advertencias</div><ul>'+warnings+'</ul>':'')+'<div style="overflow-x:auto"><table><thead><tr><th>Sección</th><th>Actual</th><th>Documento</th><th>Nuevos</th><th>Cambios</th><th>Ausentes</th></tr></thead><tbody>'+(resumen||'<tr><td colspan="6">No hay filas estructuradas para comparar.</td></tr>')+'</tbody></table></div><div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><button class="btn green" onclick="fcPublicarPlanesFijos()" '+(r.publicable?'':'disabled')+'>Publicar versión</button><span class="s">La publicación requiere confirmación explícita.</span></div></div>';
+  }catch(e){el.innerHTML='<div class="card" style="margin-top:10px;padding:12px;color:var(--red)">No se pudo generar la vista previa: '+esc(e.message)+'</div>';}
+}
+async function fcPublicarPlanesFijos(){if(!fcPreviewPlanesFijos||!fcPreviewPlanesFijos.preview_id)return;if(!confirm('¿Publicar esta versión usando los dos boletines seleccionados?'))return;try{await api('/api/fuentes-comerciales/planes-fijos/publicar',{method:'POST',body:{preview_id:fcPreviewPlanesFijos.preview_id}});alert('Versión publicada');fcPreviewPlanesFijos=null;fcLoadFuentes();}catch(e){alert('No se pudo publicar: '+e.message);}}
 // Tab "Ofertas" (Excel móviles) = lo maneja el programador
 async function ofRenderOfertasTienda(){
   var b=$('ofBody'); if(!b)return;
