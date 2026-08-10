@@ -20,6 +20,7 @@ import { ocrRouter } from './routes/ocrRoutes.js';
 import { importRouter } from './routes/importRoutes.js';
 import { equiposRouter } from './routes/equiposRoutes.js';
 import { planesRouter } from './routes/planesRoutes.js';
+import { motorOfertasRouter } from './routes/motorOfertasRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
@@ -27,6 +28,7 @@ import { directorioOperacionesRouter } from './routes/directorioOperacionesRoute
 
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
@@ -37,13 +39,19 @@ const OFFERS = path.resolve(__dir, '../../Planes para web');
 app.use(express.static(FRONT, {
   etag: false,
   setHeaders: (res, fp) => {
-    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    if (fp.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    }
   },
 }));
 app.use('/constructor', express.static(OFFERS, {
   etag: false,
   setHeaders: (res, fp) => {
-    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    if (fp.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    }
   },
 }));
 app.get('/', (_req, res) => {
@@ -74,6 +82,7 @@ app.use('/api', ocrRouter);               // OCR: subir/pegar imagen -> suscript
 app.use('/api', importRouter);            // Importador: actualización masiva desde Excel
 app.use('/api', equiposRouter);           // Admin de Equipos: lista de precios PYMES/CORP
 app.use('/api/planes-modulos', planesRouter); // Admin de Planes: CRUD + constructor de ofertas (PDF)
+app.use('/api/ofertas-movil', motorOfertasRouter); // Fuente publica de ofertas moviles
 app.use('/api', prospectosRouter);        // Prospección masiva Google Places -> public.prospectos
 app.use('/api', correosRouter);           // Correos: clientes con email + envío (mailto/SMTP)
 app.use('/api/sales', salesRouter);       // ventas / comisiones

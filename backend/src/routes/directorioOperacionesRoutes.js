@@ -174,7 +174,7 @@ directorioOperacionesRouter.post('/directorio-operaciones/import', requireAuth, 
   }
 
   try {
-    await logAudit({
+    await logAudit({ ip: req.ip,
       user_name: req.user?.nombre || req.user?.nick,
       type: 'directorio_operaciones_import',
       detail: `Directorio actualizado desde ${req.file.originalname}`,
@@ -210,7 +210,7 @@ directorioOperacionesRouter.put('/directorio-operaciones/:id', requireAuth, requ
       values,
     );
     if (!updated.rowCount) return res.status(404).json({ ok: false, error: 'Contacto no encontrado' });
-    await logAudit({
+    await logAudit({ ip: req.ip,
       user_name: req.user?.nombre || req.user?.nick,
       type: 'directorio_operaciones_edit',
       detail: `Contacto actualizado: ${updated.rows[0].full_name}`,
