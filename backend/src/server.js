@@ -21,6 +21,7 @@ import { importRouter } from './routes/importRoutes.js';
 import { equiposRouter } from './routes/equiposRoutes.js';
 import { planesRouter } from './routes/planesRoutes.js';
 import { fuentesComercialesRouter } from './routes/fuentesComercialesRoutes.js';
+import { motorOfertasRouter } from './routes/motorOfertasRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
@@ -29,6 +30,7 @@ import { reportsAiRouter } from './routes/reportsAiRoutes.js';
 
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
@@ -37,19 +39,19 @@ const __dir = path.dirname(fileURLToPath(import.meta.url));
 const FRONT = path.resolve(__dir, '../../frontend');
 const OFFERS = path.resolve(__dir, '../../Planes para web');
 app.use(express.static(FRONT, {
-  etag: false,
+  etag: true,
   setHeaders: (res, fp) => {
-    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
   },
 }));
 app.use('/constructor', express.static(OFFERS, {
-  etag: false,
+  etag: true,
   setHeaders: (res, fp) => {
-    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'no-store, must-revalidate');
+    if (fp.endsWith('.html')) res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
   },
 }));
 app.get('/', (_req, res) => {
-  res.setHeader('Cache-Control', 'no-store, must-revalidate');
+  res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
   res.sendFile(path.join(FRONT, 'app.html'));
 });
 
@@ -77,6 +79,8 @@ app.use('/api', importRouter);            // Importador: actualización masiva d
 app.use('/api', equiposRouter);           // Admin de Equipos: lista de precios PYMES/CORP
 app.use('/api/planes-modulos', planesRouter); // Admin de Planes: CRUD + constructor de ofertas (PDF)
 app.use('/api/fuentes-comerciales', fuentesComercialesRouter); // Archivo y publicación explícita de fuentes comerciales
+app.use('/api/motor-ofertas', motorOfertasRouter); // Preview/publicación versionada de ofertas móviles
+app.use('/api/ofertas-movil', motorOfertasRouter); // Alias de lectura usado por el portal móvil
 app.use('/api', prospectosRouter);        // Prospección masiva Google Places -> public.prospectos
 app.use('/api', correosRouter);           // Correos: clientes con email + envío (mailto/SMTP)
 app.use('/api/sales', salesRouter);       // ventas / comisiones

@@ -219,6 +219,19 @@
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;width:100%;max-width:520px;max-height:90vh;overflow:auto;}
   .flbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+  .form-section{margin:16px 0 10px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
+  .form-section:first-child{margin-top:0;}
+  .form-section .s{margin-top:3px;text-transform:none;letter-spacing:0;font-weight:500;}
+  .form-section.line{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.28);color:#93c5fd;}
+  .form-section.classification{background:rgba(139,92,246,.13);border-color:rgba(139,92,246,.32);color:#c4b5fd;}
+  .form-section.dates{background:rgba(245,158,11,.13);border-color:rgba(245,158,11,.32);color:#fcd34d;}
+  .form-section.finance{background:rgba(16,185,129,.13);border-color:rgba(16,185,129,.32);color:#86efac;}
+  .form-block{border:1px solid var(--line);border-radius:8px;padding:0 14px 12px;margin-bottom:12px;background:rgba(255,255,255,.015);}
+  .form-block .form-section{margin:0 -14px 12px;border-width:0 0 1px;border-radius:8px 8px 0 0;}
+  .form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px;}
+  .form-grid.finance{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .form-field{min-width:0;}
+  @media(max-width:780px){.form-grid,.form-grid.finance{grid-template-columns:1fr;}}
   .ctabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;}
   .ctab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt2);padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
   .ctab.on{color:var(--primary);border-bottom-color:var(--primary);}
@@ -307,6 +320,15 @@
 const API=''; // mismo origen: funciona en localhost:4000 y en el servidor (sin hardcodear host)
 let token=null, currentUser=null;
 const $=(id)=>document.getElementById(id);
+function isSellerProfile(){return String(currentUser&&currentUser.rol||'').trim().toLowerCase()==='vendedor';}
+function applySellerProfile(){
+  const allowed=new Set(['panel','clientes','asana','comisiones','correos','perfil']);
+  document.querySelectorAll('.nav[href^="#/"]').forEach(a=>{
+    const route=a.getAttribute('href').slice(2);
+    a.style.display=isSellerProfile()&&!allowed.has(route)?'none':'';
+  });
+  if(isSellerProfile())coMode='one';
+}
 function tog(){const b=document.body,d=b.getAttribute('data-theme')==='day';b.setAttribute('data-theme',d?'dark':'day');$('tgt').textContent=d?'Modo día':'Modo noche';}
 function money(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function ini(n){return (n||'--').trim().slice(0,2).toUpperCase();}
@@ -317,10 +339,15 @@ function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.get
 
 // ---------------- VIEWS ----------------
 // ---- Clientes: estado de pantalla (tab + búsqueda + página) ----
-let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null;
+let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false;
 const CLI_TABS=[['all','Todos'],['active','Activos'],['cancelled','Cancelados'],['following','Seguimiento'],['incomplete','Incompletos']];
 const CLI_PILL={all:'violet',active:'green',cancelled:'red',following:'violet',incomplete:'amber'};
 async function reClientes(){ $('view').innerHTML=await viewClientes(); }
+async function cliLoadStats(){
+  if(cliStatsLoading)return; cliStatsLoading=true;
+  try{ var r=await api('/api/clients-real/stats'); if(r&&r.stats)cliStatsCache=r.stats; if(location.hash==='#/clientes'||!location.hash)reClientes(); }
+  catch(e){} finally{ cliStatsLoading=false; }
+}
 function setCliTab(t){ clearTimeout(cliSearchTimer); cliTab=t; cliQ=''; cliRenewalFilter=''; if(t!=='active')cliServiceFilter='todas'; cliPage=1; reClientes(); }
 function setCliServiceFilter(t){ cliServiceFilter=t; cliRenewalFilter=''; cliPage=1; reClientes(); }
 function setCliRenewalFilter(t){ cliTab='active'; cliServiceFilter='todas'; cliRenewalFilter=t; cliPage=1; reClientes(); }
@@ -346,8 +373,9 @@ async function viewClientes(){
   const searchScope=cliQ?'all':cliTab;
   const service=(cliTab==='active'||cliTab==='all'||cliQ)?cliServiceFilter:'todas';
   const per=50;
-  const d=await api(`/api/clients-real?tab=${searchScope}&q=${encodeURIComponent(cliQ)}&service=${service}&renewal=${cliRenewalFilter}&summary=${cliQ?'0':'1'}&page=${cliPage}&per=${per}`);
+  const d=await api(`/api/clients-real?tab=${searchScope}&q=${encodeURIComponent(cliQ)}&service=${service}&renewal=${cliRenewalFilter}&summary=0&page=${cliPage}&per=${per}`);
   if(d.stats) cliStatsCache=d.stats;
+  if(!cliStatsCache&&!cliStatsLoading&&!cliQ)cliLoadStats();
   const st=d.stats||cliStatsCache||{}, lm=st.line_metrics||{};
   const counts={active:st.active_count,cancelled:st.cancelled_count,following:st.following_count,incomplete:st.incomplete_count};
   const totalClients=Number(counts.active||0)+Number(counts.cancelled||0)+Number(counts.following||0)+Number(counts.incomplete||0);
@@ -510,25 +538,41 @@ function cliLineMonthly(value){return value===null||value===undefined||String(va
 function cliNoren(s){var x=String(s||'').toLowerCase();return x.includes('no_renueva')||x==='suspendido';}
 function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
 function cliContractEndFromPayments(v){var n=parseInt(String(v||'').replace(/\D/g,''),10);if(!isFinite(n)||n<=0)return '';var d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10);}
+function cliLineKindFromProductType(productType){
+  var p=String(productType||'').trim().toUpperCase();
+  if(p==='G')return 'movil';
+  if(p==='O'||p==='T'||p==='V')return 'fijo';
+  if(p==='K')return 'cloud';
+  return '';
+}
+function cliSubscriberFinanceVisible(values){
+  values=values||{};
+  var kind=String(values.line_kind||cliLineKindFromProductType(values.product_type)||'').toLowerCase();
+  return kind==='movil'||!!(values.equipment||values.contract_term||values.payments_made||values.remaining_payments);
+}
 function cliSubscriberFields(s){
   s=s||{};
   return [
+    {type:'section',label:'Datos de la linea',tone:'line'},
     {key:'phone',label:'Telefono / suscriptor (10 digitos)',ph:'7875551234',value:s.phone||''},
     {key:'plan',label:'Plan',value:s.plan||''},
     {key:'price_code',label:'SOC / codigo plan',value:s.price_code||''},
     {key:'monthly_value',label:'Mensualidad $',value:s.monthly_value!=null?Number(s.monthly_value):''},
-    {key:'line_kind',label:'Tipo producto',type:'select',options:[['','-'],['movil','Movil'],['fijo','Fijo'],['claro_tv','Claro TV'],['cloud','Cloud'],['mpls','MPLS']],value:s.line_kind||''},
+    {key:'status',label:'Estado',type:'select',options:[['activo','Activo'],['cancelado','Cancelado'],['suspendido','Suspendido / No renueva']],value:s.status||'activo'},
+    {key:'cancel_reason',label:'Razon cancelacion',type:'select',options:[['','-'],['Deuda','Deuda'],['Sin Deuda','Sin Deuda'],['Portout','Portout'],['Cancelado via pegado masivo','Cancelado via pegado masivo']],value:s.cancel_reason||''},
+    {type:'section',label:'Clasificacion',tone:'classification'},
+    {key:'line_kind',label:'Tipo producto',type:'select',options:[['','-'],['movil','Movil'],['fijo','Fijo'],['claro_tv','Claro TV'],['cloud','Cloud'],['mpls','MPLS']],value:s.line_kind||cliLineKindFromProductType(s.product_type)},
     {key:'line_type',label:'Tipo de linea',type:'select',options:[['','-'],['NEW','NEW'],['REN','REN'],['LINEA_NUEVA','Linea nueva'],['RENOVACION','Renovacion'],['PORTABILIDAD','Portabilidad']],value:s.line_type||''},
     {key:'product_type',label:'PRODUCT_TYPE',value:s.product_type||''},
-    {key:'equipment',label:'Modelo equipo (si es movil)',value:s.equipment||''},
+    {type:'section',label:'Fechas de contrato',tone:'dates'},
     {key:'activation_date',label:'Fecha activacion',value:s.activation_date?String(s.activation_date).slice(0,10):''},
     {key:'contract_start_date',label:'Inicio contrato',value:s.contract_start_date?String(s.contract_start_date).slice(0,10):''},
-    {key:'contract_term',label:'Duracion contrato meses',value:s.contract_term??''},
-    {key:'payments_made',label:'Cuotas pagadas',value:s.payments_made??''},
-    {key:'remaining_payments',label:'Pagos restantes',value:s.remaining_payments??'',autoDateTo:'contract_end_date'},
     {key:'contract_end_date',label:'Vencimiento calculado',value:s.contract_end_date?String(s.contract_end_date).slice(0,10):''},
-    {key:'status',label:'Estado',type:'select',options:[['activo','Activo'],['cancelado','Cancelado'],['suspendido','Suspendido / No renueva']],value:s.status||'activo'},
-    {key:'cancel_reason',label:'Razon cancelacion',type:'select',options:[['','-'],['Deuda','Deuda'],['Sin Deuda','Sin Deuda'],['Portout','Portout'],['Cancelado via pegado masivo','Cancelado via pegado masivo']],value:s.cancel_reason||''}
+    {type:'section',label:'Equipo / financiamiento',tone:'finance',detail:'Solo aplica cuando la linea trae equipo o cuotas.'},
+    {key:'equipment',label:'Modelo equipo',value:s.equipment||'',finance:true},
+    {key:'contract_term',label:'Total cuotas',value:s.contract_term??'',finance:true},
+    {key:'payments_made',label:'Cuotas pagadas',value:s.payments_made??'',finance:true},
+    {key:'remaining_payments',label:'Pagos restantes',value:s.remaining_payments??'',autoDateTo:'contract_end_date',finance:true}
   ];
 }
 function cliNormalizeSubscriberPayload(v){
@@ -544,13 +588,27 @@ function cliWIP(l){alert(l+': lo conecto en el próximo paso (copiando del viejo
 function refreshCli(){ if(cliM&&cliM.id){ api('/api/clients-real/'+cliM.id).then(function(d){cliM=d;renderCli();}).catch(function(){}); } }
 function closeForm(){ var m=$('formBg'); if(m)m.remove(); }
 function openForm(title, fields, onSubmit){
-  var rows=fields.map(function(f,i){ return '<div style="margin-bottom:10px"><div class="flbl">'+f.label+'</div>'+
-    (f.type==='select'
-      ? '<select class="inp" id="ff_'+i+'">'+(f.options||[]).map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(f.value||'')?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
-      : '<input class="inp" id="ff_'+i+'" value="'+(f.value!=null?String(f.value).replace(/"/g,'&quot;'):'')+'" placeholder="'+(f.ph||'')+'">')+'</div>'; }).join('');
-  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="formBg" style="z-index:210" onclick="if(event.target===this)closeForm()"><div class="modal" style="max-width:680px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">'+title+'</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeForm()">✕</button></div>'+rows+'<div id="ff_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="ff_save">Guardar</button></div></div>');
-  fields.forEach(function(f,i){ if(f.autoDateTo){ var src=$('ff_'+i), dstIdx=fields.findIndex(function(x){return x.key===f.autoDateTo;}); var dst=dstIdx>=0?$('ff_'+dstIdx):null; if(src&&dst){ src.addEventListener('input',function(){dst.value=cliContractEndFromPayments(src.value);}); if(src.value&&!dst.value)dst.value=cliContractEndFromPayments(src.value); } } });
-  $('ff_save').onclick=async function(){ var vals={}; fields.forEach(function(f,i){ var el=$('ff_'+i); vals[f.key]=el?el.value:''; }); try{ await onSubmit(vals); closeForm(); }catch(e){ $('ff_err').textContent=(e&&e.message)||'Error'; } };
+  var rows='',open=false,currentTone='line';
+  fields.forEach(function(f,i){
+    if(f.type==='section'){
+      if(open)rows+='</div></div>';
+      currentTone=f.tone||'line'; open=true;
+      rows+='<div class="form-block" data-section="'+currentTone+'"><div class="form-section '+currentTone+'">'+f.label+(f.detail?'<div class="s">'+f.detail+'</div>':'')+'</div><div class="form-grid '+currentTone+'">';
+      return;
+    }
+    if(!open){open=true;rows+='<div class="form-block"><div class="form-grid">';}
+    rows+='<div class="form-field"'+(f.finance?' data-finance-field="1"':'')+'><div class="flbl">'+f.label+'</div>'+
+      (f.type==='select'
+        ? '<select class="inp" id="ff_'+i+'">'+(f.options||[]).map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(f.value||'')?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
+        : '<input class="inp" id="ff_'+i+'" value="'+(f.value!=null?String(f.value).replace(/"/g,'&quot;'):'')+'" placeholder="'+(f.ph||'')+'">')+'</div>';
+  });
+  if(open)rows+='</div></div>';
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="formBg" style="z-index:210"><div class="modal" style="max-width:980px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">'+title+'</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeForm()">✕</button></div>'+rows+'<div id="ff_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="ff_save">Guardar</button></div></div>');
+  function formVals(){ var vals={}; fields.forEach(function(f,i){ if(f.type==='section')return; var el=$('ff_'+i); vals[f.key]=el?el.value:''; }); return vals; }
+  function updateSubscriberFormVisibility(){ var vals=formVals(),show=cliSubscriberFinanceVisible(vals),section=document.querySelector('#formBg [data-section="finance"]'); if(section)section.style.display=show?'':'none'; }
+  fields.forEach(function(f,i){ if(f.type==='section')return; var el=$('ff_'+i); if(el&&(f.key==='line_kind'||f.key==='product_type'||f.finance))el.addEventListener('input',updateSubscriberFormVisibility); if(f.autoDateTo){ var src=$('ff_'+i), dstIdx=fields.findIndex(function(x){return x.key===f.autoDateTo;}); var dst=dstIdx>=0?$('ff_'+dstIdx):null; if(src&&dst){ src.addEventListener('input',function(){dst.value=cliContractEndFromPayments(src.value); updateSubscriberFormVisibility();}); if(src.value&&!dst.value)dst.value=cliContractEndFromPayments(src.value); } } });
+  updateSubscriberFormVisibility();
+  $('ff_save').onclick=async function(){ var vals=formVals(); try{ await onSubmit(vals); closeForm(); }catch(e){ $('ff_err').textContent=(e&&e.message)||'Error'; } };
 }
 async function cliEditar(){ var c=cliM; openForm('Editar cliente',[
   {key:'name',label:'Empresa',value:c.name},{key:'owner_name',label:'Dueño',value:c.owner_name},
@@ -568,6 +626,7 @@ async function cliNuevoBan(){ openForm('Nuevo BAN',[
 async function cliAddSub(banId){ openForm('Agregar suscriptor',cliSubscriberFields({status:'activo'}), async function(v){ await api('/api/bans-real/'+banId+'/subscribers',{method:'POST',body:cliNormalizeSubscriberPayload(v)}); refreshCli(); }); }
 async function cliEditSub(id){ var s=(cliM&&cliM.subscribers||[]).find(function(x){return String(x.id)===String(id);})||{}; openForm('Editar suscriptor',cliSubscriberFields(s), async function(v){ await api('/api/subscribers-real/'+id,{method:'PUT',body:cliNormalizeSubscriberPayload(v)}); refreshCli(); }); }
 async function cliSubStatus(id,status,label){ if(!confirm('¿'+label+' este suscriptor?'))return; try{ await api('/api/subscribers-real/'+id,{method:'PUT',body:{status:status}}); refreshCli(); }catch(e){ alert('No se pudo: '+e.message); } }
+async function cliCancelBan(banId,banNumber){ if(!confirm('Cancelar BAN '+(banNumber||'')+'? No se borran suscriptores.'))return; try{ await api('/api/bans-real/'+banId,{method:'PUT',body:{status:'C'}}); refreshCli(); }catch(e){ alert('No se pudo cancelar el BAN: '+e.message); } }
 function cliGponReviewControls(s,kind){
   if(kind!=='fijo')return '';
   const note=esc(s.gpon_note||'');
@@ -752,7 +811,7 @@ function tabBansLegacy(c){
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
     const sel=cliMSub==='canceladas'?ca:a;
     const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:260px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activación: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
-    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Crédito: ${b.credit_class||'No registrado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">✎ Editar</button></span></div>
+    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Crédito: ${b.credit_class||'No registrado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button>${cliAct(b.status)?`<button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliCancelBan('${b.id}','${b.ban_number||''}')">Cancelar BAN</button>`:''}</span></div>
       <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
   return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
@@ -792,7 +851,7 @@ function tabBans(c){
     const canceled=list.filter(s=>cliCanc(s.status));
     const activeRows=renderSubscriberRows(visibleLines(active),'activas')||'<div class="empty" style="padding:12px">Sin lineas activas en este filtro</div>';
     const canceledRows=renderSubscriberRows(visibleLines(canceled),'canceladas')||'<div class="empty" style="padding:12px">Sin lineas canceladas en este filtro</div>';
-    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${esc(b.ban_number||'—')}</b><span class="pill violet">${esc(b.account_type||'—')}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Credito: ${esc(b.credit_class||'No registrado')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">Subir/Pegar</button><button class="btn" style="padding:5px 10px;font-size:11px" onclick="cliWIP('Editar BAN')">Editar</button></span></div><div style="padding:0 14px 12px"><div class="subscriber-section active" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="pill green">Activas (${active.length})</span></div><div class="subscriber-table">${activeRows}</div></div><div class="subscriber-section canceled" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="pill red">Canceladas (${canceled.length})</span></div><div class="subscriber-table">${canceledRows}</div></div><button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
+    return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${esc(b.ban_number||'—')}</b><span class="pill violet">${esc(b.account_type||'—')}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Credito: ${esc(b.credit_class||'No registrado')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">Subir/Pegar</button>${cliAct(b.status)?`<button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliCancelBan('${b.id}','${esc(b.ban_number||'')}')">Cancelar BAN</button>`:''}</span></div><div style="padding:0 14px 12px"><div class="subscriber-section active" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="pill green">Activas (${active.length})</span></div><div class="subscriber-table">${activeRows}</div></div><div class="subscriber-section canceled" style="margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span class="pill red">Canceladas (${canceled.length})</span></div><div class="subscriber-table">${canceledRows}</div></div><button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
   return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap">${lineTabs}</div><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
 }
@@ -927,6 +986,27 @@ function renderComp(){
 }
 function compExcel(){
   try{
+    if(!window.XLSX){throw new Error('La librería de Excel no cargó. Recargá la página e intentá nuevamente.');}
+    compReadOffer();
+    const c=compCli, act=(c.subscribers||[]).filter(s=>cliAct(s.status)), t=compTotals();
+    const banOrder=compBanOrder(act), banCount=compBanCount(act);
+    const rows=[
+      ['Comparativa de Planes', '', '', '', 'Fecha', new Date().toLocaleDateString('es-PR')],
+      ['Cliente', c.name||'', '', '', '', ''],
+      [], ['PLAN ACTUAL DEL CLIENTE'], ['BAN','Teléfono','Plan','Costo','Vencimiento','']
+    ];
+    act.forEach(s=>rows.push([compBanDisplay(s,banOrder),s.phone||'',s.plan||'',Number(s.monthly_value||0),compEndDate(s),'']));
+    rows.push(['','','Total actual',Number(t.totalAct||0),banCount?('Actual '+banCount+' cuenta'+(banCount===1?'':'s')):'','']);
+    rows.push([],['OFERTA PROPUESTA'],['BAN','Teléfono','Plan nuevo','Costo','Notas','']);
+    compOffer.forEach(r=>rows.push([r.ban||'',r.phone||'',r.plan||'',Number(r.cost||0),r.notes||'','']));
+    rows.push(['','','Total oferta',Number(t.totalOf||0),'',''],['','','Diferencia',Number(t.diff||0),'','']);
+    rows.push([],['NOTAS',String($('compNotas')?.value||'').trim()||'Sin notas generales']);
+    const wb=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:20},{wch:18},{wch:28},{wch:14},{wch:22},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws,'Comparativa');
+    XLSX.writeFile(wb,'Comparativa_'+String(c.name||'cliente').replace(/[^a-z0-9]/gi,'_')+'.xlsx');
+    return;
+    {
     const c=compCli, act=(c.subscribers||[]).filter(s=>cliAct(s.status)), t=compTotals();
     const banOrder=compBanOrder(act), banCount=compBanCount(act);
     const excelCell=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -971,6 +1051,7 @@ function compExcel(){
     ].join('');
     const xls=`<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body><table class="compare-form">${table}</table></body></html>`;
     downloadTextFile('Comparativa_'+String(c.name||'cliente').replace(/[^a-z0-9]/gi,'_')+'.xls',xls,'application/vnd.ms-excel;charset=utf-8');
+    }
   }catch(e){ alert('Error al generar Excel: '+e.message); }
 }
 function compPDF(){
@@ -1171,8 +1252,7 @@ function asanaDailyCallAgenda(alerts){
   return `<div class="asana-call-agenda">${group('Vencidas',overdue)}${group('Llamadas de hoy',todayItems)}</div>`;
 }
 async function viewAsana(){
-  const rawData=await api('/api/asana-real');
-  const callAlerts=await loadCallAlerts();
+  const [rawData,callAlerts]=await Promise.all([api('/api/asana-real'),loadCallAlerts()]);
   const data=rawData.filter(o=>isAsanaClientVisible(o.client_name));
   const callByOpp=asanaCallMap(callAlerts);
   const callAgenda=asanaDailyCallAgenda(callAlerts);
@@ -1390,6 +1470,9 @@ async function viewMetas(){
 
 async function viewPanel(){
   const c=await api('/api/goals/cumplimiento?month='+monthStart());
+  if(isSellerProfile()) return `<div class="head"><div><h1>Mis metas</h1><div class="s">Tu avance del mes actual</div></div></div>
+  <div class="kpis"><div class="kpi"><div class="l">Cumplimiento</div><div class="v" style="color:var(--green)">${c.pct_total}%</div></div><div class="kpi"><div class="l">Vendido</div><div class="v">${money(c.vendido_total)}</div></div><div class="kpi"><div class="l">Meta</div><div class="v">${money(c.meta_total)}</div></div><div class="kpi"><div class="l">Falta</div><div class="v" style="color:var(--red)">${money(c.falta)}</div></div></div>
+  <div class="panel"><h3>Metas por producto</h3><div style="overflow-x:auto"><table><thead><tr><th>Producto</th><th>Meta</th><th>Vendido</th><th>Avance</th></tr></thead><tbody>${c.productos.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${p.target_qty}</td><td>${p.sold_qty}</td><td>${p.pct}%</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No hay metas configuradas para este mes.</td></tr>'}</tbody></table></div></div>`;
   const sales=await api('/api/sales');
   const callAlerts=await loadCallAlerts();
   const byV={}; sales.forEach(s=>{const v=s.vendor_name||'—';byV[v]=(byV[v]||0)+Number(s.company_commission||0);});
@@ -1566,7 +1649,7 @@ async function viewVendedores(){
 }
 
 // ---------------- CORREOS ----------------
-let coClientes=[], coSel=new Set(), coTab='activo', coMode='one';
+let coClientes=[], coSel=new Set(), coTab='activo', coMode='one', coDraft=null;
 const CO_FIRMA=`
 
 Gabriel Sanchez
@@ -1591,26 +1674,39 @@ use, disclosure or distribution of such confidential information without the wri
 prohibited. If you are not the intended recipient, please contact the sender by replying to this e-mail and destroy all
 copies of the original message. By receiving this e-mail, you acknowledge that any breach by you and/or your
 representatives of the above provisions may entitle Claro to seek for damages.`;
+const CO_CAMPAIGN_DRAFT=`<p>Saludos,</p><p>En Claro Empresas queremos apoyarle con alternativas de conectividad y servicios comerciales adaptadas a las necesidades de su negocio.</p><p>Como su asesor de cuentas, estoy coordinando conversaciones breves para presentar ofertas, beneficios y posibles oportunidades de mejora.</p><p>Puede responder a este correo o escribirme por WhatsApp al 787-319-0909 para coordinar una llamada.</p><p>Saludos cordiales.</p><p>Gabriel Sanchez</p><p>Corporate and retail account Director<br>Tel Of: 787-796-2099&nbsp;&nbsp;Cel: 787-319-0909<br>CLARO&nbsp;&nbsp;Agente de ventas SS</p><p>Email: gabriel.sanchez@claropr.com</p>`;
 async function viewCorreos(){
-  var campaignForm=coMode==='campaign'?`<div class="panel"><h3>Programar campaña</h3><div class="grid2"><div><div class="flbl">Nombre de campaña</div><input class="inp" id="coCampaignName" placeholder="Ej. Renovaciones agosto"><div class="flbl" style="margin-top:8px">Inicio de campaña</div><input class="inp" id="coCampaignStart" type="datetime-local"><div class="flbl" style="margin-top:8px">Fin de campaña</div><input class="inp" id="coCampaignEnd" type="datetime-local"></div><div><div class="flbl">Correos por lote</div><input class="inp" id="coCampaignBatch" type="number" min="1" max="100" value="100"><div class="flbl" style="margin-top:8px">Intervalo (minutos)</div><input class="inp" id="coCampaignInterval" type="number" min="5" value="30"></div></div><div style="margin-top:12px"><button class="btn green" onclick="coSaveCampaign()">Guardar y programar campaña</button></div><div id="coCampaigns" style="margin-top:12px"></div></div>`:'';
   return `<div class="head"><div><h1>Correos</h1><div class="s">Enviá ofertas/comparativas a clientes · seleccioná y abrí Outlook</div></div></div>
-  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ${coMode==='one'?'':'ghost'}" onclick="coSetMode('one')">Correo 1 a 1</button><button class="btn ${coMode==='campaign'?'':'ghost'}" onclick="coSetMode('campaign')">Campañas</button></div><div class="s" style="margin-top:8px">${coMode==='one'?'Seleccioná un cliente, editá el borrador y abrilo manualmente en Outlook.':'Cada campaña tiene asunto, contenido, fechas y programación propios.'}</div></div>
-  <div class="panel" id="coCtrl"><div class="s">Cargando…</div></div>
-  <div class="grid2"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Clientes con email</h3><input class="inp" id="coSearch" placeholder="Buscar cliente o email..." style="max-width:220px" oninput="coRenderList()"></div><div id="coList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>
-  <div class="panel"><h3>${coMode==='one'?'Borrador 1 a 1':'Contenido de campaña'}</h3>
+  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ${coMode==='one'?'':'ghost'}" onclick="coSetMode('one')">Correo 1 a 1</button>${isSellerProfile()?'':'<button class="btn '+(coMode==='campaign'?'':'ghost')+'" onclick="coSetMode(\'campaign\')">Campañas</button>'}</div><div class="s" style="margin-top:8px">${coMode==='one'?'Seleccioná un cliente, editá el borrador y abrilo manualmente en Outlook.':'Cada campaña tiene asunto, contenido y programación propios. Finaliza automáticamente cuando no queden clientes pendientes.'}</div></div>
+  <div class="panel" id="coCtrl" ${coMode==='campaign'?'style="display:none"':''}><div class="s">Cargando…</div></div>
+  <div class="grid2"><div class="panel" id="coClientPicker" ${coMode==='campaign'?'style="display:none"':''}><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Clientes con email</h3><input class="inp" id="coSearch" placeholder="Buscar cliente o email..." style="max-width:220px" oninput="coRenderList()"></div><div id="coList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>
+  <div class="panel" id="coEditorPanel"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px"><h3 style="margin:0">${coMode==='one'?'Borrador 1 a 1':'Contenido de campaña'}</h3><button class="btn ghost" type="button" style="padding:6px 10px" onclick="coToggleEditorSize()">Ampliar editor</button></div>
     <div class="flbl">Asunto</div><input class="inp" id="coSubj" placeholder="Asunto del correo" style="margin-bottom:10px">
-    <div class="flbl">Mensaje</div><div id="coBody" class="inp" contenteditable="true" style="width:100%;min-height:200px;white-space:pre-wrap;overflow:auto" data-placeholder="Escribí el mensaje…"></div>
-    <div id="coCount" class="s" style="margin:8px 0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn green" onclick="coCreateDraft()">Guardar borrador CRM</button><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div>
-    <div class="s" style="margin-top:8px;color:var(--txt3)">Escritorio oculta destinatarios en BCC. Outlook Web usa Para visible.</div></div></div>`;
+    <div class="flbl">Mensaje</div><div class="card" style="border-radius:10px;overflow:hidden"><div role="toolbar" aria-label="Formato del correo" style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:8px;border-bottom:1px solid var(--line);background:var(--card2)"><select class="inp" style="width:118px;padding:6px 8px" onchange="coEditorCommand('formatBlock',this.value)"><option value="P">Párrafo</option><option value="H2">Título</option><option value="H3">Subtítulo</option></select><button class="btn ghost" type="button" style="padding:6px 10px" title="Negrita" onclick="coEditorCommand('bold')"><b>N</b></button><button class="btn ghost" type="button" style="padding:6px 10px;font-style:italic" title="Cursiva" onclick="coEditorCommand('italic')">I</button><button class="btn ghost" type="button" style="padding:6px 10px;text-decoration:underline" title="Subrayado" onclick="coEditorCommand('underline')">S</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Lista" onclick="coEditorCommand('insertUnorderedList')">• Lista</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Lista numerada" onclick="coEditorCommand('insertOrderedList')">1. Lista</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Aumentar sangría" onclick="coEditorCommand('indent')">→</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Reducir sangría" onclick="coEditorCommand('outdent')">←</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Insertar enlace" onclick="coEditorCommand('createLink')">Enlace</button><button class="btn ghost" type="button" style="padding:6px 10px" title="Quitar formato" onclick="coEditorCommand('removeFormat')">Limpiar</button></div><div id="coBody" contenteditable="true" style="width:100%;min-height:260px;padding:12px 14px;line-height:1.5;overflow:auto" data-placeholder="Escribí el mensaje…"></div></div>
+    ${coMode==='one'?`<div id="coCount" class="s" style="margin:8px 0"></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn green" onclick="coSaveDraftFormat()">Guardar borrador</button><button class="btn ghost" onclick="coSaveBaseTemplate()">Guardar formato para próximos clientes</button><button class="btn" onclick="coOutlook()">Abrir app escritorio (BCC)</button><button class="btn ghost" onclick="coOutlookWeb()">Abrir Outlook Web (Para)</button></div><div class="s" style="margin-top:8px;color:var(--txt3)">Escritorio oculta destinatarios en BCC. Outlook Web usa Para visible.</div>`:'<div class="s" style="margin-top:8px;color:var(--txt3)">El agente local procesa esta campaña desde Outlook cuando llegue su fecha de inicio.</div>'}</div></div>`;
 }
-function coSetMode(mode){ coMode=mode; router(); }
+function coSetMode(mode){ if(isSellerProfile()&&mode!=='one')return; if(coMode!==mode){coSel.clear();coDraft=null;} coMode=mode; router(); }
 function coBodyHtml(){ var el=$('coBody'); return el ? el.innerHTML : ''; }
-async function coInit(){
-  try{ var r=await api('/api/correos/clientes'); coClientes=(r&&r.data)||[]; }catch(e){ coClientes=[]; }
-  coRenderCtrl(); coRenderList(); if(coMode==='campaign')coRenderCampaignComposer();
+function coEditorCommand(command,value){
+  var editor=$('coBody'); if(!editor)return; editor.focus();
+  if(command==='createLink'){ value=prompt('Dirección del enlace (https://...)',''); if(!value)return; }
+  document.execCommand(command,false,value||null);
 }
-function coRenderCampaignComposer(){ var ctrl=$('coCtrl'); if(!ctrl)return; ctrl.insertAdjacentHTML('beforebegin','<div class="panel" id="coCampaignComposer"><h3>Programar campaña</h3><div class="grid2"><div><div class="flbl">Nombre de campaña</div><input class="inp" id="coCampaignName" placeholder="Ej. Renovaciones agosto"><div class="flbl" style="margin-top:8px">Inicio de campaña</div><input class="inp" id="coCampaignStart" type="datetime-local"><div class="flbl" style="margin-top:8px">Fin de campaña</div><input class="inp" id="coCampaignEnd" type="datetime-local"></div><div><div class="flbl">Correos por lote</div><input class="inp" id="coCampaignBatch" type="number" min="1" max="100" value="100"><div class="flbl" style="margin-top:8px">Intervalo (minutos)</div><input class="inp" id="coCampaignInterval" type="number" min="5" value="30"></div></div><button class="btn green" style="margin-top:12px" onclick="coSaveCampaign()">Guardar y programar campaña</button><div id="coCampaigns" style="margin-top:12px"></div></div>'); coRenderCampaigns(); }
+function coToggleEditorSize(){
+  var panel=$('coEditorPanel'); if(!panel)return;
+  var expanded=panel.dataset.expanded==='1';
+  if(expanded){ panel.removeAttribute('style'); panel.dataset.expanded='0'; var overlay=$('coEditorOverlay'); if(overlay)overlay.remove(); }
+  else { document.body.insertAdjacentHTML('beforeend','<div id="coEditorOverlay" onclick="coToggleEditorSize()" style="position:fixed;inset:0;background:rgba(0,0,0,.56);z-index:340"></div>'); panel.dataset.expanded='1'; panel.style.cssText='position:fixed;inset:22px;z-index:341;overflow:auto;margin:0;max-width:none;'; }
+  var button=panel.querySelector('[onclick="coToggleEditorSize()"]'); if(button)button.textContent=expanded?'Ampliar editor':'Cerrar editor ampliado';
+}
+async function coInit(){
+  if(coMode==='one'){await coEnsureClientes();coRenderCtrl();coRenderList();}else{coRenderCampaignComposer();var body=$('coBody');if(body&&!body.innerHTML.trim())body.innerHTML=CO_CAMPAIGN_DRAFT;}
+}
+async function coEnsureClientes(){if(coClientes.length)return;try{var r=await api('/api/correos/clientes');coClientes=(r&&r.data)||[];}catch(e){coClientes=[];}}
+function coRenderCampaignComposer(){ var ctrl=$('coCtrl'); if(!ctrl)return; ctrl.insertAdjacentHTML('beforebegin','<div class="panel" id="coCampaignComposer"><h3>Programar campaña</h3><div class="grid2"><div><div class="flbl">Nombre de campaña</div><input class="inp" id="coCampaignName" placeholder="Ej. Renovaciones agosto"><div class="flbl" style="margin-top:8px">Inicio de campaña</div><input class="inp" id="coCampaignStart" type="datetime-local"></div><div><div class="flbl">Correos por lote</div><input class="inp" id="coCampaignBatch" type="number" min="1" max="100" value="100"><div class="flbl" style="margin-top:8px">Intervalo (minutos)</div><input class="inp" id="coCampaignInterval" type="number" min="5" value="30"><div class="flbl" style="margin-top:8px">Destinatarios</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ghost" type="button" onclick="coShowCampaignRecipients()">Seleccionar destinatarios</button><span class="s" id="coCampaignSelected">0 seleccionados</span></div></div></div><button class="btn green" style="margin-top:12px" onclick="coSaveCampaign()">Guardar y programar campaña</button><div class="s" style="margin-top:8px">Termina automáticamente al enviar a todos los destinatarios seleccionados.</div><div id="coCampaigns" style="margin-top:12px"></div></div>'); coRenderCampaigns(); }
+async function coShowCampaignRecipients(){ await coEnsureClientes(); var active=coClientes.filter(function(c){return c.activo;}).length,cancelled=coClientes.length-active; document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="coCampaignSegmentModal" style="z-index:350"><div class="modal" style="max-width:460px"><h3>Destinatarios de campaña</h3><div class="s" style="margin:8px 0 14px">Elegí el grupo completo que recibirá esta campaña.</div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="coSelectCampaignSegment(\'activo\')">Activos ('+active+')</button><button class="btn ghost" onclick="coSelectCampaignSegment(\'cancelado\')">Cancelados ('+cancelled+')</button></div><button class="btn ghost" style="margin-top:14px" onclick="coCloseCampaignSegment()">Cancelar</button></div></div>'); }
+function coSelectCampaignSegment(segment){coSel.clear();coClientes.filter(function(c){return segment==='activo'?c.activo:!c.activo;}).forEach(function(c){coSel.add(c.email);});coUpdCount();coCloseCampaignSegment();}
+function coCloseCampaignSegment(){var modal=$('coCampaignSegmentModal');if(modal)modal.remove();}
 function coRenderCtrl(){
   var el=$('coCtrl'); if(!el)return;
   var act=coClientes.filter(function(c){return c.activo;}).length, can=coClientes.length-act;
@@ -1623,7 +1719,7 @@ function coRenderCtrl(){
 function coSetTab(t){ coTab=t; coRenderCtrl(); coRenderList(); }
 function coFiltered(){
   var s=(($('coSearch')&&$('coSearch').value)||'').toLowerCase().trim();
-  return coClientes.filter(function(c){ return (coTab==='activo'?c.activo:!c.activo) && (!s || (c.name||'').toLowerCase().includes(s) || (c.email||'').toLowerCase().includes(s)); });
+  return coClientes.filter(function(c){ return (coTab==='activo'?c.activo:!c.activo) && (!s || (c.name||'').toLowerCase().includes(s) || (c.business_name||'').toLowerCase().includes(s) || (c.email||'').toLowerCase().includes(s)); });
 }
 function coRenderList(){
   var el=$('coList'); if(!el)return; var list=coFiltered();
@@ -1633,44 +1729,87 @@ function coRenderList(){
     return `<div class="prow" style="cursor:pointer" onclick="coToggle('${esc(c.email)}')"><input type="checkbox" ${on?'checked':''} onclick="event.stopPropagation();coToggle('${esc(c.email)}')"><div style="flex:1"><b>${esc(c.name||'—')}</b><div class="s">${esc(c.email)}</div></div></div>`;
   }).join('')+'</div>'; coUpdCount();
 }
-function coToggle(email){ if(coSel.has(email))coSel.delete(email); else coSel.add(email); coRenderList(); }
+async function coToggle(email){
+  if(coMode==='one'){
+    if(coSel.has(email)){ coSel.delete(email); coDraft=null; coRenderList(); return; }
+    coSel.clear(); coSel.add(email); coDraft=null; coRenderList(); await coLoadClientDraft(email); return;
+  }
+  if(coSel.has(email))coSel.delete(email); else coSel.add(email); coRenderList();
+}
 function coSelAll(on){ if(on){ coFiltered().forEach(function(c){coSel.add(c.email);}); } else { coFiltered().forEach(function(c){coSel.delete(c.email);}); } coRenderList(); }
-function coUpdCount(){ var el=$('coCount'); if(el)el.innerHTML='<b>'+coSel.size+'</b> destinatarios seleccionados'+(coMode==='one'?' · para 1 a 1 seleccioná solo uno':''); }
+function coUpdCount(){ var el=$('coCount'); if(el)el.innerHTML='<b>'+coSel.size+'</b> destinatarios seleccionados'+(coMode==='one'?' · para 1 a 1 seleccioná solo uno':''); var campaignCount=$('coCampaignSelected'); if(campaignCount)campaignCount.textContent=coSel.size+' seleccionados'; }
+async function coLoadClientDraft(email){
+  var client=coClientes.find(function(c){return c.email===email;}); if(!client)return;
+  var body=$('coBody'); if(body)body.innerHTML='<p>Preparando datos reales del cliente…</p>';
+  try{ var r=await api('/api/correos/clients/'+client.id+'/drafts',{method:'POST',body:{subject:'',html:''}}); coDraft=r.data; $('coSubj').value=r.data.subject; $('coBody').innerHTML=coApplyBaseTemplate(r.data.html_body,r.data.client); }
+  catch(e){ if(body)body.innerHTML=''; alert('No se pudo preparar el borrador: '+e.message); }
+}
 async function coCreateDraft(){
   if(coMode==='campaign'){ alert('El guardado de campañas se habilita al completar fechas y programación.'); return; }
   if(coSel.size!==1){ alert('Para correo 1 a 1 seleccioná un solo cliente'); return; }
   var email=[...coSel][0], client=coClientes.find(function(c){return c.email===email;});
   if(!client){ alert('Cliente no encontrado'); return; }
-  try{ var r=await api('/api/correos/clients/'+client.id+'/drafts',{method:'POST',body:{subject:(($('coSubj')||{}).value||''),html:coBodyHtml()}}); $('coSubj').value=r.data.subject; $('coBody').innerHTML=r.data.html_body; alert('Borrador guardado con código '+r.data.draft_code); }
+  try{ var r=await api('/api/correos/clients/'+client.id+'/drafts',{method:'POST',body:{draft_id:coDraft&&coDraft.client_id===client.id?coDraft.id:null,subject:(($('coSubj')||{}).value||''),html:coBodyHtml()}}); coDraft=r.data; $('coSubj').value=r.data.subject; $('coBody').innerHTML=r.data.html_body; alert('Borrador guardado con código '+r.data.draft_code); return r.data; }
   catch(e){ alert('No se pudo guardar el borrador: '+e.message); }
 }
+async function coSaveDraftFormat(){ return coCreateDraft(); }
+function coTemplateValues(client){
+  return [
+    { value:String(client&&client.name||''), token:'{{empresa}}' },
+    { value:String(client&&client.bans||''), token:'{{ban}}' },
+    { value:String(client&&client.active_subscribers||0), token:'{{suscriptores_activos}}' },
+    { value:Number(client&&client.monthly_value||0).toLocaleString('en-US',{style:'currency',currency:'USD'}), token:'{{mensualidad_actual}}' }
+  ].filter(function(item){return item.value;});
+}
+function coReplaceTemplateValues(html,client,toTokens){
+  var holder=document.createElement('div'); holder.innerHTML=html||''; var values=coTemplateValues(client);
+  var walker=document.createTreeWalker(holder,NodeFilter.SHOW_TEXT), nodes=[], node;
+  while(node=walker.nextNode())nodes.push(node);
+  nodes.forEach(function(textNode){ var value=textNode.nodeValue; values.forEach(function(item){ value=value.split(toTokens?item.value:item.token).join(toTokens?item.token:item.value); }); textNode.nodeValue=value; });
+  return holder.innerHTML;
+}
+function coSaveBaseTemplate(){
+  if(!coDraft||!coDraft.client){ alert('Primero seleccioná un cliente y prepará su borrador'); return; }
+  try{ localStorage.setItem('vp_correos_individual_template',coReplaceTemplateValues(coBodyHtml(),coDraft.client,true)); alert('Formato guardado. El próximo cliente usará este mismo diseño con sus propios datos.'); }
+  catch(e){ alert('No se pudo guardar el formato en este navegador'); }
+}
+function coApplyBaseTemplate(defaultHtml,client){
+  try{ var template=localStorage.getItem('vp_correos_individual_template'); return template?coReplaceTemplateValues(template,client,false):defaultHtml; }
+  catch(e){ return defaultHtml; }
+}
 // Idéntico al viejo: abre el cliente de correo predeterminado con los destinatarios en CCO.
-async function coSaveCampaign(){ var name=($('coCampaignName').value||'').trim(),subject=($('coSubj').value||'').trim(),html=coBodyHtml(),starts_at=$('coCampaignStart').value,ends_at=$('coCampaignEnd').value;if(!name||!subject||!html||!starts_at||!ends_at||!coSel.size){alert('Completá la campaña y seleccioná clientes');return;}try{var r=await api('/api/correos/campaigns',{method:'POST',body:{name:name,subject:subject,html:html,starts_at:starts_at,ends_at:ends_at,batch_size:Number($('coCampaignBatch').value||100),interval_minutes:Number($('coCampaignInterval').value||30),status:'scheduled'}});var recipients=[...coSel].map(function(e){var c=coClientes.find(function(x){return x.email===e;});return c&&{client_id:c.id,email:c.email};}).filter(Boolean);await api('/api/correos/campaigns/'+r.data.id+'/recipients',{method:'POST',body:{recipients:recipients}});alert('Campaña programada: '+r.data.campaign_code);coRenderCampaigns();}catch(e){alert('No se pudo programar: '+e.message);}}
-async function coRenderCampaigns(){var el=$('coCampaigns');if(!el)return;try{var r=await api('/api/correos/campaigns'),d=r.data||[];el.innerHTML='<div class="card" style="overflow-x:auto"><table><thead><tr><th>Campaña</th><th>Estado</th><th>Destinatarios</th><th>Enviados</th><th>Fallidos</th></tr></thead><tbody>'+d.map(function(c){return '<tr><td><b>'+esc(c.name)+'</b><div class="s">'+esc(c.campaign_code)+'</div></td><td>'+esc(c.status)+'</td><td>'+c.recipients+'</td><td>'+c.sent+'</td><td>'+c.failed+'</td></tr>';}).join('')+'</tbody></table></div>';}catch(e){el.innerHTML='<div class="s">No se pudo cargar campañas.</div>';}}
-function coOutlook(){
+async function coSaveCampaign(){ var name=($('coCampaignName').value||'').trim(),subject=($('coSubj').value||'').trim(),html=coBodyHtml(),starts_at=$('coCampaignStart').value;var missing=[];if(!name)missing.push('nombre');if(!subject)missing.push('asunto');if(!html)missing.push('contenido');if(!starts_at)missing.push('inicio');if(!coSel.size)missing.push('clientes');if(missing.length){alert('Falta: '+missing.join(', '));return;}try{var r=await api('/api/correos/campaigns',{method:'POST',body:{name:name,subject:subject,html:html,starts_at:starts_at,ends_at:null,batch_size:Number($('coCampaignBatch').value||100),interval_minutes:Number($('coCampaignInterval').value||30),status:'scheduled'}});var recipients=[...coSel].map(function(e){var c=coClientes.find(function(x){return x.email===e;});return c&&{client_id:c.id,email:c.email};}).filter(Boolean);await api('/api/correos/campaigns/'+r.data.id+'/recipients',{method:'POST',body:{recipients:recipients}});alert('Campaña programada: '+r.data.campaign_code);coRenderCampaigns();}catch(e){alert('No se pudo programar: '+e.message);}}
+var coCampaignRefreshTimer=null;
+function coCampaignState(c){if(c.status==='completed')return 'Terminada';if(c.status==='paused')return 'Pausada';if(Number(c.claimed||0)>0)return 'Enviando ahora';return 'Esperando al agente';}
+function coCampaignLastActivity(c){return c.last_activity_at?new Date(c.last_activity_at).toLocaleString('es-PR'):'Aún sin actividad';}
+function coStartCampaignRefresh(){if(coCampaignRefreshTimer)return;coCampaignRefreshTimer=setInterval(function(){if(coMode==='campaign')coRenderCampaigns();},30000);}
+async function coPauseCampaign(id){if(!confirm('Pausar los próximos lotes? Los correos que ya estén en proceso pueden terminar de salir.'))return;try{await api('/api/correos/campaigns/'+id+'/pause',{method:'POST'});coRenderCampaigns();}catch(e){alert('No se pudo pausar la campaña: '+e.message);}}
+async function coRenderCampaigns(){var el=$('coCampaigns');if(!el)return;try{var r=await api('/api/correos/campaigns'),d=r.data||[];el.innerHTML='<div class="card" style="overflow-x:auto"><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)"><div><b>SEGUIMIENTO DE CAMPAÑAS</b><div class="s">Se actualiza automáticamente cada 30 segundos.</div></div><button class="btn ghost" onclick="coRenderCampaigns()">Actualizar ahora</button></div><table><thead><tr><th>Campaña</th><th>Estado</th><th>Destinatarios</th><th>Enviados</th><th>Pendientes</th><th>Fallidos</th><th>Última actividad</th><th>Control</th></tr></thead><tbody>'+d.map(function(c){var pause=c.status==='scheduled'?'<button class="btn ghost" onclick="coPauseCampaign(\''+c.id+'\')">Pausar campaña</button>':'—';return '<tr><td><b>'+esc(c.name)+'</b><div class="s">'+esc(c.campaign_code)+'</div></td><td><b>'+coCampaignState(c)+'</b></td><td>'+c.recipients+'</td><td>'+c.sent+'</td><td>'+c.pending+'</td><td>'+c.failed+'</td><td class="s">'+coCampaignLastActivity(c)+'</td><td>'+pause+'</td></tr>';}).join('')+'</tbody></table></div>';coStartCampaignRefresh();}catch(e){el.innerHTML='<div class="s">No se pudo cargar campañas.</div>';}}
+async function coOutlook(){
+  if(coMode==='one'&&coSel.size!==1){ alert('Seleccioná un solo cliente para preparar su borrador'); return; }
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
-  var p=new URLSearchParams();
-  var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
-  var body=(($('coBody')&&$('coBody').innerText)||'')+CO_FIRMA; if(body)p.set('body',body);
-  var url='mailto:?bcc='+encodeURIComponent([...coSel].join(';'))+'&'+p.toString();
+  if(coMode==='one'&&!coDraft){ await coLoadClientDraft([...coSel][0]); if(!coDraft)return; }
+  if(coMode==='one'){ var saved=await coCreateDraft(); if(!saved)return; }
+  var subj=($('coSubj')&&$('coSubj').value)||'';
+  var body=(($('coBody')&&$('coBody').innerText)||'')+(coMode==='one'?'':CO_FIRMA);
+  var target=coMode==='one'?'to':'bcc';
+  var url='mailto:?'+target+'='+encodeURIComponent([...coSel].join(';'))+'&subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
   if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); el enlace puede quedar muy largo para abrir de una. ¿Intentar igual? Si no abre, mandá en lotes más chicos.'))return; }
   window.location.href=url;
 }
 function coOutlookWeb(){
   if(!coSel.size){ alert('Seleccioná al menos un cliente'); return; }
-  var p=new URLSearchParams();
-  p.set('to',[...coSel].join(','));
-  var subj=($('coSubj')&&$('coSubj').value)||''; if(subj)p.set('subject',subj);
-  var body=(($('coBody')&&$('coBody').innerText)||'')+CO_FIRMA; if(body)p.set('body',body);
-  var url='https://outlook.office.com/mail/deeplink/compose?'+p.toString();
-  if(url.length>1900){ if(!confirm('Son muchos destinatarios ('+coSel.size+'); Outlook Web puede rechazar enlaces largos. ¿Intentar igual?'))return; }
+  var subj=($('coSubj')&&$('coSubj').value)||'';
+  var body=(($('coBody')&&$('coBody').innerText)||'')+(coMode==='one'?'':CO_FIRMA);
+  var url='https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent([...coSel].join(','))+'&subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+  if(url.length>1900){ if(!confirm('El contenido del correo es largo y Outlook Web puede rechazar el enlace. ¿Intentar igual?'))return; }
   window.open(url,'_blank','noopener');
 }
 async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','<div class="panel"><div style="font-size:13px;color:var(--txt2)">Pantalla de campañas (diseño listo). Se conecta al armar el envío masivo.</div></div>');}
 
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
-const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/oferta-const.html';   // constructor autenticado desplegado
+const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/';   // índice público del panel de ofertas
 function buildPortalOfertasUrl(){
   let activeToken=token||'';
   if(!activeToken){try{activeToken=localStorage.getItem('vp_token')||'';}catch(e){}}
@@ -1741,18 +1880,24 @@ async function viewOfertas(){
     : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal.')">🛒 Abrir portal de ofertas</button>`;
   var tabs = OF_TABS.map(function(t){ return `<button class="btn ${ofTab===t[0]?'':'ghost'}" onclick="ofSetTab('${t[0]}')">${t[1]}</button>`; }).join('');
   return `<div class="head"><div><h1>Admin Ofertas</h1><div class="s">Gestión de listas de precios y planes publicados en el portal</div></div>
-    <div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofSetTab('ofertas')">Subir ofertas</button><button class="btn ghost" onclick="ofSetTab('equipos')">Subir lista de precios</button>${portalBtn}</div></div>
+    <div style="display:flex;gap:8px"><button class="btn ghost" onclick="ofSetTab('fuentes')">Subir fuente oficial</button><button class="btn ghost" onclick="ofSetTab('ofertas')">Publicar con motor</button><button class="btn ghost" onclick="ofSetTab('equipos')">Lista de precios</button>${portalBtn}</div></div>
   <div class="panel" style="display:flex;gap:8px;flex-wrap:wrap">${tabs}</div>
   <div id="ofBody"></div>`;
 }
-function ofSetTab(t){ ofTab=t; reOfertas(); }
-async function reOfertas(){ $('view').innerHTML=await viewOfertas(); ofRenderBody(); }
+function ofSetTab(t){ ofTab=t||'fuentes'; reOfertas(); }
+async function reOfertas(){
+  $('view').innerHTML=await viewOfertas();
+  ofRenderBody();
+}
 async function ofRenderBody(){
-  if(ofTab==='fuentes') return ofRenderFuentesComerciales();
-  if(ofTab==='equipos') return ofRenderEquipos();
-  if(ofTab==='ofertas') return ofRenderOfertasTienda();
-  if(ofTab==='servicios') return ofRenderServicios();
-  return ofRenderPlanesPagina(ofTab); // fijos | moviles | inalambrico
+  if(ofTab==='fuentes')return ofRenderFuentesComerciales();
+  if(ofTab==='equipos')return ofRenderEquipos();
+  if(ofTab==='ofertas')return ofRenderOfertasTienda();
+  if(ofTab==='servicios')return ofRenderServicios();
+  if(ofTab==='fijos')return ofRenderPlanesPagina('fijos');
+  if(ofTab==='moviles')return ofRenderPlanesPagina('moviles');
+  if(ofTab==='inalambrico')return ofRenderPlanesPagina('inalambrico');
+  return ofRenderFuentesComerciales();
 }
 async function ofRenderFuentesComerciales(){
   var b=$('ofBody'); if(!b)return;
@@ -1779,6 +1924,7 @@ async function fcGuardarFuente(){
   if(estado)estado.textContent='Guardando...';
   try{
     var r=await apiForm('/api/fuentes-comerciales',fd);
+    if(r.codigo==='fuente_duplicada')ofRenderFuentesComerciales();
     if(!r.ok){alert(r.codigo==='fuente_duplicada'?'Ese documento ya está archivado para esta familia.':(r.error||'No se pudo guardar'));return;}
     alert('Fuente guardada'); ofRenderFuentesComerciales();
   }catch(e){alert('No se pudo guardar: '+e.message);}
@@ -1823,6 +1969,22 @@ async function ofRenderOfertasTienda(){
     +'<div class="s" style="color:var(--txt2)">El parser del boletín de ofertas móviles (financiamiento) lo maneja tu programador. '
     +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
 }
+
+let omSources=[], omPreviewData=null, omBusinessRedPreviewData=null;
+async function ofRenderOfertasTienda(){
+  var b=$('ofBody'); if(!b)return;
+  b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">Ofertas moviles</h3><div class="s" style="margin-top:4px">Usa fuentes oficiales archivadas. Primero guarda el PDF o Excel en Fuentes comerciales.</div></div><button class="btn ghost" onclick="omLoadSources()">Recargar</button></div><div id="omStatus" class="card" style="padding:12px;margin-top:12px">Cargando version publicada...</div><div class="card" style="padding:14px;margin-top:12px"><b>Business Red multilinea</b><div class="s" style="margin-top:4px">Publica Plus, Extreme, Supreme y Sin Fronteras desde el boletin PDF oficial.</div><div class="impgrid" style="margin-top:10px"><div><div class="flbl">Boletin PDF de planes Business Red</div><select class="inp" id="omBusinessRedPdf"></select></div></div><div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap"><button class="btn" onclick="omPreviewBusinessRedPlanes()">Vista previa Business Red</button><span class="s">La publicacion actualiza modulos moviles; BYOP queda ultimo.</span></div><div id="omBusinessRedPreview" style="margin-top:12px"></div></div><div class="card" style="padding:14px;margin-top:12px"><b>Ofertas de equipos moviles</b><div class="impgrid" style="margin-top:10px"><div><div class="flbl">Tabla de financiamiento</div><select class="inp" id="omFinancing"></select></div><div><div class="flbl">Lista de precios de equipos</div><select class="inp" id="omPriceList"></select></div></div><div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap"><button class="btn" onclick="omPreview()">Vista previa</button><span class="s">La carga no publica automaticamente.</span></div></div><div id="omPreview" style="margin-top:12px"></div><div class="panel" style="margin-top:12px"><h3>Historial</h3><div id="omHistory" class="s">Cargando...</div></div></div>';
+  omLoadSources();
+}
+function omOptions(familia){return omSources.filter(function(f){return f.familia===familia && f.documento_tipo==='excel';}).map(function(f){return '<option value="'+f.id+'">'+esc(f.nombre_original)+' - '+esc((f.sha256||'').slice(0,10))+'</option>';}).join('');}
+function omPdfOptions(familia){return omSources.filter(function(f){return f.familia===familia && f.documento_tipo==='pdf';}).map(function(f){return '<option value="'+f.id+'">'+esc(f.nombre_original)+' - '+esc((f.sha256||'').slice(0,10))+'</option>';}).join('');}
+async function omLoadSources(){
+  try{var all=await api('/api/fuentes-comerciales');omSources=all.fuentes||[];var fi=$('omFinancing'),pl=$('omPriceList'),br=$('omBusinessRedPdf');if(fi)fi.innerHTML=omOptions('ofertas_moviles')||'<option value="">No hay tabla de financiamiento archivada</option>';if(pl)pl.innerHTML=omOptions('equipos')||'<option value="">No hay lista de precios archivada</option>';if(br)br.innerHTML=omPdfOptions('moviles')||'<option value="">No hay PDF de moviles archivado</option>';var status=$('omStatus');try{var v=await api('/api/motor-ofertas/version-vigente'),x=v.version||{};status.innerHTML='<b>Version '+esc(x.numero)+'</b> - '+esc(x.vigencia_desde||'')+' - '+esc(x.vigencia_hasta||'')+' <span class="pill '+(x.estado_vigencia==='vencida_pendiente_reemplazo'?'amber':'green')+'">'+(x.estado_vigencia==='vencida_pendiente_reemplazo'?'Vencida: esperando reemplazo':'Vigente')+'</span>';}catch(e){status.innerHTML='<span class="pill amber">Sin version publicada</span> El portal seguira mostrando el respaldo local hasta publicar una fuente.';}var h=await api('/api/motor-ofertas/historial');var rows=(h.versiones||[]).map(function(v){return '<div class="irow"><span>Version '+esc(v.numero)+' - '+esc(v.archivo_nombre||'')+'</span><b>'+esc(v.estado)+'</b></div>';}).join('');if($('omHistory'))$('omHistory').innerHTML=rows||'Sin historial.';}catch(e){var el=$('omStatus');if(el)el.innerHTML='<span style="color:var(--red)">No se pudieron cargar las fuentes: '+esc(e.message)+'</span>';}
+}
+async function omPreviewBusinessRedPlanes(){var a=$('omBusinessRedPdf')?.value,el=$('omBusinessRedPreview');if(!a){if(el)el.innerHTML='<div class="card" style="padding:12px;color:var(--amber)">Archiva primero el PDF de moviles como fuente oficial.</div>';return;}if(el)el.innerHTML='<div class="card" style="padding:12px">Analizando Business Red multilinea...</div>';try{var r=await api('/api/motor-ofertas/preview-business-red-multilinea',{method:'POST',body:{fuente_ids:[a]}});omBusinessRedPreviewData=r;var mods=(r.modulos||[]).map(function(m){return '<tr><td>'+esc(m.titulo)+'</td><td>'+esc(m.subtitulo||'')+'</td><td>'+((m.contenido&&m.contenido.activacion&&m.contenido.activacion.filas)||[]).length+'</td></tr>';}).join('');var warn=(r.advertencias||[]).map(function(w){return '<li>'+esc(w.codigo||w.error||'Advertencia')+'</li>';}).join('');if(el)el.innerHTML='<div class="card" style="padding:12px"><b>Vista previa Business Red multilinea</b><div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Modulo</th><th>Resumen</th><th>Filas</th></tr></thead><tbody>'+mods+'</tbody></table></div>'+(warn?'<div class="pill amber" style="margin-top:8px">Advertencias</div><ul>'+warn+'</ul>':'')+'<button class="btn green" style="margin-top:10px" onclick="omPublicarBusinessRedPlanes()" '+(r.publicable?'':'disabled')+'>Publicar Business Red</button><span class="s" style="margin-left:8px">Actualiza Plus, Extreme, Supreme y Sin Fronteras.</span></div>';}catch(e){if(el)el.innerHTML='<div class="card" style="padding:12px;color:var(--red)">No se pudo generar la vista previa: '+esc(e.message)+'</div>';}}
+async function omPublicarBusinessRedPlanes(){if(!omBusinessRedPreviewData?.preview_id)return;if(!confirm('Publicar estos modulos Business Red en el portal movil?'))return;try{await api('/api/motor-ofertas/publicar-business-red-multilinea',{method:'POST',body:{preview_id:omBusinessRedPreviewData.preview_id}});alert('Business Red publicado.');omBusinessRedPreviewData=null;omLoadSources();}catch(e){alert('No se pudo publicar Business Red: '+e.message);}}
+async function omPreview(){var a=$('omFinancing')?.value,b=$('omPriceList')?.value,el=$('omPreview');if(!a||!b){if(el)el.innerHTML='<div class="card" style="padding:12px;color:var(--amber)">Archiva primero ambas fuentes oficiales.</div>';return;}if(el)el.innerHTML='<div class="card" style="padding:12px">Analizando las dos fuentes...</div>';try{var r=await api('/api/motor-ofertas/preview',{method:'POST',body:{fuente_ids:[a,b]}});omPreviewData=r;var s=r.resumen||{},warn=(r.advertencias||[]).map(function(w){return '<li>'+esc(w.codigo||w.tipo||'Advertencia')+(w.modelo?' - '+esc(w.modelo):'')+'</li>';}).join('');if(el)el.innerHTML='<div class="card" style="padding:12px"><b>Vista previa de ofertas moviles</b><div class="irow"><span>Ofertas / equipos</span><b>'+s.offers+' / '+s.equipment+'</b></div><div class="irow"><span>Nuevas / eliminadas / modificadas</span><b>'+s.diferencias.nuevos+' / '+s.diferencias.eliminados+' / '+s.diferencias.modificados+'</b></div>'+(warn?'<div class="pill amber">Advertencias: '+(r.advertencias||[]).length+'</div><ul>'+warn+'</ul>':'')+'<div class="impgrid" style="margin-top:10px"><div><div class="flbl">Vigencia desde</div><input class="inp" id="omDesde" type="date" value="'+esc(r.vigencia.desde||'')+'"></div><div><div class="flbl">Vigencia hasta</div><input class="inp" id="omHasta" type="date" value="'+esc(r.vigencia.hasta||'')+'"></div></div><button class="btn green" style="margin-top:10px" onclick="omPublicar()" '+(r.publicable?'':'disabled')+'>Publicar version</button><span class="s" style="margin-left:8px">Requiere confirmacion explicita.</span></div>';}catch(e){if(el)el.innerHTML='<div class="card" style="padding:12px;color:var(--red)">No se pudo generar la vista previa: '+esc(e.message)+'</div>';}}
+async function omPublicar(){if(!omPreviewData?.version_id)return;var desde=$('omDesde')?.value,hasta=$('omHasta')?.value;if(!desde||!hasta){alert('Completa la vigencia antes de publicar.');return;}var confirmar=(omPreviewData.advertencias||[]).length?confirm('La vista previa tiene advertencias. Confirmas publicar bajo tu responsabilidad?'):true;if(!confirmar)return;if(!confirm('Publicar esta version movil y reemplazar la vigente?'))return;try{await api('/api/motor-ofertas/publicar',{method:'POST',body:{version_id:omPreviewData.version_id,vigencia_desde:desde,vigencia_hasta:hasta,confirmar_advertencias:(omPreviewData.advertencias||[]).length>0}});alert('Version movil publicada.');omPreviewData=null;omLoadSources();}catch(e){alert('No se pudo publicar: '+e.message);}}
 
 // ----- SERVICIOS / FEATURES -----
 function ofServicioById(docId, hojaNum){
@@ -2393,7 +2555,8 @@ async function payR(sid,m){await api('/api/comisiones/'+sid+'/'+m+'/pay',{method
 // ---------------- ROUTER ----------------
 async function router(){
   const h=(location.hash.slice(1)||'/clientes').split('/').filter(Boolean);
-  const [route,arg]=h;
+  let [route,arg]=h;
+  if(isSellerProfile()&&!['panel','clientes','cliente','asana','opp','comisiones','correos','perfil'].includes(route)){ location.hash='#/panel'; return; }
   document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('on',n.getAttribute('href')==='#/'+route));
   $('view').innerHTML='<div class="empty">Cargando…</div>';
   try{
@@ -2421,8 +2584,8 @@ async function router(){
         else if(route==='directorio')html=await viewDirectorioOperaciones();
         else html=await viewClientes();
     $('view').innerHTML=html;
+    if(route==='ofertas'){ await reOfertas(); return; }
     if(route==='import')impInitDrop();
-    if(route==='ofertas')ofRenderBody();
     if(route==='prospeccion')prInit();
     if(route==='config')cfgRenderBody();
     if(route==='correos')coInit();
@@ -2431,7 +2594,7 @@ async function router(){
 window.addEventListener('hashchange',router);
 
 // ---------------- SESIÓN / LOGIN (Tango V2) ----------------
-function setSession(t,u){ token=t; currentUser=u; try{localStorage.setItem('vp_token',t);localStorage.setItem('vp_user',JSON.stringify(u||{}));}catch(e){} }
+function setSession(t,u){ token=t; currentUser=u; applySellerProfile(); try{localStorage.setItem('vp_token',t);localStorage.setItem('vp_user',JSON.stringify(u||{}));}catch(e){} }
 function clearSession(){ token=null; currentUser=null; if(callReminderTimer){clearInterval(callReminderTimer);callReminderTimer=null;} var cr=$('callReminderBox'); if(cr)cr.remove(); try{localStorage.removeItem('vp_token');localStorage.removeItem('vp_user');}catch(e){} }
 function logout(){ clearSession(); showLogin(); }
 function connOk(){ $('conn').className='conn ok'; $('conn').textContent='✓ '+((currentUser&&currentUser.nombre)?currentUser.nombre:'conectado'); }
@@ -2470,7 +2633,7 @@ async function init(){
   // En prod (sin dev-login) este intento falla -> ahí sí aparece el login de Claro.
   let t=null,u=null; try{ t=localStorage.getItem('vp_token'); u=JSON.parse(localStorage.getItem('vp_user')||'null'); }catch(e){}
       if(t){ token=t; currentUser=u;
-        try{ const me=await fetch(API+'/api/me',{headers:{Authorization:'Bearer '+t}}); if(me.ok){ currentUser=(await me.json()).user; connOk(); startCallReminderWatcher(); router(); return; } }catch(e){}
+        try{ const me=await fetch(API+'/api/me',{headers:{Authorization:'Bearer '+t}}); if(me.ok){ currentUser=(await me.json()).user; applySellerProfile(); connOk(); startCallReminderWatcher(); router(); return; } }catch(e){}
     clearSession();
   }
       try{ const r=await fetch(API+'/api/auth/dev-login',{method:'POST'}); if(r.ok){ const d=await r.json(); setSession(d.token,d.user); connOk(); startCallReminderWatcher(); router(); return; } }catch(e){}
