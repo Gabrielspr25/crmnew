@@ -3,13 +3,15 @@ import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db.js';
 import { requireAdmin, requireAuth } from '../auth.js';
 import { archiveFuenteComercialBuffer, deriveFuenteTitulo } from '../services/fuentesComercialesArchive.js';
 import { PLANES_FIJOS_COLUMNAS } from '../services/planesOfertasContract.js';
 import { diffFilasPlanesFijos } from '../services/planesOfertasDiff.js';
+import { buildBasesInformativasPreviews } from '../services/basesInformativasPreview.js';
+import { runParser } from '../services/secureParserRunner.js';
+import { importarListaEquiposDesdeFuente } from './equiposRoutes.js';
 
 export const fuentesComercialesRouter = Router();
 fuentesComercialesRouter.use(requireAuth);
@@ -32,25 +34,48 @@ const upload = multer({
 const uname = (req) => req.user?.nick || req.user?.usuario || req.user?.email || 'admin';
 const previews = new Map();
 const PREVIEW_TTL_MS = 30 * 60 * 1000;
-const PYTHON = process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
-const SCRIPTS_DIR = path.resolve(__dirname, '../../../scripts');
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 function gcPreviews() { const now = Date.now(); for (const [id, value] of previews) if (now - value.created > PREVIEW_TTL_MS) previews.delete(id); }
-function runParser(script, filePath) {
-  return new Promise((resolve, reject) => {
-    let stdout = '', stderr = '';
-    const child = spawn(PYTHON, [path.join(SCRIPTS_DIR, script), filePath]);
-    child.stdout.on('data', chunk => { stdout += chunk.toString(); });
-    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
-    child.on('error', reject);
-    child.on('close', code => {
-      if (code !== 0) return reject(new Error(`Parser ${script} falló (exit ${code}): ${stderr.slice(0, 400)}`));
-      try { resolve(JSON.parse(stdout)); } catch { reject(new Error(`Parser ${script}: salida no es JSON válido`)); }
-    });
-  });
+
+function isPathInside(parent, child) {
+  const relative = path.relative(parent, child);
+  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+function resolveFuentePath(row, options = {}) {
+  const configuredRoot = options.uploadDir || process.env.FUENTES_COMERCIALES_UPLOAD_DIR || path.resolve(__dirname, '../../uploads/fuentes-comerciales');
+  let allowedRoot;
+  try {
+    allowedRoot = fs.realpathSync(configuredRoot);
+  } catch {
+    throw Object.assign(new Error('archivo_no_encontrado'), { code: 'archivo_no_encontrado' });
+  }
+
+  const relativePath = String(row.ruta_relativa || '').trim();
+  if (!relativePath || path.isAbsolute(relativePath)) {
+    throw Object.assign(new Error('archivo_fuera_directorio'), { code: 'archivo_fuera_directorio' });
+  }
+
+  const resolved = path.resolve(allowedRoot, relativePath);
+  let filePath;
+  try {
+    filePath = fs.realpathSync(resolved);
+  } catch {
+    if (isPathInside(allowedRoot, resolved)) throw Object.assign(new Error('archivo_no_encontrado'), { code: 'archivo_no_encontrado' });
+    throw Object.assign(new Error('archivo_fuera_directorio'), { code: 'archivo_fuera_directorio' });
+  }
+
+  if (!isPathInside(allowedRoot, filePath)) {
+    throw Object.assign(new Error('archivo_fuera_directorio'), { code: 'archivo_fuera_directorio' });
+  }
+  if (!fs.statSync(filePath).isFile()) {
+    throw Object.assign(new Error('archivo_no_encontrado'), { code: 'archivo_no_encontrado' });
+  }
+  return filePath;
 }
 function sourcePath(row) {
-  const root = process.env.FUENTES_COMERCIALES_UPLOAD_DIR || path.resolve(__dirname, '../../uploads/fuentes-comerciales');
-  return path.resolve(root, row.ruta_relativa);
+  return resolveFuentePath(row);
 }
 function sourceSummary(row) {
   return { id: row.id, familia: row.familia, nombre_original: row.nombre_original, sha256: row.sha256, ruta_relativa: row.ruta_relativa };
@@ -76,6 +101,78 @@ function publicFuente(row) {
     subido_por: row.subido_por,
     creado_en: row.creado_en,
   };
+}
+
+function publicFuentePreview(row) {
+  return {
+    id: row.id,
+    familia: row.familia,
+    titulo: row.titulo,
+    documento_tipo: row.documento_tipo,
+    nombre_original: row.nombre_original,
+    sha256: row.sha256,
+    vigencia_desde: row.vigencia_desde,
+    vigencia_hasta: row.vigencia_hasta,
+    vigencia_documental: row.vigencia_documental,
+  };
+}
+
+function isRealIsoDate(value) {
+  if (!ISO_DATE_RE.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function fechaActualizacionBase({ body }) {
+  const manual = body?.fecha_actualizacion_base;
+  if (manual == null || String(manual).trim() === '') {
+    throw Object.assign(new Error('fecha_actualizacion_base_requerida'), { code: 'fecha_actualizacion_base_requerida' });
+  }
+  const value = String(manual).trim();
+  if (!isRealIsoDate(value)) {
+    throw Object.assign(new Error('fecha_actualizacion_base_invalida'), { code: 'fecha_actualizacion_base_invalida' });
+  }
+  return { value, origen: 'entrada_manual_confirmada' };
+}
+
+function inalambricoVigenciaDesdeNombre(nombre) {
+  const normalized = String(nombre || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (/1al31ago2026/.test(normalized)) return { desde: '2026-08-01T04:00:00.000Z', hasta: '2026-08-31T04:00:00.000Z' };
+  return null;
+}
+
+async function applyInalambricoFuenteAutomatica({ fuente, parsed, usuario }) {
+  const expected = ['internet_on_the_go', 'claro_oficina', 'iot_telemetria'];
+  if (JSON.stringify(parsed?.secciones_detectadas) !== JSON.stringify(expected)) {
+    throw Object.assign(new Error('El boletín no contiene Internet On The Go, Claro Oficina e IoT completos. No se reemplazó nada.'), { code: 'secciones_incompletas' });
+  }
+  const vigencia = inalambricoVigenciaDesdeNombre(fuente.nombre_original);
+  if (!vigencia) throw Object.assign(new Error('No se pudo validar la vigencia del boletín inalámbrico. No se reemplazó nada.'), { code: 'vigencia_no_detectada' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: modulos } = await client.query(
+      `UPDATE public.planes_modulos
+       SET contenido=contenido, vigencia_desde=$1, vigencia_hasta=$2, boletin_ref=$3, updated_by=$4
+       WHERE pagina='inalambrico' AND activo=true
+       RETURNING id, seccion_key`,
+      [vigencia.desde, vigencia.hasta, fuente.nombre_original, usuario]
+    );
+    if (modulos.length !== 4) throw new Error('La publicación inalámbrica no tiene los cuatro módulos esperados. No se reemplazó nada.');
+    await client.query(
+      `UPDATE public.fuentes_comerciales
+       SET vigencia_desde=$1, vigencia_hasta=$2, vigencia_documental='vigente', estado='activa'
+       WHERE id=$3`,
+      [vigencia.desde, vigencia.hasta, fuente.id]
+    );
+    await client.query('COMMIT');
+    return { vigencia, modulos: modulos.map(row => row.seccion_key) };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally { client.release(); }
 }
 
 fuentesComercialesRouter.post('/planes-fijos/preview', requireAdmin, async (req, res) => {
@@ -127,6 +224,112 @@ fuentesComercialesRouter.post('/planes-fijos/preview', requireAdmin, async (req,
     res.json({ ok: true, preview_id: previewId, expira_en_min: 30, fuentes: sourceResults, resumen, advertencias: warnings, publicable: planAplicacion.length > 0 });
   } catch (error) { res.status(500).json({ ok: false, codigo: 'preview_error', error: error.message }); }
 });
+
+const PARSER_ERROR_CODES = new Set([
+  'parser_timeout',
+  'parser_output_too_large',
+  'parser_process_error',
+  'parser_exit_error',
+  'parser_json_invalido',
+]);
+
+export function createPreviewBaseHandler(options = {}) {
+  const dbPool = options.pool || pool;
+  const parserRunner = options.runParser || runParser;
+  const previewBuilder = options.buildPreviews || buildBasesInformativasPreviews;
+  const uploadDir = options.uploadDir;
+  const logger = options.logger || console;
+
+  return async function previewBaseHandler(req, res) {
+  const id = String(req.params.id || '').trim();
+  if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+
+  try {
+    let fechaBase;
+    try {
+      fechaBase = fechaActualizacionBase({ body: req.body });
+    } catch (error) {
+      return res.status(400).json({ ok: false, codigo: error.code || 'fecha_actualizacion_base_invalida' });
+    }
+
+    const { rows } = await dbPool.query(
+      `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+              vigencia_desde, vigencia_hasta, vigencia_documental, estado
+       FROM public.fuentes_comerciales WHERE id=$1 LIMIT 1`,
+      [id]
+    );
+    const fuente = rows[0];
+    if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
+    if (!['fijos', 'claro_tv', 'ofertas_fijo'].includes(fuente.familia) || fuente.documento_tipo !== 'pdf') {
+      return res.status(422).json({ ok: false, codigo: 'archivo_incompatible' });
+    }
+
+    let filePath;
+    try {
+      filePath = resolveFuentePath(fuente, { uploadDir });
+    } catch (error) {
+      if (error.code === 'archivo_fuera_directorio') return res.status(404).json({ ok: false, codigo: 'archivo_fuera_directorio' });
+      if (error.code === 'archivo_no_encontrado') return res.status(404).json({ ok: false, codigo: 'archivo_no_encontrado' });
+      throw error;
+    }
+
+    let parsed;
+    try {
+      parsed = await parserRunner('parse_planes_fijos_pdf.py', filePath);
+    } catch (error) {
+      const codigo = PARSER_ERROR_CODES.has(error.code) ? error.code : 'parser_error';
+      logger.error?.('[fuentes-comerciales/preview-base/parser]', codigo);
+      return res.status(422).json({ ok: false, codigo });
+    }
+
+    const preview = previewBuilder({
+      parsed,
+      fuente: {
+        id: fuente.id,
+        nombre_original: fuente.nombre_original,
+        sha256: fuente.sha256,
+        fecha_actualizacion_base: fechaBase.value,
+      },
+    });
+    const previews = Object.fromEntries(preview.previews.map((item) => [item.categoria, {
+      categoria: item.categoria,
+      pagina: item.pagina,
+      estado_sugerido: item.estado_sugerido,
+      publicable: item.publicable,
+      fuente_comercial_id: item.fuente_comercial_id,
+      fuente_nombre: item.fuente_nombre,
+      fuente_sha256: item.fuente_sha256,
+      fecha_actualizacion_base: item.fecha_actualizacion_base,
+      registros_normalizados: item.registros_normalizados,
+      candidatos_publicos: item.candidatos_publicos,
+      modulos_generados: item.modulos_generados,
+      contenido_excluido: item.contenido_excluido,
+      auditoria: item.auditoria,
+      duplicados: item.duplicados,
+      validacion: item.validacion,
+      diferencias: item.diferencias,
+      resumen: item.resumen,
+    }]));
+
+    res.status(200).json({
+      ok: true,
+      fuente: publicFuentePreview(fuente),
+      hash: fuente.sha256,
+      fecha_actualizacion_base: fechaBase.value,
+      fecha_actualizacion_base_origen: fechaBase.origen,
+      previews,
+      resumen: {
+        fijo: previews.fijo?.candidatos_publicos?.length || 0,
+        claro_tv: previews.claro_tv?.candidatos_publicos?.length || 0,
+      },
+    });
+  } catch {
+    res.status(500).json({ ok: false, codigo: 'error_interno' });
+  }
+  };
+}
+
+fuentesComercialesRouter.post('/:id/preview-base', requireAdmin, createPreviewBaseHandler());
 
 fuentesComercialesRouter.post('/planes-fijos/publicar', requireAdmin, async (req, res) => {
   gcPreviews();
@@ -180,6 +383,7 @@ fuentesComercialesRouter.post('/', requireAdmin, upload.single('documento'), asy
 
   if (!FAMILIAS.has(familia)) return res.status(400).json({ ok: false, codigo: 'familia_invalida' });
   if (!req.file?.buffer?.length) return res.status(400).json({ ok: false, codigo: 'archivo_requerido' });
+  if (familia === 'equipos' && !/\.(xlsx|xls)$/i.test(req.file.originalname)) return res.status(422).json({ ok: false, codigo: 'formato_equipos_invalido', error: 'Lista de Equipos requiere un Excel oficial (.xlsx o .xls).' });
 
   try {
     const titulo = deriveFuenteTitulo({ originalName: req.file.originalname, familia });
@@ -214,7 +418,27 @@ fuentesComercialesRouter.post('/', requireAdmin, upload.single('documento'), asy
         uname(req),
       ]
     );
-    res.status(201).json({ ok: true, fuente: publicFuente(rows[0]) });
+    let publicacion = null;
+    if (familia === 'equipos') {
+      publicacion = await importarListaEquiposDesdeFuente({
+        buffer: req.file.buffer,
+        nombreArchivo: req.file.originalname,
+        usuario: uname(req),
+        notas: `Fuente comercial: ${rows[0].id}`,
+        fuenteComercialId: rows[0].id,
+      });
+      await pool.query(`UPDATE public.fuentes_comerciales SET estado='activa', notas=NULL WHERE id=$1`, [rows[0].id]);
+    }
+    if (familia === 'inalambrico_iot' && archived.documento_tipo === 'pdf') {
+      try {
+        const parsed = await runParser('parse_equipos_pdf.py', sourcePath(rows[0]));
+        publicacion = await applyInalambricoFuenteAutomatica({ fuente: rows[0], parsed, usuario: uname(req) });
+      } catch (error) {
+        await pool.query(`UPDATE public.fuentes_comerciales SET notas=$1 WHERE id=$2`, [error.message, rows[0].id]);
+        return res.status(422).json({ ok: false, codigo: error.code || 'validacion_inalambrico_fallida', error: error.message, fuente: publicFuente(rows[0]) });
+      }
+    }
+    res.status(201).json({ ok: true, fuente: publicFuente(rows[0]), publicacion });
   } catch (e) {
     if (e.code === '23505') {
       const { rows } = await pool.query(
