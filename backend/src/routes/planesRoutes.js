@@ -24,7 +24,13 @@ const DOCUMENTOS_DIR = path.join(UPLOAD_DIR, 'documentos');
 const PYTHON = process.env.PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
 try { fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch {}
 
-const PAGINAS_VALIDAS = ['fijos', 'moviles', 'inalambrico'];
+const PAGINAS_VALIDAS = ['fijos', 'moviles', 'inalambrico', 'claro_tv'];
+const PUBLICACION_CATEGORIA_POR_PAGINA = {
+  fijos: 'fijo',
+  claro_tv: 'claro_tv',
+  moviles: 'movil',
+  inalambrico: 'inalambrico',
+};
 
 const uploadPdf = multer({
   dest: UPLOAD_DIR, limits: { fileSize: 20 * 1024 * 1024 },
@@ -54,12 +60,23 @@ const uname = (req) => req.user?.nick || req.user?.usuario || req.user?.email ||
 planesRouter.get('/:pagina', async (req, res, next) => {
   const { pagina } = req.params;
   if (pagina === 'admin') return next(); // deja pasar /admin/all
-  if (!PAGINAS_VALIDAS.includes(pagina)) return res.status(400).json({ ok: false, error: 'Página inválida. Usa: fijos | moviles | inalambrico' });
+  if (!PAGINAS_VALIDAS.includes(pagina)) return res.status(400).json({ ok: false, error: 'Página inválida. Usa: fijos | moviles | inalambrico | claro_tv' });
   try {
-    const { rows } = await pool.query(
+    const [{ rows }, publicacionResult] = await Promise.all([
+      pool.query(
       `SELECT id, pagina, seccion_key, titulo, subtitulo, descripcion, orden, activo, tipo, contenido, vigencia_desde, vigencia_hasta, boletin_ref, updated_at
-       FROM public.planes_modulos WHERE pagina = $1 AND activo = true ORDER BY orden, id`, [pagina]);
-    res.json({ ok: true, pagina, modulos: rows });
+       FROM public.planes_modulos WHERE pagina = $1 AND activo = true ORDER BY orden, id`, [pagina]),
+      PUBLICACION_CATEGORIA_POR_PAGINA[pagina]
+        ? pool.query(
+          `SELECT id, numero, categoria, fuente_nombre, fuente_sha256, fecha_actualizacion_base, publicada_en
+           FROM public.bases_informativas_publicaciones
+           WHERE categoria=$1 AND estado='publicada'
+           ORDER BY numero DESC LIMIT 1`,
+          [PUBLICACION_CATEGORIA_POR_PAGINA[pagina]]
+        ).catch(() => ({ rows: [] }))
+        : Promise.resolve({ rows: [] }),
+    ]);
+    res.json({ ok: true, pagina, modulos: rows, publicacion: publicacionResult.rows[0] || null });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 

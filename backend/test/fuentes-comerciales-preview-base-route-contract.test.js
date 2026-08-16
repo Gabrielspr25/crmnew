@@ -7,7 +7,12 @@ import http from 'node:http';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { requireAdmin, requireAuth } from '../src/auth.js';
-import { createPreviewBaseHandler } from '../src/routes/fuentesComercialesRoutes.js';
+import {
+  createCambiarEstadoBaseInformativaHandler,
+  createGuardarBaseBorradoresHandler,
+  createPreviewBaseHandler,
+  createPublicarBaseInformativaHandler,
+} from '../src/routes/fuentesComercialesRoutes.js';
 
 const SECRET = process.env.JWT_SECRET || 'dev-secret-cambiar';
 const UUID = '11111111-1111-4111-8111-111111111111';
@@ -48,7 +53,7 @@ function buildPreviewResult(parsed, fuente) {
   return {
     fuente,
     previews: [
-      previewItem('fijo', 80),
+      previewItem('fijo', 81),
       previewItem('claro_tv', 9),
     ],
   };
@@ -65,6 +70,25 @@ function makePool(sourceRows = []) {
       assert.match(sql, /FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/);
       return { rows: sourceRows };
     },
+  };
+}
+
+function publicacionRow(categoria, estado = 'borrador') {
+  return {
+    id: `${categoria === 'fijo' ? '22222222' : '33333333'}-2222-4222-8222-222222222222`,
+    numero: categoria === 'fijo' ? 1 : 2,
+    categoria,
+    estado,
+    version_etiqueta: `${categoria}-2026-08-16`,
+    fuente_comercial_id: UUID,
+    fuente_nombre: 'fuente.pdf',
+    fuente_sha256: 'a'.repeat(64),
+    fecha_actualizacion_base: '2026-08-16',
+    candidatos_publicos: previewItem(categoria, categoria === 'fijo' ? 81 : 9).candidatos_publicos,
+    modulos_generados: previewItem(categoria, categoria === 'fijo' ? 81 : 9).modulos_generados,
+    validacion: { errores: [], advertencias: [] },
+    diferencias: { modulos: {}, registros: {} },
+    cargada_por: 'admin',
   };
 }
 
@@ -99,6 +123,40 @@ function makeApp({ pool, parser = async () => ({ ok: true }), previewBuilder = b
     uploadDir,
     logger: { error() {} },
   }));
+  return app;
+}
+
+function makeDraftApp({ pool, parser = async () => ({ ok: true }), previewBuilder = buildPreviewResult, uploadDir }) {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/fuentes-comerciales', requireAuth);
+  app.post('/api/fuentes-comerciales/:id/preview-base/borradores', requireAdmin, createGuardarBaseBorradoresHandler({
+    pool,
+    runParser: parser,
+    buildPreviews: previewBuilder,
+    uploadDir,
+    logger: { error() {} },
+  }));
+  return app;
+}
+
+function makeStateApp({ pool }) {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/fuentes-comerciales', requireAuth);
+  app.post('/api/fuentes-comerciales/bases-informativas/:id/validar', requireAdmin, createCambiarEstadoBaseInformativaHandler({
+    pool,
+    estadoOrigen: 'borrador',
+    estadoDestino: 'validada',
+    campos: ['validada_por', 'validada_en'],
+  }));
+  app.post('/api/fuentes-comerciales/bases-informativas/:id/aprobar', requireAdmin, createCambiarEstadoBaseInformativaHandler({
+    pool,
+    estadoOrigen: 'validada',
+    estadoDestino: 'aprobada',
+    campos: ['aprobada_por', 'aprobada_en'],
+  }));
+  app.post('/api/fuentes-comerciales/bases-informativas/:id/publicar', requireAdmin, createPublicarBaseInformativaHandler({ pool }));
   return app;
 }
 
@@ -271,7 +329,7 @@ test('preview-base ignora rutas del body y usa el archivo guardado', async () =>
   }
 });
 
-test('preview-base devuelve Fijo 80 y Claro TV 9 sin mezclar categorias ni exponer rutas', async () => {
+test('preview-base devuelve Fijo 81 y Claro TV 9 sin mezclar categorias ni exponer rutas', async () => {
   const ws = makeWorkspace();
   try {
     const app = makeApp({ pool: makePool([source()]), uploadDir: ws.uploads });
@@ -280,9 +338,9 @@ test('preview-base devuelve Fijo 80 y Claro TV 9 sin mezclar categorias ni expon
       body: { fecha_actualizacion_base: '2026-08-16' },
     });
     assert.equal(res.status, 200);
-    assert.equal(res.json.resumen.fijo, 80);
+    assert.equal(res.json.resumen.fijo, 81);
     assert.equal(res.json.resumen.claro_tv, 9);
-    assert.equal(res.json.previews.fijo.candidatos_publicos.length, 80);
+    assert.equal(res.json.previews.fijo.candidatos_publicos.length, 81);
     assert.equal(res.json.previews.claro_tv.candidatos_publicos.length, 9);
     assert.ok(res.json.previews.fijo.candidatos_publicos.every((item) => item.categoria === 'fijo'));
     assert.ok(res.json.previews.claro_tv.candidatos_publicos.every((item) => item.categoria === 'claro_tv'));
@@ -331,4 +389,85 @@ test('preview-base no ejecuta escrituras ni toca planes_modulos', async () => {
   } finally {
     ws.cleanup();
   }
+});
+
+test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro TV con la misma fuente', async () => {
+  const ws = makeWorkspace();
+  try {
+    const queries = [];
+    const pool = {
+      queries,
+      async query(sql, params) {
+        queries.push({ sql, params });
+        assert.doesNotMatch(sql, /planes_modulos/i);
+        if (/FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/.test(sql)) return { rows: [source()] };
+        if (/INSERT INTO public\.bases_informativas_publicaciones/.test(sql)) {
+          return { rows: [publicacionRow(params[0], 'borrador')] };
+        }
+        throw new Error(`consulta inesperada: ${sql}`);
+      },
+    };
+    const res = await request(makeDraftApp({ pool, uploadDir: ws.uploads }), 'POST', `/api/fuentes-comerciales/${UUID}/preview-base/borradores`, {
+      token: tokenFor('admin'),
+      body: { fecha_actualizacion_base: '2026-08-16', ruta: 'C:/ignorada.pdf' },
+    });
+    assert.equal(res.status, 201);
+    assert.deepEqual(res.json.publicaciones.map((item) => item.categoria), ['fijo', 'claro_tv']);
+    assert.ok(res.json.publicaciones.every((item) => item.fuente_comercial_id === UUID));
+    assert.ok(res.json.publicaciones.every((item) => item.fuente_sha256 === 'a'.repeat(64)));
+    const insertQueries = queries.filter(({ sql }) => /INSERT INTO public\.bases_informativas_publicaciones/.test(sql));
+    assert.equal(insertQueries.length, 2);
+    for (const { params } of insertQueries) {
+      for (const index of [6, 7, 8, 9, 10, 11, 12, 13, 14]) {
+        assert.equal(typeof params[index], 'string');
+        assert.doesNotThrow(() => JSON.parse(params[index]));
+      }
+    }
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('validar, aprobar y publicar respetan estados y delegan la proyeccion transaccional', async () => {
+  let estado = 'borrador';
+  const queries = [];
+  const pool = {
+    queries,
+    async query(sql, params) {
+      queries.push({ sql, params });
+      if (/UPDATE public\.bases_informativas_publicaciones/.test(sql)) {
+        const estadoDestino = params[0];
+        const estadoOrigen = params.at(-1);
+        assert.match(sql, /WHERE id=\$\d+ AND estado=\$\d+/);
+        if (estado !== estadoOrigen) return { rows: [] };
+        estado = estadoDestino;
+        return { rows: [publicacionRow('fijo', estado)] };
+      }
+      if (/SELECT \* FROM public\.publicar_base_informativa\(\$1,\$2\)/.test(sql)) {
+        if (estado !== 'aprobada') throw new Error(`solo una base informativa aprobada puede publicarse; estado actual: ${estado}`);
+        estado = 'publicada';
+        return { rows: [publicacionRow('fijo', estado)] };
+      }
+      throw new Error(`consulta inesperada: ${sql}`);
+    },
+  };
+  const app = makeStateApp({ pool });
+  const token = tokenFor('admin');
+
+  const validar = await request(app, 'POST', `/api/fuentes-comerciales/bases-informativas/${UUID}/validar`, { token });
+  assert.equal(validar.status, 200);
+  assert.equal(validar.json.publicacion.estado, 'validada');
+
+  const repetirValidar = await request(app, 'POST', `/api/fuentes-comerciales/bases-informativas/${UUID}/validar`, { token });
+  assert.equal(repetirValidar.status, 409);
+  assert.equal(repetirValidar.json.codigo, 'transicion_invalida');
+
+  const aprobar = await request(app, 'POST', `/api/fuentes-comerciales/bases-informativas/${UUID}/aprobar`, { token });
+  assert.equal(aprobar.status, 200);
+  assert.equal(aprobar.json.publicacion.estado, 'aprobada');
+
+  const publicar = await request(app, 'POST', `/api/fuentes-comerciales/bases-informativas/${UUID}/publicar`, { token });
+  assert.equal(publicar.status, 200);
+  assert.equal(publicar.json.publicacion.estado, 'publicada');
+  assert.ok(queries.some(({ sql }) => /publicar_base_informativa/.test(sql)));
 });

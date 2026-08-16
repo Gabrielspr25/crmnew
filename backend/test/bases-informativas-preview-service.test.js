@@ -46,9 +46,9 @@ test('el PDF multiseccion genera previews independientes de fijo y Claro TV', ()
   const claroTv = previews.find((item) => item.categoria === 'claro_tv');
 
   assert.equal(previews.length, 2);
-  assert.equal(fijo.candidatos_publicos.length, 80);
+  assert.equal(fijo.candidatos_publicos.length, 81);
   assert.equal(claroTv.candidatos_publicos.length, 9);
-  assert.equal(fijo.candidatos_publicos.length + claroTv.candidatos_publicos.length, 89);
+  assert.equal(fijo.candidatos_publicos.length + claroTv.candidatos_publicos.length, 90);
   assert.equal(fijo.fuente_comercial_id, fuente.id);
   assert.equal(claroTv.fuente_comercial_id, fuente.id);
   assert.equal(fijo.fuente_sha256, fuente.sha256);
@@ -66,6 +66,7 @@ test('los candidatos publicos no mezclan fijo, Claro TV, equipos ni promociones'
     'fijo_telefonia',
     'fijo_internet_2play',
     'fijo_valores_agregados_vendibles',
+    'fijo_equipos_accesorios_internet',
   ]);
   assert.deepEqual(claroTv.resumen.categorias_incluidas, [
     'claro_tv_planes',
@@ -75,6 +76,23 @@ test('los candidatos publicos no mezclan fijo, Claro TV, equipos ni promociones'
   assert.equal(claroTv.candidatos_publicos.some((fila) => fila.categoria.startsWith('fijo_')), false);
   assert.equal(claroTv.candidatos_publicos.some((fila) => /STB|DONGLE|CONTROL REMOTO/i.test(fila.descripcion)), false);
   assert.equal([...fijo.candidatos_publicos, ...claroTv.candidatos_publicos].some((fila) => /GRATIS|Affinity|DOBLE VELOCIDAD/i.test(`${fila.descripcion} ${fila.motivo_exclusion || ''}`)), false);
+});
+
+test('Fijo publica 80184H WiFi Beacon separado de los planes y sin enviarlo a equipos generales', () => {
+  const fijo = buildPreviews().previews.find((item) => item.categoria === 'fijo');
+  const modulo = fijo.modulos_generados.find((item) => item.seccion_key === 'fijo_equipos_accesorios_internet');
+  const beacon = fijo.candidatos_publicos.find((fila) => fila.categoria === 'fijo_equipos_accesorios_internet' && fila.codigo === '80184H');
+
+  assert.ok(modulo);
+  assert.equal(modulo.titulo, 'Equipos y accesorios de Internet');
+  assert.equal(modulo.contenido.filas.length, 1);
+  assert.ok(beacon);
+  assert.match(beacon.descripcion, /WIFI BEACON/i);
+  assert.equal(beacon.precio, 59.99);
+  assert.equal(beacon.tecnologia, 'COBRE/VRAD/GPON');
+  assert.match(beacon.texto_original, /7012713/);
+  assert.match(beacon.encabezado_origen, /Equipos \/ Ofertas Internet/);
+  assert.equal(fijo.contenido_excluido.some((fila) => fila.codigo === '80184H'), false);
 });
 
 test('los modulos se agrupan y se generan en orden determinista', () => {
@@ -90,8 +108,8 @@ test('los modulos se agrupan y se generan en orden determinista', () => {
   assert.deepEqual(shape(first), [
     {
       categoria: 'fijo',
-      secciones: ['fijo_telefonia', 'fijo_internet_2play', 'fijo_valores_agregados_vendibles'],
-      filas: [40, 25, 15],
+      secciones: ['fijo_telefonia', 'fijo_internet_2play', 'fijo_valores_agregados_vendibles', 'fijo_equipos_accesorios_internet'],
+      filas: [40, 25, 15, 1],
     },
     {
       categoria: 'claro_tv',

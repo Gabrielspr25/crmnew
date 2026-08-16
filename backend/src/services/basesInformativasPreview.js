@@ -6,6 +6,7 @@ const PREVIEW_DEFINITIONS = Object.freeze([
       ['fijo_telefonia', 40, 'Telefonia fija'],
       ['fijo_internet_2play', 25, 'Internet fijo y 2Play'],
       ['fijo_valores_agregados_vendibles', 15, 'Valores agregados vendibles'],
+      ['fijo_equipos_accesorios_internet', 1, 'Equipos y accesorios de Internet'],
     ],
   },
   {

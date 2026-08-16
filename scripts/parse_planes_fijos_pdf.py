@@ -34,6 +34,7 @@ SECCIONES = {
     "fijo_telefonia": "Fijo - Telefonía",
     "fijo_internet_2play": "Fijo - Internet y 2Play",
     "fijo_valores_agregados_vendibles": "Fijo - Valores agregados vendibles",
+    "fijo_equipos_accesorios_internet": "Fijo - Equipos y accesorios de Internet",
     "claro_tv_planes": "Claro TV - Planes",
     "claro_tv_servicios_complementos": "Claro TV - Servicios y complementos",
     "claro_tv_equipos": "Claro TV - Equipos y decodificadores",
@@ -48,6 +49,7 @@ CATEGORIAS_CANDIDATAS_PORTAL = [
     "fijo_telefonia",
     "fijo_internet_2play",
     "fijo_valores_agregados_vendibles",
+    "fijo_equipos_accesorios_internet",
     "claro_tv_planes",
     "claro_tv_servicios_complementos",
 ]
@@ -169,6 +171,8 @@ def clasificar(fila, seccion_actual):
     codigo = fila.get("codigo", "").upper()
     descripcion = normalizar(fila.get("descripcion", ""))
 
+    if seccion_actual == "internet_equipos_ofertas" and codigo == "80184H":
+        return "fijo_equipos_accesorios_internet"
     if codigo in ("REAKNG", "IPLYB", "NPVR250"):
         return "claro_tv_servicios_complementos"
     if "STB" in descripcion or "DONGLE" in descripcion or "CONTROL REMOTO" in descripcion:

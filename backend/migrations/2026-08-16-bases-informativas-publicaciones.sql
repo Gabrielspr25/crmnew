@@ -188,6 +188,7 @@ BEGIN
      SET activo = false,
          updated_by = p_usuario
    WHERE pagina = v_pagina
+     AND activo = true
      AND NOT (seccion_key = ANY(v_secciones_generadas));
 
   FOR v_modulo IN SELECT value FROM jsonb_array_elements(v_modulos)

@@ -117,6 +117,39 @@ function publicFuentePreview(row) {
   };
 }
 
+function sanitizeBasePublicacion(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    numero: row.numero,
+    categoria: row.categoria,
+    estado: row.estado,
+    version_etiqueta: row.version_etiqueta,
+    fuente_comercial_id: row.fuente_comercial_id,
+    fuente_nombre: row.fuente_nombre,
+    fuente_sha256: row.fuente_sha256,
+    fecha_actualizacion_base: row.fecha_actualizacion_base,
+    candidatos_total: Array.isArray(row.candidatos_publicos) ? row.candidatos_publicos.length : Number(row.candidatos_total || 0),
+    modulos_total: Array.isArray(row.modulos_generados) ? row.modulos_generados.length : Number(row.modulos_total || 0),
+    validacion: row.validacion || {},
+    diferencias: row.diferencias || {},
+    observaciones: row.observaciones || null,
+    cargada_por: row.cargada_por,
+    cargada_en: row.cargada_en,
+    validada_por: row.validada_por,
+    validada_en: row.validada_en,
+    aprobada_por: row.aprobada_por,
+    aprobada_en: row.aprobada_en,
+    publicada_por: row.publicada_por,
+    publicada_en: row.publicada_en,
+    reemplazada_en: row.reemplazada_en,
+  };
+}
+
+function jsonbParam(value, fallback) {
+  return JSON.stringify(value ?? fallback);
+}
+
 function isRealIsoDate(value) {
   if (!ISO_DATE_RE.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
@@ -330,6 +363,175 @@ export function createPreviewBaseHandler(options = {}) {
 }
 
 fuentesComercialesRouter.post('/:id/preview-base', requireAdmin, createPreviewBaseHandler());
+
+export function createGuardarBaseBorradoresHandler(options = {}) {
+  const dbPool = options.pool || pool;
+  const parserRunner = options.runParser || runParser;
+  const previewBuilder = options.buildPreviews || buildBasesInformativasPreviews;
+  const uploadDir = options.uploadDir;
+  const logger = options.logger || console;
+
+  const previewHandler = createPreviewBaseHandler({
+    pool: dbPool,
+    runParser: parserRunner,
+    buildPreviews: previewBuilder,
+    uploadDir,
+    logger,
+  });
+
+  return async function guardarBaseBorradoresHandler(req, res) {
+    let previewPayload = null;
+    const previewRes = {
+      statusCode: 200,
+      status(code) { this.statusCode = code; return this; },
+      json(payload) { previewPayload = payload; return payload; },
+    };
+    await previewHandler(req, previewRes);
+    if (previewRes.statusCode !== 200 || !previewPayload?.ok) {
+      return res.status(previewRes.statusCode).json(previewPayload || { ok: false, codigo: 'preview_error' });
+    }
+
+    const usuario = uname(req);
+    const previewsToSave = ['fijo', 'claro_tv'].map((categoria) => previewPayload.previews?.[categoria]).filter(Boolean);
+    if (previewsToSave.length !== 2) return res.status(422).json({ ok: false, codigo: 'preview_incompleto' });
+
+    try {
+      const guardadas = [];
+      for (const item of previewsToSave) {
+        const { rows } = await dbPool.query(
+          `INSERT INTO public.bases_informativas_publicaciones
+            (categoria, estado, version_etiqueta, fuente_comercial_id, fuente_nombre, fuente_sha256,
+             fecha_actualizacion_base, extraccion_original, registros_normalizados, candidatos_publicos,
+             modulos_generados, contenido_excluido, auditoria, duplicados, validacion, diferencias,
+             cargada_por, observaciones)
+           VALUES ($1,'borrador',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+           RETURNING *`,
+          [
+            item.categoria,
+            `${item.categoria}-${previewPayload.fecha_actualizacion_base}`,
+            item.fuente_comercial_id,
+            item.fuente_nombre,
+            item.fuente_sha256,
+            previewPayload.fecha_actualizacion_base,
+            jsonbParam(item.auditoria?.original, {}),
+            jsonbParam(item.registros_normalizados, []),
+            jsonbParam(item.candidatos_publicos, []),
+            jsonbParam(item.modulos_generados, []),
+            jsonbParam(item.contenido_excluido, []),
+            jsonbParam(item.auditoria, {}),
+            jsonbParam(item.duplicados, []),
+            jsonbParam(item.validacion, {}),
+            jsonbParam(item.diferencias, {}),
+            usuario,
+            req.body?.observaciones || null,
+          ]
+        );
+        guardadas.push(sanitizeBasePublicacion(rows[0]));
+      }
+      return res.status(201).json({ ok: true, publicaciones: guardadas });
+    } catch (error) {
+      logger.error?.('[fuentes-comerciales/bases-informativas/borradores]', error.code || 'error');
+      return res.status(500).json({ ok: false, codigo: 'error_interno' });
+    }
+  };
+}
+
+fuentesComercialesRouter.post('/:id/preview-base/borradores', requireAdmin, createGuardarBaseBorradoresHandler());
+
+export function createHistorialBasesInformativasHandler(options = {}) {
+  const dbPool = options.pool || pool;
+  return async function historialBasesInformativasHandler(req, res) {
+    const categoria = req.query.categoria ? String(req.query.categoria) : null;
+    if (categoria && !['fijo', 'claro_tv', 'movil', 'servicios', 'inalambrico', 'cloud'].includes(categoria)) {
+      return res.status(400).json({ ok: false, codigo: 'categoria_invalida' });
+    }
+    try {
+      const params = [];
+      let sql = `SELECT id, numero, categoria, estado, version_etiqueta, fuente_comercial_id, fuente_nombre,
+          fuente_sha256, fecha_actualizacion_base, validacion, diferencias, observaciones,
+          cargada_por, cargada_en, validada_por, validada_en, aprobada_por, aprobada_en,
+          publicada_por, publicada_en, reemplazada_en,
+          jsonb_array_length(candidatos_publicos) AS candidatos_total,
+          jsonb_array_length(modulos_generados) AS modulos_total
+        FROM public.bases_informativas_publicaciones`;
+      if (categoria) {
+        params.push(categoria);
+        sql += ` WHERE categoria=$${params.length}`;
+      }
+      sql += ' ORDER BY categoria, numero DESC LIMIT 100';
+      const { rows } = await dbPool.query(sql, params);
+      res.json({ ok: true, publicaciones: rows.map(sanitizeBasePublicacion) });
+    } catch {
+      res.status(500).json({ ok: false, codigo: 'error_interno' });
+    }
+  };
+}
+
+fuentesComercialesRouter.get('/bases-informativas/historial', requireAdmin, createHistorialBasesInformativasHandler());
+
+async function cambiarEstadoBaseInformativa({ req, res, estadoOrigen, estadoDestino, campos, dbPool = pool }) {
+  const id = String(req.params.id || '').trim();
+  if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+  try {
+    const sets = [`estado=$1`, ...campos.map((campo, index) => `${campo}=$${index + 2}`)];
+    const values = [estadoDestino, ...campos.map((campo) => (campo.endsWith('_por') ? uname(req) : new Date()))];
+    const idIndex = values.length + 1;
+    const estadoIndex = values.length + 2;
+    const extraWhere = estadoDestino === 'validada'
+      ? ` AND COALESCE(jsonb_array_length(validacion->'errores'), 0) = 0
+          AND jsonb_array_length(candidatos_publicos) > 0
+          AND jsonb_array_length(modulos_generados) > 0`
+      : '';
+    const { rows } = await dbPool.query(
+      `UPDATE public.bases_informativas_publicaciones
+         SET ${sets.join(', ')}
+       WHERE id=$${idIndex} AND estado=$${estadoIndex}
+       ${extraWhere}
+       RETURNING *`,
+      [...values, id, estadoOrigen]
+    );
+    if (!rows.length) return res.status(409).json({ ok: false, codigo: 'transicion_invalida' });
+    res.json({ ok: true, publicacion: sanitizeBasePublicacion(rows[0]) });
+  } catch (error) {
+    if (error.message && /congelada/i.test(error.message)) return res.status(409).json({ ok: false, codigo: 'publicacion_congelada' });
+    res.status(500).json({ ok: false, codigo: 'error_interno' });
+  }
+}
+
+export function createCambiarEstadoBaseInformativaHandler({ estadoOrigen, estadoDestino, campos, pool: dbPool = pool }) {
+  return async function cambiarEstadoBaseInformativaHandler(req, res) {
+    await cambiarEstadoBaseInformativa({ req, res, estadoOrigen, estadoDestino, campos, dbPool });
+  };
+}
+
+fuentesComercialesRouter.post('/bases-informativas/:id/validar', requireAdmin, createCambiarEstadoBaseInformativaHandler({
+  estadoOrigen: 'borrador',
+  estadoDestino: 'validada',
+  campos: ['validada_por', 'validada_en'],
+}));
+
+fuentesComercialesRouter.post('/bases-informativas/:id/aprobar', requireAdmin, createCambiarEstadoBaseInformativaHandler({
+  estadoOrigen: 'validada',
+  estadoDestino: 'aprobada',
+  campos: ['aprobada_por', 'aprobada_en'],
+}));
+
+export function createPublicarBaseInformativaHandler(options = {}) {
+  const dbPool = options.pool || pool;
+  return async function publicarBaseInformativaHandler(req, res) {
+    const id = String(req.params.id || '').trim();
+    if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+    try {
+      const { rows } = await dbPool.query('SELECT * FROM public.publicar_base_informativa($1,$2)', [id, uname(req)]);
+      res.json({ ok: true, publicacion: sanitizeBasePublicacion(rows[0]) });
+    } catch (error) {
+      if (/aprobada|estado actual/i.test(error.message || '')) return res.status(409).json({ ok: false, codigo: 'transicion_invalida' });
+      res.status(500).json({ ok: false, codigo: 'publicacion_error' });
+    }
+  };
+}
+
+fuentesComercialesRouter.post('/bases-informativas/:id/publicar', requireAdmin, createPublicarBaseInformativaHandler());
 
 fuentesComercialesRouter.post('/planes-fijos/publicar', requireAdmin, async (req, res) => {
   gcPreviews();

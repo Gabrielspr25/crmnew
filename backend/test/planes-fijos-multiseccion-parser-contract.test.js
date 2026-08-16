@@ -10,6 +10,7 @@ const categoriasPublicables = [
   'fijo_telefonia',
   'fijo_internet_2play',
   'fijo_valores_agregados_vendibles',
+  'fijo_equipos_accesorios_internet',
   'claro_tv_planes',
   'claro_tv_servicios_complementos',
 ];
@@ -92,6 +93,23 @@ test('equipos TV e internos no aparecen como productos publicos', () => {
   assert.equal(filas(parsed, 'claro_tv_servicios_complementos').some((fila) => ['REAKNG', 'IPLYB', 'NPVR250'].includes(fila.codigo)), true);
   assert.equal(filas(parsed, 'claro_tv_equipos').every((fila) => /STB|DONGLE|CONTROL REMOTO/i.test(fila.descripcion)), true);
   assert.equal(candidatos.some((fila) => ['2633', '2635', '7240', '7241', '9063', '7268', '9925', '9926', '9927', '9938', '3337'].includes(fila.codigo)), false);
+});
+
+test('80184H WiFi Beacon se publica en Fijo como equipo accesorio de Internet', () => {
+  const parsed = runParser();
+  const accesorios = filas(parsed, 'fijo_equipos_accesorios_internet');
+  const beacon = accesorios.find((fila) => fila.codigo === '80184H');
+  const candidatos = parsed.salida_candidata_publicacion.filas;
+
+  assert.equal(accesorios.length, 1);
+  assert.ok(beacon);
+  assert.match(beacon.descripcion, /WIFI BEACON/i);
+  assert.equal(beacon.precio, 59.99);
+  assert.equal(beacon.tecnologia, 'COBRE/VRAD/GPON');
+  assert.match(beacon.texto_original, /7012713/);
+  assert.match(beacon.encabezado_origen, /Equipos \/ Ofertas Internet/);
+  assert.equal(candidatos.some((fila) => fila.categoria === 'fijo_equipos_accesorios_internet' && fila.codigo === '80184H'), true);
+  assert.equal(filas(parsed, 'contenido_temporal_excluido').some((fila) => fila.codigo === '80184H'), false);
 });
 
 test('referencia interna, temporales y revision manual reconcilian con la auditoria', () => {
