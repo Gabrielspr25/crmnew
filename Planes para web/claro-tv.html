@@ -38,7 +38,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,
   <div class="brand-logo">CLARO</div>
   <div class="brand-text">
     <div class="brand-title">Claro TV - Lista de precios</div>
-    <div class="brand-sub">PYMES / Corporativo - Puerto Rico</div>
+    <div class="brand-sub" id="versionLabel">PYMES / Corporativo - Puerto Rico</div>
   </div>
   <div class="header-search">
     <input type="text" id="searchInput" placeholder="Buscar codigo, plan, precio...">
@@ -67,7 +67,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,
 <main class="container" id="mainContainer"></main>
 
 <script>
-const PLANES_CLARO_TV_DATA = [
+const PLANES_CLARO_TV_DATA_FALLBACK = [
   {
     key:'planes',
     titulo:'Planes Claro TV',
@@ -110,6 +110,7 @@ const PLANES_CLARO_TV_DATA = [
     ]
   }
 ];
+let PLANES_CLARO_TV_DATA = [];
 let activeFilter='all';
 function money(v){return Number(v)===0?'Gratis':'$'+Number(v).toFixed(2)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -138,10 +139,51 @@ function render(){
   document.getElementById('countLabel').textContent=count+' registros';
 }
 document.getElementById('searchInput').addEventListener('input',render);
-render();
+function showUnavailable(reason){
+  PLANES_CLARO_TV_DATA=[];
+  document.getElementById('mainContainer').innerHTML='<section class="section-card"><div class="section-body" style="text-align:center;padding:42px"><div class="section-title">Información no disponible</div><div class="section-desc">'+esc(reason||'No existe una publicación vigente de Claro TV.')+'</div></div></section>';
+  document.getElementById('countLabel').textContent='0 registros';
+}
+function buildFiltersFromModules(){
+  const bar=document.querySelector('.filters');
+  bar.querySelectorAll('[data-filter]:not([data-filter="all"])').forEach(b=>b.remove());
+  const ref=bar.querySelector('.filters-right');
+  PLANES_CLARO_TV_DATA.forEach(g=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn';
+    btn.type='button';
+    btn.dataset.filter=g.key;
+    btn.textContent=g.titulo;
+    btn.onclick=()=>setFilter(g.key,btn);
+    bar.insertBefore(btn,ref);
+  });
+}
+function moduleRows(modulo){
+  return ((modulo.contenido||{}).filas||[]).map(r=>({
+    codigo:r.codigo||'',
+    descripcion:r.descripcion||'',
+    precio:r.precio||0,
+    alfa:r.alfa_code||r.alfa||'',
+    tecnologia:r.tecnologia||'',
+    activacion:r.activacion?JSON.stringify(r.activacion):'',
+    penalidad:r.penalidad||''
+  }));
+}
+async function loadClaroTv(){
+  try{
+    const r=await fetch('/api/planes-modulos/claro_tv');
+    if(!r.ok)throw new Error('api');
+    const data=await r.json();
+    if(!data.publicacion)return showUnavailable('No existe una publicación vigente de Claro TV.');
+    PLANES_CLARO_TV_DATA=(data.modulos||[]).map(m=>({key:m.seccion_key,titulo:m.titulo,subtitulo:m.subtitulo||'',descripcion:m.descripcion||'',filas:moduleRows(m)}));
+    if(!PLANES_CLARO_TV_DATA.length)return showUnavailable('La publicación vigente no contiene módulos visibles.');
+    document.getElementById('versionLabel').textContent='Versión '+(data.publicacion.numero||'')+' · Base actualizada '+String(data.publicacion.fecha_actualizacion_base||'').slice(0,10);
+    buildFiltersFromModules();
+    render();
+  }catch(e){showUnavailable('No se pudo consultar la API de Claro TV. No se usaron datos estáticos antiguos.');}
+}
+loadClaroTv();
 </script>
 </body>
 </html>
-
-
 

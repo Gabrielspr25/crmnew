@@ -11,24 +11,58 @@ const portalPages = await Promise.all(
     .map((name) => readFile(new URL(`../../Planes para web/${name}`, import.meta.url), 'utf8'))
 );
 
-test('Planes Fijos usa fallback estatico cuando el API no devuelve modulos', () => {
+test('Planes Fijos usa API dinamica y no fallback silencioso cuando falla', () => {
   assert.match(indexPage, /fijos-data\.js/);
-  assert.match(indexPage, /PLANES_FIJOS_MODULOS_FALLBACK/);
-  assert.match(indexPage, /useFallbackPlanes/);
-  assert.match(indexPage, /sin modulos publicados/);
+  assert.doesNotMatch(indexPage, /PLANES_FIJOS_MODULOS_FALLBACK/);
+  assert.doesNotMatch(indexPage, /useFallbackPlanes/);
+  assert.match(indexPage, /No se usaron datos estáticos antiguos/);
+  assert.match(indexPage, /data\.publicacion/);
 });
 
-test('Claro TV vive en un tab separado, no dentro de Planes Fijos', () => {
+test('Portal Fijo filtra por tecnologia sin cambiar la publicacion', () => {
+  assert.match(indexPage, /data-tech-filter="all"/);
+  assert.match(indexPage, /data-tech-filter="cobre-vrad"/);
+  assert.match(indexPage, /data-tech-filter="gpon"/);
+  assert.match(indexPage, /function setTechnologyFilter/);
+  assert.match(indexPage, /function matchesTechnologyFilter/);
+  assert.match(indexPage, /COBRE\/VRAD\/GPON/);
+  assert.match(indexPage, /matchesTechnologyFilter\(r, activeTechnologyFilter\)/);
+  assert.doesNotMatch(indexPage, /fetch\(`\$\{API_BASE\}\/api\/planes-modulos\/fijos`[\s\S]*method:\s*['"]POST/);
+});
+
+test('Portal Fijo muestra conteos por producto y tecnologia', () => {
+  assert.match(indexPage, /function technologyCounts/);
+  assert.match(indexPage, /function buildTechnologySummary/);
+  assert.match(indexPage, /Cobre\/VRAD/);
+  assert.match(indexPage, /GPON/);
+  assert.match(indexPage, /Sin tecnología indicada/);
+  assert.match(indexPage, /data-tech-counts/);
+  assert.match(indexPage, /techBadge\(r\.tecnologia\|\|''\)/);
+});
+
+test('Portal Fijo muestra equipos y accesorios de Internet como modulo separado', () => {
+  assert.match(indexPage, /Equipos y accesorios de Internet/);
+  assert.match(indexPage, /fijo_equipos_accesorios_internet/);
+  assert.match(indexPage, /80184H/);
+  assert.match(indexPage, /WiFi Beacon/);
+});
+
+test('Portal Fijo conserva registros compartidos en ambos filtros tecnologicos', () => {
+  assert.match(indexPage, /const TECH_FILTERS/);
+  assert.match(indexPage, /techIncludesCobreVrad/);
+  assert.match(indexPage, /techIncludesGpon/);
+  assert.match(indexPage, /COBRE\/VRAD\/GPON/);
+  assert.match(indexPage, /filter === 'all'/);
+});
+
+test('Claro TV vive separado y consume planes_modulos dinamicos', () => {
   assert.match(indexPage, /href="claro-tv\.html"/);
   assert.doesNotMatch(fallbackData, /seccion_key:\s*'claro_tv'/);
   assert.match(claroTvPage, /Claro TV/);
-  assert.match(claroTvPage, /PLANES_CLARO_TV_DATA/);
-  assert.match(claroTvPage, /Clarotv\+ ULTRA ESENCIAL/);
-  assert.match(claroTvPage, /IP2BASC2/);
-  assert.match(claroTvPage, /Clarotv\+ BASIC/);
-  assert.match(claroTvPage, /PY2SIG/);
-  assert.match(claroTvPage, /IPLYB/);
-  assert.match(claroTvPage, /NPVR250/);
+  assert.match(claroTvPage, /api\/planes-modulos\/claro_tv/);
+  assert.match(claroTvPage, /No se usaron datos estáticos antiguos/);
+  assert.match(claroTvPage, /data\.publicacion/);
+  assert.match(claroTvPage, /PLANES_CLARO_TV_DATA=\(data\.modulos\|\|\[\]\)\.map/);
 });
 
 test('Planes Fijos fallback conserva modulos visibles aunque no haya backend', () => {

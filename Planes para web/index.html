@@ -80,6 +80,18 @@ body{
   border-color:rgba(56,189,248,0.5);color:#38bdf8;
 }
 .filters-right{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.4)}
+.tech-summary{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-top:8px;
+}
+.tech-count{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;color:rgba(255,255,255,0.62);
+  background:rgba(255,255,255,0.055);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:3px 8px;
+}
+.tech-count strong{color:#f8fafc;font-weight:700}
 
 /* ”€”€ MAIN ”€”€ */
 .container{max-width:1600px;margin:0 auto;padding:24px}
@@ -143,7 +155,6 @@ body{
 .plan-table tr:last-child td{border-bottom:none}
 .plan-table tr:hover td{background:rgba(255,255,255,0.03)}
 .plan-table tr.hidden{display:none}
-
 code{
   font-family:monospace;font-size:11px;
   background:rgba(56,189,248,0.1);
@@ -159,6 +170,7 @@ code{
 .badge-cobre{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)}
 .badge-gpon{background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
 .badge-vradgpon{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
+.badge-unknown{background:rgba(148,163,184,0.15);color:#cbd5e1;border:1px solid rgba(148,163,184,0.3)}
 
 /* ”€”€ EMPTY / ERROR ”€”€ */
 .state-card{
@@ -196,7 +208,7 @@ code{
   <div class="brand-logo">CLARO</div>
   <div class="brand-text">
     <div class="brand-title">Planes Fijos - Estructura de Negocios</div>
-    <div class="brand-sub">PYMES / Corporativo - Puerto Rico</div>
+    <div class="brand-sub" id="versionLabel">PYMES / Corporativo - Puerto Rico</div>
   </div>
   <div class="header-search">
     <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -213,11 +225,13 @@ code{
   <a href="servicios.html">Servicios</a>
   <a href="oferta-const.html">Oferta const.</a>
   <a href="ofertas.html">Ofertas</a>
+  <a href="directorio-fijo.html">Directorio de fijo</a>
 </nav>
 
 <div class="filters" id="filtersBar">
-  <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Todos</button>
-  <!-- Filtros por secci³n se generan din¡micamente -->
+  <button class="filter-btn active" data-tech-filter="all" onclick="setTechnologyFilter('all',this)">Todos</button>
+  <button class="filter-btn" data-tech-filter="cobre-vrad" onclick="setTechnologyFilter('cobre-vrad',this)">Cobre/VRAD</button>
+  <button class="filter-btn" data-tech-filter="gpon" onclick="setTechnologyFilter('gpon',this)">GPON</button>
   <span class="filters-right" id="countLabel"></span>
 </div>
 
@@ -231,23 +245,30 @@ code{
 <script src="fijos-data.js?v=2026070501"></script>
 <script>
 const API_BASE = '';  // mismo origen (proxy nginx †’ :3001)
+const TECH_FILTERS = {
+  all: 'Todos',
+  'cobre-vrad': 'Cobre/VRAD',
+  gpon: 'GPON'
+};
+const CATEGORY_META_OVERRIDES = {
+  fijo_equipos_accesorios_internet: {
+    title: 'Equipos y accesorios de Internet',
+    hint: '80184H WiFi Beacon'
+  }
+};
 let allModulos = [];
-let activeFilter = 'all';
+let activeTechnologyFilter = 'all';
 
 // ”€”€ Fetch planes ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
-function useFallbackPlanes(reason) {
-  allModulos = window.PLANES_FIJOS_MODULOS_FALLBACK || [];
-  if (!allModulos.length) {
-    document.getElementById('mainContainer').innerHTML = `
-      <div class="state-card">
-        <div class="state-icon">š ï¸</div>
-        <div class="state-title">No hay modulos publicados</div>
-        <div class="state-sub">${reason || 'sin modulos publicados'}</div>
-      </div>`;
-    return;
-  }
-  buildFilters();
-  render();
+function showUnavailable(reason) {
+  allModulos = [];
+  document.getElementById('mainContainer').innerHTML = `
+    <div class="state-card">
+      <div class="state-icon">!</div>
+      <div class="state-title">Información no disponible</div>
+      <div class="state-sub">${reason || 'No existe una publicación vigente de Fijo.'}</div>
+    </div>`;
+  document.getElementById('countLabel').textContent = '0 registros';
 }
 
 async function loadPlanes() {
@@ -256,36 +277,63 @@ async function loadPlanes() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     allModulos = data.modulos || [];
-    if (!allModulos.length) throw new Error('sin modulos publicados');
-    buildFilters();
+    if (!data.publicacion) return showUnavailable('No existe una publicación vigente de Fijo.');
+    if (!allModulos.length) return showUnavailable('La publicación vigente no contiene módulos visibles.');
+    document.getElementById('versionLabel').textContent = `Versión ${data.publicacion.numero || ''} · Base actualizada ${String(data.publicacion.fecha_actualizacion_base || '').slice(0,10)}`;
     render();
   } catch(e) {
-    useFallbackPlanes(e.message);
+    showUnavailable('No se pudo consultar la API de planes. No se usaron datos estáticos antiguos.');
   }
 }
 
-// ”€”€ Build section filter buttons ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
-function buildFilters() {
-  const bar = document.getElementById('filtersBar');
-  // Remove old dynamic buttons (keep "Todos")
-  bar.querySelectorAll('[data-filter]:not([data-filter="all"])').forEach(b => b.remove());
-  const refSpan = bar.querySelector('.filters-right');
-
-  allModulos.forEach(m => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn';
-    btn.dataset.filter = m.seccion_key;
-    btn.textContent = m.titulo;
-    btn.onclick = () => setFilter(m.seccion_key, btn);
-    bar.insertBefore(btn, refSpan);
-  });
-}
-
-function setFilter(key, btn) {
-  activeFilter = key;
+function setTechnologyFilter(key, btn) {
+  activeTechnologyFilter = key;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   render();
+}
+
+function normalizedTechnology(row) {
+  const raw = String(row?.tecnologia || '').trim();
+  return raw && raw !== '-' ? raw.toUpperCase() : 'Sin tecnología indicada';
+}
+
+function techIncludesCobreVrad(row) {
+  const tech = normalizedTechnology(row);
+  return tech.includes('COBRE') || tech.includes('VRAD');
+}
+
+function techIncludesGpon(row) {
+  return normalizedTechnology(row).includes('GPON');
+}
+
+function matchesTechnologyFilter(row, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'cobre-vrad') return techIncludesCobreVrad(row);
+  if (filter === 'gpon') return techIncludesGpon(row);
+  return true;
+}
+
+function technologyCounts(rows) {
+  return rows.reduce((acc, row) => {
+    acc.total += 1;
+    if (techIncludesCobreVrad(row)) acc.cobreVrad += 1;
+    if (techIncludesGpon(row)) acc.gpon += 1;
+    if (normalizedTechnology(row) === 'Sin tecnología indicada') acc.sinTecnologia += 1;
+    if (normalizedTechnology(row) === 'COBRE/VRAD/GPON') acc.compartida += 1;
+    return acc;
+  }, { total: 0, cobreVrad: 0, gpon: 0, compartida: 0, sinTecnologia: 0 });
+}
+
+function buildTechnologySummary(rows) {
+  const c = technologyCounts(rows);
+  return `<div class="tech-summary" data-tech-counts="total:${c.total};cobre-vrad:${c.cobreVrad};gpon:${c.gpon};compartida:${c.compartida};sin:${c.sinTecnologia}">
+    <span class="tech-count">Total <strong>${c.total}</strong></span>
+    <span class="tech-count">Cobre/VRAD <strong>${c.cobreVrad}</strong></span>
+    <span class="tech-count">GPON <strong>${c.gpon}</strong></span>
+    ${c.compartida ? `<span class="tech-count">COBRE/VRAD/GPON <strong>${c.compartida}</strong></span>` : ''}
+    ${c.sinTecnologia ? `<span class="tech-count">Sin tecnología indicada <strong>${c.sinTecnologia}</strong></span>` : ''}
+  </div>`;
 }
 
 // ”€”€ Render ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
@@ -293,19 +341,27 @@ function render() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const container = document.getElementById('mainContainer');
 
-  let visible = allModulos.filter(m => activeFilter === 'all' || m.seccion_key === activeFilter);
+  let visible = allModulos;
   container.innerHTML = '';
 
   let totalRows = 0;
+  let totalRowsBase = 0;
+  let totalCobreVrad = 0;
+  let totalGpon = 0;
 
   visible.forEach(m => {
     const rows = m.contenido?.filas || [];
-    const filteredRows = q ? rows.filter(r =>
+    const techRows = rows.filter(r => matchesTechnologyFilter(r, activeTechnologyFilter));
+    const filteredRows = q ? techRows.filter(r =>
       Object.values(r).some(v => String(v).toLowerCase().includes(q))
-    ) : rows;
+    ) : techRows;
 
     totalRows += filteredRows.length;
-    const card = buildSectionCard(m, filteredRows, q);
+    totalRowsBase += rows.length;
+    const counts = technologyCounts(rows);
+    totalCobreVrad += counts.cobreVrad;
+    totalGpon += counts.gpon;
+    const card = buildSectionCard(m, filteredRows, rows, q);
     container.appendChild(card);
   });
 
@@ -315,13 +371,17 @@ function render() {
       <div class="state-sub">Intenta con otro filtro o bºsqueda</div></div>`;
   }
 
-  document.getElementById('countLabel').textContent = `${totalRows} registros`;
+  const filterName = TECH_FILTERS[activeTechnologyFilter] || 'Todos';
+  document.getElementById('countLabel').textContent = `${filterName}: ${totalRows} registros · Base ${totalRowsBase} · Cobre/VRAD ${totalCobreVrad} · GPON ${totalGpon}`;
 }
 
-function buildSectionCard(m, filteredRows, q) {
+function buildSectionCard(m, filteredRows, originalRows, q) {
   const card = document.createElement('div');
   card.className = 'section-card';
   card.dataset.activo = m.activo;
+  const meta = CATEGORY_META_OVERRIDES[m.seccion_key] || {};
+  const sectionTitle = meta.title || m.titulo;
+  const sectionDescription = [m.descripcion, meta.hint].filter(Boolean).join(' · ');
 
   // Vigencia
   let vigBadge = '';
@@ -336,9 +396,10 @@ function buildSectionCard(m, filteredRows, q) {
   card.innerHTML = `
     <div class="section-header" onclick="this.closest('.section-card').classList.toggle('collapsed')">
       <div class="section-info">
-        <div class="section-title">${m.titulo}</div>
-        ${m.subtitulo ? `<div class="section-sub">${m.subtitulo}</div>` : ''}
-        ${m.descripcion ? `<div class="section-desc">${m.descripcion}</div>` : ''}
+        <div class="section-title">${sectionTitle}</div>
+        <div class="section-sub">${filteredRows.length} registros visibles · ${TECH_FILTERS[activeTechnologyFilter] || 'Todos'}</div>
+        ${sectionDescription ? `<div class="section-desc">${sectionDescription}</div>` : ''}
+        ${buildTechnologySummary(originalRows)}
       </div>
       <div class="section-meta">
         ${vigBadge}
@@ -420,7 +481,8 @@ function buildTable(cols, rows, q) {
 }
 
 function techBadge(val) {
-  const v = String(val).toUpperCase();
+  const v = String(val || '').toUpperCase();
+  if (!v || v === '-') return `<span class="badge badge-unknown">Sin tecnología indicada</span>`;
   if (v.includes('GPON') && v.includes('VRAD')) return `<span class="badge badge-vradgpon">${val}</span>`;
   if (v.includes('GPON')) return `<span class="badge badge-gpon">${val}</span>`;
   return `<span class="badge badge-cobre">${val}</span>`;
@@ -442,7 +504,3 @@ loadPlanes();
 </script>
 </body>
 </html>
-
-
-
-
