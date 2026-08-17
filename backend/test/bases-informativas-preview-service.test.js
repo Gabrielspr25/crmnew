@@ -309,3 +309,89 @@ test('revision manual, errores de encabezado y campos obligatorios bloquean sin 
   assert.doesNotMatch(serviceSource, /from ['"]\.\.\/db\.js['"]/);
   assert.doesNotMatch(serviceSource, /\bpool\.query\b|\bclient\.query\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b/i);
 });
+
+test('preview movil combina base y BYOP-BAN sin mezclar ofertas temporales', () => {
+  const parsed = {
+    tipo: 'planes_moviles_compuesto',
+    fuentes: [
+      { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', nombre_original: 'Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf', sha256: 'a'.repeat(64) },
+      { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', nombre_original: 'Boletin Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-17 marzo de 2026.pdf', sha256: 'b'.repeat(64) },
+    ],
+    modulos: {
+      planes_individuales: { filas: Array.from({ length: 11 }, (_, index) => ({
+        pagina: index + 1,
+        categoria: 'movil_planes_individuales',
+        codigo: index === 7 ? 'BREDSF' : `IND${index + 1}`,
+        descripcion: `Individual ${index + 1}`,
+        precio_regular: index === 7 ? 100 : 20 + index,
+        texto_original: `individual ${index + 1}`,
+        trazas_auditoria: index === 7 ? [{ pagina: 16 }, { pagina: 23 }] : [{ pagina: index + 1 }],
+      })) },
+      planes_multilinea_opciones: { filas: Array.from({ length: 36 }, (_, index) => ({
+        pagina: 27 + Math.floor(index / 9) * 2,
+        categoria: 'movil_multilinea_business_red',
+        familia: ['Business Red PLUS', 'Business Red EXTREME', 'Business Red SUPREME', 'Business Red Sin Fronteras'][Math.floor(index / 9)],
+        codigo: `ML${index + 2}`,
+        descripcion: `Multilinea ${index + 2}`,
+        precio_regular: 30 + index,
+        cantidad_lineas: (index % 9) + 2,
+        texto_original: `multilinea ${index + 2}`,
+      })) },
+      planes_multilinea_byop_ban: { filas: [{
+        pagina: 4,
+        categoria: 'movil_multilinea_byop_ban',
+        familia: 'Business Red Plus BYOP-BAN',
+        codigo: 'BREDP1015',
+        descripcion: 'Business Red Plus BYOP-BAN',
+        precio_regular: 150,
+        precio_regular_descripcion: '$150.00 por BAN',
+        modelo_cobro: 'por_ban',
+        capacidad_maxima_lineas: 10,
+        requisitos_permanentes: ['BYOP', 'AutoPay'],
+        texto_original: 'BREDP1015 $150',
+      }] },
+      referencia_operativa: { filas: ['BREDP1', 'BREDE1', 'BREDS1', 'BREDSF1'].map((codigo, index) => ({
+        pagina: 27 + index * 2,
+        categoria: 'referencia_operativa',
+        codigo,
+        descripcion: 'codigo base operativo',
+        texto_original: codigo,
+      })) },
+      segmento_no_incluido: { filas: Array.from({ length: 8 }, (_, index) => ({
+        pagina: 39 + index,
+        categoria: 'segmento_no_incluido',
+        codigo: `GRED${index}`,
+        descripcion: 'Government RED',
+        segmento_no_incluido: 'gobierno',
+        texto_original: `gobierno ${index}`,
+      })) },
+    },
+    auditoria_original: { total_filas: 60, duplicados_exactos_total: 0 },
+    registros_normalizados_total: 60,
+  };
+
+  const { previews } = buildBasesInformativasPreviews({
+    parsed,
+    fuente: {
+      id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      nombre_original: 'Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf',
+      sha256: 'a'.repeat(64),
+      fecha_actualizacion_base: '2026-06-20',
+    },
+  });
+
+  const movil = previews.find((item) => item.categoria === 'movil');
+
+  assert.equal(movil.publicable, true);
+  assert.equal(movil.candidatos_publicos.length, 48);
+  assert.deepEqual(movil.modulos_generados.map((module) => [module.seccion_key, module.contenido.filas.length]), [
+    ['movil_planes_individuales', 11],
+    ['movil_multilinea_business_red', 36],
+    ['movil_multilinea_byop_ban', 1],
+  ]);
+  assert.equal(movil.contenido_excluido.filter((row) => row.segmento_no_incluido === 'gobierno').length, 8);
+  assert.equal(movil.auditoria.referencia_operativa.length, 4);
+  assert.equal(movil.auditoria.fuentes.length, 2);
+  assert.equal(movil.candidatos_publicos.some((row) => /^GRED/.test(row.codigo)), false);
+  assert.equal(movil.candidatos_publicos.some((row) => ['BREDP1', 'BREDE1', 'BREDS1', 'BREDSF1'].includes(row.codigo)), false);
+});

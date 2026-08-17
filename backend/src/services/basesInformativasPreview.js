@@ -17,6 +17,15 @@ const PREVIEW_DEFINITIONS = Object.freeze([
       ['claro_tv_servicios_complementos', 3, 'Claro TV servicios complementos'],
     ],
   },
+  {
+    categoria: 'movil',
+    pagina: 'moviles',
+    included: [
+      ['planes_individuales', 11, 'Planes individuales Business/PYMES', 'movil_planes_individuales'],
+      ['planes_multilinea_opciones', 36, 'Planes multilinea Business RED', 'movil_multilinea_business_red'],
+      ['planes_multilinea_byop_ban', 1, 'Business Red Plus BYOP-BAN', 'movil_multilinea_byop_ban'],
+    ],
+  },
 ]);
 
 const ARRAY_CATEGORIES = Object.freeze([
@@ -24,6 +33,7 @@ const ARRAY_CATEGORIES = Object.freeze([
   'internet_equipos_ofertas',
   'referencia_interna',
   'contenido_temporal_excluido',
+  'segmento_no_incluido',
   'terminos_contrato',
   'revision_manual',
 ]);
@@ -45,8 +55,21 @@ function stableRow(row, sectionKey = null) {
     alfa_code: row.alfa_code ?? null,
     descripcion: String(row.descripcion || '').trim(),
     descripcion_original: row.descripcion_original || row.texto_original || row.descripcion || '',
-    precio: row.precio ?? null,
+    precio: row.precio ?? row.precio_regular ?? null,
+    precio_regular: row.precio_regular ?? row.precio ?? null,
+    precio_regular_descripcion: row.precio_regular_descripcion ?? null,
     tecnologia: row.tecnologia ?? null,
+    familia: row.familia ?? null,
+    cantidad_lineas: row.cantidad_lineas ?? null,
+    cantidad_lineas_permitida: row.cantidad_lineas_permitida ?? null,
+    capacidad_maxima_lineas: row.capacidad_maxima_lineas ?? null,
+    capacidad_minima_lineas: row.capacidad_minima_lineas ?? null,
+    modelo_cobro: row.modelo_cobro ?? null,
+    requisitos_permanentes: row.requisitos_permanentes ?? [],
+    caracteristicas_permanentes: row.caracteristicas_permanentes ?? [],
+    segmento_no_incluido: row.segmento_no_incluido ?? null,
+    promedio_10_lineas: row.promedio_10_lineas ?? null,
+    promedio_no_precio_regular: row.promedio_no_precio_regular ?? null,
     encabezado_origen: row.encabezado_origen || null,
     texto_original: row.texto_original || row.descripcion_original || row.descripcion || '',
     llave_auditoria: [
@@ -324,6 +347,20 @@ function excludedRows(parsed) {
   return ARRAY_CATEGORIES.flatMap((category) => rowsFor(parsed, category).map((row) => stableRow(row, category)));
 }
 
+function auditReferenceRows(parsed) {
+  return rowsFor(parsed, 'referencia_operativa').map((row) => stableRow(row, 'referencia_operativa'));
+}
+
+function auditSources(parsed, fuente) {
+  const parsedSources = Array.isArray(parsed?.fuentes) ? parsed.fuentes : [];
+  const sources = parsedSources.length ? parsedSources : [fuente];
+  return sources.map((source) => ({
+    id: source?.id || null,
+    nombre_original: source?.nombre_original || source?.titulo || null,
+    sha256: source?.sha256 || null,
+  }));
+}
+
 function validateCommon({ parsed, fuente, candidates, modules, expectedTotal }) {
   const errors = [];
   const warnings = [];
@@ -389,19 +426,19 @@ function buildPreview(definition, parsed, fuente, publicacionesAnteriores) {
   const included = [];
   let order = 10;
 
-  for (const [sectionKey, expectedCount, title] of definition.included) {
-    const rows = transformSectionRows(sectionKey, rowsFor(parsed, sectionKey).map((row) => stableRow(row, sectionKey)));
-    included.push(sectionKey);
+  for (const [sourceKey, expectedCount, title, moduleKey = sourceKey] of definition.included) {
+    const rows = transformSectionRows(moduleKey, rowsFor(parsed, sourceKey).map((row) => stableRow(row, moduleKey)));
+    included.push(moduleKey);
     if (rows.length !== expectedCount) {
       validationErrors.push({
         codigo: 'conteo_categoria_invalido',
-        categoria: sectionKey,
+        categoria: moduleKey,
         esperado: expectedCount,
         encontrado: rows.length,
       });
     }
     candidates.push(...rows);
-    modules.push(moduleFor({ page: definition.pagina, sectionKey, title, rows, order }));
+    modules.push(moduleFor({ page: definition.pagina, sectionKey: moduleKey, title, rows, order }));
     order += 10;
   }
 
@@ -426,6 +463,8 @@ function buildPreview(definition, parsed, fuente, publicacionesAnteriores) {
     auditoria: {
       original: parsed?.auditoria_original || {},
       categorias_incluidas: included,
+      referencia_operativa: auditReferenceRows(parsed),
+      fuentes: auditSources(parsed, fuente),
     },
     duplicados: parsed?.auditoria_original?.duplicados_exactos || [],
     validacion: {
@@ -449,9 +488,11 @@ export function buildBasesInformativasPreviews({ parsed, fuente, publicacionesAn
   if (!parsed || typeof parsed !== 'object') throw new Error('parsed requerido');
   if (!fuente || typeof fuente !== 'object') throw new Error('fuente requerida');
 
-  const previews = PREVIEW_DEFINITIONS.map((definition) => (
-    buildPreview(definition, parsed, fuente, publicacionesAnteriores)
-  ));
+  const previews = PREVIEW_DEFINITIONS
+    .filter((definition) => definition.included.some(([sourceKey]) => rowsFor(parsed, sourceKey).length > 0))
+    .map((definition) => (
+      buildPreview(definition, parsed, fuente, publicacionesAnteriores)
+    ));
 
   return {
     fuente: {

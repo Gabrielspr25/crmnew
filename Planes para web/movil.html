@@ -152,15 +152,15 @@ body{
   cursor:pointer;
 }
 .terms-button:hover{background:rgba(255,255,255,0.14)}
-.activation-table{width:100%;border-collapse:collapse;background:#f7f7f7;color:#111;font-size:12px}
-.activation-table th,.activation-table td{border:2px solid #111;padding:6px 7px;text-align:center;vertical-align:middle}
-.activation-table .activation-title{background:#d40000;color:#fff;font-size:18px;letter-spacing:.02em;text-transform:uppercase;padding:10px}
-.activation-table .activation-head{background:#b8b4b4;font-weight:800}
-.activation-table .account-cell{background:#fff;text-align:left;min-width:178px}
+.activation-table{width:100%;border-collapse:collapse;background:#171b2f;color:#e2e8f0;font-size:12px}
+.activation-table th,.activation-table td{border:1px solid rgba(148,163,184,0.28);padding:7px 8px;text-align:center;vertical-align:middle}
+.activation-table .activation-title{background:#12304f;color:#f6c453;font-size:18px;letter-spacing:.02em;text-transform:uppercase;padding:10px}
+.activation-table .activation-head{background:#232944;color:#f6c453;font-weight:800}
+.activation-table .account-cell{background:#1b213a;text-align:left;min-width:178px;color:#e2e8f0}
 .activation-table .account-cell ul{padding-left:20px;line-height:1.85}
 .activation-table .line-count{font-weight:900;white-space:nowrap}
-.activation-table .code-cell{font-weight:900;color:#1f334d;white-space:nowrap}
-.activation-table .money-cell{font-weight:900;white-space:nowrap}
+.activation-table .code-cell{font-weight:900;color:#7dd3fc;white-space:nowrap}
+.activation-table .money-cell{font-weight:900;color:#f8fafc;white-space:nowrap}
 .activation-table .autopay-red{color:#e00000}
 .activation-table .muted-head{font-weight:800}
 .activation-note{padding:10px 14px;background:rgba(56,189,248,0.08);border-top:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.66)}
@@ -200,6 +200,31 @@ body{
 .plan-footer{padding:10px 24px;background:rgba(0,0,0,0.08);font-size:11px;color:rgba(255,255,255,0.35)}
 
 .summary-section{display:none!important}
+.published-structure-title{padding:10px 0 8px;color:#38bdf8;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.business-plus-section{margin:0 0 24px;padding:16px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.25);border-radius:12px}
+.business-plus-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.business-plus-title{color:#f6c453;font-size:18px;font-weight:900;margin-bottom:6px}
+.business-plus-note{color:rgba(255,255,255,0.68);font-size:12px;line-height:1.55;margin-bottom:12px}
+.business-plus-terms{border:1px solid rgba(56,189,248,0.32);border-radius:8px;background:rgba(15,23,42,0.45);min-width:190px}
+.business-plus-terms summary{cursor:pointer;list-style:none;padding:8px 10px;color:#bae6fd;font-size:12px;font-weight:800}
+.business-plus-terms summary::-webkit-details-marker{display:none}
+.business-plus-terms summary::after{content:'+';float:right;color:#f6c453;font-size:16px;line-height:12px}
+.business-plus-terms[open] summary::after{content:'-'}
+.business-plus-terms-content{padding:0 10px 10px;color:rgba(255,255,255,0.72);font-size:11px;line-height:1.55}
+.business-plus-terms-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.business-plus-condition{white-space:pre-line;padding-top:8px;border-top:1px solid rgba(148,163,184,0.18)}
+.business-plus-source{white-space:pre-line;padding-top:8px}
+.business-plus-table{width:100%;min-width:1080px;border-collapse:collapse;font-size:12px}
+.business-plus-table th,.business-plus-table td{border:1px solid rgba(148,163,184,0.28);padding:8px;text-align:center;vertical-align:top}
+.business-plus-table th{background:#232944;color:#f6c453;font-size:11px}
+.business-plus-table td{color:#e2e8f0}
+.business-plus-table .equipment-list{text-align:left;min-width:220px;line-height:1.55}
+.business-plus-table .regular-price{color:#f8fafc;font-weight:800;white-space:nowrap}
+.business-plus-table .free{color:#4ade80;font-weight:900}
+.business-plus-table .discount{color:#38bdf8;font-weight:900}
+.business-plus-table .regular{color:#fbbf24;font-weight:800}
+.business-plus-meta{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.business-plus-pill{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);color:#bae6fd;font-size:11px}
 
 .state-card{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.4)}
 .state-icon{font-size:48px;margin-bottom:12px}
@@ -210,10 +235,22 @@ body{
   .header-search{width:100%}
   .header-search input{width:100%}
   .container{padding:12px}
+  #mainContainer{padding:8px 0}
+  .business-plus-section{margin:0 0 16px;padding:10px 8px;border-radius:8px}
+  .business-plus-title-row{align-items:flex-start;flex-direction:column}
+  .business-plus-terms{width:100%}
+  .business-plus-table th,.business-plus-table td{padding:7px 6px}
   .plan-card-header{flex-direction:column;gap:12px}
   .plan-heading{width:100%}
   .lineas-table{font-size:12px}
   .lineas-table th,.lineas-table td{padding:8px 10px}
+}
+
+@media(min-width:1200px){
+  .business-plus-section{
+    width:calc(100vw - 64px);
+    margin-left:calc((1100px - 100vw + 64px)/2 - 24px);
+  }
 }
 </style>
 </head>
@@ -251,6 +288,7 @@ body{
   <span class="autopay-hint">AutoPay = -$10 por l­nea / mes</span>
 </div>
 
+<div class="container" id="mobileSourceBadge" style="padding-bottom:0"></div>
 <div class="container" id="mainContainer">
   <div class="state-card">
     <div class="state-icon">³</div>
@@ -269,10 +307,18 @@ body{
 </div>
 
 <script>
-const API_BASE = '';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? window.location.origin
+  : 'https://crmp.ss-group.cloud';
 let allModulos = [];
+let publishedOffers = [];
+let businessRedPlus = null;
 let autopayOn = false;
 let openPlanKey = null;
+let openPublishedOfferId = null;
+let mobileVersionMeta = null;
+let basePublicationMeta = null;
+let mobileOffersError = null;
 
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -290,11 +336,14 @@ function moneyNumber(value) {
 
 async function loadPlanes() {
   try {
-    const r = await fetch(`${API_BASE}/api/planes-modulos/moviles`);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    allModulos = data.modulos || [];
+    const modulesResponse = await fetch(`${API_BASE}/api/planes-modulos/moviles`);
+    if (!modulesResponse.ok) throw new Error(`HTTP ${modulesResponse.status}`);
+    const modulesData = await modulesResponse.json();
+    allModulos = modulesData.modulos || [];
+    basePublicationMeta = modulesData.publicacion || null;
     if (!openPlanKey && allModulos.length) openPlanKey = allModulos[0].seccion_key;
+    await loadMobileOffersVersion();
+    renderMobileSourceBadges();
     render();
   } catch(e) {
     document.getElementById('mainContainer').innerHTML = `
@@ -303,6 +352,92 @@ async function loadPlanes() {
         <div class="state-title">Error al cargar</div>
         <div class="state-sub">${e.message}</div>
       </div>`;
+  }
+}
+
+async function loadMobileOffersVersion() {
+  try {
+    const r = await fetch(`${API_BASE}/api/ofertas-movil/vigente`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    mobileVersionMeta = data.version || null;
+    mobileOffersError = null;
+    publishedOffers = Array.isArray(mobileVersionMeta?.datos) ? mobileVersionMeta.datos : [];
+    businessRedPlus = mobileVersionMeta?.business_red_plus || null;
+  } catch (error) {
+    mobileVersionMeta = null;
+    mobileOffersError = error;
+  }
+  renderMobileSourceBadges();
+}
+
+function renderMobileSourceBadges() {
+  const badge = document.getElementById('mobileSourceBadge');
+  if (!badge) return;
+  const badges = [];
+  if (basePublicationMeta) {
+    const version = basePublicationMeta.version_etiqueta || basePublicationMeta.version || '';
+    const fechaBase = String(basePublicationMeta.fecha_actualizacion_base || '').slice(0, 10) || 'sin fecha';
+    badges.push(`<div class="badge badge-blue" style="display:inline-flex;margin:0 8px 8px 0">Base movil vigente${version ? ` · Version ${escapeHTML(version)}` : ''} · Actualizada ${escapeHTML(fechaBase)}</div>`);
+  } else {
+    badges.push('<div class="badge badge-amber" style="display:inline-flex;margin:0 8px 8px 0">Base movil no disponible</div>');
+  }
+  if (mobileVersionMeta) {
+    const expired = mobileVersionMeta.estado_vigencia === 'vencida_pendiente_reemplazo';
+    badges.push(`<div class="badge ${expired ? 'badge-amber' : 'badge-green'}" style="display:inline-flex;margin:0 8px 8px 0">${expired ? 'Ofertas moviles vencidas, esperando reemplazo' : 'Ofertas moviles vigentes'} · Version ${escapeHTML(mobileVersionMeta.numero)} · ${escapeHTML(mobileVersionMeta.archivo_nombre || '')}</div>`);
+  } else {
+    badges.push('<div class="badge badge-amber" style="display:inline-flex;margin:0 8px 8px 0">Ofertas moviles no disponibles</div>');
+  }
+  badge.innerHTML = badges.join('');
+}
+
+function formatDiscount(value) {
+  const number = Number(value);
+  if (number === 1) return '<span class="free">Gratis</span>';
+  if (number === 0) return '<span class="regular">Precio regular</span>';
+  return `<span class="discount">${escapeHTML(`${Math.round(number * 100)}%`)}</span>`;
+}
+
+function renderBusinessRedPlus(container) {
+  const block = businessRedPlus;
+  if (!block || block.line_order_dependent !== true || !Array.isArray(block.groups) || !block.groups.length) return;
+  const rows = block.groups.flatMap((group) => {
+    const equipment = (group.equipment || []).map((item) => `<div>${escapeHTML(item.model)} <span class="regular-price">($${Number(item.regular_price).toFixed(2)})</span></div>`).join('');
+    const discounts = (group.line_discounts || []).map((value) => `<td>${formatDiscount(value)}</td>`).join('');
+    return `<tr><td class="equipment-list">${equipment}</td>${discounts}<td>${escapeHTML(String(group.max_discounted_lines ?? ''))}</td><td class="regular-price">${escapeHTML((group.equipment || []).map((item) => `$${Number(item.regular_price).toFixed(2)}`).join(' / '))}</td><td><span class="business-plus-pill">${escapeHTML(group.price_codes?.up || '-')}</span><br><span class="business-plus-pill">${escapeHTML(group.price_codes?.fi || '-')}</span></td></tr>`;
+  }).join('');
+  const first = block.groups[0] || {};
+  const codes = [...new Set(block.groups.flatMap((group) => [group.price_codes?.up, group.price_codes?.fi].filter(Boolean)))];
+  const sourceNames = (block.fuentes || []).map((source) => source.nombre_original).filter(Boolean);
+  const conditions = [...new Set(block.groups.map((group) => group.terms).filter(Boolean))];
+  const section = document.createElement('section');
+  section.className = 'business-plus-section';
+  section.id = 'business_red_plus';
+  section.innerHTML = `<div class="business-plus-title-row"><div class="business-plus-title">${escapeHTML(block.plan?.nombre || 'Business Red Plus')} ${block.plan?.monto != null ? `$${escapeHTML(block.plan.monto)}` : ''}</div><details class="business-plus-terms"><summary>Terminos y condiciones</summary><div class="business-plus-terms-content"><div class="business-plus-terms-meta"><span class="business-plus-pill">Vigencia: ${escapeHTML(block.vigencia?.desde || '-')} a ${escapeHTML(block.vigencia?.hasta || '-')}</span><span class="business-plus-pill">Codigos: ${escapeHTML(codes.join(' / ') || '-')}</span></div><div class="business-plus-source">Fuentes: ${escapeHTML(sourceNames.join(' + ') || 'fuente oficial archivada')}</div>${conditions.map((condition) => `<div class="business-plus-condition">${escapeHTML(condition)}</div>`).join('')}</div></details></div>
+    <div class="business-plus-note">La oferta depende del orden de activacion: el equipo elegido para la linea 1 recibe la regla de la linea 1, el de la linea 2 la regla de la linea 2, y asi sucesivamente. No es una promocion binaria.</div>
+    <div class="table-wrap"><table class="business-plus-table"><thead><tr><th>Grupo de equipos<br>Precio regular</th>${(first.line_discounts || []).map((_, index) => `<th>Linea ${index + 1}</th>`).join('')}<th>Maximo con beneficio</th><th>Precio regular despues del limite</th><th>Price codes<br>Update / Financing</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  container.appendChild(section);
+}
+
+function renderPlanInformation() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const container = document.getElementById('mainContainer');
+  const visibleModules = allModulos.filter(module => {
+    const haystack = [module.titulo, module.subtitulo, module.descripcion].join(' ').toLowerCase();
+    return !q || haystack.includes(q);
+  });
+  container.innerHTML = '';
+
+  renderBusinessRedPlus(container);
+  if (visibleModules.length) {
+    const structureTitle = document.createElement('div');
+    structureTitle.className = 'published-structure-title';
+    structureTitle.textContent = 'Estructura oficial por plan';
+    container.appendChild(structureTitle);
+    visibleModules.forEach(module => container.appendChild(buildPlanCard(module)));
+  }
+  if (!visibleModules.length) {
+    container.innerHTML = '<div class="state-card"><div class="state-title">No hay ofertas móviles para mostrar.</div></div>';
   }
 }
 
@@ -349,7 +484,16 @@ function render() {
     visible = allModulos.filter(m =>
       m.titulo.toLowerCase().includes(q) ||
       m.subtitulo?.toLowerCase().includes(q) ||
-      (m.contenido?.lineas || []).some(l => l.codigo.toLowerCase().includes(q))
+      (m.contenido?.lineas || []).some(l => String(l.codigo || '').toLowerCase().includes(q)) ||
+      (m.contenido?.filas || []).some(row => [
+        row.codigo,
+        row.descripcion,
+        row.familia,
+        row.precio_regular_descripcion,
+        row.modelo_cobro,
+        ...(row.caracteristicas_permanentes || []),
+        ...(row.requisitos_permanentes || [])
+      ].join(' ').toLowerCase().includes(q))
     );
   }
 
@@ -361,12 +505,25 @@ function render() {
     return;
   }
 
+  const byopModule = visible.find(m => m.seccion_key === 'business_red_plus_byop_ban' || m.seccion_key === 'movil_multilinea_byop_ban');
+  const regularVisible = visible.filter(m => m.seccion_key !== 'business_red_plus_byop_ban' && m.seccion_key !== 'movil_multilinea_byop_ban');
+
   // Summary cards
-  const summaryModulos = visible.filter(m => m.tipo !== 'individual_update_plus');
+  const summaryModulos = regularVisible.filter(m => m.tipo !== 'individual_update_plus');
   if (summaryModulos.length) {
   const summary = document.createElement('div');
   summary.className = 'summary-section';
   summaryModulos.forEach(m => {
+    const baseRows = mobileRows(m);
+    if (baseRows.length) {
+      summary.innerHTML += `
+        <div class="summary-card">
+          <div class="summary-plan">${escapeHTML(m.titulo)}</div>
+          <div class="summary-l1">${baseRows.length}</div>
+          <div class="summary-range">registros publicados</div>
+        </div>`;
+      return;
+    }
     const lineas = m.contenido?.lineas || [];
     const apDesc = m.contenido?.autopay_descuento || 10;
     const lineasCalc = buildCumulatives(lineas, apDesc);
@@ -385,11 +542,14 @@ function render() {
   container.appendChild(summary);
   }
 
+  renderBusinessRedPlus(container);
+
   // Full plan cards
-  visible.forEach(m => {
+  regularVisible.forEach(m => {
     const card = buildPlanCard(m);
     container.appendChild(card);
   });
+  if (byopModule) container.appendChild(buildPlanCard(byopModule));
 }
 
 function buildActivationTable(activacion) {
@@ -492,6 +652,126 @@ function buildActivationTable(activacion) {
     </div>`;
 }
 
+function buildMultilineaActivationTable(m) {
+  const filas = m.contenido?.filas || [];
+  if (!filas.length) return '';
+  const baseCode = (m.subtitulo || '').match(/[A-Z]+[A-Z0-9]*1\b/)?.[0] || '';
+  const firstPrice = Number(filas[0]?.precio || 0);
+  let totalRegular = 0;
+  let totalAutoPay = 0;
+  const rows = filas.map(row => {
+    const line = Number(row.linea || 0);
+    const price = Number(row.precio || 0);
+    totalRegular += price;
+    totalAutoPay += Math.max(0, price - 10);
+    const systemCode = baseCode ? baseCode.replace(/1$/, String(line)) : '';
+    const averageRegular = line ? totalRegular / line : 0;
+    const averageAutoPay = line ? totalAutoPay / line : 0;
+    return `<tr>
+      <td>${escapeHTML(`${line} linea${line === 1 ? '' : 's'}`)}</td>
+      <td>${escapeHTML(baseCode)}</td>
+      <td>$${escapeHTML(firstPrice)}</td>
+      <td>${escapeHTML(systemCode)}</td>
+      <td>$${escapeHTML(price)}</td>
+      <td>$${averageRegular.toFixed(2).replace(/\.00$/, '')}/<span class="autopay-red">$${averageAutoPay.toFixed(2).replace(/\.00$/, '')}</span></td>
+      <td>$${totalRegular.toFixed(2).replace(/\.00$/, '')}/<span class="autopay-red">$${totalAutoPay.toFixed(2).replace(/\.00$/, '')}</span></td>
+    </tr>`;
+  }).join('');
+  return `<div class="table-wrap"><table class="activation-table">
+    <thead>
+      <tr><th class="activation-title" colspan="7">${escapeHTML(`PROCESO DE ACTIVACION ${m.titulo || ''}`)}</th></tr>
+      <tr class="activation-head"><th>Linea</th><th>Codigo vendedor</th><th>Precio regular vendedor</th><th>Codigo por cantidad</th><th>Precio regular cliente</th><th>Promedio regular/<span class="autopay-red">AutoPay</span></th><th>Total regular/<span class="autopay-red">AutoPay</span></th></tr>
+    </thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function isBaseMobileModule(module) {
+  return [
+    'movil_planes_individuales',
+    'movil_multilinea_business_red',
+    'movil_multilinea_byop_ban'
+  ].includes(module?.seccion_key);
+}
+
+function isPublicMobileRow(row) {
+  const operationalLineOneCodes = new Set(['BREDP1', 'BREDE1', 'BREDS1', 'BREDSF1']);
+  if (row?.segmento_no_incluido === 'gobierno') return false;
+  if (operationalLineOneCodes.has(String(row?.codigo || '').trim())) return false;
+  return true;
+}
+
+function mobileRows(module) {
+  return (module?.contenido?.filas || []).filter(isPublicMobileRow);
+}
+
+function formatPlanPrice(row) {
+  if (row.precio_regular_descripcion) return row.precio_regular_descripcion;
+  const value = row.precio_regular ?? row.precio;
+  if (value === null || value === undefined || value === '') return '-';
+  const number = Number(value);
+  if (Number.isFinite(number)) return `$${number.toFixed(2)}`;
+  return String(value);
+}
+
+function formatList(values) {
+  const list = Array.isArray(values) ? values : [];
+  return list.length ? list.map(escapeHTML).join(', ') : '-';
+}
+
+function lineCountLabel(row) {
+  if (row.cantidad_lineas) return `${row.cantidad_lineas} linea${Number(row.cantidad_lineas) === 1 ? '' : 's'}`;
+  if (row.capacidad_maxima_lineas) {
+    const minimum = row.capacidad_minima_lineas || 'minimo no especificado';
+    return `${minimum} · hasta ${row.capacidad_maxima_lineas} lineas`;
+  }
+  if (row.cantidad_lineas_permitida) return String(row.cantidad_lineas_permitida);
+  return '-';
+}
+
+function buildBaseMobileTable(module) {
+  const rows = mobileRows(module);
+  const total = module?.contenido?.total_filas ?? rows.length;
+  const tableRows = rows.map(row => {
+    if (module.seccion_key === 'movil_multilinea_byop_ban') {
+      return `<tr>
+        <td><strong>${escapeHTML(row.familia || row.descripcion)}</strong><div class="regular-price">${escapeHTML(row.codigo)}</div></td>
+        <td>${escapeHTML(formatPlanPrice(row))}</td>
+        <td>${escapeHTML(row.modelo_cobro || 'por BAN')}</td>
+        <td>${escapeHTML(lineCountLabel(row))}</td>
+        <td>${formatList(row.requisitos_permanentes)}</td>
+        <td>${formatList(row.caracteristicas_permanentes)}</td>
+      </tr>`;
+    }
+    if (module.seccion_key === 'movil_multilinea_business_red') {
+      return `<tr>
+        <td><strong>${escapeHTML(row.familia || row.descripcion)}</strong><div class="regular-price">${escapeHTML(row.codigo)}</div></td>
+        <td>${escapeHTML(lineCountLabel(row))}</td>
+        <td>${escapeHTML(formatPlanPrice(row))}</td>
+        <td>${formatList(row.requisitos_permanentes)}</td>
+        <td>${formatList(row.caracteristicas_permanentes)}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td><strong>${escapeHTML(row.descripcion)}</strong><div class="regular-price">${escapeHTML(row.codigo)}</div></td>
+      <td>${escapeHTML(formatPlanPrice(row))}</td>
+      <td>${escapeHTML(lineCountLabel(row))}</td>
+      <td>${formatList(row.caracteristicas_permanentes)}</td>
+      <td>${formatList(row.requisitos_permanentes)}</td>
+    </tr>`;
+  }).join('');
+
+  const header = module.seccion_key === 'movil_multilinea_byop_ban'
+    ? '<tr><th>Plan</th><th>Precio regular</th><th>Modelo de cobro</th><th>Capacidad</th><th>Requisitos</th><th>Caracteristicas</th></tr>'
+    : module.seccion_key === 'movil_multilinea_business_red'
+      ? '<tr><th>Familia / codigo</th><th>Lineas</th><th>Precio regular</th><th>Requisitos</th><th>Caracteristicas</th></tr>'
+      : '<tr><th>Plan / codigo</th><th>Precio regular</th><th>Lineas</th><th>Caracteristicas</th><th>Requisitos</th></tr>';
+
+  return `<div class="published-structure-title">${escapeHTML(rows.length)} candidatos publicos de ${escapeHTML(total)} registros auditados</div>
+    <div class="table-wrap"><table class="activation-table">
+      <thead>${header}</thead>
+      <tbody>${tableRows}</tbody>
+    </table></div>`;
+}
+
 function buildPlanCard(m) {
   const c = m.contenido || {};
   const lineas = c.lineas || [];
@@ -571,9 +851,12 @@ function buildPlanCard(m) {
       <tbody>${rows}</tbody>
     </table></div>`;
 
-  const tableHTML = c.activacion
+  const tableHTML = isBaseMobileModule(m)
+    ? buildBaseMobileTable(m)
+    : c.activacion
     ? buildActivationTable(c.activacion)
-    : legacyTableHTML;
+    : buildMultilineaActivationTable(m)
+    || legacyTableHTML;
 
   // Coverage
   const coverageHTML = cobertura.length ? `
@@ -629,13 +912,12 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeTermsModal();
 });
 
-document.getElementById('searchInput').addEventListener('input', () => render());
+document.getElementById('searchInput').addEventListener('input', () => {
+  render();
+});
 
 loadPlanes();
 </script>
 </body>
 </html>
-
-
-
 

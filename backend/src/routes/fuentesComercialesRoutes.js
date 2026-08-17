@@ -117,6 +117,57 @@ function publicFuentePreview(row) {
   };
 }
 
+function emptyMovilModule(titulo) {
+  return { titulo, filas: [] };
+}
+
+function combineMovilParsedSources(parsedSources, fuentes) {
+  const combined = {
+    tipo: 'planes_moviles_compuesto',
+    fuentes: fuentes.map((fuente) => ({
+      id: fuente.id,
+      nombre_original: fuente.nombre_original,
+      sha256: fuente.sha256,
+    })),
+    modulos: {
+      planes_individuales: emptyMovilModule('Planes individuales Business/PYMES'),
+      planes_multilinea_opciones: emptyMovilModule('Planes multilinea Business RED'),
+      planes_multilinea_byop_ban: emptyMovilModule('Planes multilinea BYOP-BAN'),
+      referencia_operativa: emptyMovilModule('Referencia operativa'),
+      segmento_no_incluido: emptyMovilModule('Segmento no incluido'),
+      contenido_temporal_excluido: emptyMovilModule('Contenido temporal excluido'),
+      revision_manual: emptyMovilModule('Revision manual'),
+    },
+    auditoria_original: { total_filas: 0, duplicados_exactos_total: 0, duplicados_exactos: [] },
+    registros_normalizados_total: 0,
+    resumen: {},
+  };
+
+  for (const parsed of parsedSources) {
+    for (const [key, module] of Object.entries(combined.modulos)) {
+      module.filas.push(...(parsed?.modulos?.[key]?.filas || []));
+    }
+    combined.auditoria_original.total_filas += Number(parsed?.auditoria_original?.total_filas || 0);
+    combined.auditoria_original.duplicados_exactos_total += Number(parsed?.auditoria_original?.duplicados_exactos_total || 0);
+    combined.auditoria_original.duplicados_exactos.push(...(parsed?.auditoria_original?.duplicados_exactos || []));
+    combined.registros_normalizados_total += Number(parsed?.registros_normalizados_total || 0);
+  }
+
+  combined.resumen = {
+    planes_individuales_unicos: combined.modulos.planes_individuales.filas.length,
+    familias_multilinea: 5,
+    opciones_multilinea_publicables: combined.modulos.planes_multilinea_opciones.filas.length,
+    planes_multilinea_byop_ban: combined.modulos.planes_multilinea_byop_ban.filas.length,
+    referencias_operativas: combined.modulos.referencia_operativa.filas.length,
+    segmento_no_incluido_gobierno: combined.modulos.segmento_no_incluido.filas.filter((row) => row.segmento_no_incluido === 'gobierno').length,
+    candidatos_publicos: combined.modulos.planes_individuales.filas.length
+      + combined.modulos.planes_multilinea_opciones.filas.length
+      + combined.modulos.planes_multilinea_byop_ban.filas.length,
+  };
+
+  return combined;
+}
+
 function sanitizeBasePublicacion(row) {
   if (!row) return null;
   return {
@@ -293,8 +344,28 @@ export function createPreviewBaseHandler(options = {}) {
     );
     const fuente = rows[0];
     if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
-    if (!['fijos', 'claro_tv', 'ofertas_fijo'].includes(fuente.familia) || fuente.documento_tipo !== 'pdf') {
+    if (!['fijos', 'claro_tv', 'ofertas_fijo', 'moviles'].includes(fuente.familia) || fuente.documento_tipo !== 'pdf') {
       return res.status(422).json({ ok: false, codigo: 'archivo_incompatible' });
+    }
+
+    let fuentes = [fuente];
+    if (fuente.familia === 'moviles') {
+      const companionIds = Array.isArray(req.body?.fuente_ids)
+        ? [...new Set(req.body.fuente_ids.map(String).filter((item) => item !== id))]
+        : [];
+      if (!companionIds.length) return res.status(400).json({ ok: false, codigo: 'fuente_byop_requerida' });
+      if (companionIds.some((item) => !UUID_RE.test(item))) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+      const companion = await dbPool.query(
+        `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+                vigencia_desde, vigencia_hasta, vigencia_documental, estado
+         FROM public.fuentes_comerciales WHERE id = ANY($1::uuid[])`,
+        [companionIds]
+      );
+      if (companion.rows.length !== companionIds.length) return res.status(404).json({ ok: false, codigo: 'fuente_complementaria_no_encontrada' });
+      if (companion.rows.some((row) => row.familia !== 'moviles' || row.documento_tipo !== 'pdf')) {
+        return res.status(422).json({ ok: false, codigo: 'archivo_complementario_incompatible' });
+      }
+      fuentes = [fuente, ...companion.rows];
     }
 
     let filePath;
@@ -308,7 +379,16 @@ export function createPreviewBaseHandler(options = {}) {
 
     let parsed;
     try {
-      parsed = await parserRunner('parse_planes_fijos_pdf.py', filePath);
+      if (fuente.familia === 'moviles') {
+        const parsedSources = [];
+        for (const fuenteItem of fuentes) {
+          const sourcePath = resolveFuentePath(fuenteItem, { uploadDir });
+          parsedSources.push(await parserRunner('parse_planes_moviles_pdf.py', sourcePath));
+        }
+        parsed = combineMovilParsedSources(parsedSources, fuentes);
+      } else {
+        parsed = await parserRunner('parse_planes_fijos_pdf.py', filePath);
+      }
     } catch (error) {
       const codigo = PARSER_ERROR_CODES.has(error.code) ? error.code : 'parser_error';
       logger.error?.('[fuentes-comerciales/preview-base/parser]', codigo);
@@ -352,8 +432,7 @@ export function createPreviewBaseHandler(options = {}) {
       fecha_actualizacion_base_origen: fechaBase.origen,
       previews,
       resumen: {
-        fijo: previews.fijo?.candidatos_publicos?.length || 0,
-        claro_tv: previews.claro_tv?.candidatos_publicos?.length || 0,
+        ...Object.fromEntries(Object.entries(previews).map(([categoria, item]) => [categoria, item.candidatos_publicos?.length || 0])),
       },
     });
   } catch {
@@ -392,8 +471,8 @@ export function createGuardarBaseBorradoresHandler(options = {}) {
     }
 
     const usuario = uname(req);
-    const previewsToSave = ['fijo', 'claro_tv'].map((categoria) => previewPayload.previews?.[categoria]).filter(Boolean);
-    if (previewsToSave.length !== 2) return res.status(422).json({ ok: false, codigo: 'preview_incompleto' });
+    const previewsToSave = Object.values(previewPayload.previews || {});
+    if (!previewsToSave.length) return res.status(422).json({ ok: false, codigo: 'preview_incompleto' });
 
     try {
       const guardadas = [];

@@ -13,8 +13,8 @@ test('fuentes comerciales expone ciclo local de bases informativas', () => {
   assert.match(route, /post\('\/bases-informativas\/:id\/publicar', requireAdmin/);
 });
 
-test('guardar borrador crea dos publicaciones independientes desde la misma fuente y hash', () => {
-  assert.match(route, /\['fijo', 'claro_tv'\]\.map/);
+test('guardar borrador crea publicaciones independientes desde la misma fuente y hash', () => {
+  assert.match(route, /Object\.values\(previewPayload\.previews \|\| \{\}\)/);
   assert.match(route, /INSERT INTO public\.bases_informativas_publicaciones/);
   assert.match(route, /item\.fuente_comercial_id/);
   assert.match(route, /item\.fuente_sha256/);
