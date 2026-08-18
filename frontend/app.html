@@ -1853,7 +1853,8 @@ const OF_TABS=[
   ['inalambrico_iot','Inalambrico / IoT'],
   ['lista_precios','Lista de Precios'],
   ['servicios','Servicios'],
-  ['directorio_fijo','Directorio de Fijo']
+  ['directorio_fijo','Directorio de Fijo'],
+  ['ofertas_vigentes','Ofertas Vigentes']
 ];
 let ofTab='fijo', ofEquiposPreview=null, ofEquiposItems=null;
 let fcSeleccionadas=[], fcPreviewPlanesFijosData=null, fcSeleccionInicializada=false;
@@ -1950,6 +1951,7 @@ async function ofRenderBody(){
   if(ofTab==='servicios')return ofRenderServiciosBase();
   if(ofTab==='lista_precios')return ofRenderListaPrecios();
   if(ofTab==='directorio_fijo')return ofRenderDirectorioFijo();
+  if(ofTab==='ofertas_vigentes')return ofRenderOfertasVigentes();
   return ofRenderCatalogoBase(ofTab);
 }
 function ofModuloLabel(key){
@@ -1989,6 +1991,18 @@ function ofRenderServiciosBase(){
 }
 function ofRenderDirectorioFijo(){
   return ofRenderModuleShell({title:'Directorio de Fijo',accept:'.xlsx,.xls,.pdf',details:'Directorio de Fijo usa la misma regla de catalogo base: fuente publicada, vigencia, comparacion e historial.',note:'Si vence sin reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
+}
+function ofRenderOfertasVigentes(){
+  var b=$('ofBody'); if(!b)return;
+  var familias=[
+    {key:'ofertas_moviles',title:'Ofertas Moviles',accept:'.pdf,.xlsx,.xls',body:'Para boletines y tablas de ofertas moviles. Requiere revisar modelo, plan, evento, trade-in, limite BAN, metodo, pago mensual y vigencia.'},
+    {key:'ofertas_fijo',title:'Ofertas Fijo',accept:'.pdf',body:'Para boletines de ofertas de fijo. Debe separar descuentos, velocidades, meses gratis, penalidades y condiciones de elegibilidad.'},
+    {key:'beneficios',title:'Beneficios Convergentes',accept:'.pdf',body:'Para beneficios de clientes convergentes. Debe conservar requisitos de combinacion de servicios, vigencia y exclusiones.'}
+  ];
+  var cards=familias.map(function(f){
+    return '<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(f.title)+'</b><div class="s" style="margin-top:5px">'+esc(f.body)+'</div></div><span class="pill amber">Borrador</span></div><div class="impgrid" style="margin-top:12px"><div><div class="flbl">Documento oficial</div><input class="inp" type="file" accept="'+esc(f.accept)+'"></div><div><div class="flbl">Vigencia hasta</div><input class="inp" type="date"></div></div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn">Analizar</button><button class="btn ghost">Guardar borrador</button><button class="btn green" disabled>Publicar version</button></div></div>';
+  }).join('');
+  b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">Ofertas Vigentes</h3><div class="s" style="margin-top:4px">La version anterior sigue publicada hasta confirmar la nueva. No publica automaticamente.</div></div><span class="pill violet">Revision obligatoria</span></div><div class="kpis" style="margin-top:12px"><div class="kpi"><div class="l">Correctas</div><div class="v">0</div></div><div class="kpi"><div class="l">Revisar</div><div class="v">0</div></div><div class="kpi"><div class="l">Excluidas</div><div class="v">0</div></div><div class="kpi"><div class="l">Contradicciones</div><div class="v">0</div></div></div><div class="grid2">'+cards+'</div></div>';
 }
 async function ofRenderFuentesComerciales(){
   var b=$('ofBody'); if(!b)return;

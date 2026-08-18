@@ -11,7 +11,7 @@ test('Admin Ofertas muestra los modulos base del portal sin Fuentes comerciales 
   const html = await readFile(frontendPath, 'utf8');
 
   assert.match(html, /const OF_TABS=\[/);
-  for (const label of ['Fijo', 'Claro TV', 'Planes Moviles', 'Inalambrico / IoT', 'Lista de Precios', 'Servicios', 'Directorio de Fijo']) {
+  for (const label of ['Fijo', 'Claro TV', 'Planes Moviles', 'Inalambrico / IoT', 'Lista de Precios', 'Servicios', 'Directorio de Fijo', 'Ofertas Vigentes']) {
     assert.match(html, new RegExp(`\\['[^']+','${label}'\\]`));
   }
   assert.doesNotMatch(html, /\['fuentes','Fuentes comerciales'\]/);
@@ -25,6 +25,17 @@ test('Admin Ofertas renderiza por modulo y conserva fuente interna', async () =>
   assert.match(html, /async function ofRenderBody\(\)/);
   assert.match(html, /guarda la fuente internamente/i);
   assert.match(html, /sigue usando la ultima version publicada/i);
+});
+
+test('Admin Ofertas separa ofertas vigentes de catalogos base', async () => {
+  const html = await readFile(frontendPath, 'utf8');
+
+  assert.match(html, /function ofRenderOfertasVigentes\(/);
+  assert.match(html, /Ofertas Moviles/);
+  assert.match(html, /Ofertas Fijo/);
+  assert.match(html, /Beneficios Convergentes/);
+  assert.match(html, /La version anterior sigue publicada hasta confirmar la nueva/i);
+  assert.match(html, /No publica automaticamente/i);
 });
 
 test('Fuentes comerciales restaura listado y flujo de bases informativas', async () => {
