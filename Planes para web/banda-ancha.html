@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -321,11 +321,9 @@ body{
   <a href="claro-tv.html">Claro TV</a>
   <a href="movil.html">Planes Moviles</a>
   <a href="banda-ancha.html" class="active">Inalambrico / IoT</a>
-  <a href="equipos.html">Lista de Equipos</a>
+  <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
-  <a href="oferta-const.html">Oferta const.</a>
-  <a href="ofertas.html">Ofertas</a>
-</nav>
+    </nav>
 
 <div class="container" id="mainContainer">
   <div class="state-card">
@@ -460,6 +458,12 @@ function render() {
   });
 }
 
+function formatVigenciaVisible(valor) {
+  if (!valor) return '';
+  const fecha = new Date(`${String(valor).slice(0, 10)}T12:00:00`);
+  return Number.isNaN(fecha.getTime()) ? String(valor).slice(0, 10) : fecha.toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 function buildCard(m) {
   const tipo = m.tipo;
   const c = m.contenido || {};
@@ -470,9 +474,10 @@ function buildCard(m) {
   // Vigencia badge
   let vigBadge = '';
   if (m.vigencia_desde || m.vigencia_hasta) {
-    const desde = m.vigencia_desde ? m.vigencia_desde.slice(0,7) : '';
-    const hasta = m.vigencia_hasta ? m.vigencia_hasta.slice(0,7) : '';
-    vigBadge = `<span class="badge badge-vigencia">ðŸ“… ${desde}${hasta && hasta !== desde ? ' †’ '+hasta : ''}</span>`;
+    const hasta = formatVigenciaVisible(m.vigencia_hasta);
+    const desde = formatVigenciaVisible(m.vigencia_desde);
+    const texto = hasta ? `Vigente hasta ${hasta}` : `Vigente desde ${desde}`;
+    vigBadge = `<span class="badge badge-vigencia">${texto}</span>`;
   }
 
   // Botones modal €” se muestran en el header junto a los badges
@@ -755,7 +760,3 @@ loadPlanes();
 
 </body>
 </html>
-
-
-
-

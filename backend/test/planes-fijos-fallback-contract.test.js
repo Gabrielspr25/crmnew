@@ -10,6 +10,10 @@ const portalPages = await Promise.all(
   ['index.html', 'movil.html', 'banda-ancha.html', 'equipos.html', 'servicios.html', 'oferta-const.html', 'ofertas.html', 'claro-tv.html']
     .map((name) => readFile(new URL(`../../Planes para web/${name}`, import.meta.url), 'utf8'))
 );
+const portalBasePages = await Promise.all(
+  ['index.html', 'movil.html', 'banda-ancha.html', 'equipos.html', 'servicios.html', 'directorio-fijo.html', 'claro-tv.html']
+    .map((name) => readFile(new URL(`../../Planes para web/${name}`, import.meta.url), 'utf8'))
+);
 
 test('Planes Fijos usa API dinamica y no fallback silencioso cuando falla', () => {
   assert.match(indexPage, /fijos-data\.js/);
@@ -113,7 +117,13 @@ test('Navegacion principal no muestra caracteres rotos', () => {
     assert.match(nav, /Claro TV/);
     assert.match(nav, /Planes Moviles/);
     assert.match(nav, /Inalambrico \/ IoT/);
-    assert.match(nav, /Lista de Equipos/);
+  }
+  for (const html of portalBasePages) {
+    const nav = html.match(/<nav class="nav">[\s\S]*?<\/nav>/)?.[0] || '';
+    assert.match(nav, /Lista de Precios/);
+    assert.doesNotMatch(nav, /Lista de Equipos/);
+    assert.doesNotMatch(nav, /Oferta const\./);
+    assert.doesNotMatch(nav, />Ofertas</);
   }
 });
 

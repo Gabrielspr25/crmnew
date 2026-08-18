@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business - Directorio de fijo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);min-height:100vh;color:#e2e8f0}
+.header{background:rgba(220,38,38,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1);padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.brand-logo{font-size:24px;font-weight:900;letter-spacing:-1px;color:#fff}
+.brand-text{flex:1}.brand-title{font-size:15px;font-weight:800;color:#fff}.brand-sub{color:rgba(255,255,255,.82);font-size:12px;margin-top:1px}
+.header-search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 14px}
+.header-search input{background:none;border:none;outline:none;color:#fff;font-size:14px;width:260px}.header-search input::placeholder{color:rgba(255,255,255,.62)}
+.nav{background:rgba(15,23,42,.7);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.06);padding:0 24px;display:flex;gap:4px;overflow-x:auto}
+.nav a{color:rgba(255,255,255,.64);font-size:13px;font-weight:600;padding:11px 14px;border-bottom:2px solid transparent;text-decoration:none;white-space:nowrap;transition:color .2s,border-color .2s}
+.nav a:hover{color:#fff}.nav a.active{color:#38bdf8;border-bottom-color:#38bdf8}
+.filters{padding:12px 24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.05)}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);font-size:12px;font-weight:700;cursor:pointer}
+.filter-btn.active{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.48);color:#38bdf8}
+.filters-right{margin-left:auto;font-size:12px;color:rgba(255,255,255,.45)}
+.container{max-width:1500px;margin:0 auto;padding:24px}
+.page-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}
+.page-title{font-size:23px;font-weight:900;color:#f8fafc}.page-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}
+.source{font-size:11px;color:rgba(255,255,255,.42);margin-top:4px}
+.section-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.section-card:hover{border-color:rgba(255,255,255,.15)}
+.section-header{padding:16px 20px;display:flex;justify-content:space-between;gap:16px;align-items:center;cursor:pointer;user-select:none}
+.section-header:hover{background:rgba(255,255,255,.025)}
+.section-title{font-size:16px;font-weight:900;color:#f8fafc}.section-sub{font-size:12px;color:#38bdf8;font-weight:700;margin-top:4px}
+.section-meta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.toggle-arrow{color:rgba(255,255,255,.45);font-size:12px;transition:transform .2s}.section-card.collapsed .toggle-arrow{transform:rotate(-90deg)}
+.section-body{padding:0 20px 16px}.section-card.collapsed .section-body{display:none}
+.table-wrap{overflow-x:auto}.directory-table{width:100%;border-collapse:collapse;font-size:13px}
+.directory-table th{text-align:left;padding:9px 12px;color:rgba(255,255,255,.55);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap}
+.directory-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.045);vertical-align:middle}
+.directory-table tr:hover td{background:rgba(255,255,255,.035)}
+.directory-table th:nth-child(1){min-width:220px}.directory-table th:nth-child(4){min-width:280px}
+.manager-row td{background:rgba(56,189,248,.06)}.manager-row b{color:#fff}
+.badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:12px;white-space:nowrap;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.count-badge{font-size:10px;background:rgba(250,204,21,.1);color:#facc15;border:1px solid rgba(250,204,21,.2);border-radius:20px;padding:4px 10px;white-space:nowrap}
+code{font-family:monospace;font-size:11px;background:rgba(56,189,248,.1);color:#7dd3fc;padding:2px 6px;border-radius:4px}
+a{color:#7dd3fc}.s{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}.muted{color:rgba(255,255,255,.25)}
+mark{background:#fbbf2440;color:#fbbf24;border-radius:2px}
+.state-card{text-align:center;padding:60px 20px;color:rgba(255,255,255,.45)}
+@media(max-width:720px){.header{flex-wrap:wrap}.header-search{width:100%}.header-search input{width:100%}.container{padding:12px}.page-head{flex-direction:column}.section-header{align-items:flex-start;flex-direction:column}.directory-table{font-size:12px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand-logo">CLARO</div>
+  <div class="brand-text">
+    <div class="brand-title">Directorio de fijo</div>
+    <div class="brand-sub">Operaciones Clientes Masivos - Puerto Rico</div>
+  </div>
+  <div class="header-search">
+    <input type="text" id="searchInput" placeholder="Buscar gerente, pueblo, celular, email...">
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html">Lista de Precios</a>
+  <a href="servicios.html">Servicios</a>
+  <a href="directorio-fijo.html" class="active">Directorio de fijo</a>
+</nav>
+
+<div class="filters" id="filtersBar">
+  <button class="filter-btn active" type="button" data-filter="all" onclick="setFilter('all',this)">Todos</button>
+  <span class="filters-right" id="countLabel"></span>
+</div>
+
+<main class="container">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Directorio de fijo</div>
+      <div class="page-sub">Acordeones por Gerente Operaciones de Campo.</div>
+      <div class="source" id="sourceLabel"></div>
+    </div>
+    <span class="count-badge" id="totalBadge"></span>
+  </div>
+  <div id="mainContainer"></div>
+</main>
+
+<script src="directorio-fijo-data.js?v=2026081101"></script>
+<script>
+let activeFilter='all';
+function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function hl(value,q){const s=String(value??'');if(!q)return esc(s);const i=s.toLowerCase().indexOf(q);if(i<0)return esc(s);return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));}
+function personMatches(person,q){if(!q)return true;return ['district','code','name','employee','job','municipalities','mobile','email'].some(key=>String(person[key]||'').toLowerCase().includes(q));}
+function setFilter(key,btn){activeFilter=key;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function buildFilters(groups){
+  const bar=document.getElementById('filtersBar'), ref=bar.querySelector('.filters-right');
+  groups.forEach(group=>{
+    const manager=group.manager||{}, btn=document.createElement('button');
+    btn.className='filter-btn';btn.type='button';btn.dataset.filter=manager.district||manager.name||'grupo';
+    btn.textContent=manager.district||manager.name||'Grupo';
+    btn.onclick=()=>setFilter(btn.dataset.filter,btn);
+    bar.insertBefore(btn,ref);
+  });
+}
+function row(person,isManager,q){
+  const email=person.email?`<a href="mailto:${esc(person.email)}">${hl(person.email,q)}</a>`:'<span class="muted">-</span>';
+  return `<tr class="${isManager?'manager-row':''}">
+    <td><b>${hl(person.name||'-',q)}</b><div class="s"># ${hl(person.employee||'-',q)}</div></td>
+    <td>${isManager?'<span class="badge">Gerente</span>':hl(person.job||'-',q)}</td>
+    <td><code>${hl(person.code||'-',q)}</code><div class="s">${hl(person.district||'-',q)}</div></td>
+    <td>${hl(person.municipalities||'-',q)}</td>
+    <td>${hl(person.mobile||'-',q)}</td>
+    <td>${email}</td>
+  </tr>`;
+}
+function groupRows(group,q){
+  const manager=group.manager||{}, managerMatch=personMatches(manager,q);
+  const contacts=managerMatch?(group.contacts||[]):(group.contacts||[]).filter(contact=>personMatches(contact,q));
+  if(!managerMatch&&!contacts.length)return {html:'',count:0};
+  const people=[manager].concat(contacts);
+  return {html:people.map((person,index)=>row(person,index===0,q)).join(''),count:people.length};
+}
+function render(){
+  const data=window.DIRECTORIO_FIJO_DATA||{}, q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const allGroups=[];
+  if((data.admin||[]).length)allGroups.push({title:'Administracion',manager:{name:'Administracion',job:'Equipo administrativo',district:'Administracion',code:'-',employee:'-',municipalities:'Metro e Isla',mobile:'',email:''},contacts:data.admin||[]});
+  (data.groups||[]).forEach(group=>allGroups.push(group));
+  const groups=allGroups.filter(group=>activeFilter==='all'||String((group.manager||{}).district||'')===activeFilter);
+  let total=0;
+  const cards=groups.map((group,index)=>{
+    const manager=group.manager||{}, rendered=groupRows(group,q);
+    if(!rendered.count)return '';
+    total+=rendered.count;
+    const title=group.title||manager.name||'Sin gerente';
+    return `<section class="section-card ${index>0?'collapsed':''}">
+      <div class="section-header" onclick="this.closest('.section-card').classList.toggle('collapsed')">
+        <div><div class="section-title">${esc(title)}</div><div class="section-sub">${esc(manager.job||'Gerente Operaciones de Campo')} · ${esc(manager.district||'-')}</div></div>
+        <div class="section-meta"><span class="count-badge">${rendered.count} contactos</span><span class="toggle-arrow">▾</span></div>
+      </div>
+      <div class="section-body"><div class="table-wrap"><table class="directory-table">
+        <thead><tr><th>Contacto</th><th>Puesto</th><th>Distrito / Codigo</th><th>Pueblos que comprende</th><th>Celular</th><th>Email</th></tr></thead>
+        <tbody>${rendered.html}</tbody>
+      </table></div></div>
+    </section>`;
+  }).join('');
+  document.getElementById('mainContainer').innerHTML=cards||'<div class="state-card">Sin resultados para esta busqueda.</div>';
+  document.getElementById('countLabel').textContent=total+' contactos';
+  document.getElementById('totalBadge').textContent=total+' contactos';
+  document.getElementById('sourceLabel').textContent='Fuente: '+(data.source_file||'Directorio Operaciones Clientes Masivos dic. 2025.xlsx');
+}
+document.getElementById('searchInput').addEventListener('input',render);
+buildFilters((window.DIRECTORIO_FIJO_DATA||{}).groups||[]);
+render();
+</script>
+</body>
+</html>

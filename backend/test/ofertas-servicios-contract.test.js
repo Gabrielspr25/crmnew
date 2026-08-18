@@ -6,12 +6,10 @@ import { test } from 'node:test';
 const appHtml = await readFile(new URL('../../frontend/app.html', import.meta.url), 'utf8');
 const portalServicios = await readFile(new URL('../../Planes para web/servicios.html', import.meta.url), 'utf8');
 
-test('Admin Ofertas incluye tab de servicios con alertas y modal descargable', () => {
-  assert.match(appHtml, /\['servicios','[^']*Servicios'\]/);
-  assert.match(appHtml, /ofRenderServicios/);
-  assert.match(appHtml, /Alertas de vigencia/);
-  assert.match(appHtml, /openServicioModal/);
-  assert.match(appHtml, /downloadServicioImage/);
+test('Admin Ofertas incluye Servicios como modulo base controlado', () => {
+  assert.match(appHtml, /\['servicios','Servicios'\]/);
+  assert.match(appHtml, /function ofRenderServiciosBase\(\)/);
+  assert.match(appHtml, /Solo quedan publicados Asistencia Legal y Claro Rescate/);
 });
 
 test('Servicios iniciales documentan fechas importantes y estados de vigencia', () => {
