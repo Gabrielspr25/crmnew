@@ -100,6 +100,11 @@ body{
 .plan-item-precio{font-size:16px;font-weight:700;color:#4ade80;margin-bottom:6px}
 .plan-item-codigo{font-family:monospace;font-size:10px;background:rgba(56,189,248,0.1);color:#7dd3fc;padding:2px 6px;border-radius:4px}
 .plan-item-nota{font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px}
+.plan-equipment-offer{margin-top:10px;padding-top:10px;border-top:1px solid rgba(56,189,248,.22)}
+.plan-equipment-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#7dd3fc;margin-bottom:5px}
+.plan-equipment-model{font-size:12px;font-weight:700;color:#f8fafc}
+.plan-equipment-price{font-size:12px;color:#4ade80;margin-top:3px}
+.plan-equipment-terms{font-size:10px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4}
 
 /* Doble datos badge */
 .doble-badge{
@@ -549,7 +554,7 @@ function buildCard(m) {
 
   if (tipo === 'inalambrico') {
     if (c.planes_solo) {
-      bodyHTML += buildIntGoSection(c);
+      bodyHTML += buildIntGoSection(c, allModulos);
     } else if (c.planes) {
       bodyHTML += buildOficinaSection(c);
     }
@@ -582,7 +587,29 @@ function buildSectionSummary(m) {
   return pills.length ? `<div class="section-summary">${pills.map(item => `<span class="section-summary-pill">${item}</span>`).join('')}</div>` : '';
 }
 
-function buildIntGoSection(c) {
+function findBackupEquipmentOffer(plan, modulos) {
+  if (Number(plan?.precio) >= 30) return null;
+  const precios = (modulos || []).find(m => m.seccion_key === 'equipos_precios_inalambrico')?.contenido || {};
+  const figu = precios.financiamiento_gu || [];
+  return figu.find(e => /rt\s*410/i.test(String(e.modelo || ''))) || figu[0] || null;
+}
+
+function buildBackupEquipmentOffer(plan, modulos) {
+  const equipo = findBackupEquipmentOffer(plan, modulos);
+  if (!equipo) return '<div class="plan-equipment-offer"><div class="plan-equipment-label">Oferta de equipo para este plan</div><div class="plan-equipment-terms">Pendiente de publicacion.</div></div>';
+  const cuotas = [
+    equipo.fin_24 ? `24 meses: $${Number(equipo.fin_24).toFixed(2)}/mes` : '',
+    equipo.fin_36 ? `36 meses: $${Number(equipo.fin_36).toFixed(2)}/mes` : '',
+  ].filter(Boolean).join(' · ');
+  return `<div class="plan-equipment-offer">
+    <div class="plan-equipment-label">Oferta de equipo para este plan</div>
+    <div class="plan-equipment-model">${equipo.modelo}</div>
+    <div class="plan-equipment-price">Precio financiado: $${Number(equipo.precio_regular).toFixed(2)}</div>
+    <div class="plan-equipment-terms">${cuotas} · FIGU24 / FIGU36 · Requiere cliente Fijo o Cloud</div>
+  </div>`;
+}
+
+function buildIntGoSection(c, modulos) {
   const soloItems = (c.planes_solo || []).map(p => `
     <div class="plan-item">
       <div class="plan-item-datos">${p.datos}</div>
@@ -605,6 +632,7 @@ function buildIntGoSection(c) {
       <div class="plan-item-precio">$${p.precio}/mes</div>
       <div><span class="plan-item-codigo">${p.codigo}</span></div>
       <div class="plan-item-nota">${p.uso}</div>
+      ${buildBackupEquipmentOffer(p, modulos)}
     </div>`).join('');
 
   const equipos = (c.equipos || []).map(e => `
