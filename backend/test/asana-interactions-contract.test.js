@@ -58,10 +58,11 @@ test('Asana shows due scheduled calls as a global reminder on any screen', () =>
 test('Asana muestra agenda diaria y boton de llamada por fila', () => {
   assert.match(appHtml, /const callAlerts=await loadCallAlerts\(\)/);
   assert.match(appHtml, /function asanaCallState\(alert\)/);
+  assert.match(appHtml, /function asanaUniqueCallAlerts\(alerts\)/);
   assert.match(appHtml, /function asanaDailyCallAgenda\(alerts\)/);
   assert.match(appHtml, /function asanaCallButton\(alert\)/);
   assert.match(appHtml, /const callByOpp=asanaCallMap\(callAlerts\)/);
-  assert.match(appHtml, /const callAgenda=asanaDailyCallAgenda\(callAlerts\)/);
+  assert.match(appHtml, /const callAgenda=asanaDailyCallAgenda\(asanaUniqueCallAlerts\(callAlerts\)\)/);
   assert.match(appHtml, /<th class="c">Agenda<\/th>/);
   assert.match(appHtml, /\$\{asanaCallButton\(callByOpp\.get\(o\.id\)\)\}/);
   assert.match(appHtml, /class="asana-call-agenda"/);
@@ -86,6 +87,11 @@ test('Asana opportunity detail has a visible back button to Asana list', () => {
   assert.match(appHtml, /location\.hash='#\/asana'/);
 });
 
+test('Asana opportunity detail links the client name to the client modal', () => {
+  assert.match(asanaRealSource, /SELECT o\.id, o\.client_id, o\.title/);
+  assert.match(appHtml, /<h1><button type="button" class="linkbtn"[^>]+onclick="abrirCliente\('\$\{o\.client_id\|\|''\}'\)"[^>]*>\$\{esc\(o\.client_name\|\|'[^']+'\)\}<\/button><\/h1>/);
+});
+
 test('Asana opportunity detail renders compact product step cards', () => {
   assert.match(appHtml, /flowgrid/);
   assert.match(appHtml, /flowcard/);
@@ -98,4 +104,12 @@ test('Asana real usa los pasos configurados en product_step_templates', () => {
   assert.match(asanaRealSource, /'product_step_templates'/);
   assert.match(asanaRealSource, /ensureOpportunityWorkflowSteps/);
   assert.match(asanaRealSource, /productKeyParts/);
+});
+
+test('Asana list reports only active BAN and subscriber portfolio counts', () => {
+  assert.match(asanaRealSource, /count\(DISTINCT b\.id\)::int[\s\S]*AS ban_count/);
+  assert.match(asanaRealSource, /string_agg\(DISTINCT b\.ban_number::text, ', ' ORDER BY b\.ban_number::text\)/);
+  assert.match(asanaRealSource, /COUNT\(DISTINCT s\.id\)::int[\s\S]*AS subscriber_count/);
+  assert.match(asanaRealSource, /ACTIVE_BAN_SQL\('b'\)/);
+  assert.match(asanaRealSource, /ACTIVE_OR_SUSPENDED_SUB_SQL\('s'\)/);
 });

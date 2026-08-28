@@ -5,8 +5,13 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { fetchApifyPreview } from '../services/prospectosApifyService.js';
+import { createAirtableClient } from '../services/prospectosAirtableService.js';
+import { saveSelectedApifyProspects } from '../services/prospectosProspectionService.js';
+import { createProspectosRepository } from '../services/prospectosRepository.js';
 
 export const prospectosRouter = Router();
+const prospectosRepository = createProspectosRepository(pool);
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 // Lista amplia de rubros (que no se escape ningún negocio, "aunque venda pan").
@@ -159,6 +164,29 @@ async function runHarvest(rubros, municipios, maxPages) {
 }
 
 // ─── Endpoints ────────────────────────────────────────────────────────────────
+// Preview Apify: no guarda filas CRM ni Airtable. Los secretos viven solo en backend.
+prospectosRouter.post('/prospectos/apify/preview', requireAuth, async (req, res) => {
+  try {
+    const preview = await fetchApifyPreview(req.body || {});
+    res.json({ ok: true, ...preview });
+  } catch (e) {
+    res.status(e.statusCode || 502).json({ ok: false, error: e.message });
+  }
+});
+
+// Save Apify: solo guarda la selección explícita, primero CRM y luego Airtable.
+prospectosRouter.post('/prospectos/apify/save', requireAuth, async (req, res) => {
+  try {
+    const result = await saveSelectedApifyProspects({
+      prospects: req.body?.prospects || req.body?.selected || [],
+      crmRepository: prospectosRepository,
+      airtableClient: createAirtableClient(),
+    });
+    res.status(result.status === 'partial' ? 207 : 200).json({ ok: result.status !== 'partial', ...result });
+  } catch (e) {
+    res.status(e.statusCode || 500).json({ ok: false, error: e.message });
+  }
+});
 // catálogos + conteos
 prospectosRouter.get('/prospectos/meta', requireAuth, async (_req, res) => {
   try {

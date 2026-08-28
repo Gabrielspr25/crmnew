@@ -46,6 +46,11 @@ Dependencias node: se instalan con `npm install` en `backend/` (incluye `pg, exp
 | `DEV_LOGIN` | **`0` en prod** (apaga el login de prueba local) | ✅ |
 | `PORT` | Puerto del backend (ej. 3001) | ✅ |
 | `GOOGLE_PLACES_API_KEY` | Prospección (Google) | opcional |
+| `APIFY_API_TOKEN` | Prospección Apify desde backend; no exponer al frontend | opcional |
+| `APIFY_GOOGLE_MAPS_ACTOR_ID` | Actor Google Maps Scraper de Apify | opcional |
+| `AIRTABLE_API_KEY` | Sincronización backend con Airtable | opcional |
+| `AIRTABLE_BASE_ID` | Base Airtable destino de prospectos aprobados | opcional |
+| `AIRTABLE_TABLE_NAME` | Tabla Airtable destino, por ejemplo el nombre exacto configurado | opcional |
 | `GOOGLE_APPLICATION_CREDENTIALS` | OCR (Vision) | opcional (si se usa OCR) |
 | `OCR_ENGINE` | `auto`/`google` | opcional |
 | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` | Correos: envío por servidor | opcional* |
@@ -65,6 +70,7 @@ Carpeta `backend/migrations/`. Correr **solo lo que falte** en prod (con backup 
 | `2026-06-07-equipos-lista.sql` (equipos_*) | **Ya existe** (con datos) | No re-correr |
 | `2026-06-08-planes-modulos.sql` (planes_modulos) | **Ya existe** | No re-correr |
 | `2026-06-29-prospectos.sql` (public.prospectos) | **NUEVA — no existe** | **Correr en prod** |
+| `2026-08-26-prospectos-apify-airtable.sql` (estado Airtable en prospectos) | **Revisable — no aplicar sin autorización** | Agrega `airtable_record_id`, `airtable_synced_at`, `airtable_sync_error` |
 
 Ejecutar la nueva (ejemplo):
 ```bash
@@ -108,7 +114,7 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 - **Permisos** → usuarios y permisos por rol (necesita infra de auth/roles). Pendiente.
 - **Vendedores** → ✅ replicado (lista de Tango con ventas/vendido/comisión por mes).
 - **Correos por servidor (SMTP)** → requiere credenciales SMTP. Mientras tanto: Outlook (mailto).
-- **Prospección** → motor a decidir (Google de pago vs OpenStreetMap gratis). Requiere `GOOGLE_PLACES_API_KEY` + "Places API (New)" habilitada y la IP del server permitida.
+- **Prospección** → Google Places heredado requiere `GOOGLE_PLACES_API_KEY`. El flujo Apify/Airtable requiere `APIFY_API_TOKEN`, `APIFY_GOOGLE_MAPS_ACTOR_ID`, `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID` y `AIRTABLE_TABLE_NAME`; guarda primero en `public.prospectos` y solo después intenta Airtable.
 - **Parser de ofertas Excel (móviles)** y mejoras del scraper → a cargo del programador.
 - **OCR** → requiere `GOOGLE_APPLICATION_CREDENTIALS` en `backend/.env` (hoy está en el `.env` raíz; mover/copiar si se usa OCR).
 

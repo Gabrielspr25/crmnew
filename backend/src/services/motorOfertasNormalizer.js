@@ -158,6 +158,106 @@ function familiesFrom(termsText) {
   return { families, ambiguity: false };
 }
 
+function discountMarker(row) {
+  const values = row.map((value) => {
+    if (value === '' || value == null) return null;
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 && number <= 1 ? number : null;
+  }).filter((value) => value != null);
+  return values[0] === 1 && values.length >= 4 ? values : null;
+}
+
+function extractPriceCodes(value) {
+  const source = text(value);
+  const up = source.match(/update\s*plus\s*[-:]?\s*(UP[A-Z0-9%]+)/i)?.[1] || null;
+  const fi = source.match(/financiamiento\s*[-:]?\s*(FI[A-Z0-9%]+)/i)?.[1] || null;
+  return { up, fi };
+}
+
+function discountRanges(lineDiscounts) {
+  const ranges = [];
+  let start = 1;
+  let current = lineDiscounts[0] ?? 0;
+  for (let index = 1; index <= lineDiscounts.length; index += 1) {
+    const next = lineDiscounts[index];
+    if (next !== current) {
+      ranges.push({ desde: start, hasta: index, descuento: current });
+      start = index + 1;
+      current = next;
+    }
+  }
+  return ranges;
+}
+
+function businessModelRows(rows, headerRow, nextMarkerRow) {
+  const header = rows[headerRow] || [];
+  const modelIndex = columnIndex(header, 'modelo');
+  const priceIndex = columnIndex(header, 'precio regular');
+  if (modelIndex < 0 || priceIndex < 0) return [];
+  const result = [];
+  for (let index = headerRow + 1; index < (nextMarkerRow ?? rows.length); index += 1) {
+    const row = rows[index] || [];
+    const model = cellText(row[modelIndex]).replace(/\*/g, '').trim();
+    if (!model || fold(model) === 'modelo') continue;
+    const regular = parseMoney(row[priceIndex]);
+    if (regular == null) continue;
+    result.push({
+      manufacturer: text(row[0]),
+      model,
+      regular_price: regular,
+      source_row: index + 1,
+    });
+  }
+  return result;
+}
+
+export function parseBusinessRedPlusWorkbook({ buffer, fileName = null, sourceId = null }) {
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const sheetName = workbook.SheetNames.find((name) => fold(name) === 'ofertas business red plus');
+  if (!sheetName) throw new Error('Hoja obligatoria ausente: Ofertas Business Red Plus');
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+  const markers = rows.map(discountMarker).map((value, index) => (value ? index : -1)).filter((index) => index >= 0);
+  const warnings = [];
+  const groups = markers.map((markerRow, markerIndex) => {
+    const lineDiscounts = discountMarker(rows[markerRow]);
+    const nextMarkerRow = markers[markerIndex + 1];
+    const headerRow = rows.slice(markerRow + 1, nextMarkerRow ?? rows.length).findIndex((row) => columnIndex(row, 'modelo') >= 0 && columnIndex(row, 'precio regular') >= 0);
+    const actualHeaderRow = headerRow < 0 ? -1 : markerRow + 1 + headerRow;
+    const termsCells = rows.slice(markerRow + 1, actualHeaderRow < 0 ? (nextMarkerRow ?? rows.length) : actualHeaderRow)
+      .flat()
+      .filter((value) => text(value));
+    const terms = termsCells.map(text).join('\n');
+    const codes = extractPriceCodes(terms);
+    if (!codes.up || !codes.fi) warnings.push({ codigo: 'price_codes_no_encontrados', hoja: sheetName, fila: markerRow + 1 });
+    if (actualHeaderRow < 0) {
+      warnings.push({ codigo: 'encabezado_business_red_plus_no_encontrado', hoja: sheetName, fila: markerRow + 1 });
+      return null;
+    }
+    const equipment = businessModelRows(rows, actualHeaderRow, nextMarkerRow).map((item) => ({
+      ...item,
+      discount_prices: lineDiscounts.map((discount) => discount === 1 ? 0 : discount === 0 ? item.regular_price : Number((item.regular_price * (1 - discount)).toFixed(2))),
+    }));
+    const maxDiscountedLines = lineDiscounts.reduce((last, discount, index) => discount > 0 ? index + 1 : last, 0);
+    return {
+      line_discounts: lineDiscounts,
+      discount_ranges: discountRanges(lineDiscounts),
+      max_discounted_lines: maxDiscountedLines,
+      price_codes: codes,
+      terms,
+      equipment,
+      source: { archivo: fileName, fuente_id: sourceId, hoja: sheetName, row: markerRow + 1 },
+    };
+  }).filter(Boolean);
+  if (groups.length !== 4) warnings.push({ codigo: 'matrices_business_red_plus_incompletas', esperado: 4, encontrado: groups.length, hoja: sheetName });
+  return {
+    plan: { nombre: 'Business Red Plus', monto: 65 },
+    line_order_dependent: true,
+    groups,
+    warnings,
+    source: { archivo: fileName, fuente_id: sourceId, hoja: sheetName },
+  };
+}
+
 function indexPriceOverrides(rows, sheetName, fileName, sourceId) {
   const byModel = new Map();
   for (let index = 0; index < rows.length; index += 1) {

@@ -95,6 +95,22 @@ test('Fijo publica 80184H WiFi Beacon separado de los planes y sin enviarlo a eq
   assert.equal(fijo.contenido_excluido.some((fila) => fila.codigo === '80184H'), false);
 });
 
+test('Fijo conserva columnas posteriores a tecnologia para vista previa y publicacion', () => {
+  const fijo = buildPreviews().previews.find((item) => item.categoria === 'fijo');
+  const fila = fijo.candidatos_publicos.find((item) => item.categoria === 'fijo_telefonia' && item.codigo === 'A862');
+  const modulo = fijo.modulos_generados.find((item) => item.seccion_key === 'fijo_telefonia');
+  const filaPublicada = modulo.contenido.filas.find((item) => item.codigo === 'A862');
+
+  assert.ok(fila);
+  assert.equal(fila.minuto_adicional, 0.03);
+  assert.deepEqual(fila.instalacion, { '0m': 120, '12m': 60, '24m': 0 });
+  assert.deepEqual(fila.activacion, { '0m': 40, '12m': 20, '24m': 0 });
+  assert.equal(fila.penalidad, 200);
+  assert.deepEqual(filaPublicada.instalacion, fila.instalacion);
+  assert.deepEqual(filaPublicada.activacion, fila.activacion);
+  assert.equal(filaPublicada.trazas_auditoria[0].penalidad, 200);
+});
+
 test('los modulos se agrupan y se generan en orden determinista', () => {
   const first = buildPreviews().previews;
   const second = buildPreviews().previews;

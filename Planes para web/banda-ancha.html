@@ -49,18 +49,31 @@ body{
 /* Section card */
 .section-card{
   background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;margin-bottom:24px;overflow:hidden;
+  border-radius:12px;margin-bottom:16px;overflow:hidden;
 }
 .section-card:hover{border-color:rgba(255,255,255,0.14)}
+.section-card.collapsed .section-body{display:none}
+.section-card.collapsed .section-chevron{transform:rotate(-90deg)}
 
 .section-header{
-  padding:20px 24px 16px;
+  padding:14px 18px;
   border-bottom:1px solid rgba(255,255,255,0.07);
+  cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:start;
 }
-.section-name{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
+.section-card.collapsed .section-header{border-bottom:none}
+.section-chevron{
+  width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,0.08);
+  color:#7dd3fc;display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:900;transition:transform .18s ease,background .18s ease;
+}
+.section-header:hover .section-chevron{background:rgba(255,255,255,0.14)}
+.section-title-wrap{min-width:0}
+.section-name{font-size:17px;font-weight:800;color:#dbeafe;margin-bottom:4px}
 .section-sub{font-size:13px;color:#38bdf8;font-weight:500}
 .section-desc{font-size:12px;color:rgba(255,255,255,0.45);margin-top:4px}
 .section-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.section-summary{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.section-summary-pill{font-size:11px;color:#cbd5e1;background:rgba(148,163,184,0.10);border:1px solid rgba(148,163,184,0.18);border-radius:999px;padding:4px 8px}
 
 .badge{
   display:inline-flex;align-items:center;gap:4px;
@@ -74,12 +87,12 @@ body{
 
 /* Plan cards grid */
 .plans-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;
-  padding:18px 24px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;
+  padding:14px 18px;
 }
 .plan-item{
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:12px;padding:16px;
+  border-radius:10px;padding:12px;
   transition:border-color .2s,background .2s;
 }
 .plan-item:hover{background:rgba(255,255,255,0.08);border-color:rgba(56,189,248,0.3)}
@@ -98,12 +111,12 @@ body{
 
 /* Claro Oficina €” side by side */
 .oficina-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;
-  padding:18px 24px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;
+  padding:14px 18px;
 }
 .oficina-item{
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:12px;padding:18px;
+  border-radius:10px;padding:13px;
 }
 .oficina-name{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px}
 .oficina-precio{font-size:26px;font-weight:800;color:#38bdf8}
@@ -116,7 +129,7 @@ body{
 /* IoT €” small cards */
 .iot-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;
-  padding:18px 24px;
+  padding:14px 18px;
 }
 .iot-item{
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
@@ -146,7 +159,7 @@ body{
 .nota-item::before{content:"€¢";color:rgba(255,255,255,0.2);flex-shrink:0}
 
 /* Equipos section */
-.equipos-section{padding:14px 24px;border-top:1px solid rgba(255,255,255,0.06)}
+.equipos-section{padding:12px 18px;border-top:1px solid rgba(255,255,255,0.06)}
 .equipos-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,0.4);margin-bottom:8px}
 .equipo-item{
   display:flex;justify-content:space-between;align-items:center;
@@ -323,7 +336,8 @@ body{
   <a href="banda-ancha.html" class="active">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
-    </nav>
+    
+  <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
 <div class="container" id="mainContainer">
   <div class="state-card">
@@ -336,6 +350,7 @@ body{
 const API_BASE = '';
 let allModulos = [];
 let _modals = [];
+let openSectionKey = null;
 
 /* ”€”€ T&Cs hardcoded (fallback si no est¡n en DB) ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€ */
 const TCS_LTE = [
@@ -370,9 +385,9 @@ async function loadPlanes() {
     allModulos = data.modulos || [];
     render();
   } catch(e) {
-    document.getElementById('mainContainer').innerHTML = `
+        document.getElementById('mainContainer').innerHTML = `
       <div class="state-card">
-        <div class="state-icon">š ï¸</div>
+        <div class="state-icon">!</div>
         <div class="state-title">Error al cargar</div>
         <div class="state-sub">${e.message}</div>
       </div>`;
@@ -447,15 +462,21 @@ function render() {
   );
 
   if (!visible.length) {
-    container.innerHTML = `<div class="state-card"><div class="state-icon">ðŸ”</div>
+    container.innerHTML = `<div class="state-card"><div class="state-icon">?</div>
       <div class="state-title">Sin resultados</div></div>`;
     return;
   }
 
+  if (!visible.some(m => m.seccion_key === openSectionKey)) openSectionKey = visible[0]?.seccion_key || null;
   visible.forEach(m => {
     const card = buildCard(m);
     if (card) container.appendChild(card);
   });
+}
+
+function toggleInalambricoAccordion(seccionKey) {
+  openSectionKey = openSectionKey === seccionKey ? null : seccionKey;
+  render();
 }
 
 function formatVigenciaVisible(valor) {
@@ -469,7 +490,8 @@ function buildCard(m) {
   const c = m.contenido || {};
 
   const card = document.createElement('div');
-  card.className = 'section-card';
+  const isOpen = openSectionKey === m.seccion_key;
+  card.className = `section-card ${isOpen ? 'expanded' : 'collapsed'}`;
 
   // Vigencia badge
   let vigBadge = '';
@@ -480,42 +502,46 @@ function buildCard(m) {
     vigBadge = `<span class="badge badge-vigencia">${texto}</span>`;
   }
 
-  // Botones modal €” se muestran en el header junto a los badges
   const modalBtns = [];
 
   if (c.guia && c.guia.length) {
     const idx = _modals.length;
-    _modals.push({ titulo: '¿Para qui©n es ' + m.titulo + '?', html: buildGuiaHtml(c.guia) });
-    modalBtns.push(`<button class="btn-modal btn-modal-green" onclick="openModalIdx(${idx})">ðŸ“‹ Leer m¡s</button>`);
+    _modals.push({ titulo: 'Para quien es ' + m.titulo, html: buildGuiaHtml(c.guia) });
+    modalBtns.push(`<button class="btn-modal btn-modal-green" onclick="event.stopPropagation();openModalIdx(${idx})">Leer mas</button>`);
   }
 
   if (m.seccion_key === 'internet_on_the_go') {
     const idxLte = _modals.length;
-    _modals.push({ titulo: 'T&Cs €” Banda Ancha LTE', items: c.terminos_lte || TCS_LTE });
-    modalBtns.push(`<button class="btn-modal" onclick="openModalIdx(${idxLte})">ðŸ“„ T&Cs LTE</button>`);
+    _modals.push({ titulo: 'T&Cs - Banda Ancha LTE', items: c.terminos_lte || TCS_LTE });
+    modalBtns.push(`<button class="btn-modal" onclick="event.stopPropagation();openModalIdx(${idxLte})">T&Cs LTE</button>`);
 
     const idxBk = _modals.length;
-    _modals.push({ titulo: 'T&Cs €” Backup Fijo / Cloud', items: c.terminos_backup || TCS_BACKUP });
-    modalBtns.push(`<button class="btn-modal" onclick="openModalIdx(${idxBk})">ðŸ“„ T&Cs Backup</button>`);
+    _modals.push({ titulo: 'T&Cs - Backup Fijo / Cloud', items: c.terminos_backup || TCS_BACKUP });
+    modalBtns.push(`<button class="btn-modal" onclick="event.stopPropagation();openModalIdx(${idxBk})">T&Cs Backup</button>`);
   } else if (c.terminos && c.terminos.length) {
     const idx = _modals.length;
-    _modals.push({ titulo: 'T©rminos y Condiciones €” ' + m.titulo, items: c.terminos });
-    modalBtns.push(`<button class="btn-modal" onclick="openModalIdx(${idx})">ðŸ“„ T&Cs</button>`);
+    _modals.push({ titulo: 'Terminos y Condiciones - ' + m.titulo, items: c.terminos });
+    modalBtns.push(`<button class="btn-modal" onclick="event.stopPropagation();openModalIdx(${idx})">T&Cs</button>`);
   }
 
   const btnsHTML = modalBtns.length
     ? `<div class="section-modal-btns">${modalBtns.join('')}</div>`
     : '';
 
+  const summaryHTML = buildSectionSummary(m);
   const headerHTML = `
-    <div class="section-header">
-      <div class="section-name">${m.titulo}</div>
-      ${m.subtitulo ? `<div class="section-sub">${m.subtitulo}</div>` : ''}
-      ${m.descripcion ? `<div class="section-desc">${m.descripcion}</div>` : ''}
-      <div class="section-meta">
-        ${vigBadge}
-        ${m.boletin_ref ? `<span class="badge badge-blue">ðŸ“„ Bolet­n</span>` : ''}
-        ${btnsHTML}
+    <div class="section-header" onclick="toggleInalambricoAccordion('${m.seccion_key}')" role="button" tabindex="0" aria-expanded="${isOpen ? 'true' : 'false'}">
+      <span class="section-chevron">v</span>
+      <div class="section-title-wrap">
+        <div class="section-name">${m.titulo}</div>
+        ${m.subtitulo ? `<div class="section-sub">${m.subtitulo}</div>` : ''}
+        ${m.descripcion ? `<div class="section-desc">${m.descripcion}</div>` : ''}
+        ${summaryHTML}
+        <div class="section-meta">
+          ${vigBadge}
+          ${m.boletin_ref ? `<span class="badge badge-blue">Boletin</span>` : ''}
+          ${btnsHTML}
+        </div>
       </div>
     </div>`;
 
@@ -533,8 +559,27 @@ function buildCard(m) {
     bodyHTML += buildEquiposPreciosSection(c);
   }
 
-  card.innerHTML = headerHTML + bodyHTML;
+  card.innerHTML = headerHTML + `<div class="section-body">${bodyHTML}</div>`;
+  card.querySelector('.section-header')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleInalambricoAccordion(m.seccion_key);
+    }
+  });
   return card;
+}
+
+function buildSectionSummary(m) {
+  const c = m.contenido || {};
+  const pills = [];
+  if (c.planes_solo?.length) pills.push(`${c.planes_solo.length} solo`);
+  if (c.planes_convergente?.length) pills.push(`${c.planes_convergente.length} convergente`);
+  if (c.backup?.length) pills.push(`${c.backup.length} backup`);
+  if (c.planes?.length) pills.push(`${c.planes.length} planes`);
+  if (c.equipos?.length) pills.push(`${c.equipos.length} equipos`);
+  if (c.adicionales?.length) pills.push(`${c.adicionales.length} adicionales`);
+  if (c.secciones?.length) pills.push(`${c.secciones.length} secciones`);
+  return pills.length ? `<div class="section-summary">${pills.map(item => `<span class="section-summary-pill">${item}</span>`).join('')}</div>` : '';
 }
 
 function buildIntGoSection(c) {
@@ -543,7 +588,7 @@ function buildIntGoSection(c) {
       <div class="plan-item-datos">${p.datos}</div>
       <div class="plan-item-precio">$${p.precio}/mes</div>
       <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      ${p.equipo_gratis ? `<div class="plan-item-nota">ðŸ“¦ ${p.equipo_gratis}</div>` : ''}
+      ${p.equipo_gratis ? `<div class="plan-item-nota">${p.equipo_gratis}</div>` : ''}
     </div>`).join('');
 
   const convItems = (c.planes_convergente || []).map(p => `
@@ -551,7 +596,7 @@ function buildIntGoSection(c) {
       <div class="plan-item-datos">${p.datos} <span class="doble-badge">2x datos</span></div>
       <div class="plan-item-precio">$${p.precio}/mes</div>
       <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      ${p.nota ? `<div class="plan-item-nota">„¹ï¸ ${p.nota}</div>` : ''}
+      ${p.nota ? `<div class="plan-item-nota">${p.nota}</div>` : ''}
     </div>`).join('');
 
   const backupItems = (c.backup || []).map(p => `
@@ -559,7 +604,7 @@ function buildIntGoSection(c) {
       <div class="plan-item-datos">${p.datos}</div>
       <div class="plan-item-precio">$${p.precio}/mes</div>
       <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      <div class="plan-item-nota">ðŸ”„ ${p.uso}</div>
+      <div class="plan-item-nota">${p.uso}</div>
     </div>`).join('');
 
   const equipos = (c.equipos || []).map(e => `
@@ -578,7 +623,7 @@ function buildIntGoSection(c) {
 
     <div style="padding:6px 24px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,0.4);margin-bottom:8px">
-        Planes Convergente (cliente Claro Fijo €” doble datos)
+        Planes Convergente (cliente Claro Fijo - doble datos)
       </div>
     </div>
     <div class="plans-grid">${convItems}</div>
@@ -592,7 +637,7 @@ function buildIntGoSection(c) {
       <div class="plans-grid">${backupItems}</div>` : ''}
 
     ${equipos ? `<div class="equipos-section">
-      <div class="equipos-title">ðŸ“¦ Equipos</div>
+      <div class="equipos-title">Equipos</div>
       ${equipos}
     </div>` : ''}`;
 }
@@ -618,11 +663,11 @@ function buildOficinaSection(c) {
       <span class="equipo-costo">${e.costo}</span>
     </div>`).join('');
 
-  const nota = c.nota ? `<div class="plan-footer" style="padding:10px 24px;font-size:11px;color:rgba(255,255,255,0.35)">„¹ï¸ ${c.nota}</div>` : '';
+  const nota = c.nota ? `<div class="plan-footer" style="padding:10px 24px;font-size:11px;color:rgba(255,255,255,0.35)">${c.nota}</div>` : '';
 
   return `
     <div class="oficina-grid">${planItems}</div>
-    ${equipos ? `<div class="equipos-section"><div class="equipos-title">ðŸ“¦ Equipos</div>${equipos}</div>` : ''}
+    ${equipos ? `<div class="equipos-section"><div class="equipos-title">Equipos</div>${equipos}</div>` : ''}
     ${nota}`;
 }
 
@@ -640,7 +685,7 @@ function buildIoTSection(c) {
     <div class="adicional-item">
       <span class="adicional-nombre">${a.nombre}</span>
       <span class="adicional-precio">${a.precio === 0 ? 'Sin costo' : '$'+a.precio}</span>
-      <span class="adicional-tipo"> €” ${a.tipo}</span>
+      <span class="adicional-tipo"> - ${a.tipo}</span>
     </div>`).join('');
 
   return `
@@ -654,7 +699,7 @@ function buildIoTSection(c) {
 
 /* ”€”€ Tabla de equipos y precios ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€ */
 function buildEquiposPreciosSection(c) {
-  const fmt = v => (v == null || v === 0) ? '<span style="color:rgba(255,255,255,0.2)">€”</span>' : `$${Number(v).toFixed(2)}`;
+  const fmt = v => (v == null || v === 0) ? '<span style="color:rgba(255,255,255,0.2)">-</span>' : `$${Number(v).toFixed(2)}`;
 
   const tablaSeccion = (secciones) => (secciones || []).map(sec => {
     const filas = (sec.equipos || []).map(e => `
@@ -722,22 +767,22 @@ function buildEquiposPreciosSection(c) {
 
   const ofertas = (c.ofertas_especiales || []).map(o => `
     <div class="oferta-card">
-      <div class="oferta-num">${o.num || '˜…'}</div>
+      <div class="oferta-num">${o.num || '-'}</div>
       <div>
         <div class="oferta-modelo">${o.modelo}</div>
-        ${(o.detalles || []).map(d => `<div class="oferta-detalle">†’ ${d}</div>`).join('')}
+        ${(o.detalles || []).map(d => `<div class="oferta-detalle">- ${d}</div>`).join('')}
       </div>
     </div>`).join('');
 
   return `
     <div style="padding:16px 24px 4px">
       ${tablaSeccion(c.secciones)}
-      ${tablaFin(c.financiamiento_of, 'ðŸ’³ Financiamiento FIOF €” Oferta Convergente', ['fin_12','fin_24','fin_30','fin_36'])}
-      ${tablaFin(c.financiamiento_gu, 'ðŸ’³ Financiamiento FIGU €” Oferta Convergente (planes &lt;$30)', ['fin_24','fin_36'])}
+          ${tablaFin(c.financiamiento_of, 'Financiamiento FIOF - Oferta Convergente', ['fin_12','fin_24','fin_30','fin_36'])}
+          ${tablaFin(c.financiamiento_gu, 'Financiamiento FIGU - Oferta Convergente (planes &lt;$30)', ['fin_24','fin_36'])}
     </div>
     ${ofertas ? `
       <div class="ep-ofertas-section">
-        <div class="ep-ofertas-title">ðŸŽ¯ Ofertas Especiales Vigentes</div>
+        <div class="ep-ofertas-title">Ofertas Especiales Vigentes</div>
         <div class="ep-ofertas-grid">${ofertas}</div>
       </div>` : ''}`;
 }
@@ -747,12 +792,12 @@ document.getElementById('searchInput').addEventListener('input', () => render())
 loadPlanes();
 </script>
 
-<!-- Modal T&Cs / Gu­a -->
+<!-- Modal T&Cs / Guia -->
 <div class="modal-overlay hidden" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal-panel">
     <div class="modal-header">
       <div class="modal-titulo" id="modalTitulo"></div>
-      <button class="modal-close" onclick="closeModal()">œ•</button>
+      <button class="modal-close" onclick="closeModal()">x</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>

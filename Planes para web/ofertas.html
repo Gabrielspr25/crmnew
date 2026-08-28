@@ -205,22 +205,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
           </div>
           <div id="planIndBlock" style="margin-top:10px">
             <div class="chips" data-group="planInd">
-              <button class="chip" data-val="20">$20</button>
-              <button class="chip" data-val="35">$35</button>
-              <button class="chip" data-val="40">$40</button>
-              <button class="chip" data-val="45">$45</button>
-              <button class="chip" data-val="50">$50</button>
-              <button class="chip" data-val="60">$60</button>
-              <button class="chip active" data-val="75">$75+</button>
-              <button class="chip" data-val="95">$95+</button>
+              <span class="empty">Cargando planes publicados...</span>
             </div>
           </div>
           <div id="planMultiBlock" style="margin-top:10px;display:none">
             <div class="chips" data-group="planMulti">
-              <button class="chip" data-val="plus">Plus ($65)</button>
-              <button class="chip" data-val="extreme">Extreme ($75)</button>
-              <button class="chip active" data-val="supreme">Supreme ($95)</button>
-              <button class="chip" data-val="sinfronteras">Sin Fronteras ($100)</button>
+              <span class="empty">Cargando planes publicados...</span>
             </div>
           </div>
         </div>
@@ -302,18 +292,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   </div>
 </div>
 
-<script src="ofertas-data.js?v=2026070311"></script>
-<script src="ofertas-logic.js?v=2026070311"></script>
+<script src="constructor-publications.js?v=2026082301"></script>
+<script src="ofertas-logic.js?v=2026082301"></script>
 <script>
+window.OFERTAS_DATA = [];
 const L = window.OfertasLogic;
 const PROPOSAL_STEPS = [
   { id:'cliente', title:'Paso 1 - Cliente', help:'Fecha, nombre del cliente, BAN y contactos.' },
   { id:'contrato', title:'Paso 2 - Contrato', help:'Termino de contrato editable.' },
-  { id:'plan', title:'Paso 3 - Plan de servicio mensual', help:'Nombre, descripcion, cargo, debito directo, lineas e impuestos.' },
+  { id:'plan', title:'Paso 3 - Plan de servicio mensual', help:'Nombre, descripcion, cargo y cantidad de lineas.' },
   { id:'equipos', title:'Paso 4 - Equipos', help:'Agrupa por modelo. Edita cantidad, pago por unidad, precio regular y oferta.' },
-  { id:'seguro', title:'Paso 5 - Seguro y notas', help:'Tabla de seguro, pago de IVU, promo, notas y firmas.' }
+  { id:'firmas', title:'Paso 5 - Firmas', help:'Datos de vendedor, cliente y fecha.' }
 ];
-const state = { evento:'nueva', tipo:'individual', planInd:75, planMulti:'supreme', beneficio:'todos', marca:'', buscar:'', selected:'', selectedOfferId:'', modalEquipoKey:'', qtyByOffer:{}, proposalStep:0 };
+const state = { evento:'nueva', tipo:'individual', planInd:0, planMulti:'', beneficio:'todos', marca:'', buscar:'', selected:'', selectedOfferId:'', modalEquipoKey:'', qtyByOffer:{}, proposalStep:0 };
 const proposal = {
   fecha_propuesta: new Date().toISOString().slice(0, 10),
   cliente_nombre: '',
@@ -325,25 +316,12 @@ const proposal = {
   plan_descripcion: '',
   cantidad_lineas_resumen: '',
   cargo_mensual: '',
-  descuento_debito_directo: 'Descuento de $10 por linea con debito directo',
+  descuento_debito_directo: '',
   cantidad_lineas_contratadas: '',
-  impuestos_detalle: 'Cargo Impuesto IVU 11.5% | Fondo Servicio Universal | Impuestos en roaming USA | Cargo 9-1-1',
-  pago_ivu_total: '',
-  creditos_nota: 'Creditos comienzan en la 2da factura. El cliente paga el 1er plazo del equipo y en la 2da factura se realiza el credito del plazo pagado.',
-  ivu_nota: 'IVU de los equipos se cobrara en la proxima factura basado en el precio regular de cada equipo.',
-  promocion_valida: 'PROMOCION VALIDA',
   firma_vendedor: 'Gabriel Sanchez',
   cargo_vendedor: 'Agente de Ventas SS Group',
   firma_cliente: '',
   fecha_firma_cliente: '',
-  nota_legal: 'El cliente debe iniciar las primeras paginas y firmar la ultima pagina, e incluir la fecha al lado de su firma. En la primera factura se colocaran los cargos del IVU de cada equipo.',
-  insuranceRows: [
-    { rango:'$0 - $200.00', deducible:'$20.00', prima:'$7.99', cantidad:'N/A' },
-    { rango:'$200.01 - $400', deducible:'$50.00', prima:'$7.99', cantidad:'N/A' },
-    { rango:'$400.01 - $700', deducible:'$100.00', prima:'$13.99', cantidad:'N/A' },
-    { rango:'$700.01 - $1,400', deducible:'$199.00', prima:'$13.99', cantidad:'N/A' },
-    { rango:'$1,400.01 en adelante', deducible:'$299.00', prima:'$13.99', cantidad:'N/A' }
-  ],
   equipos: []
 };
 const $ = id => document.getElementById(id);
@@ -405,13 +383,7 @@ function syncProposalDefaults(){
 
 function refreshProposalIvu(){
   const totalRegular = proposal.equipos.reduce((sum, item) => sum + (proposalNum(item.precio_regular) * (Number(item.cantidad) || 0)), 0);
-  if(!proposal.pago_ivu_total || proposal.pago_ivu_total === proposal._lastAutoIvu){
-    proposal._lastAutoIvu = (totalRegular * 0.115).toFixed(2);
-    proposal.pago_ivu_total = proposal._lastAutoIvu;
-  } else {
-    proposal._lastAutoIvu = (totalRegular * 0.115).toFixed(2);
-  }
-  return { totalRegular, ivu: totalRegular * 0.115 };
+  return { totalRegular };
 }
 
 function addProposalItem(equipo, oferta){
@@ -660,10 +632,7 @@ function renderWizardBody(){
       ${field('Descripci³n del plan', 'plan_descripcion', proposal.plan_descripcion, { span2:true, type:'textarea' })}
       ${field('Cantidad de l­neas resumen', 'cantidad_lineas_resumen', proposal.cantidad_lineas_resumen)}
       ${field('Cargo Mensual por tarifa', 'cargo_mensual', proposal.cargo_mensual)}
-      ${field('Descuento debito directo', 'descuento_debito_directo', proposal.descuento_debito_directo, { span2:true })}
       ${field('Cantidad de l­neas', 'cantidad_lineas_contratadas', proposal.cantidad_lineas_contratadas)}
-      ${field('PAGO DE IVU: $', 'pago_ivu_total', proposal.pago_ivu_total)}
-      ${field('Detalle de impuestos', 'impuestos_detalle', proposal.impuestos_detalle, { span2:true, type:'textarea' })}
     </div>`;
   } else if(step.id === 'equipos'){
     html = `
@@ -684,29 +653,14 @@ function renderWizardBody(){
         </tbody>
       </table>
       <div class="helper-note">Si repites el mismo modelo con la misma oferta, el sistema lo agrupa en una sola fila.</div>`;
-  } else if(step.id === 'seguro'){
+  } else if(step.id === 'firmas'){
     html = `
-      <table class="mini-table">
-        <thead><tr><th>Costo del equipo</th><th>Deducible por unidad</th><th>Prima mensual</th><th>Cantidad</th></tr></thead>
-        <tbody>
-          ${proposal.insuranceRows.map((row, index) => `
-            <tr>
-              <td><input data-ins-field="rango" data-ins-index="${index}" value="${escapeHtml(row.rango)}"></td>
-              <td><input data-ins-field="deducible" data-ins-index="${index}" value="${escapeHtml(row.deducible)}"></td>
-              <td><input data-ins-field="prima" data-ins-index="${index}" value="${escapeHtml(row.prima)}"></td>
-              <td><input data-ins-field="cantidad" data-ins-index="${index}" value="${escapeHtml(row.cantidad)}"></td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
+      <div class="helper-note">Benefits, seguros, impuestos y condiciones adicionales se incorporan solo desde una publicación oficial.</div>
       <div class="form-grid">
-        ${field('Creditos / facturacion', 'creditos_nota', proposal.creditos_nota, { span2:true, type:'textarea' })}
-        ${field('Nota IVU', 'ivu_nota', proposal.ivu_nota, { span2:true, type:'textarea' })}
-        ${field('Promocion valida', 'promocion_valida', proposal.promocion_valida)}
         ${field('Firma vendedor', 'firma_vendedor', proposal.firma_vendedor)}
         ${field('Cargo vendedor', 'cargo_vendedor', proposal.cargo_vendedor)}
         ${field('Firma cliente', 'firma_cliente', proposal.firma_cliente)}
         ${field('Fecha firma cliente', 'fecha_firma_cliente', proposal.fecha_firma_cliente, { type:'date' })}
-        ${field('Nota legal final', 'nota_legal', proposal.nota_legal, { span2:true, type:'textarea' })}
       </div>`;
   }
   $('wizardBody').innerHTML = html;
@@ -714,35 +668,8 @@ function renderWizardBody(){
   $('nextStepBtn').textContent = state.proposalStep === PROPOSAL_STEPS.length - 1 ? 'Listo' : 'Siguiente';
 }
 
-function proposalTaxRows(){
-  return String(proposal.impuestos_detalle || '')
-    .split('|')
-    .map(item => item.trim())
-    .filter(Boolean);
-}
-
-function proposalIvuLines(){
-  if(!proposal.equipos.length) return '<div>PRECIO DE IVU: sin equipos seleccionados</div>';
-  return proposal.equipos.map(item => {
-    const regular = proposalNum(item.precio_regular);
-    const qty = Number(item.cantidad) || 0;
-    const totalIvu = (regular * qty * 0.115).toFixed(2);
-    return `<div>PRECIO DE IVU: ${escapeHtml(item.modelo)} x${qty} ${money(totalIvu)}</div>`;
-  }).join('');
-}
-
-function proposalFinalNotesHtml(){
-  return `
-    <p>Le ofrecemos productos y servicios que le ayudar¡n a aumentar la productividad y eficiencia de su empresa con la cobertura de la red m¡s poderosa. Adem¡s, somos el ºnico proveedor que incluye llamadas ilimitadas a todo hogar y negocio con l­nea telef³nica de PRT. Le adjuntamos documento con los T©rminos y Condiciones de nuestros planes de servicio.</p>
-    <p>De tener alguna pregunta, puede comunicarse al 787-319-0909, o a trav©s del correo electr³nico gabriel.sanchez@claropr.com</p>
-    <p>Mientras sus necesidades cambian, nos complacemos en ayudarle a evaluar esas necesidades y ofrecerle los planes y servicios que le ser¡n de mayor beneficio. Puede conocer m¡s acerca de los servicios que tenemos disponibles en Claro Puerto Rico accediendo a nuestra p¡gina de Internet: <strong>www.clarotodo.com</strong></p>
-    <p>Gracias por su patrocinio, cordialmente,</p>
-  `;
-}
-
 function renderProposalPreview(){
-  const totals = refreshProposalIvu();
-  const taxRows = proposalTaxRows();
+  refreshProposalIvu();
   const lineasResumen = escapeHtml(proposal.cantidad_lineas_contratadas || proposal.cantidad_lineas_resumen || (state.tipo === 'individual' ? '1' : ''));
   $('proposalBadge').textContent = `${proposal.equipos.reduce((sum, item) => sum + Number(item.cantidad || 0), 0)} equipo(s) en borrador`;
   $('proposalPreview').innerHTML = `
@@ -803,18 +730,8 @@ function renderProposalPreview(){
             <td>Cantidad de l­neas</td>
             <td>${lineasResumen}</td>
           </tr>
-          ${taxRows.map((tax, index) => `
-          <tr>
-            <td>${escapeHtml(tax)}</td>
-            <td>${index === 0 ? '11.5%' : 'Aplican segºn servicio'}</td>
-          </tr>`).join('')}
         </tbody>
       </table>
-
-      <div class="proposal-highlight-note">
-        <strong>NOTA&gt;&gt;</strong> Todo servicio que no est© contemplado dentro del paquete seleccionado tendr¡ costo adicional.<br>
-        <span class="proposal-highlight-band">${escapeHtml(proposal.descuento_debito_directo || '')}</span>
-      </div>
 
       <div class="proposal-equipment-title">Equipos</div>
       <table class="proposal-pdf-table proposal-equipment-table">
@@ -839,41 +756,10 @@ function renderProposalPreview(){
         </tbody>
       </table>
 
-      <section class="proposal-notes-box">
-        <p><strong>${escapeHtml(proposal.creditos_nota || '')}</strong></p>
-        <p><strong>${escapeHtml(proposal.ivu_nota || '')}</strong></p>
-        <div class="proposal-promo-line">${escapeHtml(proposal.promocion_valida || '')}</div>
-        <div class="proposal-ivu-lines">${proposalIvuLines()}</div>
-        <p><strong>PAGO DE IVU:</strong> ${money(proposal.pago_ivu_total || totals.ivu)}</p>
-      </section>
+      <section class="proposal-notes-box">Benefits, seguros, impuestos y condiciones adicionales: pendientes de publicación oficial.</section>
     </article>
 
     <article class="proposal-page page-two">
-      <div class="proposal-insurance-title">Seguro de equipos a escoger:</div>
-      <table class="proposal-pdf-table">
-        <thead>
-          <tr>
-            <th>Costo del Equipo</th>
-            <th>Deducible por unidad</th>
-            <th>Prima por unidad Mensual</th>
-            <th>Cantidad de unidades</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${proposal.insuranceRows.map(row => `
-            <tr>
-              <td>${escapeHtml(row.rango)}</td>
-              <td>${escapeHtml(row.deducible)}</td>
-              <td>${escapeHtml(row.prima)}</td>
-              <td>${escapeHtml(row.cantidad)}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-
-      <section class="proposal-copy-block">
-        ${proposalFinalNotesHtml()}
-      </section>
-
       <section class="proposal-signatures">
         <div class="proposal-sign-box">
           <div class="proposal-sign-frame">
@@ -901,10 +787,6 @@ function renderProposalPreview(){
         </div>
       </section>
 
-      <section class="proposal-legal-box">
-        <div class="legal-title">Nota importante:</div>
-        <p>${escapeHtml(proposal.nota_legal || '')}</p>
-      </section>
     </article>`;
 }
 
@@ -1030,14 +912,6 @@ $('wizardBody').addEventListener('input', e => {
     }
     return;
   }
-  const insField = e.target.closest('[data-ins-field]');
-  if(insField){
-    const idx = Number(insField.dataset.insIndex);
-    if(!Number.isNaN(idx) && proposal.insuranceRows[idx]){
-      proposal.insuranceRows[idx][insField.dataset.insField] = insField.value;
-      renderProposalPreview();
-    }
-  }
 });
 
 $('wizardBody').addEventListener('click', e => {
@@ -1050,11 +924,34 @@ $('wizardBody').addEventListener('click', e => {
   renderProposal();
 });
 
-render();
+async function loadPublishedOffers(){
+  try{
+    const published=await window.ConstructorPublications.load();
+    window.OFERTAS_DATA=published.offers;
+    if(!published.ready)throw new Error('publicaciones_incompletas');
+    window.CONSTRUCTOR_PLAN_AMOUNTS=Object.fromEntries(published.mobileCatalog.multiline.map(plan=>[plan.key,Number(plan.lineCosts[0]||0)]));
+    window.CONSTRUCTOR_PLAN_LABELS=Object.fromEntries(published.mobileCatalog.multiline.map(plan=>[plan.key,plan.label]));
+    const individualGroup=document.querySelector('[data-group="planInd"]');
+    const multilineGroup=document.querySelector('[data-group="planMulti"]');
+    if(individualGroup){
+      individualGroup.innerHTML=published.mobileCatalog.individual.map((plan,index)=>`<button class="chip ${index===0?'active':''}" data-val="${plan.regular}">${escapeHtml(plan.label)} · ${money(plan.regular)}</button>`).join('');
+      state.planInd=Number(published.mobileCatalog.individual[0]?.regular||0);
+    }
+    if(multilineGroup){
+      multilineGroup.innerHTML=published.mobileCatalog.multiline.map((plan,index)=>`<button class="chip ${index===0?'active':''}" data-val="${escapeHtml(plan.key)}">${escapeHtml(plan.label)}</button>`).join('');
+      state.planMulti=published.mobileCatalog.multiline[0]?.key||'';
+    }
+    render();
+  }catch(error){
+    window.OFERTAS_DATA=[];
+    const devices=$('deviceList');
+    const offers=$('offerList');
+    const message='<div class="empty">Ofertas móviles pendientes de publicación. No se usaron datos heredados.</div>';
+    if(devices)devices.innerHTML=message;
+    if(offers)offers.innerHTML=message;
+  }
+}
+loadPublishedOffers();
 </script>
 </body>
 </html>
-
-
-
-

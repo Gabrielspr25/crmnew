@@ -79,9 +79,9 @@ miscRouter.get('/audit', requireAuth, async (req, res) => {
 });
 
 // Helper para registrar en la bitácora desde cualquier parte.
-export async function logAudit({ user_name, type, detail, entity, meta }) {
+export async function logAudit({ user_name, type, detail, entity, meta, ip }) {
   await query(
-    `INSERT INTO ventaspro_nuevo.audit_log (user_name, type, detail, entity, meta)
-     VALUES ($1,$2,$3,$4,$5)`,
-    [user_name || null, type, detail || null, entity || null, meta ? JSON.stringify(meta) : null]);
+    `INSERT INTO ventaspro_nuevo.audit_log (user_name, type, detail, entity, meta, ip_address)
+     VALUES ($1,$2,$3,$4,$5,$6)`,
+    [user_name || null, type, detail || null, entity || null, meta ? JSON.stringify(meta) : null, ip || null]);
 }

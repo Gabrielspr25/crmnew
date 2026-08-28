@@ -38,30 +38,14 @@ test('extrae la matriz Business Red Plus por posicion, precios y codigos oficial
   assert.equal(result.line_order_dependent, true);
 });
 
-test('la superficie movil renderiza el bloque Business Red Plus sin mezclarlo con otras ofertas', async () => {
+test('la superficie movil usa las familias publicadas y excluye el bloque Business Red heredado', async () => {
   const html = await readFile(new URL('../../Planes para web/movil.html', import.meta.url), 'utf8');
-  assert.match(html, /business_red_plus/);
-  assert.match(html, /line_order_dependent/);
-  assert.match(html, /Precio regular despues del limite/);
-  assert.match(html, /@media\s*\(max-width:640px\)/);
-  const renderBody = html.match(/function render\(\) \{([\s\S]*?)\n\}\n\nfunction buildActivationTable/);
-  assert.ok(renderBody, 'debe existir el render principal de la pagina');
-  assert.match(renderBody[1], /renderBusinessRedPlus\(container\)/);
-  assert.match(renderBody[1], /const byopModule = visible\.find\(m => m\.seccion_key === 'business_red_plus_byop_ban'\)/);
-  assert.match(renderBody[1], /const regularVisible = visible\.filter\(m => m\.seccion_key !== 'business_red_plus_byop_ban'\)/);
-  const summaryIndex = renderBody[1].indexOf('container.appendChild(summary);');
-  const redPlusIndex = renderBody[1].indexOf('renderBusinessRedPlus(container);');
-  const regularCardsIndex = renderBody[1].indexOf('regularVisible.forEach');
-  const byopCardIndex = renderBody[1].indexOf('if (byopModule) container.appendChild(buildPlanCard(byopModule));');
-  assert.ok(summaryIndex > -1, 'debe conservar el bloque de resumen');
-  assert.ok(redPlusIndex > summaryIndex, 'Business Red Plus debe ocupar el lugar visual del modulo BYOP');
-  assert.ok(regularCardsIndex > redPlusIndex, 'los modulos regulares deben ir despues de Business Red Plus');
-  assert.ok(byopCardIndex > regularCardsIndex, 'BYOP debe quedar como ultimo modulo');
-  assert.match(html, /#mainContainer\{padding:8px 0\}/);
-  assert.match(html, /\.business-plus-section\{margin:0 0 16px;padding:10px 8px/);
-  assert.match(html, /@media\s*\(min-width:1200px\)[\s\S]*\.business-plus-section\s*\{[\s\S]*width:calc\(100vw - 64px\)/);
-  assert.match(html, /business-plus-terms/);
-  assert.match(html, /<summary[^>]*>Terminos y condiciones<\/summary>/);
-  assert.match(html, /conditions\.map\(\(condition\) =>/);
-  assert.doesNotMatch(html, /business-plus-conditions/);
+  assert.match(html, /api\/planes-modulos\/moviles/);
+  assert.match(html, /function isLegacyBusinessRedModule/);
+  assert.match(html, /allModulos\.filter\(\s*m\s*=>\s*!isLegacyBusinessRedModule\(m\)\s*\)/);
+  assert.match(html, /movil_multilinea_business_red_plus/);
+  assert.match(html, /movil_multilinea_business_red_extreme/);
+  assert.match(html, /movil_multilinea_business_red_supreme/);
+  assert.match(html, /movil_multilinea_business_red_sin_fronteras/);
+  assert.match(html, /movil_multilinea_byop_ban/);
 });

@@ -4,8 +4,10 @@ import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { isSeller, sellerScope } from '../services/sellerScope.js';
 
 export const asanaRealRouter = Router();
+let asanaListCache = { at: 0, rows: null };
 
 async function withPublic(fn) {
   const c = await pool.connect();
@@ -30,6 +32,7 @@ const VALID_ASANA_CLIENT_SQL = `(NULLIF(TRIM(COALESCE(c.name, c.business_name, '
 const QTY_KEYS = `('movil_ren','movil_new','claro_tv','cloud')`;   // columnas por cantidad de líneas
 // Misma regla de Clientes: suspendida sigue siendo una linea activa de cartera.
 const ACTIVE_OR_SUSPENDED_SUB_SQL = (alias) => `COALESCE(LOWER(${alias}.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
+const ACTIVE_BAN_SQL = (alias) => `COALESCE(LOWER(${alias}.status::text),'a') IN ('a','activo','active')`;
 const MONEY_KEYS = `('fijo_ren','fijo_new','mpls')`;               // columnas por dinero
 const VALID_LOG_TYPES = new Set(['llamada', 'nota']);
 // Una oportunidad solo existe si proviene de una linea real del cliente o si el
@@ -73,6 +76,10 @@ function cleanText(value) {
   return String(value || '').trim();
 }
 
+function usernameForUser(user) {
+  return cleanText(user?.nombre || user?.username || user?.usuario || user?.email || 'Sistema');
+}
+
 function hasOperationalClientName(value) {
   const name = cleanText(value).toLowerCase();
   return Boolean(name) && !['—', '-', 'null', 'sin nombre'].includes(name);
@@ -81,6 +88,25 @@ function hasOperationalClientName(value) {
 function cleanDigits(value) {
   const digits = String(value || '').replace(/\D/g, '');
   return digits || null;
+}
+
+async function sellerIdForUser(c, user) {
+  if (!isSeller(user)) return null;
+  const name = sellerScope(user);
+  if (!name) return null;
+  const r = await c.query(`SELECT id FROM salespeople WHERE LOWER(TRIM(name))=LOWER(TRIM($1)) LIMIT 1`, [name]);
+  return r.rows[0]?.id || null;
+}
+
+async function sellerCanOpenOpportunity(c, opportunityId, user) {
+  if (!isSeller(user)) return true;
+  const sellerId = await sellerIdForUser(c, user);
+  if (!sellerId) return false;
+  const r = await c.query(
+    `SELECT 1 FROM sales_opportunities WHERE id=$1 AND salesperson_id=$2 AND archived_at IS NULL`,
+    [opportunityId, sellerId]
+  );
+  return Boolean(r.rows[0]);
 }
 
 // Convierte la cartera activa del CRM al producto operativo de Asana.
@@ -163,8 +189,8 @@ function normalizeLogRow(row) {
   return {
     ...row,
     body: String(row.body || '').replace(/^\[LLAMADA_AGENDADA:[^\]]+\]\s*/i, ''),
-    scheduled_call_at: scheduled.scheduled_call_at,
-    scheduled_status: scheduled.scheduled_status,
+    scheduled_call_at: row.scheduled_call_at || scheduled.scheduled_call_at,
+    scheduled_status: row.scheduled_status || scheduled.scheduled_status,
   };
 }
 
@@ -287,17 +313,32 @@ async function closeOpportunityToPool(c, opportunityId) {
 // por producto -> { quantity_value, money_value, subscriber_count, current_step }
 asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
   try {
+    const seller = isSeller(req.user) ? sellerScope(req.user) : null;
+    if (!seller && asanaListCache.rows && Date.now() - asanaListCache.at < 30000) return res.json(asanaListCache.rows);
     const r = await withPublic(c => c.query(`
       SELECT o.id, o.client_id, o.status, o.title,
         ${CLIENT_NAME} AS client_name,
         c.pendiente_validacion AS client_pending_validation,
         COALESCE(c.phone, c.cellular) AS client_phone,
-        (SELECT count(*) FROM bans b WHERE b.client_id = o.client_id)::int AS ban_count,
+        (SELECT count(DISTINCT b.id)::int
+           FROM bans b
+           JOIN subscribers s ON s.ban_id = b.id
+          WHERE b.client_id = o.client_id
+            AND ${ACTIVE_BAN_SQL('b')}
+            AND ${ACTIVE_OR_SUSPENDED_SUB_SQL('s')}) AS ban_count,
         (SELECT string_agg(DISTINCT b.ban_number::text, ', ' ORDER BY b.ban_number::text)
            FROM bans b
+           JOIN subscribers s ON s.ban_id = b.id
           WHERE b.client_id = o.client_id
+            AND ${ACTIVE_BAN_SQL('b')}
+            AND ${ACTIVE_OR_SUSPENDED_SUB_SQL('s')}
             AND NULLIF(TRIM(b.ban_number::text),'') IS NOT NULL) AS ban_numbers,
-        (SELECT count(*) FROM subscribers s JOIN bans b ON b.id = s.ban_id WHERE b.client_id = o.client_id)::int AS subscriber_count,
+        (SELECT COUNT(DISTINCT s.id)::int
+           FROM subscribers s
+           JOIN bans b ON b.id = s.ban_id
+          WHERE b.client_id = o.client_id
+            AND ${ACTIVE_BAN_SQL('b')}
+            AND ${ACTIVE_OR_SUSPENDED_SUB_SQL('s')}) AS subscriber_count,
         COALESCE(sp.name,'Sin asignar') AS vendor_name,
         COALESCE((SELECT json_object_agg(t.pk, t.jb) FROM (
             SELECT ol.product_key AS pk, json_build_object(
@@ -324,7 +365,9 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
       JOIN clients c ON c.id = o.client_id
       LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
       WHERE ${VALID_ASANA_CLIENT_SQL}
-      ORDER BY client_name`));
+        AND ($1::text IS NULL OR LOWER(TRIM(sp.name))=LOWER(TRIM($1)))
+      ORDER BY client_name`, [seller || null]));
+    asanaListCache = seller ? asanaListCache : { at: Date.now(), rows: r.rows };
     res.json(r.rows);
   } catch (e) {
     console.error('[asana-real]', e.message);
@@ -383,7 +426,7 @@ asanaRealRouter.get('/asana-real/alerts/calls', requireAuth, async (_req, res) =
     const rows = await withPublic(async c => {
       await ensureOpportunityNotes(c);
       const r = await c.query(
-        `SELECT n.id, n.opportunity_id, n.note,
+        `SELECT n.id, n.opportunity_id, n.note, n.scheduled_call_at, n.scheduled_status,
                 regexp_replace(n.note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
                 COALESCE(n.created_by_username, 'Sistema') AS user_name,
                 n.created_at,
@@ -394,7 +437,8 @@ asanaRealRouter.get('/asana-real/alerts/calls', requireAuth, async (_req, res) =
            JOIN clients c ON c.id = o.client_id
            LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
           WHERE o.archived_at IS NULL
-            AND n.note ILIKE '[LLAMADA_AGENDADA:%'
+            AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')
+            AND COALESCE(n.scheduled_status,'pendiente') = 'pendiente'
           ORDER BY n.created_at DESC, n.id DESC
           LIMIT 100`
       );
@@ -410,11 +454,218 @@ asanaRealRouter.get('/asana-real/alerts/calls', requireAuth, async (_req, res) =
   }
 });
 
+asanaRealRouter.get('/asana-real/agenda', requireAuth, async (req, res) => {
+  try {
+    const requestedTeam = cleanText(req.query?.scope).toLowerCase() === 'team';
+    const teamScope = requestedTeam && !isSeller(req.user);
+    const username = usernameForUser(req.user);
+    const items = await withPublic(async c => {
+      const taskScopeSql = teamScope
+        ? 'TRUE'
+        : 'LOWER(TRIM(t.assigned_to_username)) = LOWER(TRIM($1))';
+      const tasks = await c.query(
+        `SELECT t.id, 'tarea'::text AS item_type, t.title, t.notes, t.due_at,
+                t.priority, t.status, t.assigned_to_username, t.client_id,
+                t.opportunity_id, t.step_id, ${CLIENT_NAME} AS client_name,
+                o.title AS opportunity_title, os.name AS step_name
+           FROM asana_tasks t
+           LEFT JOIN clients c ON c.id = t.client_id
+           LEFT JOIN sales_opportunities o ON o.id = t.opportunity_id
+           LEFT JOIN opportunity_steps os ON os.id = t.step_id
+          WHERE t.status = 'pendiente' AND ${taskScopeSql}
+          ORDER BY t.due_at, CASE t.priority WHEN 'alta' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END
+          LIMIT 200`,
+        teamScope ? [] : [username]
+      );
+
+      const callScopeSql = teamScope
+        ? 'TRUE'
+        : `LOWER(TRIM(COALESCE(sp.name, n.created_by_username, 'Sistema'))) = LOWER(TRIM($1))`;
+      const calls = await c.query(
+        `SELECT n.id, n.note, 'llamada'::text AS item_type,
+                regexp_replace(n.note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS title,
+                NULL::text AS notes, n.scheduled_call_at AS due_at,
+                'normal'::text AS priority, COALESCE(n.scheduled_status,'pendiente') AS status,
+                COALESCE(sp.name, n.created_by_username, 'Sistema') AS assigned_to_username,
+                o.client_id, n.opportunity_id, NULL::uuid AS step_id,
+                ${CLIENT_NAME} AS client_name, o.title AS opportunity_title, NULL::text AS step_name
+           FROM opportunity_notes n
+           JOIN sales_opportunities o ON o.id = n.opportunity_id
+           JOIN clients c ON c.id = o.client_id
+           LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
+          WHERE o.archived_at IS NULL
+            AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')
+            AND COALESCE(n.scheduled_status,'pendiente') = 'pendiente'
+            AND ${callScopeSql}
+          ORDER BY n.scheduled_call_at
+          LIMIT 100`,
+        teamScope ? [] : [username]
+      );
+      return [...tasks.rows, ...calls.rows.map(normalizeLogRow)]
+        .filter(item => item.due_at)
+        .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+    });
+    res.json({ scope: teamScope ? 'team' : 'mine', can_view_team: !isSeller(req.user), items });
+  } catch (e) {
+    console.error('[asana-real/agenda]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+asanaRealRouter.post('/asana-real/tasks', requireAuth, async (req, res) => {
+  const title = cleanText(req.body?.title);
+  const notes = cleanText(req.body?.notes) || null;
+  const priority = cleanText(req.body?.priority).toLowerCase() || 'normal';
+  const dueDate = new Date(req.body?.due_at);
+  const opportunityId = cleanText(req.body?.opportunity_id) || null;
+  const clientIdInput = cleanText(req.body?.client_id) || null;
+  const stepId = cleanText(req.body?.step_id) || null;
+  if (!title) return res.status(400).json({ error: 'Escribe el titulo de la tarea' });
+  if (Number.isNaN(dueDate.getTime())) return res.status(400).json({ error: 'Selecciona una fecha valida' });
+  if (!['baja', 'normal', 'alta'].includes(priority)) return res.status(400).json({ error: 'Prioridad invalida' });
+
+  try {
+    const row = await withPublic(async c => {
+      const currentUsername = usernameForUser(req.user);
+      const assigned = isSeller(req.user)
+        ? sellerScope(req.user) || currentUsername
+        : cleanText(req.body?.assigned_to_username) || currentUsername;
+      let clientId = clientIdInput;
+
+      if (opportunityId) {
+        if (!await sellerCanOpenOpportunity(c, opportunityId, req.user)) return { forbidden: true };
+        const opportunity = await c.query(
+          `SELECT id, client_id FROM sales_opportunities WHERE id=$1 AND archived_at IS NULL`,
+          [opportunityId]
+        );
+        if (!opportunity.rows[0]) return { invalidOpportunity: true };
+        clientId = opportunity.rows[0].client_id;
+      } else if (clientId) {
+        const client = await c.query(`SELECT id FROM clients WHERE id=$1`, [clientId]);
+        if (!client.rows[0]) return { invalidClient: true };
+      }
+
+      if (stepId) {
+        if (!opportunityId) return { invalidStep: true };
+        const step = await c.query(
+          `SELECT id FROM opportunity_steps WHERE id=$1 AND opportunity_id=$2 AND completed_at IS NULL`,
+          [stepId, opportunityId]
+        );
+        if (!step.rows[0]) return { invalidStep: true };
+      }
+
+      const inserted = await c.query(
+        `INSERT INTO asana_tasks (
+           id, title, notes, due_at, priority, status, assigned_to_username,
+           created_by_username, client_id, opportunity_id, step_id, created_at, updated_at
+         ) VALUES ($1,$2,$3,$4,$5,'pendiente',$6,$7,$8,$9,$10,now(),now())
+         RETURNING *`,
+        [randomUUID(), title, notes, dueDate.toISOString(), priority, assigned, currentUsername,
+          clientId, opportunityId, stepId]
+      );
+      return inserted.rows[0];
+    });
+    if (row?.forbidden) return res.status(403).json({ error: 'No puedes crear tareas para otra oportunidad.' });
+    if (row?.invalidOpportunity) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
+    if (row?.invalidClient) return res.status(404).json({ error: 'Cliente no encontrado' });
+    if (row?.invalidStep) return res.status(400).json({ error: 'El paso no pertenece a la oportunidad o ya esta completo' });
+    res.status(201).json(row);
+  } catch (e) {
+    console.error('[asana-real/tasks]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+asanaRealRouter.patch('/asana-real/tasks/:taskId', requireAuth, async (req, res) => {
+  const status = cleanText(req.body?.status).toLowerCase();
+  if (!['pendiente', 'completada', 'cancelada'].includes(status)) {
+    return res.status(400).json({ error: 'Estado de tarea invalido' });
+  }
+  try {
+    const result = await withPublic(async c => {
+      const username = usernameForUser(req.user);
+      const task = await c.query(`SELECT * FROM asana_tasks WHERE id=$1`, [req.params.taskId]);
+      if (!task.rows[0]) return null;
+      if (isSeller(req.user)
+        && cleanText(task.rows[0].assigned_to_username).toLowerCase() !== cleanText(sellerScope(req.user) || username).toLowerCase()) {
+        return { forbidden: true };
+      }
+      const updated = await c.query(
+        `UPDATE asana_tasks
+            SET status=$2,
+                completed_at=CASE WHEN $2='completada' THEN now() ELSE NULL END,
+                updated_at=now()
+          WHERE id=$1 RETURNING *`,
+        [req.params.taskId, status]
+      );
+      let suggestedNextStep = null;
+      if (status === 'completada' && task.rows[0].step_id && task.rows[0].opportunity_id) {
+        const completed = await c.query(
+          `UPDATE opportunity_steps SET completed_at=COALESCE(completed_at,now()), updated_at=now()
+            WHERE id=$1 AND opportunity_id=$2
+            RETURNING product_key, step_order`,
+          [task.rows[0].step_id, task.rows[0].opportunity_id]
+        );
+        if (completed.rows[0]) {
+          const next = await c.query(
+            `SELECT id, name, product_key, step_order
+               FROM opportunity_steps
+              WHERE opportunity_id=$1 AND completed_at IS NULL
+                AND product_key IS NOT DISTINCT FROM $2
+                AND step_order > $3
+              ORDER BY step_order LIMIT 1`,
+            [task.rows[0].opportunity_id, completed.rows[0].product_key, completed.rows[0].step_order]
+          );
+          suggestedNextStep = next.rows[0] || null;
+        }
+      }
+      return { task: updated.rows[0], suggested_next_step: suggestedNextStep };
+    });
+    if (!result) return res.status(404).json({ error: 'Tarea no encontrada' });
+    if (result.forbidden) return res.status(403).json({ error: 'No puedes modificar una tarea de otro vendedor.' });
+    res.json(result);
+  } catch (e) {
+    console.error('[asana-real/tasks/:taskId]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+asanaRealRouter.patch('/asana-real/agenda/calls/:noteId', requireAuth, async (req, res) => {
+  const status = cleanText(req.body?.status || 'completada').toLowerCase();
+  if (!['completada','cancelada'].includes(status)) {
+    return res.status(400).json({ error: 'Estado de llamada no valido' });
+  }
+  try {
+    const result = await withPublic(async c => {
+      const note = await c.query(
+        `SELECT n.id, n.opportunity_id
+           FROM opportunity_notes n
+          WHERE n.id=$1 AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')`,
+        [req.params.noteId]
+      );
+      if (!note.rows[0]) return null;
+      if (!await sellerCanOpenOpportunity(c, note.rows[0].opportunity_id, req.user)) return { forbidden: true };
+      const updated = await c.query(
+        `UPDATE opportunity_notes SET scheduled_status = $2 WHERE id=$1 RETURNING id, scheduled_status`,
+        [req.params.noteId, status]
+      );
+      return updated.rows[0];
+    });
+    if (!result) return res.status(404).json({ error: 'Llamada agendada no encontrada' });
+    if (result.forbidden) return res.status(403).json({ error: 'No puedes modificar una llamada de otro vendedor.' });
+    res.json(result);
+  } catch (e) {
+    console.error('[asana-real/agenda/calls/:noteId]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
   try {
     const data = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
       const o = await c.query(
-        `SELECT o.id, o.title, o.status, o.opportunity_type, o.expected_monthly_value,
+        `SELECT o.id, o.client_id, o.title, o.status, o.opportunity_type, o.expected_monthly_value,
                 ${CLIENT_NAME} AS client_name, COALESCE(sp.name,'—') AS salesperson
            FROM sales_opportunities o
            JOIN clients c ON c.id = o.client_id
@@ -458,6 +709,7 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
       return { ...o.rows[0], steps: steps.rows, lines: lines.rows, log: log.rows.map(normalizeLogRow) };
     });
     if (!data) return res.status(404).json({ error: 'Oportunidad no existe' });
+    if (data.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
     res.json(data);
   } catch (e) {
     console.error('[asana-real/:id]', e.message);
@@ -469,6 +721,7 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
 asanaRealRouter.post('/asana-real/:id/steps/:stepId/done', requireAuth, async (req, res) => {
   try {
     const r = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
       const step = await c.query(
         `UPDATE opportunity_steps SET completed_at = now(), updated_at = now()
           WHERE id = $1 AND opportunity_id = $2 AND completed_at IS NULL
@@ -484,6 +737,7 @@ asanaRealRouter.post('/asana-real/:id/steps/:stepId/done', requireAuth, async (r
       await c.query(`UPDATE sales_opportunities SET updated_at = now() WHERE id = $1`, [req.params.id]);
       return step;
     });
+    if (r?.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
     if (!r?.rows?.[0]) return res.status(404).json({ error: 'Paso no existe' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -505,22 +759,26 @@ asanaRealRouter.post('/asana-real/:id/log', requireAuth, async (req, res) => {
       scheduledIso = scheduledDate.toISOString();
     }
     const row = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
       const exists = await c.query(
         `SELECT id FROM sales_opportunities WHERE id = $1 AND archived_at IS NULL`, [req.params.id]);
       if (!exists.rows[0]) return null;
       await ensureOpportunityNotes(c);
       const r = await c.query(
           `INSERT INTO opportunity_notes (
-             id, opportunity_id, note, created_by_username, created_at
-           ) VALUES ($1,$2,$3,$4,now())
+             id, opportunity_id, note, scheduled_call_at, scheduled_status, created_by_username, created_at
+           ) VALUES ($1,$2,$3,$4,'pendiente',$5,now())
            RETURNING id, opportunity_id, ${logTypeSql('note')} AS type,
                      regexp_replace(note, '^\\[(LLAMADA_AGENDADA:[^\\]]+|LLAMADA|NOTA|PASO)\\]\\s*', '', 'i') AS body,
+                     scheduled_call_at, scheduled_status,
                      COALESCE(created_by_username, 'Sistema') AS user_name, created_at`,
-        [randomUUID(), req.params.id, `${scheduledIso ? scheduledCallPrefix(scheduledIso) : logPrefix(type)} ${body}`, req.user?.nombre || 'Sistema']);
+        [randomUUID(), req.params.id, `${scheduledIso ? scheduledCallPrefix(scheduledIso) : logPrefix(type)} ${body}`,
+          scheduledIso, req.user?.nombre || 'Sistema']);
       await c.query(`UPDATE sales_opportunities SET updated_at = now() WHERE id = $1`, [req.params.id]);
       return normalizeLogRow(r.rows[0]);
     });
     if (!row) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
+    if (row.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
     res.status(201).json(row);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -528,16 +786,24 @@ asanaRealRouter.post('/asana-real/:id/log', requireAuth, async (req, res) => {
 // CERRAR → al pool (regla SOV2: archiva oportunidad + cliente sin vendedor)
 asanaRealRouter.post('/asana-real/:id/close', requireAuth, async (req, res) => {
   try {
-    const done = await withPublic(c => closeOpportunityToPool(c, req.params.id));
-    if (!done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
+    const done = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
+      return { done: await closeOpportunityToPool(c, req.params.id) };
+    });
+    if (done?.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
+    if (!done?.done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 asanaRealRouter.delete('/asana-real/:id', requireAuth, async (req, res) => {
   try {
-    const done = await withPublic(c => closeOpportunityToPool(c, req.params.id));
-    if (!done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
+    const done = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
+      return { done: await closeOpportunityToPool(c, req.params.id) };
+    });
+    if (done?.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
+    if (!done?.done) return res.status(404).json({ error: 'Oportunidad activa no encontrada' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -651,14 +917,21 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
   if (!client_id) return res.status(400).json({ error: 'Falta client_id' });
   try {
     const out = await withPublic(async c => {
+      const sellerId = await sellerIdForUser(c, req.user);
+      if (isSeller(req.user) && !sellerId) return { seller_not_configured: true };
       const cli = await c.query(
         `SELECT COALESCE(NULLIF(TRIM(name),''), NULLIF(TRIM(business_name),'')) AS name
            FROM clients WHERE id = $1`, [client_id]);
       if (!cli.rows[0]) return null;
       if (!hasOperationalClientName(cli.rows[0].name)) return { invalid_client: true };
       const ex = await c.query(
-        `SELECT id, source FROM sales_opportunities WHERE client_id = $1 AND archived_at IS NULL LIMIT 1`, [client_id]);
+        `SELECT id, source, salesperson_id FROM sales_opportunities WHERE client_id = $1 AND archived_at IS NULL LIMIT 1`, [client_id]);
       if (ex.rows[0]) {
+        if (sellerId && ex.rows[0].salesperson_id && ex.rows[0].salesperson_id !== sellerId) return { assigned_to_other: true };
+        if (sellerId) {
+          await c.query(`UPDATE sales_opportunities SET salesperson_id=$1,updated_at=now() WHERE id=$2`, [sellerId, ex.rows[0].id]);
+          await c.query(`UPDATE clients SET salesperson_id=$1 WHERE id=$2`, [sellerId, client_id]);
+        }
         if (String(ex.rows[0].source || '').toLowerCase() === 'desde_cliente') {
           await seedClientActiveLines(c, ex.rows[0].id, client_id);
           await ensureOpportunityWorkflowSteps(c, ex.rows[0].id);
@@ -666,9 +939,10 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
         return { opportunity_id: ex.rows[0].id, already: true };
       }
       const opp = await c.query(
-        `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source)
-         VALUES ($1,$2,'manual','activa','desde_cliente') RETURNING id`,
-        [client_id, 'Seguimiento · ' + cli.rows[0].name]);
+        `INSERT INTO sales_opportunities (client_id, salesperson_id, title, opportunity_type, status, source)
+         VALUES ($1,$2,$3,'manual','activa','desde_cliente') RETURNING id`,
+        [client_id, sellerId, 'Seguimiento · ' + cli.rows[0].name]);
+      if (sellerId) await c.query(`UPDATE clients SET salesperson_id=$1 WHERE id=$2`, [sellerId, client_id]);
       await seedClientActiveLines(c, opp.rows[0].id, client_id);
       await ensureOpportunityWorkflowSteps(c, opp.rows[0].id);
       return { opportunity_id: opp.rows[0].id, already: false };
@@ -677,6 +951,8 @@ asanaRealRouter.post('/asana-real/from-client', requireAuth, async (req, res) =>
     if (out.invalid_client) {
       return res.status(422).json({ error: 'El cliente no tiene empresa ni nombre. Complétalo antes de enviarlo a seguimiento.' });
     }
+    if (out.seller_not_configured) return res.status(403).json({ error: 'Tu usuario vendedor no está vinculado a un vendedor del CRM. Solicita la configuración al supervisor.' });
+    if (out.assigned_to_other) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
     res.json(out);
   } catch (e) {
     console.error('[from-client]', e.message);

@@ -21,3 +21,11 @@ test('Clientes conserva las columnas de oportunidades de Comisiones', () => {
   assert.match(route, /active_opportunity_count/);
   assert.doesNotMatch(route, /s_mpls.*product_type/);
 });
+
+test('Clientes muestra cuando una fila agrupa varios registros y varios BAN', () => {
+  assert.match(html, /function cliBanSummary\(c\)/);
+  assert.match(html, /client_record_count/);
+  assert.match(html, /ban_numbers/);
+  assert.match(html, /varios registros/);
+  assert.match(html, /BAN \$\{esc\(cliBanSummary\(c\)\)\}/);
+});

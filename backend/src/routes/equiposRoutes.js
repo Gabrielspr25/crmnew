@@ -120,7 +120,7 @@ function parseTab4(sheet) { // Accesorios: Item|SAP|Modelo|Precio|3|6|12|24
   }
   return items;
 }
-function parsearExcel(buffer) {
+export function parsearExcel(buffer) {
   const wb = XLSX.read(buffer, { type: 'buffer' });
   const celulares = findSheet(wb, ['finan equipos']);
   const modems = findSheet(wb, ['finan modems']);
@@ -138,9 +138,50 @@ function parsearExcel(buffer) {
   return { items, sheetNames: wb.SheetNames };
 }
 
+export async function importarListaEquiposDesdeFuente({ buffer, nombreArchivo, usuario, vigenciaInicio = null, vigenciaFin = null, notas = null, fuenteComercialId = null }) {
+  const { items, sheetNames } = parsearExcel(buffer);
+  if (!items.length) throw Object.assign(new Error('El Excel no contiene equipos reconocibles con el formato oficial. No se reemplazó nada.'), { code: 'formato_equipos_invalido' });
+  if (items.length > 5000) throw Object.assign(new Error('El Excel supera el máximo permitido de equipos. No se reemplazó nada.'), { code: 'demasiados_equipos' });
+  const c = await pool.connect();
+  try {
+    await c.query('BEGIN');
+    const up = await c.query(
+      `INSERT INTO public.equipos_uploads (nombre_archivo, subido_por, vigencia_inicio, vigencia_fin, notas, fuente_comercial_id)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+      [nombreArchivo, usuario, vigenciaInicio || null, vigenciaFin || null, notas || null, fuenteComercialId || null]
+    );
+    const uploadId = up.rows[0].id;
+    await c.query(`UPDATE public.equipos_lista SET activo = FALSE`);
+    let insertados = 0, actualizados = 0;
+    for (const item of items) {
+      const ex = await c.query(`SELECT id FROM public.equipos_lista WHERE item_code = $1 LIMIT 1`, [item.item_code]);
+      let equipoId;
+      if (ex.rows.length) {
+        equipoId = ex.rows[0].id;
+        await c.query(`UPDATE public.equipos_lista SET upload_id=$1, sap_code=$2, modelo=$3, marca=$4, categoria=$5, precio_regular=$6, fuera_portafolio=$7, activo=TRUE, actualizado_en=NOW() WHERE id=$8`, [uploadId, item.sap_code, item.modelo, item.marca, item.categoria, item.precio_regular, item.fuera_portafolio, equipoId]);
+        actualizados++;
+      } else {
+        const ins = await c.query(`INSERT INTO public.equipos_lista (upload_id, item_code, sap_code, modelo, marca, categoria, precio_regular, fuera_portafolio, activo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,TRUE) RETURNING id`, [uploadId, item.item_code, item.sap_code, item.modelo, item.marca, item.categoria, item.precio_regular, item.fuera_portafolio]);
+        equipoId = ins.rows[0].id;
+        insertados++;
+      }
+      await c.query(`DELETE FROM public.equipos_mensualidades WHERE equipo_id=$1`, [equipoId]);
+      for (const m of (item.mensualidades || [])) await c.query(`INSERT INTO public.equipos_mensualidades (equipo_id, meses, monto) VALUES ($1,$2,$3)`, [equipoId, m.meses, m.monto]);
+      await c.query(`DELETE FROM public.equipos_pospago WHERE equipo_id=$1`, [equipoId]);
+      for (const p of (item.pospago_precios || [])) await c.query(`INSERT INTO public.equipos_pospago (equipo_id, plan_precio, monto) VALUES ($1,$2,$3)`, [equipoId, p.plan_precio, p.monto]);
+    }
+    await c.query(`UPDATE public.equipos_uploads SET total_items=$1 WHERE id=$2`, [items.length, uploadId]);
+    await c.query('COMMIT');
+    return { upload_id: uploadId, total: items.length, insertados, actualizados, hojas: sheetNames };
+  } catch (error) {
+    await c.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally { c.release(); }
+}
+
 // ─── Endpoints ────────────────────────────────────────────────────────────────
-// GET /api/equipos-lista  — equipos vigentes (con filtros)
-equiposRouter.get('/equipos-lista', requireAuth, async (req, res) => {
+// GET /api/equipos-lista  — equipos vigentes (con filtros). Publico para el portal.
+equiposRouter.get('/equipos-lista', async (req, res) => {
   try {
     const { categoria, marca, search } = req.query;
     let sql = `SELECT * FROM public.v_equipos_vigentes WHERE 1=1`; const params = [];

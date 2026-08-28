@@ -163,6 +163,13 @@ body{
 .activation-table .money-cell{font-weight:900;color:#f8fafc;white-space:nowrap}
 .activation-table .autopay-red{color:#e00000}
 .activation-table .muted-head{font-weight:800}
+.individual-plan-table{font-size:11px;color:#a8b3c4}
+.individual-plan-table th{font-size:10px;color:#f6c453}
+.individual-plan-table td{color:#a8b3c4;padding:6px 8px}
+.individual-plan-name{color:#a8b3c4;font-weight:600;line-height:1.35;text-align:left}
+.individual-plan-code{font-family:monospace;font-size:11px;color:#7dd3fc;background:rgba(56,189,248,0.1);display:inline-flex;margin-top:4px;padding:2px 7px;border-radius:4px}
+.individual-details-button{border:1px solid rgba(56,189,248,0.32);background:rgba(56,189,248,0.1);color:#bae6fd;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.individual-details-button:hover{background:rgba(56,189,248,0.16)}
 .activation-note{padding:10px 14px;background:rgba(56,189,248,0.08);border-top:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.66)}
 
 /* Terms modal */
@@ -275,7 +282,8 @@ body{
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
-    </nav>
+    
+  <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
 <div class="autopay-bar">
   <span class="toggle-label">AutoPay:</span>
@@ -477,9 +485,9 @@ function render() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const container = document.getElementById('mainContainer');
 
-  let visible = allModulos;
+  let visible = allModulos.filter(m => !isLegacyBusinessRedModule(m));
   if (q) {
-    visible = allModulos.filter(m =>
+    visible = visible.filter(m =>
       m.titulo.toLowerCase().includes(q) ||
       m.subtitulo?.toLowerCase().includes(q) ||
       (m.contenido?.lineas || []).some(l => String(l.codigo || '').toLowerCase().includes(q)) ||
@@ -494,6 +502,9 @@ function render() {
       ].join(' ').toLowerCase().includes(q))
     );
   }
+  visible = buildMobileDisplayModules(visible);
+  visible = moveIndividualPlansLast(visible);
+  if (!visible.some(m => m.seccion_key === openPlanKey)) openPlanKey = visible[0]?.seccion_key || null;
 
   container.innerHTML = '';
 
@@ -683,11 +694,16 @@ function buildMultilineaActivationTable(m) {
 }
 
 function isBaseMobileModule(module) {
+  const key = String(module?.seccion_key || '');
   return [
     'movil_planes_individuales',
     'movil_multilinea_business_red',
     'movil_multilinea_byop_ban'
-  ].includes(module?.seccion_key);
+  ].includes(key) || key.startsWith('movil_multilinea_business_red_');
+}
+
+function isLegacyBusinessRedModule(module) {
+  return /^business_red_(plus|extreme|supreme|sin_fronteras)$/.test(String(module?.seccion_key || ''));
 }
 
 function isPublicMobileRow(row) {
@@ -699,6 +715,104 @@ function isPublicMobileRow(row) {
 
 function mobileRows(module) {
   return (module?.contenido?.filas || []).filter(isPublicMobileRow);
+}
+
+function businessRedActivationRowsFromText(module) {
+  const text = mobileRows(module).map(row => row.texto_original || '').find(Boolean) || '';
+  if (!text) return { rows: [], accountTypes: [] };
+
+  const accountTypes = [];
+  const accountTypeRegex = /Business\s+(?:Wireline\s+Small|Regular|Corporate|Credit\s+L[ií]mit|BYOP\s+Corporate|BYOP\s+DBA)/gi;
+  let accountMatch;
+  while ((accountMatch = accountTypeRegex.exec(text)) !== null) {
+    const value = accountMatch[0].replace(/\s+/g, ' ').trim();
+    if (!accountTypes.some(item => item.toLowerCase() === value.toLowerCase())) accountTypes.push(value);
+  }
+
+  const rows = [];
+  const seen = new Set();
+  const rowRegex = /(\d+)\s+l[ií]nea[s]?\s+([A-Z0-9]+)\s+\$([0-9]+(?:\.[0-9]+)?)\s+([A-Z0-9]+)\s+\$([0-9]+(?:\.[0-9]+)?)\s+\$([0-9]+(?:\.[0-9]+)?)\/\$([0-9]+(?:\.[0-9]+)?)\s+\$([0-9]+(?:\.[0-9]+)?)\/\$([0-9]+(?:\.[0-9]+)?)/gi;
+  let rowMatch;
+  while ((rowMatch = rowRegex.exec(text)) !== null) {
+    const lineNumber = Number(rowMatch[1]);
+    if (!lineNumber || seen.has(lineNumber)) continue;
+    seen.add(lineNumber);
+    rows.push({
+      lineNumber,
+      lineas: `${lineNumber} linea${lineNumber === 1 ? '' : 's'}`,
+      codigo_vendedor: rowMatch[2],
+      precio_vendedor: `$${rowMatch[3]}`,
+      codigo_sistema: rowMatch[4],
+      precio_factura_linea: `$${rowMatch[5]}`,
+      promedio_regular: `$${rowMatch[6]}`,
+      promedio_autopay: `$${rowMatch[7]}`,
+      total_regular: `$${rowMatch[8]}`,
+      total_autopay: `$${rowMatch[9]}`,
+    });
+  }
+
+  rows.sort((a, b) => a.lineNumber - b.lineNumber);
+  return { rows, accountTypes };
+}
+
+function mobileBusinessRedFamilyOrder(family) {
+  const value = String(family || '');
+  if (/PLUS/i.test(value)) return 10;
+  if (/EXTREME/i.test(value)) return 20;
+  if (/SUPREME/i.test(value)) return 30;
+  if (/SIN\s*FRONTERAS/i.test(value)) return 40;
+  return 90;
+}
+
+function mobileBusinessRedKey(family) {
+  const value = String(family || '');
+  if (/PLUS/i.test(value)) return 'movil_multilinea_business_red_plus';
+  if (/EXTREME/i.test(value)) return 'movil_multilinea_business_red_extreme';
+  if (/SUPREME/i.test(value)) return 'movil_multilinea_business_red_supreme';
+  if (/SIN\s*FRONTERAS/i.test(value)) return 'movil_multilinea_business_red_sin_fronteras';
+  return 'movil_multilinea_business_red_otras';
+}
+
+function mobileBusinessRedFamilyLabel(family) {
+  const key = mobileBusinessRedKey(family);
+  if (key === 'movil_multilinea_business_red_plus') return 'Business Red PLUS';
+  if (key === 'movil_multilinea_business_red_extreme') return 'Business Red EXTREME';
+  if (key === 'movil_multilinea_business_red_supreme') return 'Business Red SUPREME';
+  if (key === 'movil_multilinea_business_red_sin_fronteras') return 'Business Red Sin Fronteras';
+  return String(family || 'Business Red');
+}
+
+function buildMobileDisplayModules(modules) {
+  return (modules || []).flatMap(module => {
+    if (module?.seccion_key !== 'movil_multilinea_business_red') return [module];
+    const groups = new Map();
+    mobileRows(module).forEach(row => {
+      const family = row.familia || 'Business Red';
+      if (!groups.has(family)) groups.set(family, []);
+      groups.get(family).push(row);
+    });
+    return [...groups.entries()]
+      .sort((a, b) => mobileBusinessRedFamilyOrder(a[0]) - mobileBusinessRedFamilyOrder(b[0]))
+      .map(([family, rows]) => ({
+        ...module,
+        seccion_key: mobileBusinessRedKey(family),
+        titulo: mobileBusinessRedFamilyLabel(family),
+        subtitulo: 'Business RED multilinea',
+        descripcion: 'Opciones publicadas por cantidad de lineas.',
+        contenido: {
+          ...(module.contenido || {}),
+          filas: rows,
+          total_filas: rows.length,
+        },
+      }));
+  });
+}
+
+function moveIndividualPlansLast(modules) {
+  const list = modules || [];
+  const regularModules = list.filter(module => module?.seccion_key !== 'movil_planes_individuales');
+  const individualModules = list.filter(module => module?.seccion_key === 'movil_planes_individuales');
+  return [...regularModules, ...individualModules];
 }
 
 function formatPlanPrice(row) {
@@ -728,6 +842,13 @@ function lineCountLabel(row) {
 function buildBaseMobileTable(module) {
   const rows = mobileRows(module);
   const total = module?.contenido?.total_filas ?? rows.length;
+  if (module.seccion_key === 'movil_planes_individuales') return buildIndividualPlansTable(module);
+  if (module.seccion_key === 'movil_multilinea_business_red' || String(module.seccion_key || '').startsWith('movil_multilinea_business_red_')) {
+    const activationTable = buildBusinessRedBaseActivationTable(module);
+    if (activationTable) {
+      return `<div class="published-structure-title">${escapeHTML(rows.length)} candidatos publicos de ${escapeHTML(total)} registros auditados</div>${activationTable}`;
+    }
+  }
   const tableRows = rows.map(row => {
     if (module.seccion_key === 'movil_multilinea_byop_ban') {
       return `<tr>
@@ -739,7 +860,7 @@ function buildBaseMobileTable(module) {
         <td>${formatList(row.caracteristicas_permanentes)}</td>
       </tr>`;
     }
-    if (module.seccion_key === 'movil_multilinea_business_red') {
+    if (module.seccion_key === 'movil_multilinea_business_red' || String(module.seccion_key || '').startsWith('movil_multilinea_business_red_')) {
       return `<tr>
         <td><strong>${escapeHTML(row.familia || row.descripcion)}</strong><div class="regular-price">${escapeHTML(row.codigo)}</div></td>
         <td>${escapeHTML(lineCountLabel(row))}</td>
@@ -749,7 +870,7 @@ function buildBaseMobileTable(module) {
       </tr>`;
     }
     return `<tr>
-      <td><strong>${escapeHTML(row.descripcion)}</strong><div class="regular-price">${escapeHTML(row.codigo)}</div></td>
+      <td><div class="individual-plan-name">${escapeHTML(row.descripcion)}</div><div class="individual-plan-code">${escapeHTML(row.codigo)}</div></td>
       <td>${escapeHTML(formatPlanPrice(row))}</td>
       <td>${escapeHTML(lineCountLabel(row))}</td>
       <td>${formatList(row.caracteristicas_permanentes)}</td>
@@ -759,7 +880,7 @@ function buildBaseMobileTable(module) {
 
   const header = module.seccion_key === 'movil_multilinea_byop_ban'
     ? '<tr><th>Plan</th><th>Precio regular</th><th>Modelo de cobro</th><th>Capacidad</th><th>Requisitos</th><th>Caracteristicas</th></tr>'
-    : module.seccion_key === 'movil_multilinea_business_red'
+    : module.seccion_key === 'movil_multilinea_business_red' || String(module.seccion_key || '').startsWith('movil_multilinea_business_red_')
       ? '<tr><th>Familia / codigo</th><th>Lineas</th><th>Precio regular</th><th>Requisitos</th><th>Caracteristicas</th></tr>'
       : '<tr><th>Plan / codigo</th><th>Precio regular</th><th>Lineas</th><th>Caracteristicas</th><th>Requisitos</th></tr>';
 
@@ -768,6 +889,34 @@ function buildBaseMobileTable(module) {
       <thead>${header}</thead>
       <tbody>${tableRows}</tbody>
     </table></div>`;
+}
+
+function buildIndividualPlansTable(module) {
+  const rows = mobileRows(module);
+  const total = module?.contenido?.total_filas ?? rows.length;
+  const tableRows = rows.map(row => `<tr>
+    <td><div class="individual-plan-name">${escapeHTML(row.descripcion)}</div><div class="individual-plan-code">${escapeHTML(row.codigo)}</div></td>
+    <td class="money-cell">${escapeHTML(formatPlanPrice(row))}</td>
+    <td>${escapeHTML(lineCountLabel(row))}</td>
+    <td>${formatList(row.requisitos_permanentes)}</td>
+    <td><button class="individual-details-button" type="button" data-plan-code="${escapeHTML(row.codigo)}">Ver caracteristicas</button></td>
+  </tr>`).join('');
+  return `<div class="published-structure-title">${escapeHTML(rows.length)} planes individuales de ${escapeHTML(total)} registros auditados</div>
+    <div class="table-wrap"><table class="activation-table individual-plan-table">
+      <thead><tr><th>Plan / codigo</th><th>Precio</th><th>Lineas</th><th>Requisitos</th><th>Detalle</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table></div>`;
+}
+
+function buildBusinessRedBaseActivationTable(module) {
+  const parsed = businessRedActivationRowsFromText(module);
+  if (!parsed.rows.length) return '';
+  return buildActivationTable({
+    formato: 'business_red_base',
+    titulo_proceso: `PROCESO DE ACTIVACION ${module.titulo || 'Business Red'}`,
+    account_types: parsed.accountTypes,
+    filas: parsed.rows,
+  });
 }
 
 function buildPlanCard(m) {
@@ -874,7 +1023,27 @@ function buildPlanCard(m) {
       togglePlanAccordion(m.seccion_key);
     }
   });
+  card.querySelectorAll('.individual-details-button').forEach(button => {
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      openIndividualPlanDetails(button.dataset.planCode);
+    });
+  });
   return card;
+}
+
+function openIndividualPlanDetails(planCode) {
+  const row = mobileRows(allModulos.find(m => m.seccion_key === 'movil_planes_individuales')).find(item => String(item.codigo || '') === String(planCode || ''));
+  if (!row) return;
+  const features = Array.isArray(row.caracteristicas_permanentes) ? row.caracteristicas_permanentes : [];
+  document.getElementById('termsTitle').textContent = row.descripcion || 'Caracteristicas del plan';
+  document.getElementById('termsBody').innerHTML = `
+    <div class="terms-meta">
+      <span class="terms-pill">Codigo: ${escapeHTML(row.codigo)}</span>
+      <span class="terms-pill">Precio: ${escapeHTML(formatPlanPrice(row))}</span>
+    </div>
+    ${features.length ? `<ul>${features.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul>` : '<p>No hay caracteristicas publicadas para este plan.</p>'}`;
+  document.getElementById('termsBackdrop').classList.add('show');
 }
 
 function openTermsModal(seccionKey) {

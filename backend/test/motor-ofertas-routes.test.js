@@ -8,4 +8,6 @@ test('las rutas del motor exigen autenticacion y reservan preview/aprobacion par
   assert.match(source, /motorOfertasRouter\.post\('\/preview', requireAdmin/);
   assert.match(source, /motorOfertasRouter\.post\('\/aprobar', requireAdmin/);
   assert.match(source, /motorOfertasRouter\.post\('\/elegibles'/);
+  assert.match(source, /findBusinessRedPlusEligible/);
+  assert.doesNotMatch(source, /motor_elegibilidad_pendiente/);
 });

@@ -5,3 +5,13 @@ tmp/
 .worktrees/
 backend/eng.traineddata
 documentos-ofertas/
+.env
+.claude/
+.local-fixtures/
+.prod-sync/
+backups/
+originales/
+scripts/__pycache__/
+*.log
+/Paleta de colores
+backend/search_db.js

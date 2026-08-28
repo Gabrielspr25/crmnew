@@ -11,7 +11,7 @@ import { PLANES_FIJOS_COLUMNAS } from '../services/planesOfertasContract.js';
 import { diffFilasPlanesFijos } from '../services/planesOfertasDiff.js';
 import { buildBasesInformativasPreviews } from '../services/basesInformativasPreview.js';
 import { runParser } from '../services/secureParserRunner.js';
-import { importarListaEquiposDesdeFuente } from './equiposRoutes.js';
+import { importarListaEquiposDesdeFuente, parsearExcel } from './equiposRoutes.js';
 
 export const fuentesComercialesRouter = Router();
 fuentesComercialesRouter.use(requireAuth);
@@ -208,16 +208,34 @@ function isRealIsoDate(value) {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
-function fechaActualizacionBase({ body }) {
+function fechaDesdeNombreFuenteBase(fuente) {
+  const nombre = String(fuente?.nombre_original || fuente?.nombre_archivado || '').trim();
+  const matches = [...nombre.matchAll(/(?:^|[^0-9])(\d{6})(?:[^0-9]|$)/g)].map((match) => match[1]);
+  const fechasValidas = [];
+  for (const token of matches) {
+    const year = 2000 + Number(token.slice(0, 2));
+    const month = Number(token.slice(2, 4));
+    const day = Number(token.slice(4, 6));
+    const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (isRealIsoDate(value)) fechasValidas.push(value);
+  }
+  const unicas = [...new Set(fechasValidas)];
+  if (unicas.length !== 1) return null;
+  return unicas[0];
+}
+
+function fechaActualizacionBase({ body, fuente }) {
   const manual = body?.fecha_actualizacion_base;
-  if (manual == null || String(manual).trim() === '') {
-    throw Object.assign(new Error('fecha_actualizacion_base_requerida'), { code: 'fecha_actualizacion_base_requerida' });
+  if (manual != null && String(manual).trim() !== '') {
+    const value = String(manual).trim();
+    if (!isRealIsoDate(value)) {
+      throw Object.assign(new Error('fecha_actualizacion_base_invalida'), { code: 'fecha_actualizacion_base_invalida' });
+    }
+    return { value, origen: 'entrada_manual_confirmada' };
   }
-  const value = String(manual).trim();
-  if (!isRealIsoDate(value)) {
-    throw Object.assign(new Error('fecha_actualizacion_base_invalida'), { code: 'fecha_actualizacion_base_invalida' });
-  }
-  return { value, origen: 'entrada_manual_confirmada' };
+  const detectada = fechaDesdeNombreFuenteBase(fuente);
+  if (detectada) return { value: detectada, origen: 'nombre_archivo_confirmado' };
+  throw Object.assign(new Error('fecha_actualizacion_base_requerida'), { code: 'fecha_actualizacion_base_requerida' });
 }
 
 function inalambricoVigenciaDesdeNombre(nombre) {
@@ -329,13 +347,6 @@ export function createPreviewBaseHandler(options = {}) {
   if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
 
   try {
-    let fechaBase;
-    try {
-      fechaBase = fechaActualizacionBase({ body: req.body });
-    } catch (error) {
-      return res.status(400).json({ ok: false, codigo: error.code || 'fecha_actualizacion_base_invalida' });
-    }
-
     const { rows } = await dbPool.query(
       `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
               vigencia_desde, vigencia_hasta, vigencia_documental, estado
@@ -346,6 +357,13 @@ export function createPreviewBaseHandler(options = {}) {
     if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
     if (!['fijos', 'claro_tv', 'ofertas_fijo', 'moviles'].includes(fuente.familia) || fuente.documento_tipo !== 'pdf') {
       return res.status(422).json({ ok: false, codigo: 'archivo_incompatible' });
+    }
+
+    let fechaBase;
+    try {
+      fechaBase = fechaActualizacionBase({ body: req.body, fuente });
+    } catch (error) {
+      return res.status(400).json({ ok: false, codigo: error.code || 'fecha_actualizacion_base_invalida' });
     }
 
     let fuentes = [fuente];
@@ -548,6 +566,78 @@ export function createHistorialBasesInformativasHandler(options = {}) {
 
 fuentesComercialesRouter.get('/bases-informativas/historial', requireAdmin, createHistorialBasesInformativasHandler());
 
+fuentesComercialesRouter.post('/:id/equipos-preview', requireAdmin, async (req, res) => {
+  const id = String(req.params.id || '').trim();
+  if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+        mime_type, bytes, vigencia_desde, vigencia_hasta, vigencia_documental, notas, estado, subido_por, creado_en
+       FROM public.fuentes_comerciales WHERE id=$1 LIMIT 1`,
+      [id]
+    );
+    const fuente = rows[0];
+    if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
+    if (fuente.familia !== 'equipos' || fuente.documento_tipo !== 'excel') return res.status(422).json({ ok: false, codigo: 'archivo_incompatible' });
+    const buffer = fs.readFileSync(resolveFuentePath(fuente));
+    const parsed = parsearExcel(buffer);
+    if (!parsed.items.length) return res.status(422).json({ ok: false, codigo: 'formato_equipos_invalido', error: 'El Excel no contiene equipos reconocibles con el formato oficial.' });
+    res.json({
+      ok: true,
+      fuente: publicFuente(fuente),
+      preview: {
+        total: parsed.items.length,
+        hojas: parsed.sheetNames,
+        muestra: parsed.items.slice(0, 10).map((item) => ({
+          item_code: item.item_code,
+          modelo: item.modelo,
+          marca: item.marca,
+          categoria: item.categoria,
+          precio_regular: item.precio_regular,
+        })),
+      },
+    });
+  } catch (error) {
+    if (error.code === 'archivo_fuera_directorio' || error.code === 'archivo_no_encontrado') return res.status(404).json({ ok: false, codigo: error.code });
+    res.status(500).json({ ok: false, codigo: 'error_interno', error: error.message });
+  }
+});
+
+fuentesComercialesRouter.post('/:id/equipos-publicar', requireAdmin, async (req, res) => {
+  const id = String(req.params.id || '').trim();
+  if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+        mime_type, bytes, vigencia_desde, vigencia_hasta, vigencia_documental, notas, estado, subido_por, creado_en
+       FROM public.fuentes_comerciales WHERE id=$1 LIMIT 1`,
+      [id]
+    );
+    const fuente = rows[0];
+    if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
+    if (fuente.familia !== 'equipos' || fuente.documento_tipo !== 'excel') return res.status(422).json({ ok: false, codigo: 'archivo_incompatible' });
+    const buffer = fs.readFileSync(resolveFuentePath(fuente));
+    const publicacion = await importarListaEquiposDesdeFuente({
+      buffer,
+      nombreArchivo: fuente.nombre_original,
+      usuario: uname(req),
+      notas: `Fuente comercial: ${fuente.id}`,
+      fuenteComercialId: fuente.id,
+    });
+    await pool.query(
+      `UPDATE public.fuentes_comerciales
+       SET estado='activa', notas=NULL, vigencia_documental='vigente'
+       WHERE id=$1`,
+      [fuente.id]
+    );
+    res.json({ ok: true, fuente: publicFuente(fuente), publicacion });
+  } catch (error) {
+    if (error.code === 'formato_equipos_invalido' || error.code === 'demasiados_equipos') return res.status(422).json({ ok: false, codigo: error.code, error: error.message });
+    if (error.code === 'archivo_fuera_directorio' || error.code === 'archivo_no_encontrado') return res.status(404).json({ ok: false, codigo: error.code });
+    res.status(500).json({ ok: false, codigo: 'error_interno', error: error.message });
+  }
+});
+
 async function cambiarEstadoBaseInformativa({ req, res, estadoOrigen, estadoDestino, campos, dbPool = pool }) {
   const id = String(req.params.id || '').trim();
   if (!UUID_RE.test(id)) return res.status(400).json({ ok: false, codigo: 'uuid_invalido' });
@@ -661,10 +751,12 @@ fuentesComercialesRouter.get('/', async (req, res) => {
 
 fuentesComercialesRouter.post('/', requireAdmin, upload.single('documento'), async (req, res) => {
   const familia = String(req.body.familia || '').trim();
+  const modoPublicacion = String(req.body.publicacion_modo || '').trim();
 
   if (!FAMILIAS.has(familia)) return res.status(400).json({ ok: false, codigo: 'familia_invalida' });
   if (!req.file?.buffer?.length) return res.status(400).json({ ok: false, codigo: 'archivo_requerido' });
   if (familia === 'equipos' && !/\.(xlsx|xls)$/i.test(req.file.originalname)) return res.status(422).json({ ok: false, codigo: 'formato_equipos_invalido', error: 'Lista de Equipos requiere un Excel oficial (.xlsx o .xls).' });
+  const uploadSha256 = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
 
   try {
     const titulo = deriveFuenteTitulo({ originalName: req.file.originalname, familia });
@@ -700,7 +792,7 @@ fuentesComercialesRouter.post('/', requireAdmin, upload.single('documento'), asy
       ]
     );
     let publicacion = null;
-    if (familia === 'equipos') {
+    if (familia === 'equipos' && modoPublicacion !== 'borrador') {
       publicacion = await importarListaEquiposDesdeFuente({
         buffer: req.file.buffer,
         nombreArchivo: req.file.originalname,
@@ -726,7 +818,7 @@ fuentesComercialesRouter.post('/', requireAdmin, upload.single('documento'), asy
         `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
           mime_type, bytes, vigencia_desde, vigencia_hasta, vigencia_documental, notas, estado, subido_por, creado_en
          FROM public.fuentes_comerciales WHERE familia=$1 AND sha256=$2 LIMIT 1`,
-        [familia, e.detail?.match(/\(([a-f0-9]{64})\)/i)?.[1] || '']
+        [familia, uploadSha256]
       ).catch(() => ({ rows: [] }));
       return res.status(409).json({ ok: false, codigo: 'fuente_duplicada', fuente: rows[0] ? publicFuente(rows[0]) : null });
     }

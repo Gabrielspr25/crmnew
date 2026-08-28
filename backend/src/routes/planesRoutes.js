@@ -31,6 +31,12 @@ const PUBLICACION_CATEGORIA_POR_PAGINA = {
   moviles: 'movil',
   inalambrico: 'inalambrico',
 };
+const LEGACY_MOBILE_MODULE_KEYS = [
+  'business_red_plus',
+  'business_red_extreme',
+  'business_red_supreme',
+  'business_red_sin_fronteras',
+];
 
 const uploadPdf = multer({
   dest: UPLOAD_DIR, limits: { fileSize: 20 * 1024 * 1024 },
@@ -65,7 +71,12 @@ planesRouter.get('/:pagina', async (req, res, next) => {
     const [{ rows }, publicacionResult] = await Promise.all([
       pool.query(
       `SELECT id, pagina, seccion_key, titulo, subtitulo, descripcion, orden, activo, tipo, contenido, vigencia_desde, vigencia_hasta, boletin_ref, updated_at
-       FROM public.planes_modulos WHERE pagina = $1 AND activo = true ORDER BY orden, id`, [pagina]),
+       FROM public.planes_modulos
+       WHERE pagina = $1
+         AND activo = true
+         AND ($1 <> 'moviles' OR seccion_key <> ALL($2::text[]))
+       ORDER BY orden, id`,
+      [pagina, LEGACY_MOBILE_MODULE_KEYS]),
       PUBLICACION_CATEGORIA_POR_PAGINA[pagina]
         ? pool.query(
           `SELECT id, numero, categoria, fuente_nombre, fuente_sha256, fecha_actualizacion_base, publicada_en

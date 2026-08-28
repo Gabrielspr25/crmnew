@@ -47,14 +47,16 @@ test('Clientes permite filtrar el listado por movil, fijo y convergente sin camb
   assert.match(html, /client\.all_service_types/);
 });
 
-test('la ficha del cliente muestra lineas activas y canceladas juntas por BAN', async () => {
+test('la ficha del cliente separa lineas activas y canceladas en tabs por BAN', async () => {
   const html = await readFile(appPath, 'utf8');
 
   assert.match(html, /const activeRows=renderSubscriberRows\(visibleLines\(active\),/);
   assert.match(html, /const canceledRows=renderSubscriberRows\(visibleLines\(canceled\),/);
-  assert.match(html, /subscriber-section active/);
-  assert.match(html, /subscriber-section canceled/);
-  assert.doesNotMatch(html, /const selected=visibleLines\(cliMSub==='canceladas'\?canceled:active\)/);
+  assert.match(html, /const statusTabs=/);
+  assert.match(html, /onclick="setCliMSub\('activas'\)"/);
+  assert.match(html, /onclick="setCliMSub\('canceladas'\)"/);
+  assert.match(html, /const selectedRows=cliMSub==='canceladas'\?canceledRows:activeRows/);
+  assert.doesNotMatch(html, /subscriber-section canceled/);
 });
 
 test('la pestaña Comparativas del cliente ofrece HTML/PDF además del constructor', async () => {
@@ -85,10 +87,11 @@ test('la comparativa exporta un formulario Excel en una sola hoja visual', async
   assert.match(block, /Total actual/);
   assert.match(block, /Total oferta/);
   assert.match(block, /Diferencia/);
-  assert.match(block, /application\/vnd\.ms-excel/);
-  assert.match(block, /downloadTextFile\(/);
-  assert.doesNotMatch(block, /book_append_sheet/);
-  assert.doesNotMatch(block, /json_to_sheet/);
+  assert.match(block, /XLSX\.utils\.book_new\(\)/);
+  assert.match(block, /XLSX\.utils\.aoa_to_sheet/);
+  assert.match(block, /XLSX\.utils\.book_append_sheet/);
+  assert.match(block, /XLSX\.writeFile/);
+  assert.match(block, /\.xlsx/);
 });
 
 test('la comparativa usa fecha fin real en vencimiento y separa cuentas BAN', async () => {

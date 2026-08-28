@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VentasPro Nuevo</title>
 <style>
-  body[data-theme="day"]{ --bg:#e9edf6; --card:#fff; --card2:#f4f6fc; --line:#e3e8f2; --txt:#7a4a06; --txt2:#8f5c0e; --txt3:#aa7a30; --on-accent:#2d1904; --primary:#2f6bff; --primary-soft:#e8efff; --green:#15a35a; --green-soft:#d8f5e6; --green-border:#a7e3c4; --amber:#c9820a; --amber-soft:#fdf0d4; --amber-border:#f0d294; --red:#dc2626; --red-soft:#fde7e7; --violet:#6d57e0; --violet-soft:#ece8fc; --teal:#0d9488; --teal-soft:#d4f3ef; --track:#e7ebf3;}
-  body[data-theme="dark"]{ --bg:#0f1320; --card:#1a1f33; --card2:#212744; --line:rgba(255,255,255,0.08); --txt:#ffd07a; --txt2:#e5b65d; --txt3:#a87c3a; --on-accent:#2d1904; --primary:#4b82ff; --primary-soft:rgba(75,130,255,0.16); --green:#34d399; --green-soft:rgba(52,211,153,0.15); --green-border:rgba(52,211,153,0.4); --amber:#fbbf5a; --amber-soft:rgba(251,191,90,0.15); --amber-border:rgba(251,191,90,0.4); --red:#f87171; --red-soft:rgba(248,113,113,0.13); --violet:#a78bfa; --violet-soft:rgba(139,124,246,0.18); --teal:#2dd4bf; --teal-soft:rgba(45,212,191,0.15); --track:rgba(255,255,255,0.08);}
+  body[data-theme="day"]{color-scheme:light; --bg:#e9edf6; --card:#fff; --card2:#f4f6fc; --line:#e3e8f2; --txt:#7a4a06; --txt2:#8f5c0e; --txt3:#aa7a30; --on-accent:#2d1904; --primary:#2f6bff; --primary-soft:#e8efff; --green:#15a35a; --green-soft:#d8f5e6; --green-border:#a7e3c4; --amber:#c9820a; --amber-soft:#fdf0d4; --amber-border:#f0d294; --red:#dc2626; --red-soft:#fde7e7; --violet:#6d57e0; --violet-soft:#ece8fc; --teal:#0d9488; --teal-soft:#d4f3ef; --track:#e7ebf3;}
+  body[data-theme="dark"]{color-scheme:dark; --bg:#0f1320; --card:#1a1f33; --card2:#212744; --line:rgba(255,255,255,0.08); --txt:#ffd07a; --txt2:#e5b65d; --txt3:#a87c3a; --on-accent:#2d1904; --primary:#4b82ff; --primary-soft:rgba(75,130,255,0.16); --green:#34d399; --green-soft:rgba(52,211,153,0.15); --green-border:rgba(52,211,153,0.4); --amber:#fbbf5a; --amber-soft:rgba(251,191,90,0.15); --amber-border:rgba(251,191,90,0.4); --red:#f87171; --red-soft:rgba(248,113,113,0.13); --violet:#a78bfa; --violet-soft:rgba(139,124,246,0.18); --teal:#2dd4bf; --teal-soft:rgba(45,212,191,0.15); --track:rgba(255,255,255,0.08);}
   *{box-sizing:border-box;margin:0;padding:0;} html,body{overflow-x:hidden;} a{color:inherit;text-decoration:none;}
   body{font-family:"Segoe UI",Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);display:flex;min-height:100vh;}
   .side{width:206px;flex-shrink:0;background:#0e1426;color:#cdd5ea;padding:18px 12px;overflow-y:auto;max-height:100vh;}
@@ -81,11 +81,14 @@
   .asana-call-agenda{display:flex;gap:10px;align-items:stretch;overflow-x:auto;padding:10px 12px;margin-bottom:10px;}
   .agenda-group{min-width:240px;max-width:360px;flex:1;background:rgba(12,17,31,.34);border:1px solid rgba(75,130,255,.18);border-radius:10px;padding:9px;}
   .agenda-title{font-size:11px;text-transform:uppercase;color:#7dd3fc;margin-bottom:7px;}
-  .agenda-item{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(75,130,255,.14);cursor:pointer;}
+  .agenda-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(75,130,255,.14);cursor:pointer;}
   .agenda-item:first-of-type{border-top:0;}
   .agenda-time{font-size:11px;color:#f6c86f;}
   .agenda-client{font-size:12px;color:#ffe58f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .agenda-note{font-size:11px;color:#b9a06d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .agenda-actions{display:flex;gap:5px;align-items:center}.agenda-actions .btn{padding:5px 7px;font-size:10px}
+  .my-day{padding:14px;margin-bottom:12px}.my-day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}.my-day-head h2{font-size:17px}.my-day-form{display:grid;grid-template-columns:minmax(190px,1.4fr) 150px 110px 120px auto;gap:8px;align-items:end;margin-bottom:12px}.my-day-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.my-day-group{border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:10px;min-height:96px}.my-day-title{font-size:11px;text-transform:uppercase;color:var(--txt3);font-weight:800;margin-bottom:6px}.my-day-item{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}.my-day-item:first-of-type{border-top:0}.my-day-check{width:22px;height:22px;border-radius:6px;border:1px solid var(--green-border);background:var(--card);color:var(--green);cursor:pointer}.my-day-item-title{font-size:12px;font-weight:800;color:var(--txt)}.my-day-item-meta{font-size:10.5px;color:var(--txt3);margin-top:2px}.my-day-item.alta .my-day-item-title{color:var(--red)}.week-calendar-title{font-size:12px;font-weight:800;margin:14px 0 7px}.week-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.week-day{border:1px solid var(--line);background:var(--card2);border-radius:8px;padding:7px;min-height:88px}.week-day.today{border-color:var(--green-border);background:var(--green-soft)}.week-day-head{font-size:10px;text-transform:uppercase;color:var(--txt3);font-weight:800;margin-bottom:5px}.week-event{font-size:10px;line-height:1.25;padding:4px 0;border-top:1px solid var(--line);overflow:hidden;text-overflow:ellipsis}.week-event:first-of-type{border-top:0}.opportunity-task-form{display:none;margin-top:10px;padding:10px;border:1px solid var(--green-border);background:var(--green-soft);border-radius:10px}.opportunity-task-form.open{display:grid;grid-template-columns:minmax(180px,1fr) 150px 110px 120px auto;gap:8px;align-items:end}
+  @media(max-width:900px){.my-day-form,.opportunity-task-form.open{grid-template-columns:1fr 1fr}.my-day-groups{grid-template-columns:1fr}.week-calendar{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .callbtn{width:34px;height:28px;border-radius:8px;border:1px solid rgba(75,130,255,.16);background:rgba(12,17,31,.38);color:#68718d;font-size:14px;cursor:pointer;}
   .callbtn.today{background:rgba(251,191,90,.16);border-color:rgba(251,191,90,.42);color:#fbbf5a;}
   .callbtn.overdue{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.46);color:#ff7f93;}
@@ -93,6 +96,7 @@
   .bar{height:10px;background:var(--track);border-radius:6px;overflow:hidden;} .bar .fill{height:100%;border-radius:6px;background:var(--green);}
   .prow{display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid var(--line);} .prow:first-child{border-top:none;}
   .inp{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--txt);font-family:inherit;}
+  .inp:focus{background:var(--card2);color:var(--txt);border-color:var(--primary);outline:2px solid var(--primary-soft);outline-offset:1px;}
   .empty{padding:26px;text-align:center;color:var(--txt3);}
   .ccard{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
   .chead{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;flex-wrap:wrap;}
@@ -309,7 +313,7 @@
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
-    <a class="nav" href="#/ofertas" onclick="abrirPortalOfertas();return false;"><span class="d"></span>Ofertas Web ↗</a>
+    <a class="nav" href="#/ofertas" onclick="abrirPortalOfertas();return false;"><span class="d"></span>Constructor</a>
   </aside>
   <div class="main">
     <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo día</span></button></div>
@@ -339,10 +343,10 @@ function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.get
 
 // ---------------- VIEWS ----------------
 // ---- Clientes: estado de pantalla (tab + búsqueda + página) ----
-let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false;
+let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false, cliSearchCursor=0, cliSearchVersion=0;
 const CLI_TABS=[['all','Todos'],['active','Activos'],['cancelled','Cancelados'],['following','Seguimiento'],['incomplete','Incompletos']];
 const CLI_PILL={all:'violet',active:'green',cancelled:'red',following:'violet',incomplete:'amber'};
-async function reClientes(){ $('view').innerHTML=await viewClientes(); }
+async function reClientes(){ const version=cliSearchVersion; const html=await viewClientes(); if(version!==cliSearchVersion)return; $('view').innerHTML=html; cliRestoreSearchFocus(); }
 async function cliLoadStats(){
   if(cliStatsLoading)return; cliStatsLoading=true;
   try{ var r=await api('/api/clients-real/stats'); if(r&&r.stats)cliStatsCache=r.stats; if(location.hash==='#/clientes'||!location.hash)reClientes(); }
@@ -351,8 +355,9 @@ async function cliLoadStats(){
 function setCliTab(t){ clearTimeout(cliSearchTimer); cliTab=t; cliQ=''; cliRenewalFilter=''; if(t!=='active')cliServiceFilter='todas'; cliPage=1; reClientes(); }
 function setCliServiceFilter(t){ cliServiceFilter=t; cliRenewalFilter=''; cliPage=1; reClientes(); }
 function setCliRenewalFilter(t){ cliTab='active'; cliServiceFilter='todas'; cliRenewalFilter=t; cliPage=1; reClientes(); }
-function cliSearch(ev){ if(ev.key==='Enter'){ clearTimeout(cliSearchTimer); cliQ=ev.target.value.trim(); cliPage=1; reClientes(); } }
-function cliSearchNow(v){ cliQ=String(v||'').trim(); cliPage=1; clearTimeout(cliSearchTimer); if(!cliQ){ reClientes(); return; } cliSearchTimer=setTimeout(() => reClientes(), 220); }
+function cliSearch(ev){ if(ev.key==='Enter'){ clearTimeout(cliSearchTimer); cliQ=ev.target.value.trim(); cliSearchCursor=cliQ.length; cliSearchVersion++; cliPage=1; reClientes(); } }
+function cliSearchNow(v,el){ cliQ=String(v||'').trim(); cliSearchCursor=el&&typeof el.selectionStart==='number'?el.selectionStart:String(v||'').length; cliSearchVersion++; cliPage=1; clearTimeout(cliSearchTimer); if(!cliQ){ reClientes(); return; } cliSearchTimer=setTimeout(() => reClientes(), 220); }
+function cliRestoreSearchFocus(){ if(location.hash&&location.hash!=='#/clientes')return; var restore=function(){ var i=$('cliSearchInput'); if(!i)return; var pos=Math.min(cliSearchCursor||String(cliQ||'').length,String(cliQ||'').length); i.focus(); try{i.setSelectionRange(pos,pos);}catch(e){} }; setTimeout(restore,0); setTimeout(restore,60); }
 function cliPageGo(d){ cliPage+=d; reClientes(); }
 function cliClientServiceType(client){
   const movil=Number(client&&client.mobile_new_count||0)+Number(client&&client.mobile_ren_count||0)>0;
@@ -365,6 +370,10 @@ function cliClientServiceType(client){
   if(movil)return 'movil';
   if(fijo)return 'fijo';
   return '';
+}
+function cliBanSummary(c){
+  const bans=String(c&&c.ban_numbers||'').split(',').map(x=>x.trim()).filter(Boolean);
+  return [...new Set(bans)].slice(0,8).join(', ');
 }
 function fmtDate(d){ if(!d) return '—'; const x=new Date(d); if(isNaN(x)) return '—'; return x.toLocaleDateString('es-PR',{day:'numeric',month:'numeric',year:'numeric'}); }
 function vencBadge(d){ if(!d) return ''; const days=Math.floor((new Date(d)-new Date())/86400000); if(isNaN(days)) return ''; if(days<0) return `<div class="pill red" style="margin-top:3px;font-size:10px">Vencido hace ${-days} días</div>`; if(days<=60) return `<div class="pill amber" style="margin-top:3px;font-size:10px">Vence en ${days} días</div>`; return ''; }
@@ -431,8 +440,8 @@ async function viewClientes(){
   const CLIENT_OPPORTUNITY_COLS=[['fixed_ren_count','Fijo Ren'],['fixed_new_count','Fijo New'],['mobile_new_count','Móvil New'],['mobile_ren_count','Móvil Ren'],['claro_tv_count','Claro TV']];
   const typeLabel=c=>({movil:'Móvil',fijo:'Fijo',convergente:'Convergente'}[cliClientServiceType(c)]||'—');
   const typePill=c=>({movil:'green',fijo:'teal',convergente:'violet'}[cliClientServiceType(c)]||'');
-  const tr=c=>{ const nombre=c.name?`<b>${c.name}</b>`:'<b style="color:var(--txt3)">sin nombre</b>'; return `<tr class="click" onclick="abrirCliente('${c.id}')">
-    <td><div class="cli"><span class="av">${ini(c.name||'--')}</span>${nombre}</div></td>
+  const tr=c=>{ const nombre=c.name?`<b>${c.name}</b>`:'<b style="color:var(--txt3)">sin nombre</b>'; const grouped=Number(c.client_record_count||1)>1?`${Number(c.client_record_count||1)} varios registros`:''; const banInfo=Number(c.ban_count||0)>1?`${Number(c.ban_count||0)} BAN`:''; const banList=cliBanSummary(c); const meta=[grouped,banInfo,banList?`BAN ${esc(cliBanSummary(c))}`:''].filter(Boolean).join(' · '); return `<tr class="click" onclick="abrirCliente('${c.id}')">
+    <td><div class="cli"><span class="av">${ini(c.name||'--')}</span><span>${nombre}${meta?`<div class="s" style="font-size:11px;margin-top:3px">${meta}</div>`:''}</span></div></td>
     <td><span class="pill ${typePill(c)}">${typeLabel(c)}</span></td>
     <td>${c.vendor_name||'<span style="color:var(--txt3)">Sin asignar</span>'}</td>
     ${CLIENT_OPPORTUNITY_COLS.map(([key])=>`<td class="c">${Number(c[key]||0)}</td>`).join('')}
@@ -448,7 +457,7 @@ async function viewClientes(){
   ${cliTab==='active'&&!cliQ?`<div class="card" style="padding:9px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b style="font-size:12px">Alerta de renovaciones</b><span class="s" style="margin-left:8px;font-size:11px">Vencidas primero; dentro de cada grupo, oportunidad mayor.</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">${renewalTabs}</div></div>
   `:''}
   ${showServiceFilters?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px"><span class="s" style="font-size:12px;margin-right:2px">${serviceFilterLabel}:</span>${serviceTabs}</div>`:''}
-  <div style="margin-bottom:12px"><input class="inp search" placeholder="🔍 Buscar cliente por empresa, BAN, contacto, teléfono o email" value="${cliQ}" oninput="cliSearchNow(this.value)" onkeydown="cliSearch(event)"></div>
+  <div style="margin-bottom:12px"><input class="inp search" id="cliSearchInput" placeholder="ðŸ” Buscar cliente por empresa, BAN, contacto, teléfono o email" value="${cliQ}" oninput="cliSearchNow(this.value,this)" onkeydown="cliSearch(event)"></div>
   <div class="s" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">Mostrando ${totalRows?from+1:0}-${Math.min(from+rows.length,totalRows)} de ${totalRows} · pág ${cliPage}/${pages}
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage>1?'cliPageGo(-1)':''}">Anterior</button>
     <button class="btn ghost" style="padding:4px 10px" onclick="${cliPage<pages?'cliPageGo(1)':''}">Siguiente</button></div>
@@ -656,7 +665,7 @@ function cerrarOCR(){ var m=$('ocrBg'); if(m)m.remove(); }
 function abrirOCR(banId){
   const openedBan=(cliM&&cliM.bans||[]).find(b=>String(b.id)===String(banId));
   ocrBanId=banId; ocrRows=[]; ocrPastedImage=null; ocrDetectedBanNumber=null; ocrManualBanNumber=null; ocrBanBlocked=false; ocrOpenedBanNumber=openedBan?String(openedBan.ban_number||'').replace(/\D/g,''):null;
-  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="ocrBg" style="z-index:210" onclick="if(event.target===this)cerrarOCR()"><div class="modal" id="ocrModal" style="max-width:720px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">📷 Subir o pegar imagen</h3><button class="btn ghost" style="padding:6px 10px" onclick="cerrarOCR()">✕</button></div><div class="s" style="margin-bottom:10px">Subí una foto o pegá una captura con Ctrl+V. Vision lee teléfonos, plan y estado.</div><input type="file" id="ocrFile" accept="image/*" class="inp" style="margin-bottom:10px" onchange="ocrFileChanged()"><div id="ocrPasteZone" tabindex="0" onpaste="ocrPasteImage(event)" onclick="this.focus()" style="border:1.5px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:10px;background:var(--card2);cursor:text"><b>Pegar imagen aquí</b><div class="s">Haz clic en esta caja y presiona Ctrl+V. También puedes arrastrar una captura al selector de arriba.</div><div id="ocrPreview" style="margin-top:10px"></div></div><button class="btn" id="ocrGo" onclick="ocrAnalizar()">🔎 Analizar imagen</button><div id="ocrResult" style="margin-top:14px"></div></div></div>');
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="ocrBg" style="z-index:210" onclick="if(event.target===this)cerrarOCR()"><div class="modal" id="ocrModal" style="max-width:720px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">ðŸ“· Subir o pegar imagen</h3><button class="btn ghost" style="padding:6px 10px" onclick="cerrarOCR()">✕</button></div><div class="s" style="margin-bottom:10px">Subí una foto o pegá una captura con Ctrl+V. Vision lee teléfonos, plan y estado.</div><input type="file" id="ocrFile" accept="image/*" class="inp" style="margin-bottom:10px" onchange="ocrFileChanged()"><div id="ocrPasteZone" tabindex="0" onpaste="ocrPasteImage(event)" onclick="this.focus()" style="border:1.5px dashed var(--line);border-radius:12px;padding:16px;margin-bottom:10px;background:var(--card2);cursor:text"><b>Pegar imagen aquí</b><div class="s">Haz clic en esta caja y presiona Ctrl+V. También puedes arrastrar una captura al selector de arriba.</div><div id="ocrPreview" style="margin-top:10px"></div></div><button class="btn" id="ocrGo" onclick="ocrAnalizar()">🔎 Analizar imagen</button><div id="ocrResult" style="margin-top:14px"></div></div></div>');
   setTimeout(()=>{var z=$('ocrPasteZone');if(z)z.focus();},80);
 }
 function ocrSetPreview(src, label){
@@ -813,7 +822,7 @@ function tabInfo(c){
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:16px">
     <button class="btn ghost" onclick="cliWIP('Enviar Correo')">✉ Enviar Correo</button>
     <button class="btn" onclick="cliEditar()">✎ Editar Cliente</button>
-    <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliEliminar()">🗑 Eliminar Cliente</button></div>
+    <button class="btn" style="background:var(--red-soft);color:var(--red)" onclick="cliEliminar()">ðŸ—‘ Eliminar Cliente</button></div>
   <div class="i3">
     <div><h4>Datos de contacto</h4>${row('Empresa',c.name)}${row('Dueño',c.owner_name)}${row('Contacto',c.contact_person)}${row('Email',c.email)}${row('Tel. principal',c.phone)}${row('Tel. secundario',c.additional_phone)}${row('Celular contacto',c.cellular)}${row('TAX/SSN',c.tax_id)}</div>
     <div><h4>Ubicación</h4>${row('Dirección',c.address)}${row('Ciudad',c.city)}${row('Código postal',c.zip_code)}</div>
@@ -825,7 +834,7 @@ function tabBansLegacy(c){
   const cards=(c.bans||[]).map(b=>{
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
     const sel=cliMSub==='canceladas'?ca:a;
-    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:260px">📞 <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activación: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
+    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:260px">ðŸ“ž <b>${s.phone||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activación: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
     return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Crédito: ${b.credit_class||'No registrado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button>${cliAct(b.status)?`<button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliCancelBan('${b.id}','${b.ban_number||''}')">Cancelar BAN</button>`:''}</span></div>
       <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
@@ -887,7 +896,7 @@ function tabComp(c){
   const a=(c.subscribers||[]).filter(s=>cliAct(s.status)); const total=a.reduce((x,s)=>x+Number(s.monthly_value||0),0);
   const rows=a.map(s=>`<tr><td>${s.ban_number||'—'}</td><td>${s.phone||'—'}</td><td>${s.plan||'—'}</td><td class="r" style="color:var(--green)">${money(s.monthly_value)}</td><td>${cliVenc(s.contract_end_date)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin líneas activas</td></tr>';
   const comps=(c.comparativas||[]).map(x=>`<tr><td>${esc(x.name||'Comparativa')}</td><td class="r">${money(x.current_total)}</td><td class="r" style="color:var(--green)">${money(x.offer_total)}</td><td>${x.created_by||'—'}</td><td>${x.created_at?new Date(x.created_at).toLocaleString('es'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin comparativas guardadas.</td></tr>';
-  return `<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn ghost" onclick="abrirComparativa('${c.id}')">🌐 Comparativa HTML/PDF</button><button class="btn green" onclick="abrirConstructorCliente('${c.id}')">⇄ Abrir constructor de ofertas</button></div>
+  return `<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn ghost" onclick="abrirComparativa('${c.id}')">ðŸŒ Comparativa HTML/PDF</button><button class="btn green" onclick="abrirConstructorCliente('${c.id}')">⇄ Abrir constructor de ofertas</button></div>
   <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan actual</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(total)}</td><td></td></tr></tfoot></table></div>
   <div class="panel" style="margin-top:12px"><h3>Comparativas guardadas</h3><div style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Nombre</th><th class="r">Actual</th><th class="r">Oferta</th><th>Usuario</th><th>Fecha</th></tr></thead><tbody>${comps}</tbody></table></div></div>`;
 }
@@ -995,7 +1004,7 @@ function renderComp(){
     <td><button class="btn" style="padding:4px 8px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="compDelOffer(${i})">✕</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Agregá líneas a la oferta</td></tr>';
   const totalOf=compOffer.reduce((a,r)=>a+(parseFloat(r.cost)||0),0);
   $('compModal').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div><h2 style="font-size:18px">⇄ Comparativa de Planes</h2><div class="s">${c.name||'—'}</div></div>
-      <div style="display:flex;gap:8px"><button class="btn ghost" onclick="compSave()">✓ Marcar Actualizado</button><button class="btn green" onclick="compExcel()">⬇ Excel</button><button class="btn ghost" onclick="generarPropuesta(false)">🌐 HTML</button><button class="btn" style="background:var(--red)" onclick="generarPropuesta(true)">📄 PDF</button><button class="btn ghost" style="padding:6px 10px" onclick="cerrarComp()">✕</button></div></div>
+      <div style="display:flex;gap:8px"><button class="btn ghost" onclick="compSave()">✓ Marcar Actualizado</button><button class="btn green" onclick="compExcel()">⬇ Excel</button><button class="btn ghost" onclick="generarPropuesta(false)">ðŸŒ HTML</button><button class="btn" style="background:var(--red)" onclick="generarPropuesta(true)">📄 PDF</button><button class="btn ghost" style="padding:6px 10px" onclick="cerrarComp()">✕</button></div></div>
     <div class="panel"><h3>Plan actual del cliente</h3><div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${actRows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(totalAct)}</td><td>${banCount?('Actual '+banCount+' cuenta'+(banCount===1?'':'s')):''}</td></tr></tfoot></table></div></div>
     <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">Oferta propuesta</h3><button class="btn" onclick="compAddOffer()">+ Agregar Línea</button></div>
       <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan nuevo</th><th class="r">Costo</th><th>Notas</th><th></th></tr></thead><tbody>${ofRows}</tbody></table></div>
@@ -1146,18 +1155,18 @@ function vozToggleRec(){
   vozRec=new SR(); vozRec.lang='es-PR'; vozRec.continuous=true; vozRec.interimResults=true;
   const base=$('vz_nota').value?($('vz_nota').value+' '):'';
   vozRec.onresult=(e)=>{ let txt=''; for(let i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript; $('vz_nota').value=base+txt; };
-  vozRec.onend=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='🎤 Dictar'; vozAnalizar(); };
-  vozRec.onerror=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='🎤 Dictar'; };
+  vozRec.onend=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='ðŸŽ¤ Dictar'; vozAnalizar(); };
+  vozRec.onerror=()=>{ vozRecording=false; const b=$('vz_mic'); if(b)b.textContent='ðŸŽ¤ Dictar'; };
   vozRec.start(); vozRecording=true; $('vz_mic').textContent='⏹ Detener';
 }
 function cerrarModal(){ const m=$('modalBg'); if(m)m.remove(); if(vozRec){try{vozRec.stop();}catch(e){}} }
 function abrirVoz(){
   const opts=VOZ_PRODS.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join('');
   document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="font-size:18px">🎤 Cliente Voz</h2><button class="btn ghost" style="padding:6px 10px" onclick="cerrarModal()">✕</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="font-size:18px">ðŸŽ¤ Cliente Voz</h2><button class="btn ghost" style="padding:6px 10px" onclick="cerrarModal()">✕</button></div>
     <div class="s" style="margin-bottom:10px">Dicta: "empresa Ferreteria Ponce, BAN 123456789, suscriptor 7875551234, 2 moviles nuevas". El sistema llena los campos y tu corriges antes de crear.</div>
     <textarea class="inp" id="vz_nota" rows="3" placeholder="Apretá Dictar y hablá… (o escribí acá)" style="resize:vertical;margin-bottom:8px"></textarea>
-    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn" id="vz_mic" onclick="vozToggleRec()">🎤 Dictar</button><button class="btn ghost" onclick="vozAnalizar()">🔎 Analizar</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px"><button class="btn" id="vz_mic" onclick="vozToggleRec()">ðŸŽ¤ Dictar</button><button class="btn ghost" onclick="vozAnalizar()">🔎 Analizar</button></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div><div class="flbl">Empresa / Nombre</div><input class="inp" id="vz_emp"></div>
       <div><div class="flbl">BAN</div><input class="inp" id="vz_ban" inputmode="numeric" placeholder="9 digitos"></div>
@@ -1269,11 +1278,86 @@ function asanaDailyCallAgenda(alerts){
   const enriched=(alerts||[]).filter(a=>a&&a.scheduled_call_at).map(a=>Object.assign({},a,{state:asanaCallState(a),time:new Date(a.scheduled_call_at)})).filter(a=>!isNaN(a.time.getTime()));
   const overdue=enriched.filter(a=>a.time<now).sort((a,b)=>a.time-b.time);
   const todayItems=enriched.filter(a=>a.time>=now&&a.time.getTime()>=today&&a.time.getTime()<tomorrow).sort((a,b)=>a.time-b.time);
-  const group=(title,items)=>`<div class="agenda-group"><div class="agenda-title">${title} (${items.length})</div>${items.slice(0,8).map(a=>`<div class="agenda-item" onclick="location.hash='#/opp/${a.opportunity_id}'"><div class="agenda-time">${a.time.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div><div style="min-width:0"><div class="agenda-client">${esc(a.client_name||'Cliente')}</div><div class="agenda-note">${esc(a.body||'Llamar')}</div></div></div>`).join('')||'<div class="s">Sin llamadas.</div>'}</div>`;
+  const group=(title,items)=>`<div class="agenda-group"><div class="agenda-title">${title} (${items.length})</div>${items.slice(0,8).map(a=>`<div class="agenda-item" onclick="location.hash='#/opp/${a.opportunity_id}'"><div class="agenda-time">${a.time.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</div><div style="min-width:0"><div class="agenda-client">${esc(a.client_name||'Cliente')}</div><div class="agenda-note">${esc(a.body||'Llamar')}</div></div><div class="agenda-actions"><button class="btn green" type="button" onclick="event.stopPropagation();resolverLlamadaAsana('${a.id}','completada')">Completar</button><button class="btn ghost" type="button" onclick="event.stopPropagation();resolverLlamadaAsana('${a.id}','cancelada')">Cancelar</button></div></div>`).join('')||'<div class="s">Sin llamadas.</div>'}</div>`;
   return `<div class="asana-call-agenda">${group('Vencidas',overdue)}${group('Llamadas de hoy',todayItems)}</div>`;
 }
+let asanaAgendaScope='mine';
+function asanaAgendaState(item){
+  const due=new Date(item&&item.due_at), now=new Date();
+  if(isNaN(due.getTime()))return 'upcoming';
+  if(due<now)return 'overdue';
+  return asanaStartOfDay(due).getTime()===asanaStartOfDay(now).getTime()?'today':'upcoming';
+}
+function asanaWeekCalendar(items){
+  const today=asanaStartOfDay(new Date());
+  const days=Array.from({length:7},(_,index)=>{
+    const date=new Date(today);date.setDate(today.getDate()+index);return date;
+  });
+  const sameDay=(left,right)=>asanaStartOfDay(left).getTime()===asanaStartOfDay(right).getTime();
+  return `<div class="week-calendar-title">Calendario semanal</div><div class="week-calendar">${days.map((date,index)=>{
+    const dayItems=(items||[]).filter(item=>{const due=new Date(item.due_at);return !isNaN(due.getTime())&&sameDay(due,date)});
+    return `<div class="week-day ${index===0?'today':''}"><div class="week-day-head">${date.toLocaleDateString('es',{weekday:'short',day:'numeric'})}</div>${dayItems.map(item=>`<div class="week-event" title="${esc(item.title||'Pendiente')}">${new Date(item.due_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})} · ${esc(item.title||'Pendiente')}</div>`).join('')||'<div class="s">Sin tareas</div>'}</div>`;
+  }).join('')}</div>`;
+}
+function asanaDailyAgenda(items,canViewTeam){
+  const prepared=(items||[]).map(item=>Object.assign({},item,{agenda_state:asanaAgendaState(item),due_date:new Date(item.due_at)}));
+  const group=(title,state)=>{
+    const rows=prepared.filter(item=>item.agenda_state===state);
+    return `<div class="my-day-group"><div class="my-day-title">${title} (${rows.length})</div>${rows.map(item=>{
+      const client=item.client_name||'Sin cliente';
+      const kind=item.item_type==='llamada'?'Llamada':'Tarea';
+      const action=item.opportunity_id?`onclick="location.hash='#/opp/${item.opportunity_id}'"`:'';
+      return `<div class="my-day-item ${esc(item.priority||'normal')}" ${action}><button class="my-day-check" type="button" title="Completar" onclick="event.stopPropagation();completarTareaAsana('${item.item_type}','${item.id}')">✓</button><div><div class="my-day-item-title">${esc(item.title||kind)}</div><div class="my-day-item-meta">${item.due_date.toLocaleString('es')} · ${esc(client)} · ${esc(item.assigned_to_username||'Sin asignar')}</div></div></div>`;
+    }).join('')||'<div class="s">Sin pendientes.</div>'}</div>`;
+  };
+  const scope=canViewTeam?`<div class="ctabs"><button class="ctab ${asanaAgendaScope==='mine'?'on':''}" onclick="setAsanaAgendaScope('mine')">Mis tareas</button><button class="ctab ${asanaAgendaScope==='team'?'on':''}" onclick="setAsanaAgendaScope('team')">Equipo</button></div>`:'';
+  return `<div class="panel my-day"><div class="my-day-head"><div><h2>Mi día</h2><div class="s">Llamadas, próximos pasos y tareas generales.</div></div>${scope}</div><div class="my-day-form"><div><div class="flbl">Tarea</div><input class="inp" id="asanaTaskTitle" placeholder="Tarea general"></div><div><div class="flbl">Fecha</div><input class="inp" id="asanaTaskDate" type="date"></div><div><div class="flbl">Hora</div><input class="inp" id="asanaTaskTime" type="time"></div><div><div class="flbl">Prioridad</div><select class="inp" id="asanaTaskPriority"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baja">Baja</option></select></div><button class="btn green" onclick="crearTareaAsana()">Agregar tarea</button></div><div class="my-day-groups">${group('Vencidas','overdue')}${group('Hoy','today')}${group('Próximas','upcoming')}</div>${asanaWeekCalendar(prepared)}</div>`;
+}
+function setAsanaAgendaScope(scope){asanaAgendaScope=scope==='team'?'team':'mine';router();}
+async function crearTareaAsana(){
+  const title=($('asanaTaskTitle')&&$('asanaTaskTitle').value||'').trim();
+  const dateValue=$('asanaTaskDate')&&$('asanaTaskDate').value;
+  const timeValue=$('asanaTaskTime')&&$('asanaTaskTime').value;
+  const priority=$('asanaTaskPriority')&&$('asanaTaskPriority').value||'normal';
+  const opportunity_id=$('asanaTaskOpportunityId')&&$('asanaTaskOpportunityId').value||null;
+  const client_id=$('asanaTaskClientId')&&$('asanaTaskClientId').value||null;
+  const step_id=$('asanaTaskStepId')&&$('asanaTaskStepId').value||null;
+  if(!title){alert('Escribe la tarea.');return;}
+  if(!dateValue){alert('Selecciona la fecha de la tarea.');return;}
+  if(!timeValue){alert('Selecciona la hora de la tarea.');return;}
+  const due_at=new Date(dateValue+'T'+timeValue).toISOString();
+  try{await api('/api/asana-real/tasks',{method:'POST',body:{title,due_at,priority,opportunity_id,client_id,step_id}});router();}
+  catch(e){alert('No se pudo guardar la tarea: '+e.message);}
+}
+async function completarTareaAsana(type,id){
+  try{
+    if(type==='llamada'){await resolverLlamadaAsana(id,'completada');return;}
+    else{
+      const result=await api('/api/asana-real/tasks/'+id,{method:'PATCH',body:{status:'completada'}});
+      if(result.suggested_next_step)alert('Tarea completada. Próximo paso: '+result.suggested_next_step.name);
+    }
+    router();
+  }catch(e){alert('No se pudo completar: '+e.message);}
+}
+async function resolverLlamadaAsana(id,status){
+  if(status==='cancelada'&&!confirm('¿Cancelar esta llamada agendada?'))return;
+  try{
+    await api('/api/asana-real/agenda/calls/'+id,{method:'PATCH',body:{status}});
+    const reminder=$('callReminderBox');if(reminder)reminder.remove();
+    router();
+  }catch(e){alert('No se pudo actualizar la llamada: '+e.message);}
+}
+function abrirTareaPaso(opportunityId,clientId,stepId,stepName){
+  const form=$('asanaOpportunityTaskForm');if(!form)return;
+  form.classList.add('open');
+  $('asanaTaskOpportunityId').value=opportunityId||'';
+  $('asanaTaskClientId').value=clientId||'';
+  $('asanaTaskStepId').value=stepId||'';
+  $('asanaTaskTitle').value=stepName||'';
+  $('asanaTaskDate').focus();
+}
 async function viewAsana(){
-  const [rawData,callAlerts]=await Promise.all([api('/api/asana-real'),loadCallAlerts()]);
+  const [rawData,callAlerts,agenda]=await Promise.all([api('/api/asana-real'),loadCallAlerts(),api('/api/asana-real/agenda?scope='+asanaAgendaScope)]);
   const data=rawData.filter(o=>isAsanaClientVisible(o.client_name));
   const callByOpp=asanaCallMap(callAlerts);
   const callAgenda=asanaDailyCallAgenda(asanaUniqueCallAlerts(callAlerts));
@@ -1324,9 +1408,9 @@ async function viewAsana(){
     <td><div class="asana-actions"><button class="btn ghost" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button></div></td></tr>`;
   };
   const head=`<tr><th>Cliente</th><th>Vendedor</th>${ASANA_PRODS.map(p=>`<th class="c" style="color:var(--${p[3]})">${p[1]}</th>`).join('')}<th class="r">Total $</th><th class="c">Agenda</th><th>Acciones</th></tr>`;
-  return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn green" onclick="mostrarInfoReportes()">📊 Reporte inteligente</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">🎤 Cliente Voz</button></div></div>
+  return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn green" onclick="mostrarInfoReportes()">📊 Reporte inteligente</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">ðŸŽ¤ Cliente Voz</button></div></div>
   ${asanaSummary}
-  ${callAgenda}
+  ${asanaDailyAgenda(agenda.items,agenda.can_view_team)}
   <div class="panel" style="padding:10px 12px;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:220px"><div class="flbl">Buscar en seguimiento</div><input class="inp" placeholder="Cliente, BAN o vendedor" oninput="filterAsanaRows(this.value)"></div><div style="flex:1;min-width:260px"><div class="flbl">Buscar cliente para seguimiento</div><input class="inp" id="asanaClientSearch" placeholder="Empresa, BAN o suscriptor" oninput="buscarClienteAsana(this.value)"><div id="asanaClientSearchResults"></div></div></div></div>
   <div class="card" style="overflow-x:auto"><table class="asana-table"><thead>${head}</thead><tbody id="asanaRows">${data.map(row).join('')||'<tr><td colspan="12" class="empty">Sin oportunidades en seguimiento.</td></tr>'}<tr id="asanaNoMatches" style="display:none"><td colspan="12" class="empty">No hay oportunidades que coincidan.</td></tr></tbody></table></div>`;
 }
@@ -1346,7 +1430,7 @@ async function viewOpp(id){
     return `<div class="flowcard">
       <div class="flowhead"><span class="pill violet">${PN[pk]||pk}</span><span class="flowtitle">Seguimiento</span><span class="flowcount">${done}/${items.length}</span></div>
       <div class="flowbar"><span style="width:${pct}%"></span></div>
-      ${cur?`<div class="nowstep"><span class="sdot">${cur.step_order}</span><div style="flex:1"><div class="label">Paso actual</div><div class="name">${esc(cur.name)}</div></div></div>`:`<div class="nowstep"><span class="sdot done">✓</span><div style="flex:1"><div class="label">Producto completo</div><div class="name">Todos los pasos completados</div></div></div>`}
+      ${cur?`<div class="nowstep"><span class="sdot">${cur.step_order}</span><div style="flex:1"><div class="label">Paso actual</div><div class="name">${esc(cur.name)}</div></div><button class="btn ghost" style="padding:6px 9px;font-size:11px" onclick="abrirTareaPaso('${o.id}','${o.client_id||''}','${cur.id}',decodeURIComponent('${encodeURIComponent(cur.name)}'))">Agendar tarea</button></div>`:`<div class="nowstep"><span class="sdot done">✓</span><div style="flex:1"><div class="label">Producto completo</div><div class="name">Todos los pasos completados</div></div></div>`}
       <div class="stepchips">${chips}</div>
     </div>`;
   }).join('')||'<div class="empty">Sin pasos cargados en esta oportunidad.</div>';
@@ -1363,7 +1447,7 @@ async function viewOpp(id){
   }).join('')||`<div class="empty">Sin ${ASANA_LOG_TABS.find(t=>t[0]===asanaLogTab)[1].toLowerCase()} todavía.</div>`;
   return `<div class="crumb"><a href="#/asana">Asana</a> / Seguimiento</div>
   <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button></h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Eliminar de seguimiento</button></div></div>
-  <div class="panel"><h3>Caminito de pasos (${o.steps.filter(s=>s.done).length}/${o.steps.length})</h3><div class="flowgrid">${steps}</div></div>
+  <div class="panel"><h3>Caminito de pasos (${o.steps.filter(s=>s.done).length}/${o.steps.length})</h3><div class="flowgrid">${steps}</div><div class="opportunity-task-form" id="asanaOpportunityTaskForm"><input type="hidden" id="asanaTaskOpportunityId"><input type="hidden" id="asanaTaskClientId"><input type="hidden" id="asanaTaskStepId"><div><div class="flbl">Tarea</div><input class="inp" id="asanaTaskTitle" placeholder="Próximo paso"></div><div><div class="flbl">Fecha</div><input class="inp" id="asanaTaskDate" type="date"></div><div><div class="flbl">Hora</div><input class="inp" id="asanaTaskTime" type="time"></div><div><div class="flbl">Prioridad</div><select class="inp" id="asanaTaskPriority"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baja">Baja</option></select></div><button class="btn green" onclick="crearTareaAsana()">Guardar tarea</button></div></div>
   <div class="panel"><h3>Gestion rapida</h3><div class="gestion-choice"><button class="ctab on" data-gestion="llamada" onclick="setAsanaGestionType('llamada')">Registrar llamada</button><button class="ctab" data-gestion="nota" onclick="setAsanaGestionType('nota')">Nota</button><button class="ctab" data-gestion="agenda" onclick="setAsanaGestionType('agenda')">Agendar</button></div><div class="gestion-box"><div class="gestion-fields"><textarea class="inp logbody" id="asanaLogBody" placeholder="Escribe el resumen o pendiente..."></textarea><div class="gestion-meta" id="asanaGestionSchedule" style="display:none"><input class="inp" id="asanaCallAt" type="datetime-local"><span class="s">Fecha y hora de la alerta</span></div></div><button class="btn gestion-submit" id="asanaGestionSubmit" onclick="submitAsanaGestion('${o.id}')">Guardar llamada</button></div><div class="ctabs logtabs">${logTabs}</div><div class="loglist">${logItems}</div></div>
   <div class="panel"><h3>Productos que estás negociando</h3><div style="overflow-x:auto"><table><thead><tr><th>Producto</th><th>Teléfono</th><th class="r">Cant.</th><th class="r">$</th><th>Plan destino</th></tr></thead><tbody>${lineas}</tbody></table></div></div>`;
 }
@@ -1371,11 +1455,22 @@ let comMonth=null, comFilter='todos', comProductFilter='todos';
 const COM_FILTERS=[['todos','Todos'],['confirmadas','Confirmadas'],['revision','En revisión'],['sync','Esperando sync']];
 const COM_PRODUCT_FILTERS=[['todos','Todos'],['movil','Móvil'],['fijo','Fijo'],['otros','Otros']];
 async function reComisiones(){ $('view').innerHTML=await viewComisiones(); }
-function setComMonth(m){ comMonth=m; reComisiones(); }
+function comMonthIso(m){
+  const raw=String(m||monthStart()).trim();
+  return (/^\d{4}-\d{2}$/.test(raw)?raw+'-01':raw).slice(0,10);
+}
+function comMonthInputValue(m){ return comMonthIso(m).slice(0,7); }
+function setComMonth(m){ comMonth=comMonthIso(m); reComisiones(); }
+function shiftComMonth(delta){
+  const d=new Date(comMonthIso(comMonth||monthStart())+'T12:00:00');
+  d.setMonth(d.getMonth()+delta);
+  comMonth=d.toISOString().slice(0,10);
+  reComisiones();
+}
 function setComFilter(f){ comFilter=f; reComisiones(); }
 function setComProductFilter(f){ comProductFilter=f; reComisiones(); }
 function tangoRangeForMonth(month){
-  const start=String(month||monthStart()).slice(0,10);
+  const start=comMonthIso(month||monthStart());
   const date=new Date(start+'T12:00:00');
   date.setMonth(date.getMonth()+1,0);
   return {desde:start,hasta:date.toISOString().slice(0,10)};
@@ -1400,7 +1495,9 @@ async function viewComisiones(){
   }catch(e){}
   const canSync=['admin','administrador','administrator','super admin','super_admin','superadmin','supervisor'].includes(String(currentUser&&currentUser.rol||'').trim().toLowerCase());
   const meses=await api('/api/comisiones/meses');
-  const mon=comMonth||(meses[0]&&meses[0].mes)||null;
+  const mon=comMonthIso(comMonth||monthStart());
+  const mesCounts=Object.fromEntries((meses||[]).map(m=>[String(m.mes||'').slice(0,7),Number(m.n||0)]));
+  const selectedCount=mesCounts[comMonthInputValue(mon)]||0;
   const FIL={todos:()=>true,confirmadas:x=>x.validation_status==='confirmed',revision:x=>x.validation_status==='needs_review',sync:x=>x.validation_status!=='confirmed'&&x.validation_status!=='needs_review'};
   const PROD_FIL={todos:()=>true,movil:x=>/movil_new|movil_ren/.test(String(x.product_key||'')),fijo:x=>/fijo_new|fijo_ren/.test(String(x.product_key||'')),otros:x=>!/movil_new|movil_ren|fijo_new|fijo_ren/.test(String(x.product_key||''))};
   let rows=await api('/api/comisiones'+(mon?('?month='+mon):''));
@@ -1433,7 +1530,7 @@ async function viewComisiones(){
   let head='<tr><th>Empresa</th><th>Vendedor</th>'; COLS.forEach(k=>head+='<th class="c">'+PN[k]+'</th>'); head+='<th class="c">Completado</th><th class="r">Mensualidad</th><th class="r">Empresa$</th><th class="r">Comision$</th><th class="c">Bono</th><th class="c">Ventas</th></tr>';
   const tableMin=comProductFilter==='todos'?1380:980;
   return '<div class="head"><div><h1>Comisiones y Ventas</h1><div class="s">'+rows.length+' ventas · '+Object.keys(groups).length+' clientes · data REAL de crm_pro · clic en la empresa para ver líneas</div></div>'
-    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+(canSync?'<button class="btn green" onclick="syncTangoComisiones(\''+(mon||monthStart())+'\')">Sincronizar Tango</button>':'')+'<select class="inp" style="max-width:170px" onchange="setComMonth(this.value)">'+(meses.length?meses.map(m=>'<option value="'+m.mes+'"'+(m.mes===mon?' selected':'')+'>'+m.mes+' ('+m.n+')</option>').join(''):'<option>sin meses</option>')+'</select></div></div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+(canSync?`<button class="btn green" onclick="syncTangoComisiones('${mon}')">Sincronizar Tango</button>`:'')+'<button class="btn ghost" style="padding:8px 11px" onclick="shiftComMonth(-1)">Anterior</button><input class="inp" type="month" style="max-width:150px" value="${comMonthInputValue(mon)}" onchange="setComMonth(this.value)"><button class="btn ghost" style="padding:8px 11px" onclick="shiftComMonth(1)">Siguiente</button><span class="s">'+selectedCount+' reportes guardados</span></div></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+COM_FILTERS.map(f=>'<button class="btn '+(comFilter===f[0]?'':'ghost')+'" style="padding:7px 14px" onclick="setComFilter(\''+f[0]+'\')">'+f[1]+'</button>').join('')+'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+COM_PRODUCT_FILTERS.map(f=>'<button class="btn '+(comProductFilter===f[0]?'':'ghost')+'" style="padding:7px 14px" onclick="setComProductFilter(\''+f[0]+'\')">'+f[1]+'</button>').join('')+'</div>'
     +'<div class="kpis"><div class="kpi"><div class="l">Total ventas</div><div class="v" style="color:var(--violet)">'+rows.length+'</div></div><div class="kpi"><div class="l">Ganancia empresa</div><div class="v" style="color:var(--green)">'+money(emp)+'</div></div><div class="kpi"><div class="l">Comisión vendedores</div><div class="v" style="color:var(--primary)">'+money(ven)+'</div></div><div class="kpi"><div class="l">Pagado</div><div class="v" style="color:var(--amber)">'+money(pag)+'</div></div><div class="kpi"><div class="l">Balance pendiente</div><div class="v" style="color:var(--red)">'+money(ven-pag)+'</div></div></div>'
@@ -1501,8 +1598,8 @@ async function viewPanel(){
   const alerts=callAlerts.map(a=>`<div class="call-alert" onclick="location.hash='#/opp/${a.opportunity_id}'"><span class="lic llamada">☎</span><div style="min-width:0"><div style="font-size:13px;font-weight:700;color:var(--txt)">${esc(a.client_name||'Cliente')}</div><div style="font-size:12px;color:var(--txt2);margin-top:2px">${new Date(a.scheduled_call_at).toLocaleString('es')} · ${esc(a.salesperson||'Sin asignar')}</div><div style="font-size:12px;color:var(--txt3);margin-top:3px">${esc(a.body||'Llamada agendada')}</div></div></div>`).join('');
   return `<div class="head"><div><h1>Panel General</h1><div class="s">Resumen del negocio</div></div></div>
   <div class="kpis"><div class="kpi"><div class="l">Cumplimiento</div><div class="v" style="color:var(--green)">${c.pct_total}%</div></div><div class="kpi"><div class="l">Vendido</div><div class="v">${money(c.vendido_total)}</div></div><div class="kpi"><div class="l">Meta</div><div class="v">${money(c.meta_total)}</div></div><div class="kpi"><div class="l">Falta</div><div class="v" style="color:var(--red)">${money(c.falta)}</div></div></div>
-  <div class="grid2"><div class="panel"><h3>🏆 Ranking de vendedores</h3>${rank.map(([v,m],i)=>`<div class="prow"><span style="width:24px;font-weight:800;color:var(--txt3)">${i+1}</span><span class="av">${ini(v)}</span><span style="flex:1;font-weight:600">${v}</span><span style="font-weight:700;color:var(--green)">${money(m)}</span></div>`).join('')||'<div class="empty">Sin ventas</div>'}</div>
-  <div class="panel"><h3>🔔 Alertas</h3>${alerts||'<div style="font-size:13px;color:var(--txt2);padding:6px 0">Sin llamadas agendadas pendientes.</div>'}</div></div>`;
+  <div class="grid2"><div class="panel"><h3>ðŸ† Ranking de vendedores</h3>${rank.map(([v,m],i)=>`<div class="prow"><span style="width:24px;font-weight:800;color:var(--txt3)">${i+1}</span><span class="av">${ini(v)}</span><span style="flex:1;font-weight:600">${v}</span><span style="font-weight:700;color:var(--green)">${money(m)}</span></div>`).join('')||'<div class="empty">Sin ventas</div>'}</div>
+  <div class="panel"><h3>ðŸ”” Alertas</h3>${alerts||'<div style="font-size:13px;color:var(--txt2);padding:6px 0">Sin llamadas agendadas pendientes.</div>'}</div></div>`;
 }
 async function loadCallAlerts(){ try{return await api('/api/asana-real/alerts/calls');}catch(e){return [];} }
 let callReminderTimer=null, callReminderMutedUntil=0;
@@ -1521,7 +1618,7 @@ function renderDueCallReminder(alerts){
     <div class="call-reminder-title">${esc(due.client_name||'Cliente')}</div>
     <div class="call-reminder-meta">${new Date(due.scheduled_call_at).toLocaleString('es')} · ${esc(due.salesperson||'Sin asignar')}</div>
     <div class="call-reminder-body">${esc(due.body||'Llamada agendada')}</div>
-    <div class="call-reminder-actions"><button class="btn ghost" style="padding:7px 10px;font-size:12px" onclick="callReminderMutedUntil=Date.now()+15*60000;var b=$('callReminderBox');if(b)b.remove();">Silenciar 15 min</button><button class="btn" style="padding:7px 10px;font-size:12px" onclick="localStorage.setItem('${dueCallReminderKey(due)}','1');location.hash='#/opp/${due.opportunity_id}';var b=$('callReminderBox');if(b)b.remove();">Abrir oportunidad</button></div>
+    <div class="call-reminder-actions"><button class="btn green" style="padding:7px 10px;font-size:12px" onclick="resolverLlamadaAsana('${due.id}','completada')">Completar</button><button class="btn ghost" style="padding:7px 10px;font-size:12px" onclick="resolverLlamadaAsana('${due.id}','cancelada')">Cancelar</button><button class="btn ghost" style="padding:7px 10px;font-size:12px" onclick="callReminderMutedUntil=Date.now()+15*60000;var b=$('callReminderBox');if(b)b.remove();">Silenciar 15 min</button><button class="btn" style="padding:7px 10px;font-size:12px" onclick="localStorage.setItem('${dueCallReminderKey(due)}','1');location.hash='#/opp/${due.opportunity_id}';var b=$('callReminderBox');if(b)b.remove();">Abrir oportunidad</button></div>
   </div>`);
 }
 async function checkDueCallReminder(){
@@ -1556,7 +1653,7 @@ async function viewPasos(arg){
     <label class="paso-chk"><input type="checkbox" ${s.active?'checked':''} onchange="pasoToggle('${s.id}',this.checked)"> Activo</label>
     <button class="btn ghost" style="padding:6px 10px" ${i===0?'disabled':''} onclick="pasoMove(${i},-1)">↑</button>
     <button class="btn ghost" style="padding:6px 10px" ${i===steps.length-1?'disabled':''} onclick="pasoMove(${i},1)">↓</button>
-    <button class="btn" style="padding:6px 10px;background:var(--red-soft);color:var(--red)" onclick="pasoDel('${s.id}')">🗑</button></div>`).join('');
+    <button class="btn" style="padding:6px 10px;background:var(--red-soft);color:var(--red)" onclick="pasoDel('${s.id}')">ðŸ—‘</button></div>`).join('');
   return `<div class="head"><div><h1>Configurar pasos</h1><div class="s">Pasos por producto · no modifica los avances ya hechos en oportunidades</div></div><button class="btn green" onclick="alert('✓ Guardado — los cambios se guardan al instante')">✓ Guardar configuración</button></div>
   <div class="paso-wrap">
     <div class="paso-side"><div class="s" style="margin-bottom:2px;letter-spacing:.05em">PRODUCTO</div>${side}</div>
@@ -1587,7 +1684,7 @@ async function viewPerfil(){
   <div class="panel" style="max-width:540px"><div class="cli" style="margin-bottom:14px"><span class="av" style="width:54px;height:54px;font-size:18px">${ini(u.nombre)}</span><div><div style="font-size:18px;font-weight:700">${u.nombre}</div><span class="pill violet">${u.rol}</span></div></div>
   <div class="prow"><span style="color:var(--txt3)">Usuario</span><b style="margin-left:auto">${u.nick}</b></div>
   <div class="prow"><span style="color:var(--txt3)">Email</span><b style="margin-left:auto">${u.email||'—'}</b></div>
-  <div style="font-size:12px;color:var(--txt2);margin-top:12px">🔗 Tus datos vienen de Tango. Para cambiarlos o la clave, se hace en Tango — el CRM no maneja contraseñas.</div></div>`;
+  <div style="font-size:12px;color:var(--txt2);margin-top:12px">ðŸ”— Tus datos vienen de Tango. Para cambiarlos o la clave, se hace en Tango — el CRM no maneja contraseñas.</div></div>`;
 }
 async function viewComparativa(){
   const list=await api('/api/comparativas');
@@ -1621,7 +1718,7 @@ async function renderCfgProdCat(){
     <input class="inp" style="max-width:170px" value="${c.name||''}" onchange="saveCat('${c.id}','name',this.value)">
     <input class="inp" style="flex:1" placeholder="descripción" value="${c.description||''}" onchange="saveCat('${c.id}','description',this.value)">
     <span class="pill violet">${prods.filter(p=>p.category_id===c.id).length} prod</span>
-    <button class="btn ghost" style="padding:7px 12px" onclick="delCat('${c.id}')">🗑</button></div>`;
+    <button class="btn ghost" style="padding:7px 12px" onclick="delCat('${c.id}')">ðŸ—‘</button></div>`;
   b.innerHTML=`<div class="panel"><h3>Productos</h3><div style="overflow-x:auto"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Valor de ingreso</th></tr></thead><tbody>${prods.map(prodRow).join('')}</tbody></table></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Categorías · familias de producto</h3><button class="btn" onclick="newCat()">+ Nueva categoría</button></div>${cats.map(catRow).join('')||'<div class="empty">Sin categorías</div>'}</div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h3 style="margin:0">Asana · pasos por producto</h3><div class="s" style="margin-top:5px">Los pasos de cada producto se editan en su pantalla dedicada.</div></div><button class="btn" onclick="location.hash='#/pasos'">⚙ Configurar pasos →</button></div></div>`;
@@ -1830,15 +1927,11 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 
 // ---------------- OFERTAS (ADMIN) ----------------
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
-const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/';   // índice público del panel de ofertas
 function buildPortalOfertasUrl(){
   let activeToken=token||'';
   if(!activeToken){try{activeToken=localStorage.getItem('vp_token')||'';}catch(e){}}
   if(!activeToken)return null;
-  const local=['localhost','127.0.0.1','::1','[::1]'].includes(String(window.location.hostname||'').toLowerCase());
-  const url=new URL(local?'http://127.0.0.1:4173/oferta-const.html':PORTAL_OFERTAS_URL);
-  if(local)url.searchParams.set('crm_origin',window.location.origin);
-  url.hash=new URLSearchParams({crm_token:activeToken}).toString();
+  const url=new URL('/constructor/oferta-const.html',window.location.origin);
   return url.toString();
 }
 function abrirPortalOfertas(){
@@ -1858,7 +1951,8 @@ const OF_TABS=[
 ];
 let ofTab='fijo', ofEquiposPreview=null, ofEquiposItems=null;
 let fcSeleccionadas=[], fcPreviewPlanesFijosData=null, fcSeleccionInicializada=false;
-let fcBaseFuente=null, fcBasePreview=null, fcBaseTab='fijo', fcBaseSearch='', fcBaseDrafts={}, fcBaseBusy=false;
+let fcBaseFuente=null, fcBasePreview=null, fcBaseTab='fijo', fcBaseSearch='', fcBaseDrafts={}, fcBaseBusy=false, fcBaseMessage='', fcBaseModuleKey='fijo', fcBaseCompanionIds=[];
+let ofListaPreciosFuente=null, ofListaPreciosPreview=null, ofListaPreciosDraft=false, ofListaPreciosBusy=false;
 const FC_FAMILIAS=[
   ['equipos','Equipos'],['fijos','Fijos'],['moviles','Móviles'],['inalambrico_iot','Inalámbrico / IoT'],
   ['servicios','Servicios'],['cloud_sva','Cloud / SVA'],['claro_tv','Claro TV'],['ofertas_moviles','Ofertas móviles'],['ofertas_fijo','Ofertas fijo'],['beneficios','Beneficios']
@@ -1890,52 +1984,8 @@ function fcFechaFuente(value){
   var d=new Date(value);
   return isNaN(d.getTime())?String(value):d.toLocaleString('es');
 }
-const OF_SERVICIOS=[
-  {id:'rescate-residencia-6m',titulo:'6 meses gratis Claro Rescate / Claro Residencia',archivo:'Featires oerta.pdf',vigencia:'Desde el 5 de noviembre de 2025',estado:'Sin fecha final indicada',estadoClass:'amber',soloResumen:true,
-   resumen:'Oferta para clientes 2 Play/3 Play que activen Claro Rescate o Claro Residencia con Internet + Telefonia. Descuento automatico en meses intercalados.',
-   notas:['Aplica a planes Internet + Telefonia 100, 300, 600 y 1,000 megas.','Descuento en meses 2, 4, 6, 8, 10 y 12.','Requiere revision manual porque el boletin no indica fecha final.'],
-   hojas:[
-    {n:1,titulo:'Portada de boletin',img:'img/servicios/features-oferta-p01.png',desc:'Boletin Oferta 6 meses Gratis Claro Rescate & Claro Residencia.'},
-    {n:2,titulo:'Descripcion de oferta',img:'img/servicios/features-oferta-p02.png',desc:'Mecanica de seis meses gratis intercalados y combinaciones de servicio.'},
-    {n:3,titulo:'Clientes que aplican',img:'img/servicios/features-oferta-p03.png',desc:'Reglas para clientes nuevos, existentes y exclusiones.'},
-    {n:4,titulo:'Precios combinados',img:'img/servicios/features-oferta-p04.png',desc:'Precios Internet + Telefonia con Claro Rescate o Claro Residencia.'},
-    {n:5,titulo:'SOC y alpha codes',img:'img/servicios/features-oferta-p05.png',desc:'Codigos de planes y servicios aplicables.'},
-    {n:6,titulo:'Ordenes nuevas',img:'img/servicios/features-oferta-p06.png',desc:'Proceso para emitir ordenes nuevas por COPS.'},
-    {n:7,titulo:'Ordenes existentes',img:'img/servicios/features-oferta-p07.png',desc:'Proceso OSADIA/AS para clientes existentes.'},
-    {n:8,titulo:'Publicidad',img:'img/servicios/features-oferta-p08.png',desc:'Material visual de la oferta.'},
-    {n:9,titulo:'Terminos y condiciones',img:'img/servicios/features-oferta-p09.png',desc:'Condiciones oficiales: account type, planes, descuento SIF y cubierta.'}
-   ]},
-  {id:'features-servicios-2022',titulo:'Cubiertas de servicios Features',archivo:'Features.pdf',vigencia:'1 al 31 de julio de 2022',estado:'Vencida',estadoClass:'red',soloTitulos:true,
-   resumen:'Hojas de referencia de servicios descargables para vendedor. Este boletin esta vencido y debe quedar como alerta hasta reemplazarlo por uno vigente.',
-   notas:['Claro Residencia.','Claro Rescate.','Advantage.','Asistencia Legal.'],
-   hojas:[
-    {n:9,titulo:'Claro Residencia',img:'img/servicios/features-p09.png',desc:'Detalle de cubierta residencial.'},
-    {n:10,titulo:'Claro Rescate',img:'img/servicios/features-p10.png',desc:'Detalle de cubierta para vehiculos.'},
-    {n:11,titulo:'Claro Rescate continuacion',img:'img/servicios/features-p11.png',desc:'Continuacion de condiciones de cubierta.'},
-    {n:12,titulo:'Advantage',img:'img/servicios/features-p12.png',desc:'Advantage.'},
-    {n:13,titulo:'Asistencia Legal',img:'img/servicios/features-p13.png',desc:'Asistencia legal.'}
-   ]}
-];
-const OF_SEGUROS_EQUIPOS=[
-  {rango:'$0 - $200.00',deducible:'$20.00',prima:'$7.99'},
-  {rango:'$200.01 - $400',deducible:'$50.00',prima:'$7.99'},
-  {rango:'$400.01 - $700',deducible:'$100.00',prima:'$13.99'},
-  {rango:'$700.01 - $1,400',deducible:'$199.00',prima:'$13.99'},
-  {rango:'$1,400.01 en adelante',deducible:'$299.00',prima:'$13.99'}
-];
-const OF_SERVICIOS_SOCS=[
-  {descripcion:'Claro Rescate',socMovil:'RESCATEM',socFijo:'RESCATEF / A821',renta:5.99},
-  {descripcion:'Claro Residencia',socMovil:'RESIDEM',socFijo:'RESIDEF / A826',renta:4.50},
-  {descripcion:'Claro Residencia y Rescate',socMovil:'RESRECM',socFijo:'RESRECF / A831',renta:7.99},
-  {descripcion:'Claro Advantage',socMovil:'ADVANM',socFijo:'ADVANF / A840',renta:5.99},
-  {descripcion:'Claro Advantage y Residencia',socMovil:'ADVRESM',socFijo:'ADVRESF / A843',renta:8.99},
-  {descripcion:'Claro Advantage, Residencia y Rescate',socMovil:'ADVANTRM',socFijo:'ADVANTRF / A846',renta:11.99},
-  {descripcion:'Claro Asistencia Legal',socMovil:'LEGALM',socFijo:'LEGALF / A851',renta:9.99}
-];
 async function viewOfertas(){
-  var portalBtn = PORTAL_OFERTAS_URL
-    ? `<button class="btn" style="background:var(--violet)" onclick="abrirPortalOfertas()">🛒 Abrir portal de ofertas</button>`
-    : `<button class="btn" style="background:var(--violet)" onclick="alert('Falta configurar la URL del portal.')">🛒 Abrir portal de ofertas</button>`;
+  var portalBtn = `<button class="btn" style="background:var(--violet)" onclick="abrirPortalOfertas()">Abrir Constructor</button>`;
   var tabs=OF_TABS.map(function(t){return '<button class="btn '+(ofTab===t[0]?'':'ghost')+'" onclick="ofSetTab(\''+t[0]+'\')">'+esc(t[1])+'</button>';}).join('');
   return `<div class="head"><div><h1>Admin Ofertas</h1><div class="s">Gestión de listas de precios y planes publicados en el portal</div></div>
     <div style="display:flex;gap:8px">${portalBtn}</div></div>
@@ -1966,13 +2016,15 @@ function ofModuleSourceFamily(key){
 }
 function ofRenderModuleShell(config){
   var b=$('ofBody'); if(!b)return;
+  var key=config.key||ofTab;
   var title=config.title||ofModuloLabel(ofTab);
   var accept=config.accept||'.pdf,.xlsx,.xls';
   var details=config.details||'Sube el documento oficial. El sistema guarda la fuente internamente, conserva archivo, hash, usuario y vigencia, analiza el formato y compara contra la ultima version publicada.';
   var note=config.note||'Si la fuente vence y no subes reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.';
   var extra=config.extra||'';
   b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(title)+'</h3><div class="s" style="margin-top:4px">'+esc(details)+'</div></div><span class="pill amber">Fuente interna</span></div>'
-    +'<div class="card" style="padding:14px;margin-top:12px"><div class="impgrid"><div><div class="flbl">Documento oficial</div><input class="inp" type="file" accept="'+esc(accept)+'"></div><div><div class="flbl">Vigencia hasta</div><input class="inp" type="date"></div></div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn">Analizar</button><button class="btn ghost">Ver historial</button></div><div class="s" style="margin-top:8px">'+esc(note)+'</div></div>'+extra+'</div>';
+    +'<div class="card" style="padding:14px;margin-top:12px"><div class="impgrid"><div><div class="flbl">Documento oficial</div><input class="inp" id="ofBaseDocumento_'+esc(key)+'" type="file" accept="'+esc(accept)+'"></div><div><div class="flbl">Vigencia hasta</div><input class="inp" id="ofBaseHasta_'+esc(key)+'" type="date"></div></div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="ofBaseAnalizar_'+esc(key)+'" onclick="ofAnalizarCatalogoBase(\''+esc(key)+'\')">Analizar</button><button class="btn ghost" onclick="ofVerHistorialCatalogoBase(\''+esc(key)+'\')">Ver historial</button></div><div class="s" id="ofBaseEstado_'+esc(key)+'" style="margin-top:8px">'+esc(note)+'</div></div><div id="fcBasePreviewPanel"></div><div id="fcBaseHistorial" style="margin-top:12px"></div>'+extra+'</div>';
+  ofLoadCatalogoBaseState(key);
 }
 function ofRenderCatalogoBase(key){
   var title=ofModuloLabel(key);
@@ -1981,28 +2033,256 @@ function ofRenderCatalogoBase(key){
   if(key==='claro_tv')note='Claro TV se extrae por bloque: planes de television separados de complementos y equipos.';
   if(key==='moviles')note='Planes Moviles es catalogo base, no ofertas promocionales.';
   if(key==='inalambrico_iot')note='Inalambrico / IoT mantiene el mismo formato de tabla: altas, bajas y cambios por comparacion.';
-  return ofRenderModuleShell({title:title, note:note||undefined});
+  return ofRenderModuleShell({key:key,title:title, note:note||undefined});
 }
 function ofRenderListaPrecios(){
-  return ofRenderModuleShell({title:'Lista de Precios',accept:'.xlsx,.xls',details:'Antes Lista de Equipos. Subes el Excel oficial de precios; se guarda la fuente internamente, se compara y se reemplaza la lista publicada completa.',note:'Tiene vigencia propia. Si vence y no subes una nueva, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
+  return ofRenderModuleShell({key:'lista_precios',title:'Lista de Precios',accept:'.xlsx,.xls',details:'Antes Lista de Equipos. Subes el Excel oficial de precios; se guarda la fuente internamente, se analiza como borrador y solo se reemplaza la lista publicada al tocar Publicar.',note:'Tiene vigencia propia. Si vence y no subes una nueva, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.',extra:'<div id="ofListaPreciosPanel" style="margin-top:12px"></div>'});
 }
 function ofRenderServiciosBase(){
-  return ofRenderModuleShell({title:'Servicios',accept:'.pdf,.xlsx,.xls',details:'Servicios queda como ajuste manual controlado por ahora.',note:'Solo quedan publicados Asistencia Legal y Claro Rescate; los demas servicios quedan excluidos.',extra:'<div class="card" style="padding:14px;margin-top:12px"><b>Servicios publicados</b><div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Servicio</th><th>Estado</th></tr></thead><tbody><tr><td>Asistencia Legal</td><td><span class="pill green">Publicado</span></td></tr><tr><td>Claro Rescate</td><td><span class="pill green">Publicado</span></td></tr></tbody></table></div></div>'});
+  return ofRenderModuleShell({title:'Servicios',accept:'.pdf,.xlsx,.xls',details:'Carga la fuente oficial de Servicios para preparar una publicación nueva.',note:'Pendiente de publicación oficial. No se usan servicios, precios ni condiciones heredadas.',extra:''});
 }
 function ofRenderDirectorioFijo(){
   return ofRenderModuleShell({title:'Directorio de Fijo',accept:'.xlsx,.xls,.pdf',details:'Directorio de Fijo usa la misma regla de catalogo base: fuente publicada, vigencia, comparacion e historial.',note:'Si vence sin reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
 }
+async function ofAnalizarCatalogoBase(key){
+  var fileInput=$('ofBaseDocumento_'+key), estado=$('ofBaseEstado_'+key), btn=$('ofBaseAnalizar_'+key);
+  if(!fileInput||!fileInput.files||!fileInput.files.length){if(estado)estado.innerHTML='<span class="pill red">Falta documento oficial</span> Selecciona el boletin antes de analizar.';return;}
+  if(!['fijo','claro_tv','moviles','inalambrico_iot','lista_precios'].includes(key)){if(estado)estado.innerHTML='<span class="pill amber">Pendiente</span> Este modulo todavia no tiene analisis conectado.';return;}
+  var fd=new FormData(); fd.append('documento',fileInput.files[0]); fd.append('familia',ofModuleSourceFamily(key));
+  if(key==='lista_precios')fd.append('publicacion_modo','borrador');
+  if(estado)estado.textContent='Guardando fuente y analizando...';
+  if(btn){btn.disabled=true;btn.textContent='Analizando';}
+  try{
+    var r=await apiForm('/api/fuentes-comerciales',fd);
+    if(!r.ok&&r.codigo!=='fuente_duplicada')throw new Error(r.error||r.codigo||'No se pudo guardar la fuente');
+    if(!r.fuente)throw new Error('No se recibio la fuente guardada');
+    if(key==='lista_precios'){
+      ofListaPreciosFuente=r.fuente; ofListaPreciosPreview=null; ofListaPreciosDraft=false; ofListaPreciosBusy=false; ofRenderListaPreciosPanel();
+      await ofGenerarListaPreciosPreview();
+      fcLoadBaseHistorial();
+      return;
+    }
+    if(key==='inalambrico_iot'){
+      fcBaseFuente=null; fcBasePreview=null; fcBaseDrafts={}; fcBaseModuleKey=key; fcBaseCompanionIds=[]; fcBaseMessage='';
+      var mods=r.publicacion&&Array.isArray(r.publicacion.modulos)?r.publicacion.modulos.length:0;
+      if(estado)estado.innerHTML=r.codigo==='fuente_duplicada'
+        ? '<span class="pill amber">Fuente ya guardada</span> '+esc(r.fuente.nombre_original||'Documento oficial')+'. Si necesitas reemplazar, sube un boletin nuevo.'
+        : '<span class="pill green">Inalambrico actualizado</span> Fuente guardada y validada. Modulos revisados: '+mods+'.';
+      fcRenderBasePanel();
+      fcLoadBaseHistorial();
+      return;
+    }
+    fcBaseFuente=r.fuente; fcBasePreview=null; fcBaseDrafts={}; fcBaseModuleKey=key; fcBaseCompanionIds=key==='moviles'?await ofMovilCompanionIds(fcBaseFuente.id):[]; fcBaseTab=key==='moviles'?'movil':(key==='claro_tv'?'claro_tv':'fijo'); fcBaseSearch='';
+    fcBaseBusy=true;fcRenderBasePanel();
+    fcBasePreview=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody('')});
+    fcBaseDrafts={};
+    if(estado)estado.innerHTML=fcBaseModuleKey==='moviles'?'<span class="pill green">Vista previa lista</span> Fuente guardada. Revisa Planes Moviles antes de guardar borrador.':'<span class="pill green">Vista previa lista</span> Fuente guardada. Revisa Fijo y Claro TV antes de guardar borrador.';
+    fcLoadBaseHistorial();
+  }catch(e){
+    if(estado)estado.innerHTML='<span class="pill red">No se pudo analizar</span> '+esc(fcMensajeApi(e));
+    else alert(fcMensajeApi(e));
+  }finally{
+    fcBaseBusy=false;fcRenderBasePanel();
+    if(btn){btn.disabled=false;btn.textContent='Analizar';}
+  }
+}
+function ofRenderListaPreciosPanel(){
+  var el=$('ofListaPreciosPanel'); if(!el)return;
+  if(!ofListaPreciosFuente){el.innerHTML='';return;}
+  var total=ofListaPreciosPreview&&ofListaPreciosPreview.total||0;
+  var hojas=(ofListaPreciosPreview&&ofListaPreciosPreview.hojas||[]).slice(0,8).map(esc).join(', ');
+  var muestra=(ofListaPreciosPreview&&ofListaPreciosPreview.muestra||[]).map(function(item){
+    return '<tr><td>'+esc(item.item_code||'')+'</td><td>'+esc(item.modelo||'')+'</td><td>'+esc(item.marca||'')+'</td><td>'+esc(item.categoria||'')+'</td><td class="r">'+esc(item.precio_regular||'')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><b>'+esc(ofListaPreciosFuente.nombre_original||'Excel oficial')+'</b><div class="s">Hash '+esc((ofListaPreciosFuente.sha256||'').slice(0,12))+' · Analizar no publica cambios.</div></div><span class="pill '+(ofListaPreciosDraft?'green':'amber')+'">'+(ofListaPreciosDraft?'Borrador guardado':'Vista previa')+'</span></div>'
+    +(ofListaPreciosPreview?'<div class="kpis" style="margin-top:12px"><div class="kpi"><div class="l">Equipos detectados</div><div class="v">'+esc(total)+'</div></div><div class="kpi"><div class="l">Hojas leidas</div><div class="v">'+esc((ofListaPreciosPreview.hojas||[]).length)+'</div></div></div><div class="s">Hojas: '+(hojas||'sin detalle')+'</div><div style="overflow-x:auto;margin-top:10px"><table style="min-width:720px"><thead><tr><th>Item</th><th>Modelo</th><th>Marca</th><th>Categoria</th><th class="r">Precio</th></tr></thead><tbody>'+(muestra||'<tr><td colspan="5">Sin muestra.</td></tr>')+'</tbody></table></div>':'<div class="empty" style="padding:14px">'+(ofListaPreciosBusy?'Analizando Excel...':'Genera la vista previa.')+'</div>')
+    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+(!ofListaPreciosPreview?'<button class="btn" onclick="ofGenerarListaPreciosPreview()" '+(ofListaPreciosBusy?'disabled':'')+'>'+(ofListaPreciosBusy?'Analizando Excel':'Generar vista previa')+'</button>':'')+'<button class="btn ghost" onclick="ofGuardarListaPreciosBorrador()" '+(ofListaPreciosPreview&&!ofListaPreciosBusy?'':'disabled')+'>Guardar borrador</button><button class="btn green" onclick="ofPublicarListaPrecios()" '+(ofListaPreciosDraft&&!ofListaPreciosBusy?'':'disabled')+'>Publicar</button></div><div class="s" id="ofListaPreciosEstado" style="margin-top:8px"></div></div>';
+}
+async function ofGenerarListaPreciosPreview(){
+  var estadoModulo=$('ofBaseEstado_lista_precios');
+  if(!ofListaPreciosFuente){if(estadoModulo)estadoModulo.innerHTML='<span class="pill red">Falta fuente</span> Sube primero el Excel oficial.';return;}
+  ofListaPreciosBusy=true;ofListaPreciosDraft=false;ofRenderListaPreciosPanel();
+  try{
+    var preview=await api('/api/fuentes-comerciales/'+ofListaPreciosFuente.id+'/equipos-preview',{method:'POST'});
+    ofListaPreciosPreview=preview.preview||null;
+    if(!ofListaPreciosPreview)throw new Error('No se recibio la vista previa');
+    ofListaPreciosBusy=false;ofRenderListaPreciosPanel();
+    if(estadoModulo)estadoModulo.innerHTML='<span class="pill green">Vista previa lista</span> Fuente guardada como borrador. Equipos detectados: '+esc(ofListaPreciosPreview.total||0)+'.';
+  }catch(e){
+    ofListaPreciosBusy=false;ofListaPreciosPreview=null;ofRenderListaPreciosPanel();
+    if(estadoModulo)estadoModulo.innerHTML='<span class="pill red">No se pudo analizar</span> '+esc(fcMensajeApi(e));
+  }
+}
+function ofGuardarListaPreciosBorrador(){
+  if(!ofListaPreciosFuente||!ofListaPreciosPreview)return;
+  ofListaPreciosDraft=true;
+  ofRenderListaPreciosPanel();
+  var estado=$('ofListaPreciosEstado'); if(estado)estado.innerHTML='<span class="pill green">Lista de Precios en borrador</span> Revisada con '+esc(ofListaPreciosPreview.total||0)+' equipos. Todavia no reemplaza el portal.';
+}
+async function ofPublicarListaPrecios(){
+  var estado=$('ofListaPreciosEstado');
+  if(!ofListaPreciosFuente||!ofListaPreciosDraft){if(estado)estado.innerHTML='<span class="pill red">Falta borrador</span> Primero analiza y guarda borrador.';return;}
+  ofListaPreciosBusy=true;ofRenderListaPreciosPanel();estado=$('ofListaPreciosEstado');if(estado)estado.textContent='Publicando Lista de Precios...';
+  try{
+    var r=await api('/api/fuentes-comerciales/'+ofListaPreciosFuente.id+'/equipos-publicar',{method:'POST'});
+    if(!r.ok)throw new Error(r.error||r.codigo||'No se pudo publicar');
+    ofListaPreciosBusy=false;ofListaPreciosDraft=false;
+    ofRenderListaPreciosPanel();
+    estado=$('ofListaPreciosEstado');if(estado)estado.innerHTML='<span class="pill green">Lista de Precios publicada</span> Equipos publicados: '+esc(r.publicacion&&r.publicacion.total||0)+'.';
+    fcLoadBaseHistorial();
+  }catch(e){
+    ofListaPreciosBusy=false;ofRenderListaPreciosPanel();
+    estado=$('ofListaPreciosEstado');if(estado)estado.innerHTML='<span class="pill red">No se pudo publicar</span> '+esc(fcMensajeApi(e));
+  }
+}
+async function ofLoadCatalogoBaseState(key){
+  if(!['fijo','claro_tv','moviles','inalambrico_iot','lista_precios'].includes(key))return;
+  var estado=$('ofBaseEstado_'+key);
+  try{
+    fcBaseModuleKey=key;fcBaseCompanionIds=[];
+    var family=ofModuleSourceFamily(key);
+    var r=await api('/api/fuentes-comerciales?familia='+encodeURIComponent(family));
+    var rows=(r&&r.fuentes||[]).filter(function(f){return f.estado!=='archivada';});
+    var fuente=ofPrimaryFuenteForCatalogo(rows,key);
+    if(!fuente&&key==='claro_tv'){
+      r=await api('/api/fuentes-comerciales?familia='+encodeURIComponent('fijos'));
+      rows=(r&&r.fuentes||[]).filter(function(f){return f.estado!=='archivada';});
+      fuente=ofPrimaryFuenteForCatalogo(rows,key);
+    }
+    if(!fuente){
+      if(estado)estado.innerHTML='<span class="pill amber">Sin fuente guardada</span> Sube el documento oficial.';
+      fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcRenderBasePanel();fcLoadBaseHistorial();
+      return;
+    }
+    fcBaseFuente=fuente;fcBasePreview=null;fcBaseDrafts={};fcBaseTab=fcBaseTabForModule(key);fcBaseSearch='';fcBaseMessage='';
+    if(key==='moviles')fcBaseCompanionIds=await ofMovilCompanionIds(fuente.id);
+    if(key==='lista_precios'){
+      if(estado)estado.innerHTML='<span class="pill green">Fuente guardada</span> '+esc(fuente.nombre_original||'Excel oficial')+'. Sube una lista nueva para reemplazar la Lista de Precios publicada.';
+      ofListaPreciosFuente=fuente;ofListaPreciosPreview=null;ofListaPreciosDraft=false;ofListaPreciosBusy=false;ofRenderListaPreciosPanel();
+      fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcRenderBasePanel();fcLoadBaseHistorial();
+      return;
+    }
+    if(estado)estado.innerHTML='<span class="pill green">Fuente guardada</span> '+esc(fuente.nombre_original||'Documento oficial')+'. Puedes generar vista previa sin volver a subir.';
+    if(key==='inalambrico_iot'){
+      if(estado)estado.innerHTML='<span class="pill green">Fuente guardada</span> '+esc(fuente.nombre_original||'Documento oficial')+'. Sube un boletin nuevo para reemplazar Inalambrico / IoT.';
+      fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcRenderBasePanel();fcLoadBaseHistorial();
+      return;
+    }
+    fcRenderBasePanel();
+    fcLoadBaseHistorial();
+  }catch(e){
+    if(estado)estado.innerHTML='<span class="pill red">No se pudo cargar la fuente guardada</span> '+esc(fcMensajeApi(e));
+  }
+}
+function ofVerHistorialCatalogoBase(key){
+  fcBaseFuente=fcBaseFuente||{nombre_original:ofModuloLabel(key),sha256:''};
+  fcBaseModuleKey=key;fcBaseCompanionIds=[];fcBaseTab=fcBaseTabForModule(key);
+  fcRenderBasePanel();
+  fcLoadBaseHistorial();
+}
 function ofRenderOfertasVigentes(){
   var b=$('ofBody'); if(!b)return;
   var familias=[
-    {key:'ofertas_moviles',title:'Ofertas Moviles',accept:'.pdf,.xlsx,.xls',body:'Para boletines y tablas de ofertas moviles. Requiere revisar modelo, plan, evento, trade-in, limite BAN, metodo, pago mensual y vigencia.'},
-    {key:'ofertas_fijo',title:'Ofertas Fijo',accept:'.pdf',body:'Para boletines de ofertas de fijo. Debe separar descuentos, velocidades, meses gratis, penalidades y condiciones de elegibilidad.'},
-    {key:'beneficios',title:'Beneficios Convergentes',accept:'.pdf',body:'Para beneficios de clientes convergentes. Debe conservar requisitos de combinacion de servicios, vigencia y exclusiones.'}
+    {key:'ofertas_moviles',title:'Ofertas Moviles',agent:'Agente Movil',scope:'Maneja: Excel de ofertas, PDF de terminos, planes, equipos, eventos, trade-in, limite BAN y vigencia.',accept:'.pdf,.xlsx,.xls',multiple:true,body:'Prepara combinaciones moviles para revision. No publica sin parser completo.'},
+    {key:'ofertas_fijo',title:'Ofertas Fijo',agent:'Agente Fijo',scope:'Maneja: boletines de fijo, descuentos, velocidades, meses gratis, elegibilidad y condiciones por producto.',accept:'.pdf',multiple:true,body:'Prepara ofertas fijas para revision y separa beneficios que debe consolidar Benefits.'},
+    {key:'beneficios',title:'Benefits',agent:'Agente Benefits',scope:'Maneja: descuentos, convergencia, meses gratis, bonos, beneficios por producto y exclusiones desde todos los boletines.',accept:'.pdf',multiple:true,body:'Consolida beneficios encontrados en movil, fijo y convergencia. No se cargan reglas a mano.'}
   ];
   var cards=familias.map(function(f){
-    return '<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(f.title)+'</b><div class="s" style="margin-top:5px">'+esc(f.body)+'</div></div><span class="pill amber">Borrador</span></div><div class="impgrid" style="margin-top:12px"><div><div class="flbl">Documento oficial</div><input class="inp" type="file" accept="'+esc(f.accept)+'"></div><div><div class="flbl">Vigencia hasta</div><input class="inp" type="date"></div></div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn">Analizar</button><button class="btn ghost">Guardar borrador</button><button class="btn green" disabled>Publicar version</button></div></div>';
+    var upload=f.key==='ofertas_moviles'
+      ? '<div><div class="flbl">Excel de ofertas</div><input class="inp" id="ovExcel_ofertas_moviles" type="file" accept=".xlsx,.xls"></div><div><div class="flbl">PDF de terminos</div><input class="inp" id="ovPdf_ofertas_moviles" type="file" accept=".pdf"></div>'
+      : '<div><div class="flbl">Documento oficial</div><input class="inp" id="ovFile_'+f.key+'" type="file" accept="'+esc(f.accept)+'" '+(f.multiple?'multiple':'')+'></div><div><div class="flbl">Vigencia hasta</div><input class="inp" id="ovHasta_'+f.key+'" type="date"></div>';
+    var hasta=f.key==='ofertas_moviles'?'<div style="margin-top:10px"><div class="flbl">Vigencia hasta</div><input class="inp" id="ovHasta_'+f.key+'" type="date"></div>':'';
+    if(f.key==='beneficios'){
+      upload='<div><div class="flbl">Documento oficial</div><input class="inp" id="ovFile_'+f.key+'" type="file" accept="'+esc(f.accept)+'" multiple></div><div><div class="flbl">Vigencia desde</div><input class="inp" id="ovDesde_'+f.key+'" type="date"></div>';
+      hasta='<div style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end"><div><div class="flbl">Vigencia hasta</div><input class="inp" id="ovHasta_'+f.key+'" type="date"></div><label class="s" style="display:flex;gap:6px;align-items:center;padding-bottom:10px"><input id="ovSinHasta_'+f.key+'" type="checkbox"> Hasta nuevo boletin</label></div>';
+    }
+    return '<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(f.title)+'</b><div style="margin-top:5px"><span class="pill violet">'+esc(f.agent)+'</span></div><div class="s" style="margin-top:7px">'+esc(f.scope)+'</div><div class="s" style="margin-top:5px">'+esc(f.body)+'</div></div><span class="pill amber">Borrador</span></div><div class="impgrid" style="margin-top:12px">'+upload+'</div>'+hasta+'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" onclick="ovAnalizar(\''+f.key+'\')">Analizar</button><button class="btn ghost" onclick="ovGuardarBorrador(\''+f.key+'\')">Guardar borrador</button><button class="btn green" disabled>Publicar version</button></div><div class="s" id="ovResumen_'+f.key+'" style="margin-top:8px">'+ovRenderBorradorResumen(f.key)+'</div><div class="s" id="ovEstado_'+f.key+'" style="margin-top:8px"></div></div>';
   }).join('');
   b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">Ofertas Vigentes</h3><div class="s" style="margin-top:4px">La version anterior sigue publicada hasta confirmar la nueva. No publica automaticamente.</div></div><span class="pill violet">Revision obligatoria</span></div><div class="kpis" style="margin-top:12px"><div class="kpi"><div class="l">Correctas</div><div class="v">0</div></div><div class="kpi"><div class="l">Revisar</div><div class="v">0</div></div><div class="kpi"><div class="l">Excluidas</div><div class="v">0</div></div><div class="kpi"><div class="l">Contradicciones</div><div class="v">0</div></div></div><div class="grid2">'+cards+'</div></div>';
+}
+function ovLeerBorrador(key){
+  try{return JSON.parse(localStorage.getItem('ov_borrador_'+key)||'null')||null;}catch(e){return null;}
+}
+function ovMergeDocumentos(prev,names){
+  var seen={}, out=[];
+  (prev||[]).concat(names||[]).forEach(function(n){n=String(n||'').trim();if(n&&!seen[n]){seen[n]=1;out.push(n);}});
+  return out;
+}
+function ovRenderBorradorResumen(key){
+  var b=ovLeerBorrador(key);
+  if(!b||!b.documentos||!b.documentos.length)return '';
+  return '<div class="card" style="padding:9px 10px;background:var(--card2)"><b>Documentos en borrador</b><div style="margin-top:4px">'+b.documentos.map(function(n){return '<div>- '+esc(n)+'</div>';}).join('')+'</div></div>';
+}
+function ovFiles(key){
+  if(key==='ofertas_moviles'){
+    var excel=$('ovExcel_ofertas_moviles'), pdf=$('ovPdf_ofertas_moviles'), out=[];
+    if(excel&&excel.files&&excel.files[0])out.push(excel.files[0]);
+    if(pdf&&pdf.files&&pdf.files[0])out.push(pdf.files[0]);
+    return out;
+  }
+  var fileInput=$('ovFile_'+key);
+  return fileInput&&fileInput.files?Array.from(fileInput.files):[];
+}
+function ovAnalizar(key){
+  var hasta=$('ovHasta_'+key), desde=$('ovDesde_'+key), sinHasta=$('ovSinHasta_'+key), estado=$('ovEstado_'+key);
+  if(!estado)return;
+  var files=ovFiles(key);
+  if(!files.length){estado.innerHTML='<span class="pill red">Falta documento oficial</span> Selecciona el Excel o PDF antes de analizar.';return;}
+  if(key==='beneficios'&&sinHasta&&sinHasta.checked){
+    estado.innerHTML='<span class="pill amber">Pendiente de parser</span> '+files.length+' documento(s) leidos. Vigencia desde '+esc((desde&&desde.value)||'pendiente')+' hasta nuevo boletin. La publicacion sigue bloqueada hasta conectar el analisis completo.';
+    return;
+  }
+  var vigencia=hasta&&hasta.value;
+  var name=String(files[0].name||'');
+  var detectada=ovDetectarVigenciaHasta(files);
+  if(!vigencia&&detectada&&hasta)hasta.value=detectada;
+  vigencia=(hasta&&hasta.value)||detectada||'';
+  var hasPdf=files.some(function(f){return /\.pdf$/i.test(String(f.name||''));});
+  var hasExcel=files.some(function(f){return /\.xlsx?$/i.test(String(f.name||''));});
+  if(key==='ofertas_moviles'&&hasExcel&&!hasPdf){
+    estado.innerHTML='<span class="pill amber">Analisis parcial</span> Excel recibido. '+(vigencia?'Vigencia hasta '+esc(vigencia)+'. ':'Vigencia pendiente de detectar desde el PDF. ')+'Falta PDF de terminos y condiciones para habilitar publicacion.';
+    return;
+  }
+  if(key==='ofertas_moviles'&&hasExcel&&hasPdf&&vigencia){
+    estado.innerHTML='<span class="pill amber">Pendiente de parser</span> Excel y PDF recibidos. 2 documento(s) y vigencia hasta '+esc(vigencia)+' leidos. La publicacion sigue bloqueada hasta conectar el analisis completo.';
+    return;
+  }
+  if(!vigencia){estado.innerHTML='<span class="pill amber">Vigencia pendiente</span> Documento(s) recibido(s). No pude detectar la fecha hasta en el nombre; la publicacion queda bloqueada hasta completar vigencia o conectar lectura interna del PDF.';return;}
+  estado.innerHTML='<span class="pill amber">Pendiente de parser</span> '+files.length+' documento(s) y vigencia hasta '+esc(vigencia)+' leidos. La publicacion sigue bloqueada hasta conectar el analisis completo.';
+}
+function ovDetectarVigenciaHasta(files){
+  var months={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',setiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'};
+  for(var i=0;i<files.length;i++){
+    var source=String(files[i].name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    var year=(source.match(/20\d{2}/)||[])[0]||'';
+    var desdeMatch=source.match(/desde\s+(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(20\d{2})/);
+    if(desdeMatch&&months[desdeMatch[2]])return desdeMatch[3]+'-'+months[desdeMatch[2]]+'-'+String(desdeMatch[1]).padStart(2,'0');
+    var rangoMes=source.match(/(?:del|vigencia|valido del)?\s*(\d{1,2})\s+(?:al|a|-)\s+(\d{1,2})\s+de?\s*([a-z]+)\s+de?\s*(20\d{2})/);
+    if(rangoMes&&months[rangoMes[3]])return rangoMes[4]+'-'+months[rangoMes[3]]+'-'+String(rangoMes[2]).padStart(2,'0');
+    var same=source.match(/(?:al|hasta)\s+(\d{1,2})\s+de\s+([a-z]+)/);
+    if(year&&same&&months[same[2]])return year+'-'+months[same[2]]+'-'+String(same[1]).padStart(2,'0');
+    var numeric=source.match(/(?:al|hasta|-)\s*(\d{1,2})[-_ ](\d{1,2})[-_ ](20\d{2})/);
+    if(numeric)return numeric[3]+'-'+String(numeric[2]).padStart(2,'0')+'-'+String(numeric[1]).padStart(2,'0');
+    var compact=source.match(/(20\d{2})(\d{2})(\d{2})/);
+    if(compact)return compact[1]+'-'+compact[2]+'-'+compact[3];
+  }
+  return '';
+}
+function ovGuardarBorrador(key){
+  var hasta=$('ovHasta_'+key), desde=$('ovDesde_'+key), sinHasta=$('ovSinHasta_'+key), estado=$('ovEstado_'+key);
+  if(!estado)return;
+  var files=ovFiles(key);
+  if(!files.length){estado.innerHTML='<span class="pill red">Falta documento oficial</span> Selecciona el Excel o PDF antes de guardar borrador.';return;}
+  var detectada=ovDetectarVigenciaHasta(files);
+  var vigencia=(hasta&&hasta.value)||detectada||'pendiente';
+  if(sinHasta&&sinHasta.checked)vigencia='hasta_nuevo_boletin';
+  if(hasta&&!hasta.value&&detectada)hasta.value=detectada;
+  var previo=ovLeerBorrador(key);
+  var documentos=ovMergeDocumentos(previo&&previo.documentos,files.map(function(f){return f.name;}));
+  var borrador={familia:key,documentos:documentos,vigencia_desde:(desde&&desde.value)||(previo&&previo.vigencia_desde)||'',vigencia_hasta:(sinHasta&&sinHasta.checked)?'hasta_nuevo_boletin':vigencia,guardado_en:new Date().toISOString()};
+  try{localStorage.setItem('ov_borrador_'+key,JSON.stringify(borrador));}catch(e){}
+  var resumen=$('ovResumen_'+key); if(resumen)resumen.innerHTML=ovRenderBorradorResumen(key);
+  estado.innerHTML='<span class="pill green">Borrador guardado</span> '+documentos.length+' documento(s) registrados. Vigencia '+((desde&&desde.value)?'desde '+esc(desde.value)+' ':'')+'hasta: '+esc(vigencia)+'. La publicacion sigue bloqueada.';
 }
 async function ofRenderFuentesComerciales(){
   var b=$('ofBody'); if(!b)return;
@@ -2067,80 +2347,126 @@ async function fcSeleccionarBaseFuente(id){
   try{
     var r=await api('/api/fuentes-comerciales'), rows=(r&&r.fuentes)||[];
     fcBaseFuente=rows.find(function(f){return String(f.id)===String(id);})||null;
-    fcBasePreview=null; fcBaseDrafts={}; fcBaseTab='fijo'; fcBaseSearch='';
+    fcBaseModuleKey=fcBaseFuente&&fcBaseFuente.familia==='moviles'?'moviles':'fijo';
+    fcBaseCompanionIds=fcBaseModuleKey==='moviles'?await ofMovilCompanionIds(fcBaseFuente&&fcBaseFuente.id):[];
+    fcBasePreview=null; fcBaseDrafts={}; fcBaseTab=fcBaseTabForModule(fcBaseModuleKey); fcBaseSearch='';
     fcRenderBasePanel();
   }catch(e){alert('No se pudo abrir la fuente: '+fcMensajeApi(e));}
 }
 function fcMensajeApi(e){
   var m=String(e&&e.message||e||'');
+  if(/fuente_byop_requerida/.test(m))return 'Falta la fuente BYOP-BAN guardada para generar Planes Moviles.';
   if(/400|fecha_actualizacion_base/.test(m))return 'Ingresá una fecha válida de actualización de la base.';
   if(/401/.test(m))return 'Tu sesión expiró. Volvé a entrar.';
-  if(/403/.test(m))return 'No tenés permiso administrativo para esta acción.';
+  if(/^(?:HTTP\s+)?403\b|->\s*403\b/.test(m))return 'No tenés permiso administrativo para esta acción.';
   if(/404/.test(m))return 'La fuente o el archivo archivado no está disponible.';
   if(/422/.test(m))return 'El documento no pudo procesarse como fuente Fijo/Claro TV.';
   if(/500/.test(m))return 'Ocurrió un error interno al generar la vista previa.';
   return m.replace(/([A-Z]:\\|\/)[^ ]+/g,'[ruta oculta]').replace(/stderr.*/i,'');
 }
 function fcBasePublicacionActual(){return fcBaseDrafts&&fcBaseDrafts[fcBaseTab]||null;}
+function fcBaseTabForModule(key){return key==='claro_tv'?'claro_tv':(key==='moviles'?'movil':'fijo');}
+function fcBaseCategoriasActivas(){return fcBaseModuleKey==='moviles'?[['movil','Planes Moviles']]:[['fijo','Fijo'],['claro_tv','Claro TV']];}
+function fcBasePreviewRequestBody(fecha){
+  var body=fcBaseModuleKey==='moviles'?{fuente_ids:fcBaseCompanionIds}:{};
+  if(fecha)body.fecha_actualizacion_base=fecha;
+  return body;
+}
+function ofPrimaryFuenteForCatalogo(rows,key){
+  if(key!=='moviles')return rows[0]||null;
+  return rows.find(function(f){return /Planes Vigentes|Update Plus|Financiamiento/i.test(String(f.nombre_original||f.titulo||''));})
+    ||rows.find(function(f){return !/BYOP|BAN/i.test(String(f.nombre_original||f.titulo||''));})
+    ||rows[0]||null;
+}
+async function ofMovilCompanionIds(primaryId){
+  var r=await api('/api/fuentes-comerciales?familia=moviles');
+  var rows=(r&&r.fuentes||[]).filter(function(f){return f.estado!=='archivada'&&String(f.id)!==String(primaryId||'');});
+  var byop=rows.filter(function(f){return /BYOP|BAN/i.test(String(f.nombre_original||f.titulo||''));});
+  return (byop.length?byop:rows).map(function(f){return f.id;}).slice(0,1);
+}
+function fcMontoBase(v){
+  if(v===null||v===undefined||v==='')return '';
+  var n=Number(v);
+  if(Number.isFinite(n))return '$'+n.toFixed(2);
+  return String(v);
+}
+function fcCargoPlazos(v){
+  if(!v||typeof v!=='object')return '';
+  return ['0m','12m','24m'].filter(function(k){return v[k]!==null&&v[k]!==undefined&&v[k]!=='';}).map(function(k){return k+': '+fcMontoBase(v[k]);}).join(' · ');
+}
 function fcCountBase(cat){var p=fcBasePreview&&fcBasePreview.previews&&fcBasePreview.previews[cat];return p?'('+((p.candidatos_publicos||[]).length)+')':'';}
 function fcSetBaseTab(tab){fcBaseTab=tab;fcBaseSearch='';fcRenderBasePanel();}
 function fcBaseDiffCount(diff,key){var d=diff&&diff.registros||diff&&diff.modulos||{};var v=d[key];return Array.isArray(v)?v.length:Number(v||0);}
+function fcHydrateBaseDraftsFromHistorial(publicaciones){
+  if(!fcBaseFuente)return;
+  (publicaciones||[]).forEach(function(p){
+    if(String(p.fuente_comercial_id)!==String(fcBaseFuente.id))return;
+    if(!['fijo','claro_tv','movil'].includes(p.categoria))return;
+    var actual=fcBaseDrafts[p.categoria];
+    if(!actual||Number(p.numero||0)>=Number(actual.numero||0))fcBaseDrafts[p.categoria]=p;
+  });
+}
 function fcRenderBasePanel(){
   var el=$('fcBasePreviewPanel'); if(!el)return;
   if(!fcBaseFuente){el.innerHTML='';return;}
   var pub=fcBasePublicacionActual(), estado=pub&&pub.estado||'sin_borrador';
-  var canSave=!!fcBasePreview&&!fcBaseDrafts.fijo&&!fcBaseDrafts.claro_tv&&!fcBaseBusy;
+  var categorias=fcBaseCategoriasActivas();
+  var tabs=categorias.map(function(t){return '<button class="btn '+(fcBaseTab===t[0]?'':'ghost')+'" onclick="fcSetBaseTab(\''+t[0]+'\')">'+esc(t[1])+' '+fcCountBase(t[0])+'</button>';}).join('');
+  var canSave=!!fcBasePreview&&!fcBaseDrafts[fcBaseTab]&&!fcBaseBusy;
   var canValidate=pub&&pub.estado==='borrador'&&!fcBaseBusy;
   var canApprove=pub&&pub.estado==='validada'&&!fcBaseBusy;
   var canPublish=pub&&pub.estado==='aprobada'&&!fcBaseBusy;
   el.innerHTML='<div class="card" style="margin-top:12px;padding:14px">'
     +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><b>'+esc(fcBaseFuente.nombre_original||fcBaseFuente.titulo||'Fuente')+'</b><div class="s">Hash '+esc((fcBaseFuente.sha256||'').slice(0,12))+' · No se publica automáticamente; la vista previa tampoco guarda cambios.</div></div><span class="pill '+(estado==='aprobada'||estado==='publicada'?'green':(estado==='sin_borrador'?'amber':'violet'))+'">'+esc(estado)+'</span></div>'
     +'<div class="impgrid" style="margin-top:12px"><div><div class="flbl">Fecha de actualización de la base</div><input class="inp" id="fcBaseFecha" type="date" value="'+esc(fcBasePreview&&fcBasePreview.fecha_actualizacion_base||'')+'"></div><div style="display:flex;align-items:end;gap:8px;flex-wrap:wrap"><button class="btn" id="fcBasePreviewBtn" onclick="fcGenerarBasePreview()" '+(fcBaseBusy?'disabled':'')+'>'+(fcBaseBusy?'Procesando documento':'Generar vista previa')+'</button><button class="btn ghost" onclick="fcLoadBaseHistorial()">Historial</button></div></div>'
-    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn '+(fcBaseTab==='fijo'?'':'ghost')+'" onclick="fcSetBaseTab(\'fijo\')">Fijo '+fcCountBase('fijo')+'</button><button class="btn '+(fcBaseTab==='claro_tv'?'':'ghost')+'" onclick="fcSetBaseTab(\'claro_tv\')">Claro TV '+fcCountBase('claro_tv')+'</button></div>'
-    +(fcBasePreview?fcRenderBasePreviewBody():'<div class="empty" style="padding:18px">Seleccioná la fecha y generá la vista previa.</div>')
-    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="fcGuardarBaseBorrador()" '+(canSave?'':'disabled')+'>Guardar borrador</button><button class="btn ghost" onclick="fcBaseTransicion(\'validar\')" '+(canValidate?'':'disabled')+'>Validar</button><button class="btn ghost" onclick="fcBaseTransicion(\'aprobar\')" '+(canApprove?'':'disabled')+'>Aprobar</button><button class="btn green" onclick="fcBaseTransicion(\'publicar\')" '+(canPublish?'':'disabled')+'>Publicar</button></div>'
-    +'<div id="fcBaseEstado" class="s" style="margin-top:8px"></div></div>';
+    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+tabs+'</div>'
+    +(fcBasePreview?fcRenderBasePreviewBody():'<div class="empty" style="padding:18px">Generá la vista previa. Si el boletín trae fecha clara, se detecta automáticamente.</div>')
+    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="fcGuardarBaseBorrador()" '+(fcBaseBusy?'disabled':'')+'>Guardar borrador</button><button class="btn ghost" onclick="fcBaseTransicion(\'validar\')" '+(canValidate?'':'disabled')+'>Validar</button><button class="btn ghost" onclick="fcBaseTransicion(\'aprobar\')" '+(canApprove?'':'disabled')+'>Aprobar</button><button class="btn green" onclick="fcBaseTransicion(\'publicar\')" '+(canPublish?'':'disabled')+'>Publicar</button></div>'
+    +'<div id="fcBaseEstado" class="s" style="margin-top:8px">'+fcBaseMessage+'</div></div>';
 }
 function fcRenderBasePreviewBody(){
   var p=fcBasePreview.previews&&fcBasePreview.previews[fcBaseTab]; if(!p)return '<div class="empty">Sin datos de '+esc(fcBaseTab)+'</div>';
   var q=fcBaseSearch.toLowerCase().trim(), rows=(p.candidatos_publicos||[]).filter(function(r){return !q||Object.values(r).some(function(v){return String(v).toLowerCase().includes(q);});});
   var modulos=(p.modulos_generados||[]).map(function(m){return '<tr><td>'+esc(m.seccion_key)+'</td><td>'+esc(m.titulo||'')+'</td><td class="r">'+(((m.contenido||{}).filas||[]).length)+'</td></tr>';}).join('');
-  var excluidos=(p.contenido_excluido||[]).slice(0,30).map(function(x){return '<tr><td>'+esc(x.categoria||'')+'</td><td>'+esc(x.codigo||'')+'</td><td>'+esc(x.descripcion||x.texto_original||'')+'</td></tr>';}).join('');
   var errores=(p.validacion&&p.validacion.errores||[]).map(function(e){return '<div class="pill red" style="margin:2px">'+esc(e.codigo||e.message||e)+'</div>';}).join('');
   var advertencias=(p.validacion&&p.validacion.advertencias||[]).map(function(e){return '<div class="pill amber" style="margin:2px">'+esc(e.codigo||e.message||e)+'</div>';}).join('');
   return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px">'
     +['nuevos','modificados','eliminados','sin_cambios'].map(function(k){return '<div class="kpi"><div class="l">'+esc(k.replace('_',' '))+'</div><div class="v">'+fcBaseDiffCount(p.diferencias,k)+'</div></div>';}).join('')+'</div>'
     +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span class="pill '+(p.publicable?'green':'red')+'">'+(p.publicable?'Publicable':'Bloqueado')+'</span>'+errores+advertencias+'</div>'
-    +'<div class="grid2" style="margin-top:12px"><div class="card" style="padding:12px"><b>Módulos</b><div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Sección</th><th>Módulo</th><th class="r">Registros</th></tr></thead><tbody>'+(modulos||'<tr><td colspan="3">Sin módulos</td></tr>')+'</tbody></table></div></div>'
-    +'<div class="card" style="padding:12px"><b>Contenido excluido</b><div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Categoría</th><th>Código</th><th>Descripción</th></tr></thead><tbody>'+(excluidos||'<tr><td colspan="3">Sin excluidos</td></tr>')+'</tbody></table></div></div></div>'
-    +'<div class="card" style="padding:12px;margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b>Registros candidatos</b><input class="inp" style="max-width:260px" placeholder="Buscar" value="'+esc(fcBaseSearch)+'" oninput="fcBaseSearch=this.value;fcRenderBasePanel()"></div><div style="overflow-x:auto;margin-top:8px"><table style="min-width:760px"><thead><tr><th>Código</th><th>Descripción</th><th class="r">Precio</th><th>Tecnología</th><th>Sección</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+esc(r.codigo||'')+'</td><td>'+esc(r.descripcion||'')+'</td><td class="r">'+esc(r.precio_texto||r.precio||'')+'</td><td>'+esc(r.tecnologia||'')+'</td><td>'+esc(r.seccion_key||'')+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+    +'<div class="card" style="padding:12px;margin-top:12px"><b>Módulos</b><div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Sección</th><th>Módulo</th><th class="r">Registros</th></tr></thead><tbody>'+(modulos||'<tr><td colspan="3">Sin módulos</td></tr>')+'</tbody></table></div></div>'
+    +'<div class="card" style="padding:12px;margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b>Registros candidatos</b><input class="inp" style="max-width:260px" placeholder="Buscar" value="'+esc(fcBaseSearch)+'" oninput="fcBaseSearch=this.value;fcRenderBasePanel()"></div><div style="overflow-x:auto;margin-top:8px"><table style="min-width:1180px"><thead><tr><th>Código</th><th>Descripción</th><th class="r">Precio</th><th>Tecnología</th><th class="r">Min. adicional</th><th>Instalación</th><th>Activación</th><th class="r">Penalidad</th><th>Sección</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+esc(r.codigo||'')+'</td><td>'+esc(r.descripcion||'')+'</td><td class="r">'+esc(r.precio_texto||fcMontoBase(r.precio))+'</td><td>'+esc(r.tecnologia||'')+'</td><td class="r">'+esc(fcMontoBase(r.minuto_adicional))+'</td><td>'+esc(fcCargoPlazos(r.instalacion))+'</td><td>'+esc(fcCargoPlazos(r.activacion))+'</td><td class="r">'+esc(fcMontoBase(r.penalidad))+'</td><td>'+esc(r.seccion_key||'')+'</td></tr>';}).join('')+'</tbody></table></div></div>';
 }
 async function fcGenerarBasePreview(){
   var fecha=String($('fcBaseFecha')&&$('fcBaseFecha').value||'').trim();
-  if(!fecha){alert('Ingresá la fecha de actualización de la base');return;}
-  fcBaseBusy=true;fcRenderBasePanel();
-  try{fcBasePreview=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base',{method:'POST',body:{fecha_actualizacion_base:fecha}});fcBaseDrafts={};}
-  catch(e){alert(fcMensajeApi(e));}
+  if(fcBaseModuleKey==='moviles'&&!fcBaseCompanionIds.length){fcBaseMessage='<span class="pill red">Falta BYOP-BAN</span> Guarda también la fuente BYOP-BAN para generar Planes Moviles.';fcRenderBasePanel();return;}
+  fcBaseBusy=true;fcBaseMessage='Generando vista previa...';fcRenderBasePanel();
+  try{fcBasePreview=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody(fecha)});fcBaseDrafts={};fcBaseMessage='<span class="pill green">Vista previa lista</span> Ahora puedes guardar borrador.';}
+  catch(e){fcBaseMessage='<span class="pill red">No se pudo generar vista previa</span> '+esc(fcMensajeApi(e));alert(fcMensajeApi(e));}
   finally{fcBaseBusy=false;fcRenderBasePanel();}
 }
 async function fcGuardarBaseBorrador(){
-  var fecha=fcBasePreview&&fcBasePreview.fecha_actualizacion_base;if(!fecha)return;
-  fcBaseBusy=true;fcRenderBasePanel();
-  try{var r=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base/borradores',{method:'POST',body:{fecha_actualizacion_base:fecha}});fcBaseDrafts={};(r.publicaciones||[]).forEach(function(p){fcBaseDrafts[p.categoria]=p;});fcLoadBaseHistorial();}
-  catch(e){alert(fcMensajeApi(e));}
+  if(!fcBaseFuente){fcBaseMessage='<span class="pill red">Falta fuente</span> Primero selecciona o carga el documento oficial.';fcRenderBasePanel();return;}
+  if(!fcBasePreview){fcBaseMessage='<span class="pill amber">Primero genera la vista previa</span> Después se puede guardar borrador.';fcRenderBasePanel();return;}
+  var fecha=String(fcBasePreview&&fcBasePreview.fecha_actualizacion_base||$('fcBaseFecha')&&$('fcBaseFecha').value||'').trim();
+  if(!fecha){fcBaseMessage='<span class="pill red">Falta fecha base</span> Genera la vista previa o escribe la fecha de actualización.';fcRenderBasePanel();return;}
+  if(fcBaseModuleKey==='moviles'&&!fcBaseCompanionIds.length){fcBaseMessage='<span class="pill red">Falta BYOP-BAN</span> Guarda también la fuente BYOP-BAN para generar Planes Moviles.';fcRenderBasePanel();return;}
+  fcBaseBusy=true;fcBaseMessage='Guardando borrador...';fcRenderBasePanel();
+  try{var r=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base/borradores',{method:'POST',body:fcBasePreviewRequestBody(fecha)});fcBaseDrafts={};(r.publicaciones||[]).forEach(function(p){fcBaseDrafts[p.categoria]=p;});fcBaseMessage='<span class="pill green">Borrador guardado</span> Revisa '+esc(fcBaseModuleKey==='moviles'?'Planes Moviles':'Fijo y Claro TV')+'; luego puedes validar.';fcLoadBaseHistorial();}
+  catch(e){fcBaseMessage='<span class="pill red">No se pudo guardar borrador</span> '+esc(fcMensajeApi(e));alert(fcMensajeApi(e));}
   finally{fcBaseBusy=false;fcRenderBasePanel();}
 }
 async function fcBaseTransicion(accion){
-  var pub=fcBasePublicacionActual(); if(!pub)return;
+  var pub=fcBasePublicacionActual();
+  if(!pub){fcBaseMessage='<span class="pill amber">No hay borrador activo</span> Guardá el borrador o esperá que cargue el historial.';fcRenderBasePanel();fcLoadBaseHistorial();return;}
   if(accion==='publicar'&&!confirm('Publicar '+fcBaseTab+' actualizará el portal local y reemplazará la versión vigente. ¿Continuar?'))return;
-  fcBaseBusy=true;fcRenderBasePanel();
-  try{var r=await api('/api/fuentes-comerciales/bases-informativas/'+pub.id+'/'+accion,{method:'POST'});fcBaseDrafts[fcBaseTab]=r.publicacion;fcLoadBaseHistorial();}
-  catch(e){alert(fcMensajeApi(e));}
+  fcBaseBusy=true;fcBaseMessage='Procesando '+accion+'...';fcRenderBasePanel();
+  try{var r=await api('/api/fuentes-comerciales/bases-informativas/'+pub.id+'/'+accion,{method:'POST'});fcBaseDrafts[fcBaseTab]=r.publicacion;fcBaseMessage='<span class="pill green">Transición aplicada</span> '+esc(fcBaseTab)+' quedó en estado '+esc(r.publicacion&&r.publicacion.estado||'actualizado')+'.';fcLoadBaseHistorial();}
+  catch(e){fcBaseMessage='<span class="pill red">No se pudo '+esc(accion)+'</span> '+esc(fcMensajeApi(e));alert(fcMensajeApi(e));}
   finally{fcBaseBusy=false;fcRenderBasePanel();}
 }
 async function fcLoadBaseHistorial(){
   var el=$('fcBaseHistorial'); if(!el)return;
-  try{var r=await api('/api/fuentes-comerciales/bases-informativas/historial');var rows=(r.publicaciones||[]).filter(function(p){return p.categoria==='fijo'||p.categoria==='claro_tv';}).slice(0,20).map(function(p){return '<tr><td>'+esc(p.categoria)+'</td><td>'+esc(p.numero||'')+'</td><td><span class="pill '+(p.estado==='publicada'?'green':(p.estado==='aprobada'?'violet':'amber'))+'">'+esc(p.estado)+'</span></td><td>'+esc(String(p.fecha_actualizacion_base||'').slice(0,10))+'</td><td class="r">'+esc(p.candidatos_total||0)+'</td><td>'+esc(p.fuente_nombre||'')+'</td></tr>';}).join('');el.innerHTML='<div class="card" style="padding:12px"><b>Historial de bases informativas</b><div style="overflow-x:auto;margin-top:8px"><table style="min-width:760px"><thead><tr><th>Categoría</th><th>Versión</th><th>Estado</th><th>Fecha base</th><th class="r">Candidatos</th><th>Fuente</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Sin historial.</td></tr>')+'</tbody></table></div></div>';}
+  try{var r=await api('/api/fuentes-comerciales/bases-informativas/historial');fcHydrateBaseDraftsFromHistorial(r.publicaciones||[]);var permitidas=fcBaseModuleKey==='moviles'?['movil']:['fijo','claro_tv'];var rows=(r.publicaciones||[]).filter(function(p){return permitidas.includes(p.categoria);}).slice(0,20).map(function(p){return '<tr><td>'+esc(p.categoria)+'</td><td>'+esc(p.numero||'')+'</td><td><span class="pill '+(p.estado==='publicada'?'green':(p.estado==='aprobada'?'violet':'amber'))+'">'+esc(p.estado)+'</span></td><td>'+esc(String(p.fecha_actualizacion_base||'').slice(0,10))+'</td><td class="r">'+esc(p.candidatos_total||0)+'</td><td>'+esc(p.fuente_nombre||'')+'</td></tr>';}).join('');el.innerHTML='<div class="card" style="padding:12px"><b>Historial de bases informativas</b><div style="overflow-x:auto;margin-top:8px"><table style="min-width:760px"><thead><tr><th>Categoría</th><th>Versión</th><th>Estado</th><th>Fecha base</th><th class="r">Candidatos</th><th>Fuente</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Sin historial.</td></tr>')+'</tbody></table></div></div>';fcRenderBasePanel();}
   catch(e){el.innerHTML='<div class="empty">No se pudo cargar historial: '+fcMensajeApi(e)+'</div>';}
 }
 function fcToggleFuente(id,checked){id=String(id);if(checked&&!fcSeleccionadas.includes(id))fcSeleccionadas.push(id);if(!checked)fcSeleccionadas=fcSeleccionadas.filter(function(x){return x!==id;});}
@@ -2157,7 +2483,7 @@ async function fcPublicarPlanesFijos(){if(!fcPreviewPlanesFijosData||!fcPreviewP
 // Tab "Ofertas" (Excel móviles) = lo maneja el programador
 async function ofRenderOfertasTienda(){
   var b=$('ofBody'); if(!b)return;
-  b.innerHTML='<div class="panel"><h3>🛍 Ofertas (Excel móviles)</h3>'
+  b.innerHTML='<div class="panel"><h3>ðŸ› Ofertas (Excel móviles)</h3>'
     +'<div class="s" style="color:var(--txt2)">El parser del boletín de ofertas móviles (financiamiento) lo maneja tu programador. '
     +'Cuando esté listo, se enchufa acá el flujo <b>subir Excel → analizar → aplicar</b>, igual que en Planes Fijos.</div></div>';
 }
@@ -2180,76 +2506,25 @@ async function omPublicar(){if(!omPreviewData?.version_id)return;var desde=$('om
 
 // ----- SERVICIOS / FEATURES -----
 function ofServicioById(docId, hojaNum){
-  var doc=OF_SERVICIOS.find(function(d){return d.id===docId;});
-  if(!doc)return null;
-  var hoja=doc.hojas.find(function(h){return Number(h.n)===Number(hojaNum);});
-  return hoja?{doc:doc,hoja:hoja}:null;
+  return null;
 }
 async function ofRenderServicios(){
   var b=$('ofBody'); if(!b)return;
-  var alertas=OF_SERVICIOS.filter(function(d){return d.estado!=='Vigente';}).map(function(d){
-    return `<div class="card" style="padding:12px;border-color:var(--${d.estadoClass==='red'?'red':'amber'}-border);min-width:220px;flex:1">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>${esc(d.titulo)}</b><span class="pill ${d.estadoClass}">${esc(d.estado)}</span></div>
-      <div class="s" style="margin-top:6px">${esc(d.vigencia)}</div></div>`;
-  }).join('');
-  var docs=OF_SERVICIOS.map(function(d){
-    var hojas=d.hojas.map(function(h){
-      return `<button class="btn ghost" style="justify-content:flex-start;text-align:left" onclick="openServicioModal('${d.id}',${h.n})">${esc(h.titulo)}</button>`;
-    }).join('');
-    var notas=(d.notas||[]).map(function(n){return `<li>${esc(n)}</li>`;}).join('');
-    return `<div class="card" style="padding:14px;margin-bottom:12px">
-      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap">
-        <div><h3 style="margin:0">${esc(d.titulo)}</h3><div class="s" style="margin-top:3px">${esc(d.archivo)} · ${esc(d.vigencia)}</div></div>
-        <span class="pill ${d.estadoClass}">${esc(d.estado)}</span>
-      </div>
-      <div class="s" style="margin:10px 0;color:var(--txt2)">${esc(d.resumen)}</div>
-      ${d.soloResumen?'':`${d.soloTitulos?'':`<ul class="s" style="margin:0 0 12px 18px;color:var(--txt2)">${notas}</ul>`}
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px">${hojas}</div>`}
-    </div>`;
-  }).join('');
-  b.innerHTML=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
-      <div><h3 style="margin:0">Alertas de vigencia</h3><div class="s" style="margin-top:4px">Boletines vencidos o sin fecha final para que admin los revise antes de publicar.</div></div>
-      <span class="pill amber">${OF_SERVICIOS.length} documentos cargados</span>
-    </div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${alertas}</div></div>
-    <div class="panel"><h3 style="margin-top:0">Hojas de servicios descargables</h3>${docs}${ofRenderServiciosSocs()}${ofRenderSeguroEquipos()}</div>`;
-}
-function ofMoney(n){return '$'+Number(n||0).toFixed(2);}
-function ofRenderServiciosSocs(){
-  var rows=OF_SERVICIOS_SOCS.map(function(s){
-    return `<tr><td><b>${esc(s.descripcion)}</b></td><td>${esc(s.socMovil)}</td><td>${esc(s.socFijo)}</td><td><b>${ofMoney(s.renta)}</b></td></tr>`;
-  }).join('');
-  return `<div class="card" style="padding:14px;margin-top:12px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">SOCS Y CODIGOS DE EMISION</h3><div class="s" style="margin-top:4px">Servicios individuales y combinados oficiales para sumar a la propuesta.</div></div><span class="pill blue">Precios oficiales</span></div>
-    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:760px"><thead><tr><th>Descripcion</th><th>SOC movil</th><th>Alphacode / SOC fijo</th><th>Renta mensual</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="s" style="margin-top:8px;color:var(--txt2)">Estos son cargos de servicios. No usar aqui precios de paquetes de Internet + Telefonia.</div>
+  b.innerHTML=`<div class="panel">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+      <div><h3 style="margin:0">Servicios</h3><div class="s" style="margin-top:6px;color:var(--txt2)">Pendiente de publicación oficial. No se muestran precios, seguros, promociones ni documentos heredados.</div></div>
+      <span class="pill amber">Sin fuente publicada</span>
+    </div>
   </div>`;
+}
+function ofRenderServiciosSocs(){
+  return '';
 }
 function ofRenderSeguroEquipos(){
-  var rows=OF_SEGUROS_EQUIPOS.map(function(s,i){
-    return `<tr><td style="text-align:center"><input type="checkbox" id="of_seg_${i}"></td><td><b>${esc(s.rango)}</b></td><td>${esc(s.deducible)}</td><td>${esc(s.prima)}</td><td><input class="inp" type="number" min="0" step="1" value="0" style="width:90px;text-align:center"></td></tr>`;
-  }).join('');
-  return `<div class="card" style="padding:14px;margin-top:12px">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Seguro de equipos a escoger</h3><div class="s" style="margin-top:4px">Check para escoger y cantidad de unidades editable desde 0.</div></div><span class="pill violet">Opcional</span></div>
-    <div style="overflow-x:auto;margin-top:12px"><table style="min-width:720px"><thead><tr><th>Escoger</th><th>Costo del Equipo</th><th>Deducible por unidad</th><th>Prima por unidad mensual</th><th>Cantidad de unidades</th></tr></thead><tbody>${rows}</tbody></table></div>
-  </div>`;
+  return '';
 }
 function openServicioModal(docId, hojaNum){
-  var item=ofServicioById(docId, hojaNum); if(!item){ alert('No se encontro la hoja'); return; }
-  var d=item.doc, h=item.hoja;
-  var html=`<div class="modal-bg" id="servicioModalBg" style="z-index:180">
-    <div class="modal" style="max-width:980px;width:94vw;max-height:92vh;overflow:auto">
-      <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-        <div><h3 style="margin:0">${esc(d.titulo)} · ${esc(h.titulo)}</h3><div class="s">${esc(d.vigencia)} · ${esc(d.estado)}</div></div>
-        <button class="btn ghost" onclick="closeServicioModal()">Cerrar</button>
-      </div>
-      <div class="s" style="margin-bottom:10px;color:var(--txt2)">${esc(h.desc)}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <button class="btn green" onclick="downloadServicioImage('${h.img}','${d.id}-hoja-${h.n}.png')">Descargar imagen</button>
-        <a class="btn ghost" href="${h.img}" target="_blank" rel="noopener">Abrir imagen</a>
-      </div>
-      <div class="card" style="padding:8px;background:#fff;overflow:auto"><img src="${h.img}" alt="${esc(h.titulo)}" style="display:block;width:100%;height:auto"></div>
-    </div></div>`;
-  document.body.insertAdjacentHTML('beforeend',html);
+  alert('Servicios pendiente de publicación oficial.');
 }
 function closeServicioModal(){ var el=$('servicioModalBg'); if(el)el.remove(); }
 function downloadServicioImage(src, name){
@@ -2334,7 +2609,7 @@ const PL_LABEL={fijos:'Planes Fijos',moviles:'Planes Móviles',inalambrico:'Inal
 async function ofRenderPlanesPagina(pagina){
   plPagina=pagina; plPreview=null;
   var b=$('ofBody'); if(!b)return;
-  b.innerHTML=`<div class="panel"><h3>🤖 Constructor de Ofertas — ${PL_LABEL[pagina]||pagina}</h3>
+  b.innerHTML=`<div class="panel"><h3>ðŸ¤– Constructor de Ofertas — ${PL_LABEL[pagina]||pagina}</h3>
     <div class="s" style="margin-bottom:8px">Subí el documento oficial (PDF: listado de planes fijos o boletín inalámbrico). Se detecta el tipo, se compara con lo publicado y se muestran los cambios <b>antes</b> de aplicar.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><input type="file" id="plDoc" accept=".pdf,.xlsx,.xls" class="inp" style="flex:1;min-width:240px"><button class="btn" onclick="plAnalizar()">🔎 Analizar documento</button></div>
     <div id="plPreview"></div></div>
@@ -2364,7 +2639,7 @@ function plModCard(m){
       <div><div class="flbl">Orden</div><input class="inp" id="pl_o_${m.id}" value="${Number(m.orden||0)}"></div></div>
     <details style="margin-top:8px"><summary class="s" style="cursor:pointer">Contenido (JSON)</summary><textarea class="inp" id="pl_c_${m.id}" style="width:100%;min-height:140px;font-family:monospace;font-size:12px;margin-top:6px">${cont}</textarea></details>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-      <button class="btn green" onclick="plGuardar(${m.id})">💾 Guardar</button>
+      <button class="btn green" onclick="plGuardar(${m.id})">ðŸ’¾ Guardar</button>
       <button class="btn ghost" onclick="plToggle(${m.id},${!m.activo})">${m.activo?'Desactivar':'Activar'}</button>
       <span style="flex:1"></span>
       <input type="file" id="pl_pdf_${m.id}" accept=".pdf" class="inp" style="max-width:200px">
@@ -2442,17 +2717,94 @@ async function plAplicar(previewId){
   }catch(e){ alert('No se pudo aplicar: '+e.message); }
 }
 
-// ---------------- PROSPECCIÓN (Google Places) ----------------
-let prPoll=null, prMeta=null;
+// ---------------- PROSPECCIÓN (Google Places + Apify preview) ----------------
+let prPoll=null, prMeta=null, prApifyPreview=[], prApifyLastResult=null;
 async function viewProspeccion(){
-  return `<div class="head"><div><h1>Prospección · Google</h1><div class="s">Barre negocios de Puerto Rico y los junta en una base aparte (prospectos) para mapear después</div></div></div>
+  return `<div class="head"><div><h1>Prospección · Apify</h1><div class="s">Buscar negocios, revisar resultados y guardar solo los aprobados en prospectos</div></div></div>
+  <div class="panel" id="prApifyPanel">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <div><h3 style="margin:0">Buscar negocios</h3><div class="s">Preview sin guardar. Airtable se intenta solo después de guardar en CRM.</div></div>
+      <button class="btn" onclick="prApifySearch()">Buscar</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end">
+      <div><div class="flbl">Rubro</div><input class="inp" id="prApifyRubro" placeholder="Ej. farmacia"></div>
+      <div><div class="flbl">Zona</div><input class="inp" id="prApifyZona" placeholder="Ej. San Juan"></div>
+      <div><div class="flbl">Cantidad</div><input class="inp" id="prApifyCantidad" type="number" min="1" max="200" value="25"></div>
+      <div style="display:flex;gap:12px;align-items:center;min-height:38px;flex-wrap:wrap">
+        <label class="s"><input type="checkbox" id="prApifyTelefono" checked> Con teléfono</label>
+        <label class="s"><input type="checkbox" id="prApifyWebsite"> Con web</label>
+      </div>
+    </div>
+    <div id="prApifyMsg" class="s" style="margin-top:8px"></div>
+    <div id="prApifyPreview" style="margin-top:10px"></div>
+  </div>
   <div class="panel" id="prCtrl"><div class="s">Cargando…</div></div>
   <div id="prProgress"></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Prospectos recolectados</h3><input class="inp" id="prSearch" placeholder="Buscar nombre o dirección…" style="max-width:280px" oninput="prLoadList()"></div><div id="prList" style="margin-top:10px"><div class="s">Cargando…</div></div></div>`;
 }
 async function reProspeccion(){ $('view').innerHTML=await viewProspeccion(); prInit(); }
-async function prInit(){ await prLoadMeta(); prRenderCtrl(); prLoadList(); prPollStatus(true); }
+async function prInit(){ prRenderApifyPreview(); await prLoadMeta(); prRenderCtrl(); prLoadList(); prPollStatus(true); }
 async function prLoadMeta(){ try{ prMeta=await api('/api/prospectos/meta'); }catch(e){ prMeta=null; } }
+function prApifyCriteria(){
+  return {
+    rubro: (($('prApifyRubro')&&$('prApifyRubro').value)||'').trim(),
+    zona: (($('prApifyZona')&&$('prApifyZona').value)||'').trim(),
+    cantidad: Number(($('prApifyCantidad')&&$('prApifyCantidad').value)||25),
+    filtros: {
+      telefono: !!($('prApifyTelefono')&&$('prApifyTelefono').checked),
+      website: !!($('prApifyWebsite')&&$('prApifyWebsite').checked)
+    }
+  };
+}
+async function prApifySearch(){
+  var msg=$('prApifyMsg'); if(msg)msg.textContent='Buscando en Apify…';
+  prApifyPreview=[]; prApifyLastResult=null; prRenderApifyPreview();
+  try{
+    var r=await api('/api/prospectos/apify/preview',{method:'POST',body:prApifyCriteria()});
+    prApifyPreview=((r&&r.data)||[]).map(function(p){ p._selected=true; return p; });
+    prApifyLastResult=null;
+    if(msg)msg.textContent=(r.total_raw||0)+' resultados recibidos · '+prApifyPreview.length+' disponibles para revisar';
+    prRenderApifyPreview();
+  }catch(e){ if(msg)msg.textContent='No se pudo buscar: '+e.message; }
+}
+function prApifyToggle(i,checked){ if(prApifyPreview[i]){ prApifyPreview[i]._selected=checked; prRenderApifySummary(); } }
+function prRenderApifySummary(){
+  var el=$('prApifySummary'); if(!el)return;
+  var selected=prApifyPreview.filter(function(p){return p._selected;}).length;
+  el.textContent=selected+' seleccionados de '+prApifyPreview.length;
+}
+function prRenderApifyPreview(){
+  var el=$('prApifyPreview'); if(!el)return;
+  if(prApifyLastResult){
+    var cls=prApifyLastResult.status==='partial'?'var(--amber)':'var(--green)';
+    el.innerHTML='<div style="background:var(--bg);border:1px solid '+cls+';border-radius:8px;padding:10px 12px"><b>Resultado</b><div class="s">'
+      +'CRM guardados: '+((prApifyLastResult.crm&&prApifyLastResult.crm.saved)||0)
+      +' · Airtable sincronizados: '+((prApifyLastResult.airtable&&prApifyLastResult.airtable.synced)||0)
+      +(prApifyLastResult.status==='partial'?' · Error Airtable: '+esc((prApifyLastResult.airtable&&prApifyLastResult.airtable.error)||''):'')
+      +'</div></div>';
+    return;
+  }
+  if(!prApifyPreview.length){ el.innerHTML='<div class="empty">Haz una búsqueda para revisar resultados antes de guardar.</div>'; return; }
+  var rows=prApifyPreview.map(function(p,i){
+    return '<tr><td><input type="checkbox" '+(p._selected?'checked':'')+' onchange="prApifyToggle('+i+',this.checked)"></td>'
+      +'<td><b>'+esc(p.name||'')+'</b><div class="s">'+esc(p.address||'')+'</div></td>'
+      +'<td>'+esc(p.city||'')+'</td><td>'+esc(p.phone||'—')+'</td><td>'+esc(p.website||'—')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap"><div class="s" id="prApifySummary"></div><button class="btn green" onclick="prApifySave()">Guardar seleccionados</button></div>'
+    +'<div class="card" style="overflow-x:auto"><table style="min-width:760px"><thead><tr><th></th><th>Negocio</th><th>Ciudad</th><th>Teléfono</th><th>Web</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  prRenderApifySummary();
+}
+async function prApifySave(){
+  var selected=prApifyPreview.filter(function(p){return p._selected;});
+  var msg=$('prApifyMsg'); if(!selected.length){ if(msg)msg.textContent='Selecciona al menos un prospecto.'; return; }
+  if(msg)msg.textContent='Guardando en CRM y luego sincronizando Airtable…';
+  try{
+    var r=await api('/api/prospectos/apify/save',{method:'POST',body:{prospects:selected}});
+    prApifyPreview=[]; prApifyLastResult=r; prRenderApifyPreview();
+    if(msg)msg.textContent=r.status==='partial'?'Guardado en CRM con error parcial de Airtable.':'Guardado y sincronización terminados.';
+    prLoadMeta().then(prRenderCtrl); prLoadList();
+  }catch(e){ if(msg)msg.textContent='No se pudo guardar: '+e.message; }
+}
 function prRenderCtrl(){
   var el=$('prCtrl'); if(!el)return; var m=prMeta||{};
   el.innerHTML='<div class="kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">'
@@ -2614,7 +2966,7 @@ function renderImpStep2(){
   var fieldLabel={}; IMP_FIELDS.forEach(function(fd){fieldLabel[fd[0]]=fd[1];});
   // 1) arriba: los botones REALES de lo que subió (sus columnas)
   var cols=visibleColumns.map(function(column){ var h=column.h,i=column.i; return '<span class="impcol'+(asignado[i]!=null?' used':'')+'">'+(h||('col '+(i+1)))+'</span>'; }).join('');
-  // 2) tabla dos columnas: TU EXCEL (izq) -> A DÓNDE VA (der), una fila por columna del archivo, en su orden
+  // 2) tabla dos columnas: TU EXCEL (izq) -> A DÓDE VA (der), una fila por columna del archivo, en su orden
   var filas=visibleColumns.map(function(column){
     var h=column.h,i=column.i;
     var k=asignado[i];
@@ -2785,7 +3137,7 @@ async function router(){
 }
 window.addEventListener('hashchange',router);
 
-// ---------------- SESIÓN / LOGIN (Tango V2) ----------------
+// ---------------- SESIÓ / LOGIN (Tango V2) ----------------
 function setSession(t,u){ token=t; currentUser=u; applySellerProfile(); try{localStorage.setItem('vp_token',t);localStorage.setItem('vp_user',JSON.stringify(u||{}));}catch(e){} }
 function clearSession(){ token=null; currentUser=null; if(callReminderTimer){clearInterval(callReminderTimer);callReminderTimer=null;} var cr=$('callReminderBox'); if(cr)cr.remove(); try{localStorage.removeItem('vp_token');localStorage.removeItem('vp_user');}catch(e){} }
 function logout(){ clearSession(); showLogin(); }

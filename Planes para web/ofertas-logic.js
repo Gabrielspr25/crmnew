@@ -1,31 +1,36 @@
 // ofertas-logic.js
-// Motor de filtrado del Constructor de Ofertas 2 (Excel PYMES 9-22 jun 2026).
-// Depende de OFERTAS_DATA (ofertas-data.js).
+// Motor de filtrado. Los datos y montos se inyectan desde publicaciones vigentes.
 
-const PLAN_MULTILINEA_NUM = {
-  plus: 65,
-  extreme: 75,
-  supreme: 95,
-  sinfronteras: 100
-};
+const publishedPlanAmounts = () => window.CONSTRUCTOR_PLAN_AMOUNTS || {};
+const publishedPlanLabels = () => window.CONSTRUCTOR_PLAN_LABELS || {};
 
-const PLAN_MULTILINEA_LABEL = {
-  plus: 'Plus ($65)',
-  extreme: 'Extreme ($75)',
-  supreme: 'Supreme ($95)',
-  sinfronteras: 'Sin Fronteras ($100)'
-};
+function canonicalToken(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
 
-const PLAN_MULTILINEA_RANK = {
-  plus: 65,
-  extreme: 75,
-  supreme: 95,
-  sinfronteras: 100
-};
+function canonicalEvent(value) {
+  const token = canonicalToken(value);
+  if (token === 'nueva' || token === 'lineanueva') return 'lineanueva';
+  if (token === 'adicional' || token === 'lineaadicional') return 'lineaadicional';
+  return token;
+}
+
+function canonicalFamily(value) {
+  const token = canonicalToken(value);
+  if (token.includes('sinfronteras')) return 'sinfronteras';
+  if (token.includes('extreme')) return 'extreme';
+  if (token.includes('supreme')) return 'supreme';
+  if (token.includes('plus')) return 'plus';
+  return token;
+}
 
 function getPlanNum(state) {
   if (state.tipo === 'individual') return Number(state.planInd) || 0;
-  return PLAN_MULTILINEA_NUM[state.planMulti] || 65;
+  return Number(publishedPlanAmounts()[state.planMulti] || 0);
 }
 
 // Ofertas aplicables segun evento/tipo/plan/beneficio.
@@ -37,7 +42,7 @@ function getOfertasAplicables(state) {
     if (state.beneficio !== 'todos' && oferta.beneficio !== state.beneficio) return false;
     if (Array.isArray(oferta.eventos) && oferta.eventos.length) {
       const evento = state.lineEvent || (Array.isArray(state.eventos) ? state.eventos[0] : null);
-      if (!oferta.eventos.includes(evento)) return false;
+      if (!oferta.eventos.some(item => canonicalEvent(item) === canonicalEvent(evento))) return false;
     }
 
     // 2. Filtro de tipo individual vs multilinea
@@ -46,9 +51,12 @@ function getOfertasAplicables(state) {
       if (Array.isArray(oferta.planesIndividuales)) return oferta.planesIndividuales.includes(plan);
     } else {
       if (oferta.tipo === 'individual') return false;
-      if (Array.isArray(oferta.familiasMultilinea)) return oferta.familiasMultilinea.includes(state.planMulti);
+      if (Array.isArray(oferta.familiasMultilinea)) {
+        return oferta.familiasMultilinea.some(item => canonicalFamily(item) === canonicalFamily(state.planMulti));
+      }
       // verificar familia multilinea segun terminos del Excel
-      if (oferta.familias.length > 0 && !oferta.familias.includes(state.planMulti)) return false;
+      if (Array.isArray(oferta.familias) && oferta.familias.length > 0
+        && !oferta.familias.some(item => canonicalFamily(item) === canonicalFamily(state.planMulti))) return false;
     }
 
     // 3. Regla general: un plan mayor hereda ofertas/equipos de planes menores,
@@ -135,9 +143,9 @@ function calcularTablaComercial(oferta, equipoPrecio) {
 
 // Exponer global
 window.OfertasLogic = {
-  PLAN_MULTILINEA_NUM,
-  PLAN_MULTILINEA_LABEL,
-  PLAN_MULTILINEA_RANK,
+  get PLAN_MULTILINEA_NUM(){ return publishedPlanAmounts(); },
+  get PLAN_MULTILINEA_LABEL(){ return publishedPlanLabels(); },
+  get PLAN_MULTILINEA_RANK(){ return publishedPlanAmounts(); },
   getPlanNum,
   getOfertasAplicables,
   getEquiposFiltrados,

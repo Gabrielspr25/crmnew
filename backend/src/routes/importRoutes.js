@@ -424,6 +424,7 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
         type: 'import_apply',
         entity: 'importador',
         detail: `Importador aplicado: ${rows.length} filas, ${out.subs_actualizados} suscriptores actualizados, ${out.subs_creados} nuevos, ${out.clientes_actualizados} clientes actualizados, ${out.clientes_creados} clientes nuevos.`,
+        ip: req.ip,
         meta: {
           total_filas: rows.length,
           clientes_creados: out.clientes_creados,
@@ -472,6 +473,7 @@ importRouter.post('/import/bajas', requireAuth, async (req, res) => {
         type: 'import_bajas',
         entity: 'importador',
         detail: `Bajas aplicadas desde importador: ${rs.rowCount} lineas canceladas, ${rb.rowCount} BANs cancelados.`,
+        ip: req.ip,
         meta: { subs_cancelados: rs.rowCount, bans_cancelados: rb.rowCount, archivo_telefonos: phones.length, archivo_bans: bans.length },
       });
     } catch (e) {

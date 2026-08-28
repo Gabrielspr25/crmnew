@@ -204,29 +204,16 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
         active_subscriber_count DESC,
         primary_sale_date ASC NULLS LAST,
         created_at DESC`;
-
-  const conn = await pool.connect();
-  try {
-    // SET LOCAL solo dura la transacción y se revierte al COMMIT/ROLLBACK,
-    // así NO contamina la conexión cuando vuelve al pool (bug aprendido).
-    await conn.query('BEGIN');
-    await conn.query('SET LOCAL search_path TO public'); // leer tablas REALES
-
-    const total = await conn.query(
-      `SELECT COUNT(*)::int AS total FROM clients c ${whereClause}`,
-      params);
-
-    const clients = await conn.query(
-      `SELECT * FROM (
-         SELECT c.id, c.name, c.business_name, c.business_name AS company,
+  const clientRowsSql = `SELECT c.id, c.name, c.business_name, c.business_name AS company,
               c.email, c.owner_name, c.contact_person,
               c.phone, c.cellular AS mobile, c.cellular,
               c.city, c.source AS base, c.created_at, c.salesperson_id,
+        LOWER(REGEXP_REPLACE(TRIM(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), c.id::text)), '\\s+', ' ', 'g')) AS client_group_key,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id) AS ban_count,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id AND COALESCE(LOWER(b.status::text),'') IN ('a','activo','active')) AS active_ban_count,
         (SELECT COUNT(*) FROM subscribers s JOIN bans b ON s.ban_id=b.id WHERE b.client_id=c.id AND ${ACTIVE_SUB_STATUS('s')}) AS active_subscriber_count,
         (SELECT COUNT(*) FROM subscribers s JOIN bans b ON s.ban_id=b.id WHERE b.client_id=c.id) AS subscriber_count,
-        (SELECT string_agg(CAST(b.ban_number AS text), ', ') FROM bans b WHERE b.client_id=c.id) AS ban_numbers,
+        (SELECT string_agg(CAST(b.ban_number AS text), ', ' ORDER BY CAST(b.ban_number AS text)) FROM bans b WHERE b.client_id=c.id) AS ban_numbers,
         (SELECT s.phone FROM subscribers s JOIN bans b ON s.ban_id=b.id WHERE b.client_id=c.id
            AND ${ACTIVE_SUB_STATUS('s')} ORDER BY s.contract_end_date ASC NULLS LAST LIMIT 1) AS primary_subscriber_phone,
         (SELECT MIN(s.contract_end_date) FROM subscribers s JOIN bans b ON s.ban_id=b.id
@@ -258,8 +245,66 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
            FROM subscribers s2 JOIN bans b2 ON s2.ban_id=b2.id WHERE b2.client_id=c.id) AS last_activity
         FROM clients c
         LEFT JOIN salespeople sp ON sp.id = c.salesperson_id
-        ${whereClause}
-       ) AS client_rows
+        ${whereClause}`;
+
+  const conn = await pool.connect();
+  try {
+    // SET LOCAL solo dura la transacción y se revierte al COMMIT/ROLLBACK,
+    // así NO contamina la conexión cuando vuelve al pool (bug aprendido).
+    await conn.query('BEGIN');
+    await conn.query('SET LOCAL search_path TO public'); // leer tablas REALES
+
+    const total = await conn.query(
+      `WITH client_rows AS (${clientRowsSql})
+       SELECT COUNT(*)::int AS total FROM (SELECT client_group_key FROM client_rows GROUP BY client_group_key) grouped_total`,
+      params);
+
+    const clients = await conn.query(
+      `WITH client_rows AS (${clientRowsSql})
+       SELECT
+        (array_agg(id ORDER BY created_at DESC))[1] AS id,
+        (array_agg(name ORDER BY created_at DESC))[1] AS name,
+        (array_agg(business_name ORDER BY created_at DESC))[1] AS business_name,
+        (array_agg(company ORDER BY created_at DESC))[1] AS company,
+        (array_agg(email ORDER BY created_at DESC))[1] AS email,
+        (array_agg(owner_name ORDER BY created_at DESC))[1] AS owner_name,
+        (array_agg(contact_person ORDER BY created_at DESC))[1] AS contact_person,
+        (array_agg(phone ORDER BY created_at DESC))[1] AS phone,
+        (array_agg(mobile ORDER BY created_at DESC))[1] AS mobile,
+        (array_agg(cellular ORDER BY created_at DESC))[1] AS cellular,
+        (array_agg(city ORDER BY created_at DESC))[1] AS city,
+        (array_agg(base ORDER BY created_at DESC))[1] AS base,
+        MAX(created_at) AS created_at,
+        (array_agg(salesperson_id ORDER BY created_at DESC))[1] AS salesperson_id,
+        client_group_key,
+        array_agg(id ORDER BY created_at DESC) AS client_ids,
+        COUNT(*)::int AS client_record_count,
+        SUM(ban_count)::int AS ban_count,
+        SUM(active_ban_count)::int AS active_ban_count,
+        SUM(active_subscriber_count)::int AS active_subscriber_count,
+        SUM(subscriber_count)::int AS subscriber_count,
+        string_agg(ban_numbers, ', ' ORDER BY created_at DESC) AS ban_numbers,
+        (array_agg(primary_subscriber_phone ORDER BY primary_contract_end_date ASC NULLS LAST))[1] AS primary_subscriber_phone,
+        MIN(primary_contract_end_date) AS primary_contract_end_date,
+        MIN(primary_sale_date) AS primary_sale_date,
+        SUM(fixed_monthly_value)::numeric AS fixed_monthly_value,
+        SUM(active_opportunity_value)::numeric AS active_opportunity_value,
+        SUM(active_opportunity_count)::int AS active_opportunity_count,
+        (array_agg(primary_service_type ORDER BY created_at DESC))[1] AS primary_service_type,
+        string_agg(all_service_types, ', ' ORDER BY created_at DESC) AS all_service_types,
+        SUM(mobile_new_count)::int AS mobile_new_count,
+        SUM(mobile_ren_count)::int AS mobile_ren_count,
+        SUM(fixed_new_count)::int AS fixed_new_count,
+        SUM(fixed_ren_count)::int AS fixed_ren_count,
+        SUM(claro_tv_count)::int AS claro_tv_count,
+        SUM(cloud_count)::int AS cloud_count,
+        SUM(mpls_count)::int AS mpls_count,
+        CASE WHEN COUNT(DISTINCT vendor_name) FILTER (WHERE vendor_name IS NOT NULL) > 1 THEN 'Varios'
+             ELSE (array_agg(vendor_name ORDER BY created_at DESC))[1]
+        END AS vendor_name,
+        MAX(last_activity) AS last_activity
+       FROM client_rows
+       GROUP BY client_group_key
         ORDER BY ${clientOrderSql}
         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
       [...params, per, offset]);
@@ -300,6 +345,46 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   } finally {
     conn.release();
   }
+});
+
+// Resumen pesado separado: la tabla de Clientes puede aparecer sin esperarlo.
+clientsRealRouter.get('/clients-real/stats', requireAuth, async (_req, res) => {
+  const conn = await pool.connect();
+  try {
+    await conn.query('BEGIN');
+    await conn.query('SET LOCAL search_path TO public');
+    const stats = await conn.query(
+      `WITH scoped_lines AS (
+         SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type,
+                s_metric.status AS line_status, s_metric.monthly_value, s_metric.contract_end_date, b_metric.account_type
+         FROM clients c
+         JOIN bans b_metric ON b_metric.client_id = c.id
+         JOIN subscribers s_metric ON s_metric.ban_id = b_metric.id
+         WHERE ${ACTIVE_SUB_STATUS('s_metric')})
+       SELECT
+        (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL}) AS active_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${CANCELLED_CLIENT_SQL}) AS cancelled_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
+        (SELECT COUNT(*)::int FROM clients c WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
+        (SELECT COUNT(*)::int FROM subscribers s_cancelled WHERE NOT ${ACTIVE_SUB_STATUS('s_cancelled')}) AS cancelled_lines_count,
+        ${serviceCountsJson()} AS service_counts,
+        json_build_object(
+          'expired_clients', (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL} AND ${RENEWAL_CLIENT_SQL.expired}),
+          'upcoming_clients', (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL} AND ${RENEWAL_CLIENT_SQL.upcoming}),
+          'missing_date_clients', (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL} AND ${RENEWAL_CLIENT_SQL.missing})
+        ) AS renewal_alert,
+        json_build_object(
+          'active',     ${lineMetricJson(ACTIVE_CLIENT_SQL)},
+          'cancelled',  ${lineMetricJson(CANCELLED_CLIENT_SQL)},
+          'following',  ${lineMetricJson(FOLLOWING_CLIENT_SQL)},
+          'incomplete', ${lineMetricJson(INCOMPLETE_CLIENT_SQL)}) AS line_metrics`);
+    await conn.query('COMMIT');
+    res.json({ stats: stats.rows[0] || {} });
+  } catch (e) {
+    try { await conn.query('ROLLBACK'); } catch {}
+    console.error('[clients-real/stats]', e.message);
+    res.status(500).json({ error: e.message });
+  } finally { conn.release(); }
 });
 
 // FICHA del cliente con data REAL (cliente + BANs + suscriptores)
@@ -357,6 +442,18 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
          JOIN bans b ON b.id = s.ban_id
         WHERE b.client_id = $1
         ORDER BY sr.report_month DESC, b.ban_number`, [req.params.id]);
+    let clientNotes = { rows: [] };
+    const hasClientNotes = await conn.query(`SELECT to_regclass('public.client_notes') AS t`);
+    if (hasClientNotes.rows[0].t) {
+      clientNotes = await conn.query(
+        `SELECT id, COALESCE(type, 'nota') AS type, note,
+                COALESCE(created_by_name, created_by::text, 'Usuario') AS created_by,
+                created_at
+           FROM client_notes
+          WHERE client_id = $1
+          ORDER BY created_at DESC
+          LIMIT 100`, [req.params.id]);
+    }
     // Historial de gestiones = bitácora de Asana de las oportunidades del cliente
     let historial = [];
     const hasNotes = await conn.query(`SELECT to_regclass('public.opportunity_notes') AS t`);
@@ -384,7 +481,7 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
           LIMIT 50`, [req.params.id]);
     }
     await conn.query('COMMIT');
-    res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows, ventas: ventas.rows, ventas_tango: ventasTango.rows, historial, comparativas: comparativas.rows });
+    res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows, ventas: ventas.rows, ventas_tango: ventasTango.rows, historial, client_notes: clientNotes.rows, comparativas: comparativas.rows });
   } catch (e) {
     try { await conn.query('ROLLBACK'); } catch {}
     console.error('[clients-real/:id]', e.message);

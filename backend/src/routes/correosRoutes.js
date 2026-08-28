@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { requireCampaignAdmin } from '../services/sellerScope.js';
 import { campaignSubject, extractCrmCode, folderForClassification } from '../services/correosCampaigns.js';
 
 export const correosRouter = Router();
@@ -27,13 +28,17 @@ function campaignCode() {
   return `CRM-CAMP-${Date.now().toString(36).toUpperCase()}`;
 }
 
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
 // GET /api/correos/clientes -> clientes con email + flag activo
 correosRouter.get('/correos/clientes', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT c.id,
               COALESCE(NULLIF(TRIM(c.name),''), NULLIF(TRIM(c.business_name),'')) AS name,
-              c.email, c.city,
+              c.business_name, c.email, c.city,
               EXISTS (SELECT 1 FROM public.subscribers s JOIN public.bans b ON s.ban_id=b.id
                       WHERE b.client_id=c.id AND ${ACTIVE_SUB}) AS activo
        FROM public.clients c
@@ -43,19 +48,31 @@ correosRouter.get('/correos/clientes', requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-correosRouter.get('/correos/campaigns', requireAuth, async (_req, res) => {
+correosRouter.get('/correos/campaigns', requireAuth, requireCampaignAdmin, async (_req, res) => {
   try {
     const { rows } = await pool.query(`SELECT c.*, COUNT(r.id)::int AS recipients,
+      COUNT(r.id) FILTER (WHERE r.status='pending')::int AS pending,
+      COUNT(r.id) FILTER (WHERE r.status='claimed')::int AS claimed,
       COUNT(r.id) FILTER (WHERE r.status='sent')::int AS sent,
-      COUNT(r.id) FILTER (WHERE r.status='failed')::int AS failed
+      COUNT(r.id) FILTER (WHERE r.status='failed')::int AS failed,
+      MAX(COALESCE(r.sent_at,r.claimed_at)) AS last_activity_at
       FROM public.email_campaigns c LEFT JOIN public.email_campaign_recipients r ON r.campaign_id=c.id
       GROUP BY c.id ORDER BY c.created_at DESC`);
     res.json({ ok: true, data: rows });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
+correosRouter.post('/correos/campaigns/:id/pause', requireAuth, requireCampaignAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`UPDATE public.email_campaigns
+      SET status='paused', updated_at=now() WHERE id=$1 AND status='scheduled' RETURNING *`, [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ ok: false, error: 'La campaÃ±a no estÃ¡ programada o ya terminÃ³' });
+    res.json({ ok: true, data: rows[0] });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 correosRouter.post('/correos/clients/:id/drafts', requireAuth, async (req, res) => {
-  const { subject = 'Revisión de su cuenta Claro Empresas', html = '' } = req.body || {};
+  const { subject = 'Revisión de su cuenta Claro Empresas', html = '', draft_id = null } = req.body || {};
   try {
     const { rows } = await pool.query(`SELECT c.id, COALESCE(NULLIF(TRIM(c.name),''),NULLIF(TRIM(c.business_name),'')) AS name, c.email,
       COALESCE(string_agg(DISTINCT b.ban_number::text, ', '), '') AS bans,
@@ -66,28 +83,35 @@ correosRouter.post('/correos/clients/:id/drafts', requireAuth, async (req, res) 
     const client = rows[0];
     if (!client) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
     const code = `CRM-CLI-${String(client.id).replace(/-/g, '').slice(0, 10).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
-    const body = html || `<p>Hola,</p><p>Mi nombre es Gabriel Sánchez y soy el coordinador de Claro Empresas.</p><p>Estamos revisando la cuenta <strong>${client.name}</strong>${client.bans ? `, BAN ${client.bans}` : ''}, que actualmente incluye <strong>${client.active_subscribers}</strong> suscriptores activos.</p><p>Deseamos coordinar una conversación para revisar beneficios y alternativas para esta cuenta.</p><p>Saludos cordiales,</p>`;
-    const { rows: draftRows } = await pool.query(`INSERT INTO public.email_client_drafts (client_id,draft_code,subject,html_body,created_by)
-      VALUES ($1,$2,$3,$4,$5) RETURNING *`, [client.id, code, campaignSubject(subject, code), body, req.user?.email || req.user?.nick || 'crm']);
-    res.status(201).json({ ok: true, data: { ...draftRows[0], client } });
+    const company = escapeHtml(client.name || 'su empresa');
+    const bans = escapeHtml(client.bans || 'No disponible');
+    const monthly = Number(client.monthly_value || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const body = html || `<p>Saludos,</p><p>Mi nombre es <strong>Gabriel Sánchez</strong>, su asesor de Claro Empresas.</p><p>Estamos realizando una revisión de la cuenta <strong>${company}</strong> que detallo a continuación.</p><table style="border-collapse:collapse;margin:14px 0"><tr><td style="padding:6px 10px;border:1px solid #d9d9d9"><strong>BAN</strong></td><td style="padding:6px 10px;border:1px solid #d9d9d9">${bans}</td></tr><tr><td style="padding:6px 10px;border:1px solid #d9d9d9"><strong>Suscriptores activos</strong></td><td style="padding:6px 10px;border:1px solid #d9d9d9">${client.active_subscribers}</td></tr><tr><td style="padding:6px 10px;border:1px solid #d9d9d9"><strong>Mensualidad actual</strong></td><td style="padding:6px 10px;border:1px solid #d9d9d9">${monthly}</td></tr></table><p>Necesitamos organizar y coordinar una llamada para revisar esta cuenta y trabajar alternativas que aporten valor a su empresa, beneficios y descuentos.</p><p>Quedo atento a la persona de contacto indicada para continuar. También puede escribirme por <strong>WhatsApp</strong>, que es la alternativa más rápida.</p><p>Saludos cordiales,<br><strong>Gabriel Sánchez</strong><br>Corporate and Retail Account Director<br>Claro Empresas<br>Cel o WhatsApp: 787-319-0909<br>Tel. oficina: 787-796-2099 ext. 703-704<br>gabriel.sanchez@claropr.com</p>`;
+    const draftSubject = campaignSubject(String(subject).trim() || 'Revisión de su cuenta Claro Empresas', code);
+    const draftRows = draft_id
+      ? await pool.query(`UPDATE public.email_client_drafts SET subject=$1,html_body=$2,updated_at=now() WHERE id=$3 AND client_id=$4 RETURNING *`, [draftSubject, body, draft_id, client.id])
+      : await pool.query(`INSERT INTO public.email_client_drafts (client_id,draft_code,subject,html_body,created_by)
+          VALUES ($1,$2,$3,$4,$5) RETURNING *`, [client.id, code, draftSubject, body, req.user?.email || req.user?.nick || 'crm']);
+    if (!draftRows.rows[0]) return res.status(404).json({ ok: false, error: 'Borrador no encontrado para este cliente' });
+    res.status(draft_id ? 200 : 201).json({ ok: true, data: { ...draftRows.rows[0], client } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-correosRouter.post('/correos/campaigns', requireAuth, async (req, res) => {
-  const { name, subject, html, starts_at, ends_at, batch_size = 100, interval_minutes = 30, status = 'draft' } = req.body || {};
-  if (!name || !subject || !html || !starts_at || !ends_at) return res.status(400).json({ ok: false, error: 'Faltan nombre, asunto, contenido o fechas' });
+correosRouter.post('/correos/campaigns', requireAuth, requireCampaignAdmin, async (req, res) => {
+  const { name, subject, html, starts_at, ends_at = null, batch_size = 100, interval_minutes = 30, status = 'draft' } = req.body || {};
+  if (!name || !subject || !html || !starts_at) return res.status(400).json({ ok: false, error: 'Faltan nombre, asunto, contenido o inicio de campaña' });
   if (Number(batch_size) < 1 || Number(batch_size) > 100 || Number(interval_minutes) < 5 || !['draft', 'scheduled'].includes(status)) return res.status(400).json({ ok: false, error: 'Programación inválida' });
   const code = campaignCode();
   try {
     const { rows } = await pool.query(`INSERT INTO public.email_campaigns
-      (campaign_code,name,subject_template,html_template,starts_at,ends_at,batch_size,interval_minutes,status,created_by)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-    [code, String(name).trim(), campaignSubject(subject, code), html, starts_at, ends_at, Number(batch_size), Number(interval_minutes), status, req.user?.email || req.user?.nick || 'crm']);
+      (campaign_code,name,subject,body_html,subject_template,html_template,scheduled_at,starts_at,ends_at,batch_size,interval_minutes,status,created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    [code, String(name).trim(), campaignSubject(subject, code), html, campaignSubject(subject, code), html, starts_at, starts_at, ends_at || null, Number(batch_size), Number(interval_minutes), status, req.user?.email || req.user?.nick || 'crm']);
     res.status(201).json({ ok: true, data: rows[0] });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-correosRouter.post('/correos/campaigns/:id/recipients', requireAuth, async (req, res) => {
+correosRouter.post('/correos/campaigns/:id/recipients', requireAuth, requireCampaignAdmin, async (req, res) => {
   const recipients = Array.isArray(req.body?.recipients) ? req.body.recipients : [];
   if (!recipients.length) return res.status(400).json({ ok: false, error: 'Seleccioná al menos un cliente' });
   try {
@@ -107,7 +131,7 @@ correosRouter.get('/correos/agent/queue', agentAuth, async (req, res) => {
     await client.query('BEGIN');
     const { rows } = await client.query(`WITH next AS (
       SELECT r.id FROM public.email_campaign_recipients r JOIN public.email_campaigns c ON c.id=r.campaign_id
-      WHERE c.status='scheduled' AND now() BETWEEN c.starts_at AND c.ends_at
+      WHERE c.status='scheduled' AND now() >= c.starts_at AND (c.ends_at IS NULL OR now() <= c.ends_at)
         AND (r.status='pending' OR (r.status='claimed' AND r.claimed_at < now() - interval '2 hours'))
       ORDER BY r.created_at FOR UPDATE SKIP LOCKED LIMIT $1
     ) UPDATE public.email_campaign_recipients r SET status='claimed', claimed_at=now()
@@ -145,7 +169,12 @@ correosRouter.post('/correos/agent/events', agentAuth, async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8::timestamptz,now()),$9)
       ON CONFLICT (outlook_entry_id) DO NOTHING RETURNING id`,
     [outlook_entry_id,event_type,campaign_id,client_id,draft_id,recipient_id,folderForClassification(event_type),occurred_at,details]);
-    if (recipient_id && ['sent', 'failed'].includes(event_type)) await pool.query(`UPDATE public.email_campaign_recipients SET status=$2, sent_at=CASE WHEN $2='sent' THEN now() ELSE sent_at END, last_error=$3 WHERE id=$1`, [recipient_id, event_type, details?.error || null]);
+    if (recipient_id && ['sent', 'failed'].includes(event_type)) {
+      await pool.query(`UPDATE public.email_campaign_recipients SET status=$2, sent_at=CASE WHEN $2='sent' THEN now() ELSE sent_at END, last_error=$3 WHERE id=$1`, [recipient_id, event_type, details?.error || null]);
+      if (campaign_id) await pool.query(`UPDATE public.email_campaigns c SET status='completed',updated_at=now()
+        WHERE c.id=$1 AND c.status='scheduled' AND NOT EXISTS (
+          SELECT 1 FROM public.email_campaign_recipients r WHERE r.campaign_id=c.id AND r.status IN ('pending','claimed'))`, [campaign_id]);
+    }
     res.json({ ok: true, duplicate: !rows.length });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });

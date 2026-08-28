@@ -11,6 +11,7 @@ import { normalizeOperationalStatus } from '../services/subscriberClassification
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
 const VALID_SUBSCRIBER_PHONE = /^(787|939|989)\d{7}$/;
+const VALID_CLIENT_NOTE_TYPES = new Set(['nota', 'no_renueva', 'pendiente', 'riesgo', 'otro']);
 function isMissingClientIdentityValue(value) {
   const v = String(value || '').trim();
   return !v || /^SIN NOMBRE - BAN\s+/i.test(v);
@@ -58,6 +59,33 @@ writeRouter.put('/clients-real/:id', requireAuth, async (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// NOTA interna del cliente: no crea oportunidad, no modifica Asana ni estados.
+writeRouter.post('/clients-real/:id/notes', requireAuth, async (req, res) => {
+  const body = req.body || {};
+  const rawType = String(body.type || '').trim();
+  const type = VALID_CLIENT_NOTE_TYPES.has(rawType) ? rawType : 'nota';
+  const note = String(body.note || '').trim();
+  if (!note) return res.status(400).json({ error: 'Escribe una nota antes de guardar' });
+  if (note.length > 1200) return res.status(400).json({ error: 'La nota no puede pasar de 1200 caracteres' });
+  const createdBy = req.user?.nombre || req.user?.nick || req.user?.email || req.user?.username || 'Usuario';
+  try {
+    const r = await wp(async c => {
+      const client = await c.query(`SELECT id FROM clients WHERE id = $1`, [req.params.id]);
+      if (!client.rows[0]) return null;
+      return c.query(
+        `INSERT INTO client_notes (client_id, type, note, created_by_name)
+         VALUES ($1,$2,$3,$4)
+         RETURNING id, type, note, created_by_name AS created_by, created_at`,
+        [req.params.id, type, note, createdBy]);
+    });
+    if (!r) return res.status(404).json({ error: 'Cliente no existe' });
+    res.status(201).json(r.rows[0]);
+  } catch (e) {
+    if (e.code === '42P01') return res.status(500).json({ error: 'Falta aplicar la migracion de notas del cliente' });
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ELIMINAR cliente (cascada de BANs/suscriptores según FKs)
 writeRouter.delete('/clients-real/:id', requireAuth, async (req, res) => {
   try { await wp(c => c.query(`DELETE FROM clients WHERE id = $1`, [req.params.id])); res.json({ ok: true }); }
@@ -71,6 +99,25 @@ writeRouter.post('/clients-real/:id/bans', requireAuth, async (req, res) => {
   if (num.length !== 9) return res.status(400).json({ error: 'El BAN debe tener 9 dígitos' });
   try { const r = await wp(c => c.query(`INSERT INTO bans (client_id, ban_number, status, account_type) VALUES ($1,$2,'A',$3) RETURNING id, ban_number`, [req.params.id, num, acct])); res.status(201).json(r.rows[0]); }
   catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// CANCELAR BAN: solo cambia el estado del BAN, no borra suscriptores.
+writeRouter.put('/bans-real/:id', requireAuth, async (req, res) => {
+  const status = String(req.body?.status || '').trim().toUpperCase();
+  if (status !== 'C') return res.status(400).json({ error: 'Solo se permite cancelar el BAN' });
+  try {
+    const r = await wp(c => c.query(
+      `UPDATE bans
+          SET status = 'C', updated_at = now()
+        WHERE id = $1
+        RETURNING id, ban_number, status`,
+      [req.params.id],
+    ));
+    if (!r.rows[0]) return res.status(404).json({ error: 'BAN no existe' });
+    res.json({ ok: true, ban: r.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // AGREGAR suscriptor a un BAN

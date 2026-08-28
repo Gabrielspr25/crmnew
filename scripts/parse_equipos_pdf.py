@@ -38,7 +38,8 @@ FIGU_COLS = ["item_code", "material_sap", "modelo", "precio_regular",
 
 SECTION_KEYWORDS = {
     "claro_oficina":    ["modems claro oficina", "claro oficina"],
-    "internet_on_the_go": ["mifi", "internet on the go", "on the go"],
+    "internet_on_the_go": ["mifi", "internet on the go", "internet onthe go", "on the go"],
+    "iot_telemetria": ["iot/internet of things", "iot / internet of things", "internet of things"],
 }
 
 SKIP_HEADER_KW = [
@@ -97,6 +98,16 @@ def detect_section_from_text(raw_text):
         if kw in t:
             return "internet_on_the_go"
     return None
+
+
+def detect_document_sections(raw_texts):
+    """Detecta las secciones comerciales del boletín, sin inventar contenido."""
+    joined = "\n".join(raw_texts).lower()
+    detected = []
+    for key in ["internet_on_the_go", "claro_oficina", "iot_telemetria"]:
+        if any(keyword in joined for keyword in SECTION_KEYWORDS[key]):
+            detected.append(key)
+    return detected
 
 
 def normalize_spaced(text):
@@ -161,6 +172,7 @@ def parse_words_page(page, col_names):
 def extract_tables(pdf_path):
     result = {
         "secciones": [],
+        "secciones_detectadas": [],
         "financiamiento_of": [],
         "financiamiento_gu": [],
         "ofertas_especiales": [],
@@ -177,8 +189,10 @@ def extract_tables(pdf_path):
     in_figu = False
 
     with pdfplumber.open(pdf_path) as pdf:
+        all_texts = []
         for page_num, page in enumerate(pdf.pages):
             raw_text = page.extract_text() or ""
+            all_texts.append(raw_text)
             raw_lower = raw_text.lower()
 
             # ── Ofertas especiales ────────────────────────────────────────────
@@ -262,6 +276,8 @@ def extract_tables(pdf_path):
                 text_equipos = parse_words_page(page, MAIN_COLS)
                 if text_equipos:
                     sections_map[current_section_key]["equipos"].extend(text_equipos)
+
+        result["secciones_detectadas"] = detect_document_sections(all_texts)
 
     # ── Armar resultado final en orden ────────────────────────────────────────
     for key in ["claro_oficina", "internet_on_the_go"]:

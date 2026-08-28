@@ -2,16 +2,19 @@
 import { Router } from 'express';
 import { query } from '../db.js';
 import { requireAuth, requireAdmin } from '../auth.js';
+import { isSeller, sellerScope } from '../services/sellerScope.js';
 
 export const goalsRouter = Router();
 
 // GET /api/goals?month=YYYY-MM-01
 goalsRouter.get('/', requireAuth, async (req, res) => {
   const { month } = req.query;
+  const seller = isSeller(req.user) ? sellerScope(req.user) : null;
   const r = await query(
     `SELECT * FROM goals
       WHERE ($1::date IS NULL OR date_trunc('month', month) = date_trunc('month', $1::date))
-      ORDER BY scope, salesperson NULLS FIRST, product_key`, [month || null]);
+        AND ($2::text IS NULL OR (scope='vendedor' AND LOWER(TRIM(salesperson))=LOWER(TRIM($2))))
+      ORDER BY scope, salesperson NULLS FIRST, product_key`, [month || null, seller || null]);
   res.json(r.rows);
 });
 
@@ -50,16 +53,19 @@ goalsRouter.post('/', requireAuth, requireAdmin, async (req, res) => {
 // GET /api/goals/cumplimiento?month=YYYY-MM-01  -> vendido vs meta por producto
 goalsRouter.get('/cumplimiento', requireAuth, async (req, res) => {
   const { month } = req.query;
+  const seller = isSeller(req.user) ? sellerScope(req.user) : null;
   const r = await query(
     `SELECT p.key, p.name, p.kind, p.income_value,
         COALESCE(g.target_qty, 0) AS target_qty,
         (SELECT count(*) FROM sales s
            WHERE s.product_key = p.key
-             AND ($1::date IS NULL OR date_trunc('month', s.sale_date) = date_trunc('month', $1::date)))::int AS sold_qty
+             AND ($1::date IS NULL OR date_trunc('month', s.sale_date) = date_trunc('month', $1::date))
+             AND ($2::text IS NULL OR LOWER(TRIM(s.vendor_name))=LOWER(TRIM($2))))::int AS sold_qty
        FROM products p
-       LEFT JOIN goals g ON g.product_key = p.key AND g.scope = 'negocio'
+       LEFT JOIN goals g ON g.product_key = p.key AND g.scope = CASE WHEN $2::text IS NULL THEN 'negocio' ELSE 'vendedor' END
+            AND ($2::text IS NULL OR LOWER(TRIM(g.salesperson))=LOWER(TRIM($2)))
             AND ($1::date IS NULL OR date_trunc('month', g.month) = date_trunc('month', $1::date))
-      ORDER BY p.sort_order`, [month || null]);
+      ORDER BY p.sort_order`, [month || null, seller || null]);
 
   let metaTotal = 0, vendidoTotal = 0;
   const productos = r.rows.map((p) => {

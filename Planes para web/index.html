@@ -223,8 +223,8 @@ code{
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
-  <a href="directorio-fijo.html">Directorio de fijo</a>
-</nav>
+
+  <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
 <div class="filters" id="filtersBar">
   <button class="filter-btn active" data-tech-filter="all" onclick="setTechnologyFilter('all',this)">Todos</button>
@@ -240,7 +240,6 @@ code{
   </div>
 </div>
 
-<script src="fijos-data.js?v=2026070501"></script>
 <script>
 const API_BASE = '';  // mismo origen (proxy nginx †’ :3001)
 const TECH_FILTERS = {
@@ -275,9 +274,10 @@ async function loadPlanes() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     allModulos = data.modulos || [];
-    if (!data.publicacion) return showUnavailable('No existe una publicación vigente de Fijo.');
+    const publicacion = data.publicacion || data.ultima_publicacion;
+    if (!publicacion) return showUnavailable('No existe una publicación vigente de Fijo.');
     if (!allModulos.length) return showUnavailable('La publicación vigente no contiene módulos visibles.');
-    document.getElementById('versionLabel').textContent = `Versión ${data.publicacion.numero || ''} · Base actualizada ${String(data.publicacion.fecha_actualizacion_base || '').slice(0,10)}`;
+    document.getElementById('versionLabel').textContent = `Versión ${publicacion.numero || ''} · Base actualizada ${String(publicacion.fecha_actualizacion_base || publicacion.publicado_en || '').slice(0,10)}`;
     render();
   } catch(e) {
     showUnavailable('No se pudo consultar la API de planes. No se usaron datos estáticos antiguos.');

@@ -44,6 +44,15 @@ Antes de modificar ofertas, equipos, bonos, seguros, promociones o elegibilidad:
 
 El Admin Ofertas existente usa `backend/src/routes/planesRoutes.js`, `backend/src/routes/equiposRoutes.js`, `public.planes_modulos` y `public.equipos_*`. Cualquier motor nuevo debe coexistir con esas rutas hasta que exista una migracion aprobada.
 
+### Fuente comercial: Lista de Equipos
+
+- El unico ingreso de una lista nueva es **Fuentes comerciales > Lista de equipos**.
+- Aceptar solo Excel oficial `.xlsx` o `.xls`; conservar original, hash y usuario.
+- Validar que haya equipos reconocibles antes de desactivar cualquier equipo vigente.
+- Ante archivo vacio, formato no reconocido o error: no cambiar el catalogo publicado; informar el error.
+- Ante archivo valido: crear el historial enlazado a la fuente y reemplazar solo el catalogo de equipos en una transaccion.
+- No cargar, modificar ni borrar equipos manualmente para simular una fuente oficial.
+
 ## Base de datos y despliegue
 
 - Todo cambio de schema va en una migracion explicita.

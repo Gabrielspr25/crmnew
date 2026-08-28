@@ -99,3 +99,14 @@ test('Comisiones permite filtrar por producto movil sin cambiar la fuente de dat
   assert.match(frontend, /movil_new\|movil_ren/);
   assert.match(frontend, /rows=rows\.filter\(PROD_FIL\[comProductFilter\]\|\|PROD_FIL\.todos\)/);
 });
+
+test('Comisiones permite escoger meses futuros aunque no existan reportes todavia', () => {
+  assert.match(frontend, /function comMonthIso\(m\)/);
+  assert.match(frontend, /function shiftComMonth\(delta\)/);
+  assert.match(frontend, /const mon=comMonthIso\(comMonth\|\|monthStart\(\)\)/);
+  assert.match(frontend, /type="month"/);
+  assert.match(frontend, /value="\$\{comMonthInputValue\(mon\)\}"/);
+  assert.match(frontend, /syncTangoComisiones\('\$\{mon\}'\)/);
+  assert.match(comisionesRoute, /CURRENT_DATE/);
+  assert.doesNotMatch(frontend, /const mon=comMonth\|\|\(meses\[0\]&&meses\[0\]\.mes\)\|\|null/);
+});

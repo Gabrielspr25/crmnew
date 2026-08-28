@@ -22,5 +22,6 @@ test('la búsqueda de Clientes no recalcula las tarjetas globales por cada térm
   assert.match(frontendSource, /cliSearchTimer=null/);
   assert.match(frontendSource, /clearTimeout\(cliSearchTimer\)/);
   assert.match(frontendSource, /setTimeout\(\(\) => reClientes\(\), 220\)/);
-  assert.match(frontendSource, /summary=\$\{cliQ\?'0':'1'\}/);
+  assert.match(frontendSource, /summary=0/);
+  assert.match(frontendSource, /async function cliLoadStats\(/);
 });

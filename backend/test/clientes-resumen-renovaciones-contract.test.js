@@ -24,7 +24,7 @@ test('Clientes calcula metricas de lineas desde line_kind y publica la alerta de
 test('Clientes muestra Todos como vista global y mantiene filtros de activos separados', async () => {
   const html = await readFile(appPath, 'utf8');
 
-  assert.match(html, /let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null;/);
+  assert.match(html, /let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false;/);
   assert.match(html, /const CLI_TABS=\[\['all','Todos'\],\['active','Activos'\],\['cancelled','Cancelados'\],\['following','Seguimiento'\],\['incomplete','Incompletos'\]\];/);
   assert.match(html, /function setCliTab\(t\)\{ clearTimeout\(cliSearchTimer\); cliTab=t; cliQ=''; cliRenewalFilter='';/);
   assert.match(html, /const searchScope=cliQ\?'all':cliTab;/);
@@ -47,4 +47,14 @@ test('Clientes muestra Todos como vista global y mantiene filtros de activos sep
   assert.match(html, /neas activas/);
   assert.match(html, /neas canceladas/);
   assert.doesNotMatch(html, /Total . \$\{CLI_TABS\.find/);
+});
+
+test('Clientes carga tabla primero y solicita el resumen pesado por separado', async () => {
+  const source = await readFile(routePath, 'utf8');
+  const html = await readFile(appPath, 'utf8');
+
+  assert.match(source, /clientsRealRouter\.get\('\/clients-real\/stats'/);
+  assert.match(html, /async function cliLoadStats\(/);
+  assert.match(html, /summary=0/);
+  assert.match(html, /\/api\/clients-real\/stats/);
 });

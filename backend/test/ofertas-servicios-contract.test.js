@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
@@ -9,53 +8,18 @@ const portalServicios = await readFile(new URL('../../Planes para web/servicios.
 test('Admin Ofertas incluye Servicios como modulo base controlado', () => {
   assert.match(appHtml, /\['servicios','Servicios'\]/);
   assert.match(appHtml, /function ofRenderServiciosBase\(\)/);
-  assert.match(appHtml, /Solo quedan publicados Asistencia Legal y Claro Rescate/);
+  assert.match(appHtml, /Pendiente de publicación oficial/);
 });
 
-test('Servicios iniciales documentan fechas importantes y estados de vigencia', () => {
-  assert.match(appHtml, /6 meses gratis Claro Rescate \/ Claro Residencia/);
-  assert.match(appHtml, /Desde el 5 de noviembre de 2025/);
-  assert.match(appHtml, /Sin fecha final indicada/);
-  assert.match(appHtml, /Vencida/);
-});
-
-test('Servicios incluye seguro de equipos con check y cantidad editable desde cero', () => {
-  assert.match(appHtml, /Seguro de equipos a escoger/);
-  assert.match(appHtml, /OF_SEGUROS_EQUIPOS/);
-  assert.match(appHtml, /\$1,400\.01 en adelante/);
-  assert.match(appHtml, /type="checkbox"/);
-  assert.match(appHtml, /type="number" min="0" step="1" value="0"/);
-});
-
-test('Servicios publica SOCS y precios oficiales individuales y combinados', () => {
+test('Servicios no presenta datos heredados como publicación vigente', () => {
   for (const html of [appHtml, portalServicios]) {
-    assert.match(html, /SOCS Y CODIGOS DE EMISION/);
-    assert.match(html, /RESCATEM/);
-    assert.match(html, /RESCATEF \/ A821/);
-    assert.match(html, /renta:5\.99/);
-    assert.match(html, /RESIDEM/);
-    assert.match(html, /renta:4\.50/);
-    assert.match(html, /RESRECM/);
-    assert.match(html, /renta:7\.99/);
-    assert.match(html, /ADVANTRM/);
-    assert.match(html, /ADVANTRF \/ A846/);
-    assert.match(html, /renta:11\.99/);
-    assert.match(html, /LEGALF \/ A851/);
-    assert.match(html, /renta:9\.99/);
-    assert.match(html, /No usar aqui precios de paquetes de Internet \+ Telefonia/);
+    assert.match(html, /Pendiente de publicación/i);
+    assert.doesNotMatch(html, /OF_SERVICIOS\s*=|OF_SEGUROS_EQUIPOS\s*=|OF_SERVICIOS_SOCS\s*=/);
+    assert.doesNotMatch(html, /RESCATEM|RESCATEF|RESIDEM|RESRECM|ADVANTRM|ADVANTRF|LEGALF|LEGALM/);
   }
 });
 
-test('Imagenes descargables de hojas de servicios existen', () => {
-  const required = [
-    '../../frontend/img/servicios/features-p09.png',
-    '../../frontend/img/servicios/features-p10.png',
-    '../../frontend/img/servicios/features-p11.png',
-    '../../frontend/img/servicios/features-p12.png',
-    '../../frontend/img/servicios/features-p13.png',
-    '../../frontend/img/servicios/features-oferta-p09.png',
-  ];
-  for (const rel of required) {
-    assert.equal(existsSync(new URL(rel, import.meta.url)), true, `${rel} debe existir`);
-  }
+test('Portal Servicios explica que no usa documentos comerciales antiguos', () => {
+  assert.match(portalServicios, /No existe todavía una publicación oficial de Servicios/);
+  assert.match(portalServicios, /No se muestran precios, seguros, promociones ni documentos heredados/);
 });

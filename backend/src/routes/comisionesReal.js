@@ -27,7 +27,7 @@ const BASE = `
     LEFT JOIN public.salespeople sp ON sp.id = cl.salesperson_id
     LEFT JOIN ventaspro_nuevo.sales vs ON vs.tango_venta_id::text = sr.external_sale_id::text`;
 
-// GET /api/comisiones?month=YYYY-MM-01  (si no hay month, usa el último mes con datos)
+// GET /api/comisiones?month=YYYY-MM-01  (si no hay month, usa el mes actual)
 comisionesRouter.get('/comisiones', requireAuth, async (req, res) => {
   const { month } = req.query;
   const soloV = req.user.rol === 'vendedor';
@@ -35,7 +35,7 @@ comisionesRouter.get('/comisiones', requireAuth, async (req, res) => {
     `${BASE}
       WHERE date_trunc('month', sr.report_month) =
             COALESCE(date_trunc('month', $1::date),
-                     (SELECT max(date_trunc('month', report_month)) FROM public.subscriber_reports))
+                     date_trunc('month', CURRENT_DATE))
         AND ($2::text IS NULL OR COALESCE(sp.name, vs.vendor_name) ILIKE $2)
       ORDER BY cl.name, b.ban_number`,
     [month || null, soloV ? `%${req.user.nombre}%` : null]);

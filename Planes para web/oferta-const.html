@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Oferta const.</title>
-<script src="fijos-data.js?v=2026070513"></script>
-<script src="ofertas-data.js?v=2026070311"></script>
+<script src="constructor-publications.js?v=2026082301"></script>
 <script src="ofertas-logic.js?v=2026070311"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -62,6 +61,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 @media(max-width:980px){.comparison-head,.comparison-grid,.comparison-summary{grid-template-columns:1fr}.compare-actions{justify-content:flex-start}}
 @media(max-width:980px){.product-builder{grid-template-columns:1fr}.product-list{grid-template-columns:1fr}.product-panel-head{display:grid}.product-panel-head input{max-width:none;width:100%}}
 @media(max-width:640px){.hero{display:block}.wrap{padding:16px 14px 36px}.plan-controls{grid-template-columns:1fr}.device-grid{grid-template-columns:1fr}.device-tools{grid-template-columns:1fr}.lines-table{min-width:920px}.step-body{overflow:auto}}
+.equipment-modal{height:min(90vh,820px);max-height:calc(100vh - 24px);grid-template-rows:auto auto minmax(0,1fr)}
+.modal-body{min-height:0}
+.modal-picker{height:100%;min-height:0;max-height:none}
 </style>
 </head>
 <body>
@@ -77,8 +79,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   <a href="ofertas.html">Ofertas</a>
 </nav>
 <main class="wrap">
+  <div id="mobileVersionNotice" class="cp-note" style="display:none"></div>
   <section class="hero">
-    <div><h1>Oferta const.</h1><p>Flujo limpio: escoger plan, escoger equipo y oferta, revisar terminos, agregar servicios/seguro y cerrar propuesta.</p></div>
+    <div><h1>Oferta const.</h1><p>Flujo basado en planes, ofertas, Fijo y Claro TV publicados desde el Admin.</p></div>
   </section>
 
   <section class="step" id="stepPlan">
@@ -86,13 +89,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
     <div class="step-body">
       <div class="plan-controls">
         <div class="plan-card"><label>Tipo de plan</label><div class="segmented" data-group="tipo"><button class="segment-btn active" data-val="individual">Individual</button><button class="segment-btn" data-val="multilinea">Multilinea</button></div></div>
-        <div class="plan-card" id="planIndWrap"><label>Plan individual</label><select class="plan-select" id="planInd" onchange="syncPlan();renderSummary()"><option>20</option><option>35</option><option>40</option><option>45</option><option>50</option><option>65</option><option selected>75</option><option>95</option><option>100</option></select></div>
-        <div class="plan-card" id="planMultiWrap" style="display:none"><label>Plan multilinea</label><select class="plan-select" id="planMulti" onchange="syncPlan();renderSummary()"><option value="plus" selected>Business Red Plus</option><option value="extreme">Business Red Extreme</option><option value="supreme">Business Red Supreme</option><option value="sinfronteras">Business Red Sin Fronteras</option></select></div>
-        <div class="plan-card"><label>Eventos de esta propuesta</label><div class="chips event-grid" id="eventosChips">
-          <button class="chip active" type="button" data-evento="nueva" onclick="toggleEvento('nueva')">Linea nueva</button>
-          <button class="chip" type="button" data-evento="portabilidad" onclick="toggleEvento('portabilidad')">Portabilidad</button>
-        </div></div>
-        <div class="plan-card"><label>Contexto del cliente</label><button class="context-toggle" id="convergenteBtn" type="button" onclick="toggleConvergente()">No convergente<span>Toca para activar bono streaming</span></button></div>
+        <div class="plan-card" id="planIndWrap"><label>Plan individual</label><select class="plan-select" id="planInd" onchange="syncPlan();renderSummary()"><option value="">Cargando publicacion...</option></select></div>
+        <div class="plan-card" id="planMultiWrap" style="display:none"><label>Plan multilinea</label><select class="plan-select" id="planMulti" onchange="syncPlan();renderSummary()"><option value="">Cargando publicacion...</option></select></div>
+        <div class="plan-card"><label>Contexto del cliente</label><button class="context-toggle" id="convergenteBtn" type="button" disabled>Benefits pendientes de publicacion<span>No se aplican reglas heredadas</span></button></div>
         <div class="plan-card"><label>Cantidad de lineas</label><input class="plan-input" id="lineas" type="number" min="1" step="1" value="1" oninput="syncPlan();renderSummary()"></div>
       </div>
       <div class="plan-action-row"><button class="btn primary" onclick="completePlan()">Ver equipos</button></div>
@@ -108,12 +107,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
       </div>
       <div class="lines-scroll"><table class="lines-table" id="lineasTable"></table></div>
       <div id="termsBox"></div>
-      <div class="actions"><button class="btn" onclick="backToPlan()">Volver atras</button><button class="btn primary" id="nextServicios" onclick="completeEquipo()" disabled>Siguiente: servicios y seguro</button></div>
+      <div class="actions"><button class="btn" onclick="backToPlan()">Volver atras</button><button class="btn primary" id="nextServicios" onclick="completeEquipo()" disabled>Siguiente: publicaciones complementarias</button></div>
     </div>
   </section>
 
   <section class="step locked" id="stepServicios">
-    <div class="step-head"><div><h2>3. Servicios y seguro</h2><p>Selecciona servicios adicionales y seguro de equipos.</p></div><span class="pill" id="servStatus">Pendiente</span></div>
+    <div class="step-head"><div><h2>3. Publicaciones complementarias</h2><p>Benefits, servicios y seguros se habilitan solo cuando tengan una publicación oficial.</p></div><span class="pill" id="servStatus">Pendiente de publicación</span></div>
     <div class="step-body">
       <div class="conditional-panel" id="offerExtrasPanel"></div>
       <div class="service-list" id="serviciosList"></div>
@@ -168,82 +167,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 </div>
 <script>
 const L=window.OfertasLogic;
-const CONST_CLARO_TV_DATA=[
-  {key:'claro_tv_planes',titulo:'Claro TV - planes',filas:[
-    {codigo:'PY2ULE',descripcion:'Clarotv+ ULTRA ESENCIAL (21c)',precio:15.99,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'PY2ESE',descripcion:'Clarotv+ ESENCIAL (29c)',precio:19.99,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'IP2ESTE',descripcion:'Clarotv+ ESENCIAL + TODO ESPANOL (68c)',precio:26.99,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'IP2BASC2',descripcion:'Clarotv+ BASIC (76c)',precio:55.99,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'IP2BASC3',descripcion:'Clarotv+ BASIC+ (98c)',precio:60.99,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'PY2SIG',descripcion:'Clarotv+ SIGNATURE (147c)',precio:70.99,tecnologia:'COBRE/VRAD/GPON'}
-  ]},
-  {key:'claro_tv_premium',titulo:'Claro TV - premium',filas:[
-    {codigo:'REAKNG',descripcion:'REALITY KING',precio:24.99,tecnologia:'VRAD/GPON'},
-    {codigo:'IPLYB',descripcion:'PLAYBOY TV',precio:19.99,tecnologia:'VRAD/GPON'}
-  ]},
-  {key:'claro_tv_equipos',titulo:'Claro TV - equipos',filas:[
-    {codigo:'40942H',descripcion:'1er STB gratis contrato 24 meses',precio:0,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'40942H-FINA24',descripcion:'STB financiado 24 meses clientes con contrato',precio:1.67,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'80105H-FINA24',descripcion:'DONGLE 4K financiado 24 meses',precio:1.25,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'40941H',descripcion:'2do control remoto en adelante',precio:6,tecnologia:'COBRE/VRAD/GPON'},
-    {codigo:'NPVR250',descripcion:'Cloud DVR 250GB',precio:5,tecnologia:'COBRE/VRAD/GPON'}
-  ]}
-];
+let fixedProductGroups=[];
+let claroTvProductGroups=[];
+let mobilePlanCatalog={individual:[],multiline:[]};
+let constructorPublications=null;
 const EVENTOS=[
   {id:'nueva',label:'Linea nueva'},
   {id:'portabilidad',label:'Portabilidad'},
   {id:'renovacion',label:'Renovacion'},
   {id:'adicional',label:'Linea adicional'}
 ];
-const state={tipo:'individual',planInd:75,planMulti:'plus',beneficio:'todos',eventos:['nueva'],convergente:false,usarAutopay:true,lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],servicios:[],seguros:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'precios_2play_internet',openProductGroups:['precios_2play_internet'],activeLineIndex:null,activeBrand:'Todos',selectedModalKey:null};
-const SERVICIOS=[
-  {id:'rescate',nombre:'Claro Rescate',desc:'Servicio de asistencia vehicular',socMovil:'RESCATEM',socFijo:'RESCATEF / A821'},
-  {id:'residencia',nombre:'Claro Residencia',desc:'Cubierta residencial',socMovil:'RESIDEM',socFijo:'RESIDEF / A826'},
-  {id:'residencia-rescate',nombre:'Claro Residencia y Rescate',desc:'Combo residencial y rescate',socMovil:'RESRECM',socFijo:'RESRECF / A831'},
-  {id:'advantage',nombre:'Claro Advantage',desc:'Servicio adicional Advantage',socMovil:'ADVANM',socFijo:'ADVANF / A840'},
-  {id:'advantage-residencia',nombre:'Claro Advantage y Residencia',desc:'Combo Advantage + Residencia',socMovil:'ADVRESM',socFijo:'ADVRESF / A843'},
-  {id:'advantage-residencia-rescate',nombre:'Claro Advantage, Residencia y Rescate',desc:'Combo Advantage + Residencia + Rescate',socMovil:'ADVANTRM',socFijo:'ADVANTRF / A846'},
-  {id:'legal',nombre:'Claro Asistencia Legal',desc:'Servicio legal',socMovil:'LEGALM',socFijo:'LEGALF / A851'}
-];
-const SERVICE_PRICE_OPTIONS={
-  rescate:[{label:'Claro Rescate',precio:5.99}],
-  residencia:[{label:'Claro Residencia',precio:4.50}],
-  'residencia-rescate':[{label:'Claro Residencia y Rescate',precio:7.99}],
-  advantage:[{label:'Claro Advantage',precio:5.99}],
-  'advantage-residencia':[{label:'Claro Advantage y Residencia',precio:8.99}],
-  'advantage-residencia-rescate':[{label:'Claro Advantage, Residencia y Rescate',precio:11.99}],
-  legal:[{label:'Claro Asistencia Legal',precio:9.99}]
-};
-const SEGUROS=[
-  {rango:'$0 - $200.00',deducible:'$20.00',prima:'$7.99'},
-  {rango:'$200.01 - $400',deducible:'$50.00',prima:'$7.99'},
-  {rango:'$400.01 - $700',deducible:'$100.00',prima:'$13.99'},
-  {rango:'$700.01 - $1,400',deducible:'$199.00',prima:'$13.99'},
-  {rango:'$1,400.01 en adelante',deducible:'$299.00',prima:'$13.99'}
-];
-const PLAN_MULTILINEA_TOTALS={
-  plus:{regular:[65,110,130,160,175,210,245,280,315,350],autopay:[55,90,100,120,125,150,175,200,225,250]},
-  extreme:{regular:[75,120,135,170,200,240,280,320,360,400],autopay:[65,100,105,130,150,180,210,240,270,300]},
-  supreme:{regular:[95,170,210,240,275,300,350,400,450,500],autopay:[85,150,180,200,225,240,280,320,360,400]},
-  sinfronteras:{regular:[100,180,225,260,300,330,385,440,495,550],autopay:[90,160,195,220,250,270,315,360,405,450]}
-};
-const PLAN_MULTILINEA_LINE_COSTS={
-  plus:[65,45,20,30,15,35,35,35,35,35],
-  extreme:[75,45,15,35,30,40,40,40,40,40],
-  supreme:[95,75,40,30,35,25,50,50,50,50],
-  sinfronteras:[100,80,45,35,40,30,55,55,55,55]
-};
-const PLAN_INDIVIDUAL_TOTALS={
-  20:{regular:20,autopay:20},
-  35:{regular:35,autopay:35},
-  40:{regular:40,autopay:40},
-  45:{regular:45,autopay:45},
-  50:{regular:50,autopay:50},
-  65:{regular:65,autopay:55},
-  75:{regular:75,autopay:65},
-  95:{regular:95,autopay:85},
-  100:{regular:100,autopay:90}
-};
+const state={tipo:'individual',planInd:0,planMulti:'',beneficio:'todos',eventos:['nueva'],lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'',openProductGroups:[],activeLineIndex:null,activeBrand:'Todos',selectedModalKey:null,motorEquipos:[],motorLoading:false,motorError:''};
 function $(id){return document.getElementById(id)}
 function money(v){return '$'+Number(v||0).toFixed(2)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -268,6 +202,39 @@ async function crmApi(path,opts={}){
   const r=await fetch(path,opts);
   if(!r.ok)throw new Error(path+' -> '+r.status);
   return r.json();
+}
+function fillPlanSelectors(){
+  const individual=$('planInd');
+  const multiline=$('planMulti');
+  window.CONSTRUCTOR_PLAN_AMOUNTS=Object.fromEntries(mobilePlanCatalog.multiline.map(plan=>[plan.key,Number(plan.lineCosts[0]||0)]));
+  window.CONSTRUCTOR_PLAN_LABELS=Object.fromEntries(mobilePlanCatalog.multiline.map(plan=>[plan.key,plan.label]));
+  individual.innerHTML=mobilePlanCatalog.individual.map(plan=>`<option value="${plan.regular}">${esc(plan.label)} · ${money(plan.regular)}</option>`).join('');
+  multiline.innerHTML=mobilePlanCatalog.multiline.map(plan=>`<option value="${esc(plan.key)}">${esc(plan.label)}</option>`).join('');
+  state.planInd=Number(individual.value||0);
+  state.planMulti=multiline.value||'';
+  const individualButton=document.querySelector('[data-group="tipo"] [data-val="individual"]');
+  const multilineButton=document.querySelector('[data-group="tipo"] [data-val="multilinea"]');
+  if(individualButton)individualButton.disabled=!mobilePlanCatalog.individual.length;
+  if(multilineButton)multilineButton.disabled=!mobilePlanCatalog.multiline.length;
+}
+async function loadCurrentPublications(){
+  const notice=$('mobileVersionNotice');
+  constructorPublications=await window.ConstructorPublications.load();
+  window.OFERTAS_DATA=constructorPublications.offers;
+  mobilePlanCatalog=constructorPublications.mobileCatalog;
+  fixedProductGroups=constructorPublications.fixedGroups;
+  claroTvProductGroups=constructorPublications.tvGroups;
+  fillPlanSelectors();
+  const version=constructorPublications.offersVersion;
+  const statuses=[];
+  statuses.push(version?`Ofertas moviles: version ${esc(version.numero||'publicada')}`:'Ofertas moviles: pendiente de publicacion');
+  statuses.push(mobilePlanCatalog.individual.length||mobilePlanCatalog.multiline.length?'Planes moviles: publicados':'Planes moviles: pendiente de publicacion');
+  statuses.push(constructorPublications.equipment.length?`Lista de Precios: ${constructorPublications.equipment.length} equipos`:'Lista de Precios: pendiente de publicacion');
+  statuses.push(fixedProductGroups.length?'Fijo: publicado':'Fijo: pendiente de publicacion');
+  statuses.push(claroTvProductGroups.length?'Claro TV: publicado':'Claro TV: pendiente de publicacion');
+  if(notice){notice.style.display='block';notice.innerHTML=statuses.join(' · ');}
+  $('planStatus').textContent=constructorPublications.ready?'Pendiente':'Pendiente de publicacion';
+  document.querySelector('#stepPlan .btn.primary').disabled=!constructorPublications.ready;
 }
 function setTipoPlan(tipo){
   state.tipo=tipo;
@@ -306,14 +273,6 @@ async function loadCrmClientContext(){
 }
 document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.tipo=btn.dataset.val;$('planIndWrap').style.display=state.tipo==='individual'?'flex':'none';$('planMultiWrap').style.display=state.tipo==='multilinea'?'flex':'none';syncPlan();renderSummary();});
 function eventLabel(id){return (EVENTOS.find(e=>e.id===id)||{}).label||id;}
-function toggleConvergente(){
-  state.convergente=!state.convergente;
-  $('convergenteBtn').classList.toggle('active',state.convergente);
-  $('convergenteBtn').innerHTML=state.convergente?'Cliente convergente<span>Bono streaming habilitado si aplica</span>':'No convergente<span>Toca para activar bono streaming</span>';
-  renderSummary();
-  if(!$('stepServicios').classList.contains('locked')) renderOfferExtrasPanel();
-  if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
-}
 function toggleEvento(id){
   if(state.eventos.includes(id)&&state.eventos.length>1)state.eventos=state.eventos.filter(e=>e!==id);
   else if(!state.eventos.includes(id))state.eventos.push(id);
@@ -348,7 +307,7 @@ function ensureLineRows(){
   for(let i=0;i<state.lineas;i++){
     rows.push(state.cart[i]||{linea:i+1,evento:state.eventos[Math.min(i,state.eventos.length-1)]||state.eventos[0],equipo:null,oferta:null,deudaPortabilidad:0});
     rows[i].linea=i+1;
-    if(!state.eventos.includes(rows[i].evento)) rows[i].evento=state.eventos[0];
+    if(!EVENTOS.some(evento=>evento.id===rows[i].evento)) rows[i].evento='nueva';
   }
   state.cart=rows;
 }
@@ -379,6 +338,7 @@ function defaultPlazo(oferta){return oferta.plazos&&oferta.plazos.includes(30)?3
 function selectedPlazo(row){return row&&row.plazo?Number(row.plazo):defaultPlazo(row&&row.oferta);}
 function paymentPerUnit(row){
   if(!row||!row.equipo||!row.oferta) return 0;
+  if(Number.isFinite(Number(row.motorPagoMensual))) return Number(row.motorPagoMensual);
   const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
   if(!t) return row.equipo.precio;
   if(t.tipo==='gratis') return 0;
@@ -392,12 +352,14 @@ function paymentPerUnit(row){
 function offerProposalLabel(row){
   if(!row||!row.oferta) return 'Pendiente';
   if(row.oferta.beneficio==='gratis') return 'EQUIPO GRATIS';
+  if(row.motorEsquema==='esquema_1') return `${Number(row.motorPorcentaje||0)}% descuento del equipo`;
   if(row.oferta.beneficio==='50pct') return '50% del valor del equipo';
   if(row.oferta.beneficio==='credito') return `Credito ${money(row.oferta.credito)} / ${selectedPlazo(row)} meses`;
   return row.oferta.titulo;
 }
 function lineEquipmentPayTotal(row){
   if(!row||!row.equipo||!row.oferta) return 0;
+  if(Number.isFinite(Number(row.motorPrecioFinanciado))) return Number(row.motorPrecioFinanciado);
   const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
   if(!t) return row.equipo.precio;
   if(t.tipo==='gratis') return 0;
@@ -419,48 +381,11 @@ function offerActionPills(row){
   if(!row||!row.oferta) return '<span class="offer-pill pending">Pendiente</span>';
   const pills=[];
   if(row.oferta.beneficio==='gratis') pills.push('<span class="offer-pill free">Gratis</span>');
+  if(row.motorEsquema==='esquema_1'&&row.oferta.beneficio!=='gratis') pills.push(`<span class="offer-pill half">${Number(row.motorPorcentaje||0)}% descuento</span>`);
   if(row.oferta.beneficio==='50pct') pills.push('<span class="offer-pill half">50%</span>');
   if(L.requiresTradein(row.oferta,row.evento)) pills.push('<span class="offer-pill trade">Trade-in</span>');
   if(!pills.length&&row.oferta.beneficio==='credito') pills.push(`<span class="offer-pill">Credito ${money(row.oferta.credito)}</span>`);
   return `<div class="offer-pills">${pills.join('')}</div>`;
-}
-function portabilidadBaseAmount(selected){
-  const portCount=selectedPortabilidadRows(selected).length;
-  if(state.convergente) return 150;
-  return portCount>=2?100:50;
-}
-function businessRedPortAmount(){
-  if(state.tipo!=='multilinea') return null;
-  if(state.planMulti==='plus') return 175;
-  if(state.planMulti==='extreme') return 300;
-  return 500;
-}
-function lineBonusCredits(row,selected=state.cart.filter(i=>i.equipo&&i.oferta)){
-  if(!row||!row.equipo||!row.oferta) return [];
-  const plan=planAmount();
-  const items=[];
-  if(state.convergente&&plan>=35&&row.oferta.bonoStreaming&&(row.evento==='nueva'||row.evento==='portabilidad'||row.evento==='adicional')){
-    items.push({kind:'stream',label:'Streaming $10/BAN',detail:'Bono Streaming: descuento de $10.00 por BAN por 12 meses. Requiere cliente convergente y terminos activos.'});
-  }
-  const portCreditEligible=row.evento==='portabilidad'&&row.oferta.beneficio!=='gratis';
-  if(portCreditEligible&&plan>=45){
-    const amount=portabilidadBaseAmount(selected);
-    items.push({kind:'port',label:`Portabilidad $${amount}`,amount,monthly:amount/24,detail:`Bono Portabilidad: $${amount} por linea portada, dividido en 24 creditos de ${money(amount/24)}. Aplica a ofertas que no sean equipo gratis; no aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.`});
-  }
-  if(portCreditEligible&&state.tipo==='multilinea'&&plan>=65&&row.linea<=3){
-    const amount=businessRedPortAmount();
-    items.push({kind:'port',label:`BR porta $${amount}`,amount,monthly:amount/24,detail:`Bono Business Red por portabilidad: $${amount} por linea portada, dividido en 24 creditos de ${money(amount/24)}. Maximo 3 lineas; sujeto a validacion del boletin.`});
-  }
-  if(portCreditEligible&&plan>=50&&row.linea<=5){
-    const debt=Math.min(Number(row.deudaPortabilidad||0),800);
-    items.push({kind:'balance',label:'Balance hasta $800',amount:debt,detail:`Pago de balance/deuda de equipo de la otra compania hasta $800. Monto indicado para esta linea: ${debt?money(debt):'pendiente de capturar'}. Maximo 5 lineas; solicitud dentro de 60 dias calendario con evidencia.`});
-  }
-  return items;
-}
-function lineBonusPills(row){
-  const items=lineBonusCredits(row);
-  if(!items.length) return '<span class="offer-pill pending">No aplica</span>';
-  return `<div class="bonus-pills">${items.map(i=>`<span class="bonus-pill ${i.kind}">${esc(i.label)}</span>`).join('')}</div>`;
 }
 function lineMonthsText(row){
   if(!row||!row.oferta) return '-';
@@ -500,26 +425,18 @@ function recommendOffer(oferta,row){
 function sortRecommendedOffers(ofertas,row){
   return [...ofertas].sort((a,b)=>recommendOffer(b,row).score-recommendOffer(a,row).score);
 }
-function lineInsuranceCell(row,i){
-  if(!row||!row.equipo)return '<span class="offer-pill pending">Pendiente</span>';
-  const ins=insuranceForPrice(row.equipo.precio);
-  return `<label class="insurance-line-check"><input type="checkbox" ${row.seguro?'checked':''} onchange="toggleLineInsurance(${i},this.checked)"> Seguro</label><span class="mini-note">Prima seguro ${esc(ins.prima)} / Deducible ${esc(ins.deducible)}</span>`;
-}
 function renderLineRows(){
   ensureLineRows();
   const selected=state.cart.filter(r=>r.equipo&&r.oferta).length;
   $('equiposDisponiblesMeta').textContent=`${state.lineas} linea(s). Toca el campo Equipo para escoger desde la modal por marca.`;
-  $('lineasTable').innerHTML=`<thead><tr><th>Linea</th><th>Evento</th><th>Equipo</th><th>Beneficio</th><th>Creditos/bonos</th><th>Deuda port.</th><th>Meses</th><th>Pago equipo</th><th>Regular</th><th>Seguro</th></tr></thead><tbody>${state.cart.map((row,i)=>`<tr>
+  $('lineasTable').innerHTML=`<thead><tr><th>Linea</th><th>Evento</th><th>Equipo</th><th>Beneficio</th><th>Meses</th><th>Pago equipo</th><th>Regular</th></tr></thead><tbody>${state.cart.map((row,i)=>`<tr>
     <td>Linea ${row.linea}</td>
-    <td><select onchange="setRowEvent(${i},this.value)">${state.eventos.map(ev=>`<option value="${ev}" ${row.evento===ev?'selected':''}>${esc(eventLabel(ev))}</option>`).join('')}</select></td>
+    <td><select onchange="setRowEvent(${i},this.value)">${EVENTOS.map(ev=>`<option value="${ev.id}" ${row.evento===ev.id?'selected':''}>${esc(ev.label)}</option>`).join('')}</select></td>
     <td><button class="line-pick ${row.equipo?'':'empty'}" onclick="openEquipmentModal(${i})">${row.equipo?esc(row.equipo.modelo):'Escoger equipo'}</button></td>
     <td>${offerActionPills(row)}</td>
-    <td>${lineBonusPills(row)}</td>
-    <td>${row.evento==='portabilidad'?`<input class="compare-input compare-mini" type="number" min="0" step="0.01" value="${Number(row.deudaPortabilidad||0)}" onchange="setLineDebt(${i},this.value)">`:'-'}</td>
     <td>${lineMonthsControl(row,i)}</td>
     <td><b>${esc(linePaymentText(row))}</b></td>
     <td>${esc(lineRegularText(row))}</td>
-    <td>${lineInsuranceCell(row,i)}</td>
   </tr>`).join('')}</tbody>`;
   $('equipoStatus').textContent=selected?`${selected}/${state.lineas} linea(s)`:'Pendiente';
   $('nextServicios').disabled=selected<minLines();
@@ -530,7 +447,6 @@ function setRowEvent(index,value){
   if(state.cart[index].equipo&&!ofertaAplicaALinea(state.cart[index],index)){
     state.cart[index].equipo=null;
     state.cart[index].oferta=null;
-    state.cart[index].seguro=false;
   }
   if(state.activeLineIndex===index) renderEquipos();
   renderLineRows();
@@ -546,11 +462,38 @@ function setRowPlazo(index,value){
 }
 function setLineDebt(index,value){
   ensureLineRows();
-  state.cart[index].deudaPortabilidad=Math.max(0,Number(value||0));
+  state.cart[index].deudaPortabilidad=Math.min(800,Math.max(0,Number(value||0)));
   renderLineRows();
   if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
 }
-function openEquipmentModal(index){
+function isBusinessRedPlus(){return state.tipo==='multilinea'&&state.planMulti==='plus';}
+function motorEvent(evento){return ({nueva:'linea_nueva',portabilidad:'portabilidad',renovacion:'renovacion',adicional:'linea_adicional'})[evento]||evento;}
+async function loadMotorEligibleEquipment(index){
+  state.motorLoading=true;state.motorError='';state.motorEquipos=[];renderEquipos();
+  try{
+    const result=await crmApi('/api/motor-ofertas/elegibles',{method:'POST',body:{linea:{
+      id:`linea-${index+1}`,
+      tipo:'multilinea_business_red',
+      familia_business_red:'business_red_plus',
+      plan:{codigo:'BRPLUS',nombre:'Business Red Plus',monto:Number(planLineCosts()[index]||0)},
+      evento:motorEvent(state.cart[index].evento),
+      trade_in:{aplica:false,validado:false},
+      posicion_en_ban:index+1
+    }}});
+    state.motorEquipos=(result.equipos||[]).map((item,position)=>({
+      key:`motor-${index+1}-${position}`,
+      marca:item.equipo.marca||'',
+      modelo:item.equipo.modelo_oficial,
+      precio:Number(item.equipo.precio_regular||0),
+      motor:item,
+      segmento:item.segmento||'gama_alta',
+      categoria:item.equipo.categoria||''
+    }));
+    if(!state.motorEquipos.length)state.motorError=(result.validaciones||[]).map(item=>item.codigo).join(', ')||'No hay equipos elegibles para esta linea.';
+  }catch(e){state.motorError='No se pudieron cargar los equipos de esta linea.';}
+  finally{state.motorLoading=false;renderBrandTabs();renderEquipos();}
+}
+async function openEquipmentModal(index){
   ensureLineRows();
   state.activeLineIndex=index;
   state.activeBrand='Todos';
@@ -560,16 +503,20 @@ function openEquipmentModal(index){
   $('equipmentModal').classList.add('open');
   renderBrandTabs();
   renderEquipos();
+  if(isBusinessRedPlus())await loadMotorEligibleEquipment(index);
 }
 function closeEquipmentModal(){$('equipmentModal').classList.remove('open');}
 const MODEM_BRANDS=['Dlink','Franklin','Netgear','PCD','SenseConnect'];
 function isTablet(eq){return /ipad|tab/i.test(`${eq.marca} ${eq.modelo}`);}
-function isModem(eq){return MODEM_BRANDS.includes(eq.marca);}
-function deviceTab(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablets';return eq.marca;}
+function isModem(eq){return eq.categoria==='modem'||MODEM_BRANDS.includes(eq.marca)||/mifi|modem|router/i.test(`${eq.marca} ${eq.modelo}`);}
+function normalizedBrand(brand){const value=String(brand||'').trim().toLowerCase();if(/apple|iphone/.test(value))return 'Apple';return value?value.charAt(0).toUpperCase()+value.slice(1):'Sin marca';}
+function deviceTab(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablets';return normalizedBrand(eq.marca);}
 function deviceKind(eq){if(isModem(eq))return 'modem';if(isTablet(eq))return 'tablet';return 'phone';}
 function deviceKindLabel(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablet';return eq.marca;}
 function availableBrands(){
-  const tabs=[...new Set(L.getEquiposFiltrados({...lineState(state.activeLineIndex??0),buscar:''}).map(deviceTab))].sort((a,b)=>{
+  const source=isBusinessRedPlus()?state.motorEquipos:L.getEquiposFiltrados({...lineState(state.activeLineIndex??0),buscar:''});
+  if(isBusinessRedPlus())return ['Todos','Gama alta','Gama baja','Tabletas','Módems'];
+  const tabs=[...new Set(source.map(deviceTab))].sort((a,b)=>{
     const order={Modem:0,Tablets:1};
     return (order[a]??10)-(order[b]??10)||a.localeCompare(b);
   });
@@ -581,22 +528,38 @@ function renderBrandTabs(){
 function setActiveBrand(brand){state.activeBrand=brand;state.selectedModalKey=null;renderBrandTabs();renderEquipos();}
 function modalEquipoList(){
   const q=($('buscarEquipo').value||'').toLowerCase().trim();state.buscar=q;
+  if(isBusinessRedPlus()){
+    let list=state.motorEquipos.filter(eq=>!q||`${eq.marca} ${eq.modelo}`.toLowerCase().includes(q));
+    if(state.activeBrand==='Gama alta')list=list.filter(eq=>eq.segmento === 'gama_alta');
+    if(state.activeBrand==='Gama baja')list=list.filter(eq=>eq.segmento === 'gama_baja');
+    if(state.activeBrand==='Tabletas')list=list.filter(isTablet);
+    if(state.activeBrand==='Módems')list=list.filter(isModem);
+    return list;
+  }
   const activeState={...lineState(state.activeLineIndex??0),buscar:q};
   let list=L.getEquiposFiltrados(activeState);
   if(state.activeBrand&&state.activeBrand!=='Todos') list=list.filter(eq=>deviceTab(eq)===state.activeBrand);
   return list.slice(0,80);
 }
 function renderEquipos(){
+  if(isBusinessRedPlus()&&state.motorLoading){$('modalDeviceList').innerHTML='<div class="modal-empty">Cargando equipos de la Matriz uno...</div>';$('modalOfferPanel').innerHTML='';return;}
+  if(isBusinessRedPlus()&&state.motorError){$('modalDeviceList').innerHTML=`<div class="modal-empty">${esc(state.motorError)}</div>`;$('modalOfferPanel').innerHTML='';return;}
   const list=modalEquipoList();
   const current=state.cart[state.activeLineIndex??0]||{};
   if(!state.selectedModalKey) state.selectedModalKey=(current.equipo&&list.some(eq=>eq.key===current.equipo.key))?current.equipo.key:(list[0]&&list[0].key)||null;
-  $('modalDeviceList').innerHTML=list.map(eq=>`<button class="modal-device-row device-${deviceKind(eq)} ${state.selectedModalKey===eq.key?'active':''}" onclick="selectModalDevice('${esc(eq.key)}')"><b>${esc(eq.modelo)}</b><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span><em class="device-kind ${deviceKind(eq)==='modem'?'modem':''}">${esc(deviceKindLabel(eq))}</em></button>`).join('')||'<div class="modal-empty">No hay equipos disponibles para este filtro.</div>';
+  $('modalDeviceList').innerHTML=list.map(eq=>`<button class="modal-device-row device-${deviceKind(eq)} ${state.selectedModalKey===eq.key?'active':''}" onclick="selectModalDevice('${esc(eq.key)}')"><b>${esc(eq.modelo)}</b><span>${esc(eq.marca)} / Regular ${money(eq.precio)}${eq.motor?` / Pago equipo en linea ${(state.activeLineIndex??0)+1}: ${money(eq.motor.plazos?.[0]?.pago_mensual)}/mes`:''}</span><em class="device-kind ${deviceKind(eq)==='modem'?'modem':''}">${esc(deviceKindLabel(eq))}</em></button>`).join('')||'<div class="modal-empty">No hay equipos disponibles para este filtro.</div>';
   renderModalOfferPanel();
 }
 function selectModalDevice(key){state.selectedModalKey=key;renderEquipos();}
 function renderModalOfferPanel(){
   const eq=modalEquipoList().find(item=>item.key===state.selectedModalKey);
   if(!eq){$('modalOfferPanel').innerHTML='<div class="modal-empty">Selecciona un equipo para ver ofertas.</div>';return;}
+  if(eq.motor){
+    const monthly=Number(eq.motor.plazos?.[0]?.pago_mensual||0);
+    const financed=Number(eq.motor.equipo.precio_financiado||0);
+    $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span></div><span>Matriz uno</span></div><div class="modal-offer-list"><div class="offer-choice recommended" onclick="assignMotorEquipment('${esc(eq.key)}')"><span class="recommend-badge">Aplica</span><b>Pago equipo en linea ${(state.activeLineIndex??0)+1}: ${money(monthly)}/mes</b><span>Precio financiado ${money(financed)} / 30 meses / Fuente: ${esc(eq.motor.fuente?.hoja||'Ofertas Business Red Plus')}</span><div class="select-offer">Escoger para linea ${(state.activeLineIndex??0)+1}</div></div></div>`;
+    return;
+  }
   const current=state.cart[state.activeLineIndex??0]||{};
   const ofertas=sortRecommendedOffers(ofertasParaEquipo(eq,state.activeLineIndex??0),current);
   $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span></div><span>${ofertas.length} oferta(s)</span></div><div class="modal-offer-list">${ofertas.map(o=>{const rec=recommendOffer(o,current);return `<div class="offer-choice ${rec.score>=90?'recommended':''} ${current.oferta&&current.oferta.id===o.id&&current.equipo&&current.equipo.key===eq.key?'active':''}" onclick="assignOfferToLine('${esc(eq.key)}','${esc(o.id)}')"><span class="recommend-badge ${rec.warn?'warn':''}">${esc(rec.label)}</span><b>${esc(offerDisplayTitle(o))}</b><span>${esc(rec.detail)} / ${termsShort(o,eq)}${offerEligibilityNote(o)?' / '+esc(offerEligibilityNote(o)):''}</span><div class="select-offer">Escoger para linea ${(state.activeLineIndex??0)+1}</div></div>`}).join('')||'<div class="modal-empty">Este equipo no tiene ofertas para el contexto actual.</div>'}</div>`;
@@ -615,7 +578,7 @@ function assignOfferToLine(key,offerId){
   ensureLineRows();
   const index=state.activeLineIndex??0;
   const eq=L.getEquiposFiltrados({...lineState(index),buscar:''}).find(e=>e.key===key);const offer=(window.OFERTAS_DATA||[]).find(o=>o.id===offerId);
-  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:defaultPlazo(offer),seguro:state.cart[index]?.seguro||false};
+  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:defaultPlazo(offer)};
   state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
   renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
 }
@@ -627,7 +590,6 @@ function termsShort(o,eq){const t=L.calcularTablaComercial(o,eq.precio);if(t&&t.
 function renderTerms(eq,o,index=state.activeLineIndex??0){
   const row=state.cart[index]||{};
   const trade=L.requiresTradein(o,row.evento||state.lineEvent);
-  const bonuses=lineBonusCredits(row).map(b=>`<li>${esc(b.detail)}</li>`).join('');
   $('termsBox').innerHTML=`<div class="terms"><h3>Terminos y condiciones de la oferta seleccionada</h3><ul>
     <li>Linea: <b>${index+1}</b></li>
     <li>Equipo: <b>${esc(eq.modelo)}</b> / Precio regular ${money(eq.precio)}</li>
@@ -638,8 +600,7 @@ function renderTerms(eq,o,index=state.activeLineIndex??0){
     <li>Plazos: ${esc((o.plazos||[]).join(', ')||'N/A')}</li>
     <li>Limite: ${o.lineaLimit||'segun boletin'} equipo(s)/linea(s) por BAN cuando aplique.</li>
     <li>Taxes/IVU: el cliente paga taxes sobre el precio regular al activar.</li>
-    ${bonuses||'<li>Creditos/bonos adicionales: no aplican con el contexto actual de esta linea.</li>'}
-    ${o.bonoStreaming?'<li>Bono streaming aplica segun terminos del boletin.</li>':''}
+    <li>Benefits adicionales: pendientes de una publicación oficial independiente.</li>
   </ul></div>`;
 }
 function completeEquipo(){$('stepEquipo').classList.add('done');$('stepServicios').classList.remove('locked');renderServicios();window.scrollTo({top:$('stepServicios').offsetTop-80,behavior:'smooth'});}
@@ -673,37 +634,30 @@ function backToProductos(){
   renderProductosAdicionales();renderSummary();
   window.scrollTo({top:$('stepProductos').offsetTop-80,behavior:'smooth'});
 }
-function serviceAppliedOption(id){
-  const options=SERVICE_PRICE_OPTIONS[id]||[];
-  return options[0]?{...options[0]}:null;
-}
-function selectedServicePrice(id){
-  return serviceAppliedOption(id);
-}
-function serviceSummaryText(s){
-  if(!s)return '';
-  if(s.selectedOption)return `${s.nombre}: ${s.selectedOption.label} - ${money(s.selectedOption.precio)}`;
-  return `${s.nombre}: Precio pendiente`;
-}
 function productoPrecio(row){
   const raw=String(row.precio_texto||row.precio||'0');
   const num=Number(String(row.precio||raw).replace(/[^0-9.]/g,''));
   return Number.isFinite(num)?num:0;
 }
 function fijoProductGroups(){
-  const source=window.PLANES_FIJOS_MODULOS_FALLBACK||[];
   const allowed=new Set(['precios_medidos_telefonia','precios_ilimitado_pr','precios_tele_entry','precios_remote_call_forward_pr','precios_remote_call_forward_us','precios_paquete_pr_us','precios_2play_internet','servicios_internet_fijo']);
-  return source.filter(g=>allowed.has(g.seccion_key)).map(g=>({
-    key:g.seccion_key,
-    titulo:g.titulo,
-    tipo:'Fijo',
-    filas:(g.contenido?.filas||[]).map(row=>({...row,tipo:'Fijo',grupo:g.titulo}))
-  }));
+  return fixedProductGroups.filter(group=>allowed.has(group.key));
+}
+function assignMotorEquipment(key){
+  ensureLineRows();
+  const index=state.activeLineIndex??0;
+  const eq=state.motorEquipos.find(item=>item.key===key);if(!eq)return;
+  const item=eq.motor;
+  const financed=Number(item.equipo.precio_financiado||0);
+  const benefit=item.beneficio?.tipo==='gratis'?'gratis':'credito';
+  const offer={id:item.oferta.id,titulo:item.oferta.nombre,tipo:'multilinea',beneficio,credito:Math.max(0,eq.precio-financed),plazos:[30],eventos:[state.cart[index].evento],familias:['plus'],equipos:[eq],terminos:[`Fuente: ${item.fuente?.hoja||'Ofertas Business Red Plus'}`]};
+  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:30,motorEsquema:'esquema_1',motorPorcentaje:Number(item.beneficio?.porcentaje||0),motorPagoMensual:Number(item.plazos?.[0]?.pago_mensual||0),motorPrecioFinanciado:financed};
+  state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
+  renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
 }
 function productGroups(){
   const fijo=fijoProductGroups();
-  const tv=CONST_CLARO_TV_DATA.map(g=>({key:g.key,titulo:g.titulo,tipo:'Claro TV',filas:g.filas.map(row=>({...row,tipo:'Claro TV',grupo:g.titulo}))}));
-  return [...fijo,...tv];
+  return [...fijo,...claroTvProductGroups];
 }
 function productFamilyGroups(){
   return productGroups().filter(g=>state.activeProductFamily==='claro_tv'?g.tipo==='Claro TV':g.tipo==='Fijo');
@@ -761,7 +715,7 @@ function renderProductosAdicionales(){
   const q=($('buscarProducto')?.value||'').toLowerCase().trim();
   $('productFamilyTabs').innerHTML=[
     {id:'fijo',label:'Fijo',count:fijoProductGroups().reduce((n,g)=>n+g.filas.length,0)},
-    {id:'claro_tv',label:'Claro TV',count:CONST_CLARO_TV_DATA.reduce((n,g)=>n+g.filas.length,0)}
+    {id:'claro_tv',label:'Claro TV',count:claroTvProductGroups.reduce((n,g)=>n+g.filas.length,0)}
       ].map(f=>`<button class="product-family-tab ${state.activeProductFamily===f.id?'active':''}" onclick="setProductFamily('${f.id}')">${f.label}<span class="line-note">${f.count} item(s)</span></button>`).join('');
   $('productTechTabs').innerHTML=state.activeProductFamily==='fijo'
     ? [
@@ -788,123 +742,25 @@ function renderProductosAdicionales(){
   $('selectedProducts').innerHTML=`<div class="box"><h3>Productos agregados</h3><div style="overflow:auto"><table><thead><tr><th>Tipo</th><th>Producto</th><th>Codigo</th><th>Cant.</th><th>Mensual</th><th></th></tr></thead><tbody>${state.productosAdicionales.length?state.productosAdicionales.map(p=>`<tr><td>${esc(p.tipo)}</td><td>${esc(p.descripcion)}</td><td>${esc(p.codigo)}</td><td><input class="qty-input" type="number" min="1" value="${p.qty}" onchange="updateProductoQty('${esc(p.id)}',this.value)"></td><td>${money(Number(p.precio||0)*Number(p.qty||1))}</td><td><button class="btn" onclick="removeProductoAdicional('${esc(p.id)}')">Quitar</button></td></tr>`).join(''):'<tr><td colspan="6">Sin productos fijos o Claro TV agregados.</td></tr>'}</tbody></table></div></div>`;
   $('prodStatus').textContent=state.productosAdicionales.length?`${state.productosAdicionales.length} agregado(s)`:'Opcional';
 }
-function serviceMetaText(s){
-  const isBundle=String(s.id||'').includes('-');
-  return `${isBundle?'Bundle':'SOC'}: ${s.socMovil} / ${s.socFijo}`;
-}
-function isServiceSelected(id){
-  return state.servicios.some(s=>s&&s.id===id);
-}
 function collectSelectedServices(){
-  const selected=[...document.querySelectorAll('[data-serv]:checked')];
-  if(!selected.length&&document.querySelectorAll('[data-serv]').length===0)return state.servicios;
-  state.servicios=selected.map(i=>{
-    const base=SERVICIOS.find(s=>s.id===i.dataset.serv);
-    const selectedOption=selectedServicePrice(i.dataset.serv);
-    return {...base,selectedOption,precio:selectedOption?selectedOption.precio:0,precioPendiente:!selectedOption};
-  });
-  return state.servicios;
+  return [];
 }
 function renderServicios(){
   renderOfferExtrasPanel();
-  $('serviciosList').innerHTML=SERVICIOS.map(s=>{
-    const applied=serviceAppliedOption(s.id);
-    const priceControl=applied?`<div class="service-price-line"><strong>Precio: ${money(applied.precio)}</strong><em>${esc(serviceMetaText(s))}</em></div>`:'<span class="line-note">Precio pendiente - no suma al total.</span>';
-    return `<label class="check-card"><input type="checkbox" data-serv="${s.id}" ${isServiceSelected(s.id)?'checked':''} onchange="collectSelectedServices();renderProposal()"><div><b>${s.nombre}</b><span>${s.desc}</span>${priceControl}</div></label>`;
-  }).join('');
+  $('serviciosList').innerHTML='<div class="modal-empty">Servicios pendientes de publicacion. No se aplican valores heredados.</div>';
   renderSelectedLineInsuranceSummary();
 }
 function planAmount(){return L.getPlanNum(state);}
-function selectedPortabilidadRows(selected){return selected.filter(i=>i.evento==='portabilidad');}
-function selectedPortabilidadCreditRows(selected){return selectedPortabilidadRows(selected).filter(i=>i.oferta&&i.oferta.beneficio!=='gratis');}
-function applicableBonuses(selected=state.cart.filter(i=>i.equipo&&i.oferta)){
-  const plan=planAmount();
-  const portabilidad=selectedPortabilidadRows(selected);
-  const portabilidadCreditos=selectedPortabilidadCreditRows(selected);
-  const bonuses={streaming:null,portabilidad:[],pagoBalance:null};
-  const streamingLines=selected.filter(i=>i.oferta.bonoStreaming&&(i.evento==='nueva'||i.evento==='portabilidad'||i.evento==='adicional'));
-  if(state.convergente&&plan>=35&&streamingLines.length){
-    bonuses.streaming={nombre:'Bono Streaming',lineas:streamingLines};
-  }
-  if(portabilidadCreditos.length&&plan>=45){
-    bonuses.portabilidad.push({
-      nombre:'Bono Portabilidad $150',
-      lineas:portabilidadCreditos,
-      detalles:[
-        'Aplica a lineas marcadas como portabilidad en planes elegibles desde $45, excepto equipos gratis.',
-        'Cliente convergente: $150 por linea segun boletin; no convergente depende de cantidad de lineas portadas.',
-        'Se presenta como credito dividido en 24 cuotas mensuales. No aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.'
-      ]
-    });
-  }
-  if(portabilidadCreditos.length&&state.tipo==='multilinea'&&plan>=65){
-    const amount=state.planMulti==='plus'?175:(state.planMulti==='extreme'?300:500);
-    bonuses.portabilidad.push({
-      nombre:`Bono Portabilidad hasta $${amount}`,
-      lineas:portabilidadCreditos.slice(0,3),
-      detalles:[
-        `Aplica en Business Red ${$('planMulti').selectedOptions[0].textContent}; maximo 3 lineas.`,
-        `Monto estimado: $${amount} por linea portada, sujeto a terminos y validacion. Se presenta dividido en 24 cuotas mensuales.`,
-        'Aplica a clientes convergentes y no convergentes si cumplen requisitos.'
-      ]
-    });
-  }
-  if(portabilidadCreditos.length&&plan>=50){
-    bonuses.pagoBalance={
-      nombre:'Pago balance hasta $800',
-      lineas:portabilidadCreditos.slice(0,5),
-      detalles:[
-        'Aplica a portabilidad en planes desde $50 y ofertas que no sean equipo gratis.',
-        'Maximo hasta 5 lineas y solicitud dentro de 60 dias calendario.',
-        'Solo cubre balance de equipo y/o accesorios; no cubre impuestos ni balances pendientes.'
-      ]
-    };
-  }
-  return bonuses;
-}
-function bonusProposalItems(selected){
-  const b=applicableBonuses(selected);
-  const items=[];
-  if(b.streaming) items.push(`Bono Streaming: $10.00 por BAN por 12 meses, sujeto a convergencia y terminos.`);
-  groupedCreditsByKind(selected,'port').forEach(x=>items.push(`${x.label}: ${x.lines}. ${x.detail}`));
-  if(b.pagoBalance) items.push(`Pago balance/deuda equipo otra compania: ${b.pagoBalance.lineas.map(i=>`Linea ${i.linea} ${money(Math.min(Number(i.deudaPortabilidad||0),800))}`).join(', ') || 'pendiente'}, sujeto a evidencia y validacion.`);
-  return items;
-}
 function renderOfferExtrasPanel(){
-  const selected=state.cart.filter(i=>i.equipo&&i.oferta);
-  const bonuses=applicableBonuses(selected);
-  const blocks=[];
-  if(bonuses.streaming){
-    blocks.push(`<div class="info-card"><b>Bono Streaming</b><ul>
-      <li>Activo porque el cliente esta marcado como convergente.</li>
-      <li>Aplica a ${bonuses.streaming.lineas.length} linea(s), sujeto a los terminos del boletin.</li>
-      <li>Descuento de $10.00 por BAN por 12 meses cuando cumpla requisitos.</li>
-      <li>Equipos/ofertas: ${esc(bonuses.streaming.lineas.map(i=>`${i.equipo.modelo} (${offerProposalLabel(i)})`).join(', '))}</li>
-    </ul></div>`);
-  }
-  bonuses.portabilidad.forEach(b=>{
-    blocks.push(`<div class="info-card"><b>${esc(b.nombre)}</b><ul>
-      ${b.detalles.map(d=>`<li>${esc(d)}</li>`).join('')}
-      <li>Lineas: ${esc(b.lineas.map(i=>`Linea ${i.linea}: ${i.equipo.modelo}`).join(' | '))}</li>
-    </ul></div>`);
-  });
-  if(bonuses.pagoBalance){
-    blocks.push(`<div class="info-card"><b>Pago balance hasta $800</b><ul>
-      ${bonuses.pagoBalance.detalles.map(d=>`<li>${esc(d)}</li>`).join('')}
-      <li>Lineas: ${esc(bonuses.pagoBalance.lineas.map(i=>`Linea ${i.linea}: ${i.equipo.modelo}`).join(' | '))}</li>
-    </ul></div>`);
-  }
-  $('offerExtrasPanel').className=blocks.length?'conditional-panel show':'conditional-panel';
-  $('offerExtrasPanel').innerHTML=blocks.length?`<h3>Bonos aplicables antes de servicios</h3><div class="info-grid">${blocks.join('')}</div>`:'';
+  $('offerExtrasPanel').className='conditional-panel show';
+  $('offerExtrasPanel').innerHTML='<div class="info-card"><b>Benefits pendientes de publicacion</b><span>No se aplican bonos ni descuentos heredados.</span></div>';
 }
 function renderSelectedLineInsuranceSummary(){
-  const seguros=selectedLineInsurance();
-  $('lineInsuranceSummary').innerHTML=`<div class="box"><h3>Seguros seleccionados por equipo</h3><div style="overflow:auto"><table class="insurance"><thead><tr><th>Linea</th><th>Equipo</th><th>Costo del Equipo</th><th>Deducible</th><th>Prima mensual</th></tr></thead><tbody>${seguros.length?seguros.map(s=>`<tr><td>Linea ${s.linea}</td><td>${esc(s.modelo)}</td><td>${esc(s.rango)}</td><td>${esc(s.deducible)}</td><td>${esc(s.prima)}</td></tr>`).join(''):'<tr><td colspan="5">Sin seguro de equipo seleccionado. Marca el check de Seguro al escoger cada equipo.</td></tr>'}</tbody></table></div></div>`;
+  $('lineInsuranceSummary').innerHTML='<div class="box"><h3>Seguros pendientes de publicacion</h3><p class="muted">No se calculan primas ni deducibles desde tablas heredadas.</p></div>';
 }
 function completeServicios(){
   collectSelectedServices();
-  state.seguros=[];
-  $('servStatus').textContent=(state.servicios.length+selectedLineInsurance().length)+' seleccionado(s)';
+  $('servStatus').textContent='Pendiente de publicación';
   $('stepServicios').classList.add('done');
   $('stepProductos').classList.remove('locked');
   renderProductosAdicionales();renderSummary();
@@ -918,48 +774,23 @@ function completeProductos(){
   window.scrollTo({top:$('stepPropuesta').offsetTop-80,behavior:'smooth'});
 }
 function minLines(){return state.tipo==='individual'?1:2}
-function setAutopayMode(checked){
-  state.usarAutopay=!!checked;
-  syncCurrentRowCosts();
-  renderProposal();
-  renderSummary();
-}
 function planMonthlyCost(){
-  return state.usarAutopay?planAutopayTotal():planRegularTotal();
+  return planRegularTotal();
 }
 function planRegularTotal(){
-  if(state.tipo==='individual')return Number((PLAN_INDIVIDUAL_TOTALS[state.planInd]||{}).regular||state.planInd||0);
-  const table=PLAN_MULTILINEA_TOTALS[state.planMulti]||PLAN_MULTILINEA_TOTALS.plus;
-  const idx=Math.max(0,Math.min(Number(state.lineas||1),table.regular.length)-1);
-  return Number(table.regular[idx]||0);
-}
-function planAutopayTotal(){
-  if(state.tipo==='individual'){
-    const row=PLAN_INDIVIDUAL_TOTALS[state.planInd]||{regular:Number(state.planInd||0),autopay:Number(state.planInd||0)};
-    return Number(row.autopay||row.regular||0);
-  }
-  const table=PLAN_MULTILINEA_TOTALS[state.planMulti]||PLAN_MULTILINEA_TOTALS.plus;
-  const idx=Math.max(0,Math.min(Number(state.lineas||1),table.autopay.length)-1);
-  return Number(table.autopay[idx]||table.regular[idx]||0);
+  if(state.tipo==='individual')return Number(mobilePlanCatalog.individual.find(plan=>plan.regular===Number(state.planInd))?.regular||0);
+  return planLineCosts().slice(0,Number(state.lineas||0)).reduce((sum,value)=>sum+Number(value||0),0);
 }
 function serviciosMonthlyTotal(){
-  collectSelectedServices();
-  return state.servicios.reduce((sum,s)=>sum+Number(String(s.precio||'0').replace(/[^0-9.]/g,'')||0),0);
-}
-function segurosMonthlyTotal(){
-  return selectedLineInsurance().reduce((sum,s)=>sum+s.primaNum,0);
-}
-function debitDiscountTotal(){
-  return planAutopayTotal()-planRegularTotal();
+  return 0;
 }
 function ofertaMonthlyTotal(selected){
   const equipTotal=selected.reduce((sum,row)=>sum+Number(paymentPerUnit(row)||0),0);
-  return planMonthlyCost()+equipTotal+serviciosMonthlyTotal()+segurosMonthlyTotal()+productosAdicionalesMonthlyTotal();
+  return planMonthlyCost()+equipTotal+productosAdicionalesMonthlyTotal();
 }
 function planLineCosts(){
   if(state.tipo==='individual')return [planRegularTotal()];
-  const base=PLAN_MULTILINEA_LINE_COSTS[state.planMulti]||PLAN_MULTILINEA_LINE_COSTS.plus;
-  return base;
+  return mobilePlanCatalog.multiline.find(plan=>plan.key===state.planMulti)?.lineCosts||[];
 }
 function syncCurrentRowCosts(){
   const costs=planLineCosts();
@@ -1004,21 +835,6 @@ function linePaySummary(row){
   if(row.oferta.credito)return `Credito ${money(row.oferta.credito)} - paga ${money(paymentPerUnit(row))}/mes`;
   return `${money(paymentPerUnit(row))}/mes`;
 }
-function insuranceForPrice(price){
-  const p=Number(price||0);
-  const idx=p<=200?0:p<=400?1:p<=700?2:p<=1400?3:4;
-  const row=SEGUROS[idx];
-  return {...row,primaNum:Number(String(row.prima||'0').replace(/[^0-9.]/g,'')||0),deducibleNum:Number(String(row.deducible||'0').replace(/[^0-9.]/g,'')||0)};
-}
-function toggleLineInsurance(index,checked){
-  if(!state.cart[index])return;
-  state.cart[index].seguro=!!checked;
-  renderLineRows();
-  renderProposal();
-}
-function selectedLineInsurance(){
-  return state.cart.filter(row=>row&&row.equipo&&row.seguro).map(row=>({linea:row.linea,modelo:row.equipo.modelo,...insuranceForPrice(row.equipo.precio)}));
-}
 function comparisonData(){
   const selected=selectedOfferRows();
   return {
@@ -1027,38 +843,24 @@ function comparisonData(){
     vendedor:($('cmpVendedor')&&$('cmpVendedor').value)||state.crmVendor||'',
     selected,
     equipos:groupProposalEquipment(selected),
-    bonusItems:bonusProposalItems(selected),
     totalActual:currentTotal(),
     totalOferta:ofertaMonthlyTotal(selected),
     planRegularCosto:planRegularTotal(),
-    planCosto:planAutopayTotal(),
+    planCosto:planRegularTotal(),
     planBaseCosto:planMonthlyCost(),
-    modoPago:state.usarAutopay?'con AutoPay':'sin AutoPay',
+    modoPago:'precio publicado',
     equipoCosto:selected.reduce((sum,row)=>sum+Number(paymentPerUnit(row)||0),0),
     serviciosCosto:serviciosMonthlyTotal(),
-    segurosCosto:segurosMonthlyTotal(),
+    segurosCosto:0,
     productosCosto:productosAdicionalesMonthlyTotal(),
     productosAdicionales:state.productosAdicionales,
-    seguroCosto:selectedLineInsurance(),
-    debitoCosto:debitDiscountTotal(),
+    seguroCosto:[],
+    debitoCosto:0,
     notas:commercialNotes(selected)
   };
 }
 function commercialNotes(selected){
-  const notes=[
-    `Descuento debito automatico: $10.00 por linea, aplicado automaticamente en esta comparativa.`
-  ];
-  if(state.convergente){
-    notes.push('Convergencia: cliente marcado como convergente; se muestran notas de convergencia y portabilidad cuando aplican bonos del boletin.');
-  }
-  const portLines=selected.filter(row=>row.evento==='portabilidad');
-  if(portLines.length){
-    notes.push(`Portabilidad: ${portLines.length} linea(s) marcada(s); revisar creditos y pago de balance segun plan, convergencia y validacion final.`);
-  }
-  selected.filter(row=>lineBonusCredits(row,selected).length).forEach(row=>{
-    lineBonusCredits(row,selected).forEach(b=>notes.push(`Linea ${row.linea} ${row.equipo.modelo}: ${b.label}. ${b.detail}`));
-  });
-  return notes;
+  return selected.map(row=>`Linea ${row.linea}: aplicar exclusivamente los términos de la oferta publicada ${row.oferta?.id||''}.`);
 }
 function todayText(){
   return new Date().toLocaleDateString('es-US');
@@ -1078,98 +880,37 @@ function cpCurrentRows(interactive){
 }
 function cpOfferRows(d,interactive){
   const rows=(d.selected||[]).map(row=>{
-    const ins=insuranceForPrice(row.equipo.precio);
-    const idx=state.cart.indexOf(row);
-    const seguro=interactive?`<label><input type="checkbox" ${row.seguro?'checked':''} onchange="toggleLineInsurance(${idx},this.checked)"> Seguro</label>`:(row.seguro?'Si':'No');
-    return `<tr><td>Linea ${row.linea}</td><td>${esc(eventLabel(row.evento))}</td><td>${esc(row.equipo.modelo)}</td><td>${esc(offerProposalLabel(row))}</td><td>${esc(linePaySummary(row))}</td><td>${lineMonthsText(row)}</td><td class="cost">${money(paymentPerUnit(row))}/mes</td><td class="cost">${money(row.equipo.precio)}</td><td>${seguro}<div class="cp-small">Prima ${esc(ins.prima)} / Deducible ${esc(ins.deducible)}</div></td></tr>`;
+    return `<tr><td>Linea ${row.linea}</td><td>${esc(eventLabel(row.evento))}</td><td>${esc(row.equipo.modelo)}</td><td>${esc(offerProposalLabel(row))}</td><td>${esc(linePaySummary(row))}</td><td>${lineMonthsText(row)}</td><td class="cost">${money(paymentPerUnit(row))}/mes</td><td class="cost">${money(row.equipo.precio)}</td></tr>`;
   }).join('');
-  return rows||'<tr><td colspan="9">Sin equipos seleccionados</td></tr>';
+  return rows||'<tr><td colspan="8">Sin equipos seleccionados</td></tr>';
 }
 function cpEquipmentRows(d){
   return (d.equipos||[]).map(i=>`<tr><td>${esc(i.modelo)}</td><td>${i.cantidad}</td><td class="cost">${money(i.pago)}</td><td class="cost">${money(i.precio)}</td><td>${esc(i.oferta)}</td></tr>`).join('')||'<tr><td colspan="5">Sin equipos seleccionados</td></tr>';
 }
 function cpServicesList(){
-  const lines=[...state.servicios.map(serviceSummaryText),...state.productosAdicionales.map(productoAdicionalSummaryText),...selectedLineInsurance().map(s=>`Seguro linea ${s.linea} ${s.modelo}: prima ${s.prima}, deducible ${s.deducible}`)];
-  return lines.length?lines.map(s=>`<div class="cp-list-item">${esc(s)}</div>`).join(''):'<div class="cp-list-item">Sin servicios, fijo/TV o seguros seleccionados</div>';
-}
-function cpEquipmentOptions(d){
-  const selected=d.selected||[];
-  return selected.length?selected.map(row=>{
-    const ins=insuranceForPrice(row.equipo.precio);
-    return `<div class="cp-list-item"><b>${esc(row.equipo.modelo)}</b><span>${esc(linePaySummary(row))} / Regular ${money(row.equipo.precio)}${row.seguro?` / Seguro ${esc(ins.prima)} / deducible ${esc(ins.deducible)}`:''}</span></div>`;
-  }).join(''):'<div class="cp-list-item">Sin equipos seleccionados</div>';
-}
-function cpBonusList(items){
-  return items.length?items.map(i=>`<li>${esc(i)}</li>`).join(''):'<li>Sin bonos aplicables con el contexto actual</li>';
-}
-function tradeInAcceptedSummary(){
-  return 'Samsung: S22, S22 Plus, S22 Ultra, S23, S23 Plus, S23 Ultra, S24 FE, S24, S24 Plus, S24 Ultra, S25, S25 Plus, S25 Ultra, Z Flip 5, Z Flip 6, Z Fold 4, Z Fold 5, Z Fold 6. Apple: iPhone 14, 14 Plus, 14 Pro, 14 Pro Max, 15, 15 Plus, 15 Pro, 15 Pro Max, 16, 16 Plus, 16 Pro, 16 Pro Max, 17e, 17, Air, 17 Pro, 17 Pro Max. Motorola: Razr 2024, Razr 2025, Razr+ 2023, Razr+ 2024, Razr+ 2025, Razr Ultra 2025. OnePlus: 9 Pro 5G, 10 Pro 5G.';
-}
-function groupedCreditsByKind(selected,kind){
-  const rows=[];
-  const seen=new Set();
-  selected.forEach(row=>{
-    lineBonusCredits(row,selected).filter(b=>b.kind===kind).forEach(b=>{
-      const key=`${kind}-${b.label}`;
-      if(seen.has(key)) return;
-      seen.add(key);
-      const lines=selected.filter(r=>lineBonusCredits(r,selected).some(x=>x.kind===kind&&x.label===b.label)).map(r=>`Linea ${r.linea}`).join(', ');
-      rows.push({label:b.label,detail:b.detail,lines});
-    });
-  });
-  return rows;
+  const products=state.productosAdicionales.map(productoAdicionalSummaryText);
+  const published=products.length?products.map(item=>`<div class="cp-list-item">${esc(item)}</div>`).join(''):'<div class="cp-list-item">Sin productos Fijo o Claro TV agregados</div>';
+  return published+'<div class="cp-list-item">Benefits, servicios y seguros: pendientes de publicación oficial.</div>';
 }
 function cpBonusConditions(d){
   const selected=d.selected||[];
-  const portCredits=groupedCreditsByKind(selected,'port');
-  const balanceCredits=groupedCreditsByKind(selected,'balance');
-  const streamCredits=groupedCreditsByKind(selected,'stream');
-  const tradeRows=[];
-  selected.forEach(row=>{
-    if(L.requiresTradein(row.oferta,row.evento)){
-      tradeRows.push(`Linea ${row.linea}: ${row.equipo.modelo}`);
-    }
-  });
-  const portText=portCredits.length
-    ? `<li><b>Bono Portabilidad:</b> ${portCredits.map(i=>`${esc(i.label)} (${esc(i.lines)}): ${esc(i.detail)}`).join(' ')}</li>`
-    : '<li><b>Bono Portabilidad:</b> No aplica con el contexto actual. No aplica renovaciones, BYOP, prepago, Banda Ancha, FWA ni Claro Hogar.</li>';
-  const balanceText=balanceCredits.length
-    ? `<li><b>Pago de balance/deuda otra compania:</b> ${balanceCredits.map(i=>`${esc(i.lines)}: ${esc(i.detail)}`).join(' ')}</li>`
-    : '<li><b>Pago de balance hasta $800:</b> No aplica con el contexto actual.</li>';
-  const streamText=streamCredits.length
-    ? '<li><b>Bono Streaming:</b> $10 por BAN por 12 meses, sujeto a convergencia y terminos.</li>'
-    : '<li><b>Credito de convergencia / streaming:</b> No aplica si el cliente no es convergente o si la oferta seleccionada no lo permite.</li>';
-  const tradeText=tradeRows.length
-    ? `<li><b>Trade-in requerido:</b> ${esc(tradeRows.join(' / '))}.</li><li><b>Equipos que se reciben:</b> ${esc(tradeInAcceptedSummary())}</li>`
-    : '<li>Trade-in: no requiere para las lineas seleccionadas.</li>';
-  return `<div class="cp-note"><ul>${streamText}${portText}${balanceText}${tradeText}</ul></div>`;
+  const tradeRows=selected.filter(row=>L.requiresTradein(row.oferta,row.evento)).map(row=>`Linea ${row.linea}: ${row.equipo.modelo}`);
+  const tradeText=tradeRows.length?`<li><b>Trade-in requerido por la oferta publicada:</b> ${esc(tradeRows.join(' / '))}.</li>`:'<li>Trade-in: no requerido por las ofertas seleccionadas.</li>';
+  return `<div class="cp-note"><ul><li>Benefits adicionales: pendientes de publicación oficial; no se aplicaron reglas heredadas.</li>${tradeText}</ul></div>`;
 }
 function cpMonthlyCreditSummary(d){
-  const selected=d.selected||[];
-  const portCredits=selected.flatMap(row=>lineBonusCredits(row,selected).filter(b=>b.kind==='port'));
-  const portMonthly=portCredits.reduce((sum,b)=>sum+Number(b.monthly||0),0);
-  const hasStreaming=selected.some(row=>lineBonusCredits(row,selected).some(b=>b.kind==='stream'));
-  const streamingMonthly=hasStreaming?10:0;
-  const finalTotal=d.totalOferta-portMonthly-streamingMonthly;
-  const portLabel=portCredits.length?`Credito portabilidad (${portCredits.length} credito${portCredits.length>1?'s':''})`:'Credito portabilidad';
   return `<div class="cp-breakdown">
     <div><span>Plan usado:</span><b>${money(d.planBaseCosto)} (${esc(d.modoPago)})</b></div>
     <div><span>Equipos:</span><b>${money(d.equipoCosto)}</b></div>
-    <div><span>Servicios:</span><b>${money(d.serviciosCosto)}</b></div>
     <div><span>Fijo / Claro TV:</span><b>${money(d.productosCosto)}</b></div>
-    <div><span>Seguro:</span><b>${money(d.segurosCosto)}</b></div>
     <div class="total"><span>Total mensual propuesta:</span><b>${money(d.totalOferta)}</b></div>
-    <div class="credit"><span>${esc(portLabel)}</span><b>${portMonthly?'-'+money(portMonthly):'-'}</b><em>24 meses</em></div>
-    <div class="credit"><span>Streaming</span><b>${streamingMonthly?'-'+money(streamingMonthly):'-'}</b><em>12 meses</em></div>
-    <div class="final"><span>Total final estimado:</span><b>${money(finalTotal)}</b></div>
+    <div class="final"><span>Complementos no publicados:</span><b>No incluidos</b></div>
   </div>`;
 }
 function cpCommercialMarkup(d,interactive){
-  const bonusItems=d.bonusItems||[];
   const clientInput=interactive?`<input class="compare-input" id="cmpCliente" value="${esc(d.cliente==='Cliente'?'':d.cliente)}" placeholder="Nombre del cliente">`:esc(d.cliente);
   const banInput=interactive?`<input class="compare-input" id="cmpBan" value="${esc(d.ban)}" placeholder="BAN principal">`:esc(d.ban);
   const sellerInput=interactive?`<input class="compare-input" id="cmpVendedor" value="${esc(d.vendedor)}" placeholder="Vendedor">`:esc(d.vendedor);
-  const autoPayControl=interactive?`<label class="autopay-toggle"><input id="autopayMode" type="checkbox" ${state.usarAutopay?'checked':''} onchange="setAutopayMode(this.checked)"> Calcular con AutoPay</label>`:'';
   return `<div class="commercial-proposal">
     <header class="cp-hero">
       <div class="cp-hero-grid">
@@ -1189,21 +930,20 @@ function cpCommercialMarkup(d,interactive){
     </div>
     <section class="cp-cards">
       <div class="cp-card"><div class="label">Plan nuevo</div><div class="value">${esc(planLabel())}</div></div>
-      <div class="cp-card"><div class="label">Plan regular sin debito</div><div class="value red">${money(d.planRegularCosto)}</div></div>
-      <div class="cp-card"><div class="label">Plan con AutoPay</div><div class="value green">${money(d.planCosto)}</div></div>
-          <div class="cp-card"><div class="label">Total mensual propuesta ${state.usarAutopay?'con AutoPay':'sin AutoPay'}</div><div class="value blue">${money(d.totalOferta)}</div>${autoPayControl}<small>Plan + equipos + servicios + seguro + fijo/TV</small></div>
+      <div class="cp-card"><div class="label">Plan publicado</div><div class="value red">${money(d.planRegularCosto)}</div></div>
+      <div class="cp-card"><div class="label">Total mensual publicado</div><div class="value blue">${money(d.totalOferta)}</div><small>Plan + equipos + Fijo/TV seleccionados</small></div>
     </section>
     <section class="cp-section">
       <div class="cp-section-head"><h2>Plan actual</h2><span class="cp-small">Cuentas actuales y lineas existentes</span></div>
       <div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Linea</th><th>BAN</th><th>Telefono</th><th>Plan</th><th>Costo</th><th>Equipo</th></tr></thead><tbody>${cpCurrentRows(interactive)}<tr class="cp-total-row"><td colspan="4">TOTAL ACTUAL</td><td class="cost">${money(d.totalActual)}</td><td>${cpLineCount(d)} linea(s)</td></tr></tbody></table></div>
     </section>
     <section class="cp-section">
-      <div class="cp-section-head"><h2>Oferta nueva calculada</h2><span class="cp-small">Equipos, beneficio, pago mensual y seguro</span></div>
-      <div class="cp-table-wrap"><table class="cp-table proposal"><thead><tr><th>Linea</th><th>Evento</th><th>Equipo</th><th>Beneficio</th><th>Que paga</th><th>Meses</th><th>Paga equipo</th><th>Regular</th><th>Seguro</th></tr></thead><tbody>${cpOfferRows(d,interactive)}</tbody></table></div>
+      <div class="cp-section-head"><h2>Oferta nueva calculada</h2><span class="cp-small">Equipos, beneficio y pago mensual publicados</span></div>
+      <div class="cp-table-wrap"><table class="cp-table proposal"><thead><tr><th>Linea</th><th>Evento</th><th>Equipo</th><th>Beneficio</th><th>Que paga</th><th>Meses</th><th>Paga equipo</th><th>Regular</th></tr></thead><tbody>${cpOfferRows(d,interactive)}</tbody></table></div>
     </section>
     <section class="cp-section">
       <div class="cp-grid-2">
-        <div><h2>Servicios y seguro</h2><div class="cp-list" style="margin-top:12px">${cpServicesList()}</div></div>
+        <div><h2>Publicaciones complementarias</h2><div class="cp-list" style="margin-top:12px">${cpServicesList()}</div></div>
         <div><h2>Desglose mensual</h2>${cpMonthlyCreditSummary(d)}</div>
       </div>
     </section>
@@ -1213,7 +953,7 @@ function cpCommercialMarkup(d,interactive){
       <div class="cp-small" style="margin-top:8px">El IVU se calcula basado en el precio regular de cada equipo. Los creditos comienzan segun los terminos del boletin.</div>
     </section>
     <section class="cp-section">
-      <div class="cp-section-head"><h2>Bonos y condiciones</h2><span class="cp-small">Creditos aplicables y trade-in si corresponde</span></div>
+      <div class="cp-section-head"><h2>Condiciones publicadas</h2><span class="cp-small">Trade-in cuando la oferta vigente lo requiere</span></div>
       ${cpBonusConditions(d)}
     </section>
     <footer class="cp-footer">
@@ -1263,15 +1003,13 @@ function downloadComparisonExcel(){
   const d=comparisonData();
   const selected=d.selected||[];
   const currentRows=(state.currentRows||[]);
-      const services=[...state.servicios.map(serviceSummaryText),...state.productosAdicionales.map(productoAdicionalSummaryText),...selectedLineInsurance().map(s=>`Seguro linea ${s.linea} ${s.modelo}: prima ${s.prima}, deducible ${s.deducible}`)];
+  const products=state.productosAdicionales.map(productoAdicionalSummaryText);
   const offerRows=selected.map(row=>{
-      const ins=insuranceForPrice(row.equipo.precio);
-      return [`Linea ${row.linea}`,eventLabel(row.evento),row.equipo.modelo,offerProposalLabel(row),linePaySummary(row),lineMonthsText(row),`${money(paymentPerUnit(row))}/mes`,money(row.equipo.precio),row.seguro?`Si - Prima ${ins.prima} / Deducible ${ins.deducible}`:'No'];
+      return [`Linea ${row.linea}`,eventLabel(row.evento),row.equipo.modelo,offerProposalLabel(row),linePaySummary(row),lineMonthsText(row),`${money(paymentPerUnit(row))}/mes`,money(row.equipo.precio),''];
     });
-  const bonusRows=[
-    ...selected.flatMap(row=>lineBonusCredits(row,selected).filter(b=>b.kind==='port'||b.kind==='balance'||b.kind==='stream').map(b=>[`Linea ${row.linea}`,row.equipo.modelo,b.label,b.detail])),
-    ...selected.filter(row=>L.requiresTradein(row.oferta,row.evento)).map(row=>[`Linea ${row.linea}`,row.equipo.modelo,'Trade-in requerido',tradeInAcceptedSummary()])
-  ];
+  const conditionRows=selected
+    .filter(row=>L.requiresTradein(row.oferta,row.evento))
+    .map(row=>[`Linea ${row.linea}`,row.equipo.modelo,'Trade-in requerido','Según la oferta móvil publicada']);
   const style=`<style>
     body{font-family:Segoe UI,Arial,sans-serif;background:#fff;color:#111827}
     table.excel-proposal{border-collapse:collapse;width:100%;table-layout:fixed}
@@ -1295,7 +1033,7 @@ function downloadComparisonExcel(){
     `<tr class="brand-row"><td colspan="3"><div class="brand">Claro <span>empresas</span></div><div>Agente de ventas SS Solution</div></td><td colspan="6"><div class="subtitle">Comparativa de Planes</div><div>${excelCell(planLabel())} / ${excelCell(todayText())}</div></td></tr>`,
     `<tr class="meta"><td colspan="3">Cliente: ${excelCell(d.cliente)}</td><td colspan="3">BAN: ${excelCell(d.ban)}</td><td colspan="3">Vendedor: ${excelCell(d.vendedor)}</td></tr>`,
     '<tr class="spacer"><td colspan="9"></td></tr>',
-        `<tr class="card"><td colspan="2">Plan nuevo<b>${excelCell(planLabel())}</b></td><td colspan="2">Plan regular sin debito<b class="red">${excelCell(money(d.planRegularCosto))}</b></td><td colspan="2">Plan con AutoPay<b class="green">${excelCell(money(d.planCosto))}</b></td><td colspan="3">Total mensual propuesta<b class="blue">${excelCell(money(d.totalOferta))}</b><br>Plan + equipos + servicios + seguro + fijo/TV</td></tr>`,
+    `<tr class="card"><td colspan="3">Plan nuevo<b>${excelCell(planLabel())}</b></td><td colspan="3">Plan publicado<b class="red">${excelCell(money(d.planRegularCosto))}</b></td><td colspan="3">Total mensual publicado<b class="blue">${excelCell(money(d.totalOferta))}</b><br>Plan + equipos + fijo/TV</td></tr>`,
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Plan actual'),
     excelRow(['Linea','BAN','Telefono','Plan','Costo','Equipo','','',''],'header'),
@@ -1303,14 +1041,15 @@ function downloadComparisonExcel(){
     excelRow(['','','','TOTAL ACTUAL',money(d.totalActual),`${cpLineCount(d)} linea(s)`,'','',''],'total'),
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Oferta nueva calculada'),
-    excelRow(['Linea','Evento','Equipo','Beneficio','Que paga','Meses','Paga equipo','Regular','Seguro'],'header'),
+    excelRow(['Linea','Evento','Equipo','Beneficio','Que paga','Meses','Paga equipo','Regular',''],'header'),
     excelDataRows(offerRows.length?offerRows:[['Sin equipos seleccionados','','','','','','','','']]),
     '<tr class="spacer"><td colspan="9"></td></tr>',
-    excelSection('Servicios y seguro'),
-    (services.length?services.map(s=>`<tr class="note"><td colspan="9">${excelCell(s)}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin servicios o seguros seleccionados</td></tr>'),
+    excelSection('Productos publicados y complementos'),
+    (products.length?products.map(item=>`<tr class="note"><td colspan="9">${excelCell(item)}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin productos Fijo o Claro TV seleccionados</td></tr>'),
+    '<tr class="note"><td colspan="9">Benefits, servicios y seguros pendientes de publicación oficial; no incluidos.</td></tr>',
     '<tr class="spacer"><td colspan="9"></td></tr>',
-    excelSection('Bonos y condiciones'),
-    (bonusRows.length?bonusRows.map(r=>`<tr class="note"><td colspan="2">${excelCell(r[0])}</td><td colspan="2">${excelCell(r[1])}</td><td colspan="2">${excelCell(r[2])}</td><td colspan="3">${excelCell(r[3])}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin bonos aplicables con el contexto actual</td></tr>')
+    excelSection('Condiciones publicadas'),
+    (conditionRows.length?conditionRows.map(r=>`<tr class="note"><td colspan="2">${excelCell(r[0])}</td><td colspan="2">${excelCell(r[1])}</td><td colspan="2">${excelCell(r[2])}</td><td colspan="3">${excelCell(r[3])}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin requisitos de trade-in en las ofertas seleccionadas</td></tr>')
   ].join('');
   const xls=`<!DOCTYPE html><html><head><meta charset="UTF-8">${style}</head><body><table class="excel-proposal">${table}</table></body></html>`;
   downloadTextFile(comparisonFileName('xls'),xls,'application/vnd.ms-excel;charset=utf-8');
@@ -1362,13 +1101,10 @@ function renderProposal(){
       const summary=$('topSummary');
       if(!summary)return;
       const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
-      summary.innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span><span class="pill">${state.convergente?'Convergente':'No convergente'}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
+      summary.innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
     }
-ensureLineRows();renderSummary();loadCrmClientContext();
+async function initConstructor(){await loadCurrentPublications();ensureLineRows();renderSummary();await loadCrmClientContext();}
+initConstructor();
 </script>
 </body>
 </html>
-
-
-
-

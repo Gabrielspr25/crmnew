@@ -18,16 +18,25 @@ test('Outlook Web usa deeplink compose con Para, asunto y cuerpo', () => {
   const webFunction = appHtml.match(/function coOutlookWeb\(\)\{[\s\S]*?\n\}/)?.[0] || '';
 
   assert.match(appHtml, /https:\/\/outlook\.office\.com\/mail\/deeplink\/compose/);
-  assert.match(webFunction, /p\.set\('to'/);
+  assert.match(webFunction, /compose\?to=/);
   assert.doesNotMatch(webFunction, /p\.set\('bcc'/);
   assert.match(webFunction, /subject/);
   assert.match(webFunction, /body/);
 });
 
-test('App escritorio usa mailto con BCC separado por punto y coma para Outlook classic', () => {
+test('Outlook Web para un cliente no duplica la firma ni codifica espacios como mas', () => {
+  const webFunction = appHtml.match(/function coOutlookWeb\(\)\{[\s\S]*?\n\}/)?.[0] || '';
+
+  assert.match(webFunction, /coMode==='one'\?'':CO_FIRMA/);
+  assert.match(webFunction, /encodeURIComponent\(body\)/);
+  assert.doesNotMatch(webFunction, /new URLSearchParams/);
+});
+
+test('App escritorio usa Para para el borrador 1 a 1 y BCC para campaña', () => {
   const desktopFunction = appHtml.match(/function coOutlook\(\)\{[\s\S]*?\n\}/)?.[0] || '';
 
-  assert.match(desktopFunction, /mailto:\?bcc=/);
+  assert.match(desktopFunction, /coMode==='one'\?'to':'bcc'/);
+  assert.match(desktopFunction, /'mailto:\?'\+target/);
   assert.match(desktopFunction, /join\(';'\)/);
 });
 

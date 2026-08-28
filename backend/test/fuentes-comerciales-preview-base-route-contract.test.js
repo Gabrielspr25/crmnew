@@ -224,17 +224,23 @@ test('preview-base valida UUID y consulta la fuente solo por id', async () => {
   }
 });
 
-test('preview-base exige fecha manual confirmada y valida fecha real', async () => {
+test('preview-base detecta fecha clara del boletin y solo exige fecha manual si no hay fecha confiable', async () => {
   const ws = makeWorkspace();
   try {
-    const app = makeApp({ pool: makePool([source()]), uploadDir: ws.uploads });
+    const app = makeApp({
+      pool: makePool([source({
+        nombre_original: 'LISTADO_ESTRUCTURA_PLANES_PYMESNEGOCIOS_TODOS_2026_15_260330.pdf',
+      })]),
+      uploadDir: ws.uploads,
+    });
 
-    const missing = await request(app, 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
+    const detected = await request(app, 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
       token: tokenFor('admin'),
       body: {},
     });
-    assert.equal(missing.status, 400);
-    assert.equal(missing.json.codigo, 'fecha_actualizacion_base_requerida');
+    assert.equal(detected.status, 200);
+    assert.equal(detected.json.fecha_actualizacion_base, '2026-03-30');
+    assert.equal(detected.json.fecha_actualizacion_base_origen, 'nombre_archivo_confirmado');
 
     const invalid = await request(app, 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
       token: tokenFor('admin'),
@@ -250,6 +256,13 @@ test('preview-base exige fecha manual confirmada y valida fecha real', async () 
     assert.equal(ok.status, 200);
     assert.equal(ok.json.fecha_actualizacion_base, '2026-08-16');
     assert.equal(ok.json.fecha_actualizacion_base_origen, 'entrada_manual_confirmada');
+
+    const missing = await request(makeApp({ pool: makePool([source()]), uploadDir: ws.uploads }), 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
+      token: tokenFor('admin'),
+      body: {},
+    });
+    assert.equal(missing.status, 400);
+    assert.equal(missing.json.codigo, 'fecha_actualizacion_base_requerida');
   } finally {
     ws.cleanup();
   }
@@ -400,7 +413,9 @@ test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro T
       async query(sql, params) {
         queries.push({ sql, params });
         assert.doesNotMatch(sql, /planes_modulos/i);
-        if (/FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/.test(sql)) return { rows: [source()] };
+        if (/FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/.test(sql)) {
+          return { rows: [source({ nombre_original: 'LISTADO_ESTRUCTURA_PLANES_PYMESNEGOCIOS_TODOS_2026_15_260330.pdf' })] };
+        }
         if (/INSERT INTO public\.bases_informativas_publicaciones/.test(sql)) {
           return { rows: [publicacionRow(params[0], 'borrador')] };
         }
@@ -409,7 +424,7 @@ test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro T
     };
     const res = await request(makeDraftApp({ pool, uploadDir: ws.uploads }), 'POST', `/api/fuentes-comerciales/${UUID}/preview-base/borradores`, {
       token: tokenFor('admin'),
-      body: { fecha_actualizacion_base: '2026-08-16', ruta: 'C:/ignorada.pdf' },
+      body: { ruta: 'C:/ignorada.pdf' },
     });
     assert.equal(res.status, 201);
     assert.deepEqual(res.json.publicaciones.map((item) => item.categoria), ['fijo', 'claro_tv']);

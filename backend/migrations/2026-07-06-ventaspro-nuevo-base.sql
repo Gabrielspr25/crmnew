@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS ventaspro_nuevo.audit_log (
   type TEXT,
   detail TEXT,
   entity TEXT,
+  ip_address TEXT,
   meta JSONB,
   created_at TIMESTAMP NOT NULL DEFAULT now()
 );

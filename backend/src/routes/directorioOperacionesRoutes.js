@@ -179,6 +179,7 @@ directorioOperacionesRouter.post('/directorio-operaciones/import', requireAuth, 
       type: 'directorio_operaciones_import',
       detail: `Directorio actualizado desde ${req.file.originalname}`,
       entity: 'ventaspro_nuevo.directorio_operaciones',
+      ip: req.ip,
       meta: { ...result, source_sheet: parsed.sheetName },
     });
   } catch (error) {
@@ -215,6 +216,7 @@ directorioOperacionesRouter.put('/directorio-operaciones/:id', requireAuth, requ
       type: 'directorio_operaciones_edit',
       detail: `Contacto actualizado: ${updated.rows[0].full_name}`,
       entity: 'ventaspro_nuevo.directorio_operaciones',
+      ip: req.ip,
       meta: { id: updated.rows[0].id, changed_fields: sets.map((set) => set.split(' ')[0]) },
     });
     res.json({ ok: true, contact: updated.rows[0] });

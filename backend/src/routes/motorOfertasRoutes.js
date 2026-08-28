@@ -8,6 +8,7 @@ import { requireAdmin, requireAuth } from '../auth.js';
 import { pool, query } from '../db.js';
 import { normalizeOfferWorkbooks, parseBusinessRedPlusWorkbook } from '../services/motorOfertasNormalizer.js';
 import { diffBusinessRedMultilinea, parseBusinessRedMultilineaText } from '../services/businessRedMultilineaPdf.js';
+import { findBusinessRedPlusEligible } from '../services/businessRedPlusEligibility.js';
 
 export const motorOfertasRouter = Router();
 
@@ -36,8 +37,29 @@ motorOfertasRouter.post('/aprobar', requireAdmin, (_req, res) => {
   });
 });
 
-motorOfertasRouter.post('/elegibles', (_req, res) => {
-  res.status(503).json({ ok: false, codigo: 'motor_elegibilidad_pendiente' });
+motorOfertasRouter.post('/elegibles', async (req, res) => {
+  const { rows } = await query(`SELECT estado, vigencia_desde, vigencia_hasta, datos, resumen
+    FROM public.ofertas_movil_versiones WHERE estado='vigente' ORDER BY numero DESC LIMIT 1`);
+  if (!rows[0]) return res.status(404).json({ ok: false, codigo: 'sin_version_publicada' });
+  const block = rows[0].resumen?.business_red_plus || null;
+  if (!block) return res.status(404).json({ ok: false, codigo: 'esquema_business_red_plus_no_publicado' });
+  const especiales = await query(`SELECT item_code, sap_code, modelo, marca, categoria, precio_regular, mensualidades, upload_id
+    FROM public.v_equipos_vigentes
+    WHERE categoria IN ('tablet', 'modem') AND COALESCE(fuera_portafolio, false)=false
+    ORDER BY categoria, marca, modelo`);
+  const result = findBusinessRedPlusEligible({
+    block: {
+      ...block,
+      vigencia: block.vigencia || { desde: rows[0].vigencia_desde, hasta: rows[0].vigencia_hasta },
+    },
+    linea: req.body?.linea,
+    offers: rows[0].datos || [],
+    equiposEspeciales: especiales.rows,
+    version: { estado: rows[0].estado },
+  });
+  const invalidContract = result.validaciones.some((item) => item.campo);
+  if (invalidContract) return res.status(422).json({ ok: false, codigo: 'contrato_linea_invalido', ...result });
+  res.json({ ok: true, ...result });
 });
 
 const previews = new Map();
