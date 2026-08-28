@@ -39,3 +39,13 @@ test('Backup organiza plan y financiamiento en una tabla compacta', () => {
   assert.match(portal, /<th>36 meses<\/th>/);
   assert.match(portal, /@media\(max-width:640px\)[\s\S]*\.backup-table/);
 });
+
+test('Planes Solo y Convergente muestran equipo y pago en tablas compactas', () => {
+  assert.match(portal, /function findRegularEquipmentOffer\(plan/);
+  assert.match(portal, /const kind = convergent \? 'convergent-table' : 'solo-table'/);
+  assert.match(portal, /class="plan-offer-table \$\{kind\}"/);
+  assert.match(portal, /equipo_gratis/);
+  assert.match(portal, /<th>Equipo<\/th>/);
+  assert.match(portal, /<th>Pago equipo<\/th>/);
+  assert.match(portal, /Oferta convergente/);
+});

@@ -100,11 +100,11 @@ body{
 .plan-item-precio{font-size:16px;font-weight:700;color:#4ade80;margin-bottom:6px}
 .plan-item-codigo{font-family:monospace;font-size:10px;background:rgba(56,189,248,0.1);color:#7dd3fc;padding:2px 6px;border-radius:4px}
 .plan-item-nota{font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px}
-.backup-table-wrap{margin:0 18px 16px;overflow-x:auto;border:1px solid rgba(56,189,248,.18);border-radius:8px}
-.backup-table{width:100%;min-width:760px;border-collapse:collapse;background:rgba(2,6,23,.28)}
-.backup-table th{padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:#7dd3fc;background:rgba(56,189,248,.08);white-space:nowrap}
-.backup-table td{padding:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#e2e8f0;vertical-align:middle}
-.backup-table tbody tr:hover{background:rgba(255,255,255,.04)}
+.backup-table-wrap,.plan-offer-table-wrap{margin:0 18px 16px;overflow-x:auto;border:1px solid rgba(56,189,248,.18);border-radius:8px}
+.backup-table,.plan-offer-table{width:100%;min-width:760px;border-collapse:collapse;background:rgba(2,6,23,.28)}
+.backup-table th,.plan-offer-table th{padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:#7dd3fc;background:rgba(56,189,248,.08);white-space:nowrap}
+.backup-table td,.plan-offer-table td{padding:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#e2e8f0;vertical-align:middle}
+.backup-table tbody tr:hover,.plan-offer-table tbody tr:hover{background:rgba(255,255,255,.04)}
 .backup-plan{font-size:16px;font-weight:800;color:#38bdf8}
 .backup-code{display:block;margin-top:3px;font:10px monospace;color:#94a3b8}
 .backup-price{font-weight:800;color:#4ade80;white-space:nowrap}
@@ -321,8 +321,8 @@ body{
   .header-search input{width:100%}
   .container{padding:12px}
   .plans-grid,.oficina-grid,.iot-grid{padding:12px 14px}
-  .backup-table-wrap{margin:0 12px 14px}
-  .backup-table th,.backup-table td{padding:8px}
+  .backup-table-wrap,.plan-offer-table-wrap{margin:0 12px 14px}
+  .backup-table th,.backup-table td,.plan-offer-table th,.plan-offer-table td{padding:8px}
 }
 </style>
 </head>
@@ -599,22 +599,53 @@ function findBackupEquipmentOffer(plan, modulos) {
   return figu.find(e => /rt\s*410/i.test(String(e.modelo || ''))) || figu[0] || null;
 }
 
-function buildIntGoSection(c, modulos) {
-  const soloItems = (c.planes_solo || []).map(p => `
-    <div class="plan-item">
-      <div class="plan-item-datos">${p.datos}</div>
-      <div class="plan-item-precio">$${p.precio}/mes</div>
-      <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      ${p.equipo_gratis ? `<div class="plan-item-nota">${p.equipo_gratis}</div>` : ''}
-    </div>`).join('');
+function equipmentModelKey(value) {
+  const text = String(value || '').toLowerCase();
+  if (/rt\s*410/.test(text)) return 'rt410';
+  if (/rg\s*2100/.test(text)) return 'rg2100';
+  return text.replace(/[^a-z0-9]+/g, ' ').trim();
+}
 
-  const convItems = (c.planes_convergente || []).map(p => `
-    <div class="plan-item">
-      <div class="plan-item-datos">${p.datos} <span class="doble-badge">2x datos</span></div>
-      <div class="plan-item-precio">$${p.precio}/mes</div>
-      <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      ${p.nota ? `<div class="plan-item-nota">${p.nota}</div>` : ''}
-    </div>`).join('');
+function findRegularEquipmentOffer(plan, modulos) {
+  const intgo = (modulos || []).find(m => m.seccion_key === 'internet_on_the_go')?.contenido || {};
+  const equipmentName = plan?.equipo_gratis || (intgo.planes_solo || []).find(item => Number(item.precio) === Number(plan?.precio))?.equipo_gratis;
+  if (!equipmentName) return null;
+  const precios = (modulos || []).find(m => m.seccion_key === 'equipos_precios_inalambrico')?.contenido || {};
+  const equipos = (precios.secciones || []).flatMap(section => section.equipos || []);
+  const key = equipmentModelKey(equipmentName);
+  return equipos.find(e => equipmentModelKey(e.modelo) === key) || null;
+}
+
+function buildPlanOfferRows(plans, modulos, convergent) {
+  return (plans || []).map(plan => {
+    const equipo = findRegularEquipmentOffer(plan, modulos);
+    const intgo = (modulos || []).find(m => m.seccion_key === 'internet_on_the_go')?.contenido || {};
+    const publishedName = plan.equipo_gratis || (intgo.planes_solo || []).find(item => Number(item.precio) === Number(plan.precio))?.equipo_gratis;
+    const isRt410 = equipmentModelKey(publishedName) === 'rt410';
+    const payment = convergent ? 'Gratis con credito' : (equipo?.fin_24 ? `$${Number(equipo.fin_24).toFixed(2)}/mes` : 'Pendiente de publicacion');
+    const code = convergent && isRt410 ? 'FIOF24' : (convergent ? 'Pendiente de publicacion' : 'Financiamiento regular');
+    return `<tr>
+      <td><span class="backup-plan">${plan.datos}</span><span class="backup-code">${plan.codigo}</span></td>
+      <td class="backup-price">$${plan.precio}/mes</td>
+      <td>${equipo?.modelo || publishedName || 'Pendiente de publicacion'}</td>
+      <td class="backup-price">${equipo ? `$${Number(equipo.precio_regular).toFixed(2)}` : '-'}</td>
+      <td>${payment}</td>
+      <td>${code}<span class="backup-note">${convergent ? 'Oferta convergente' : 'Precio regular del equipo'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function buildPlanOfferTable(plans, modulos, convergent) {
+  const kind = convergent ? 'convergent-table' : 'solo-table';
+  return `<div class="plan-offer-table-wrap"><table class="plan-offer-table ${kind}">
+    <thead><tr><th>Plan</th><th>Renta</th><th>Equipo</th><th>Precio</th><th>Pago equipo</th><th>Condicion</th></tr></thead>
+    <tbody>${buildPlanOfferRows(plans, modulos, convergent)}</tbody>
+  </table></div>`;
+}
+
+function buildIntGoSection(c, modulos) {
+  const soloItems = buildPlanOfferTable(c.planes_solo, modulos, false);
+  const convItems = buildPlanOfferTable(c.planes_convergente, modulos, true);
 
   const backupItems = (c.backup || []).map(p => {
     const equipo = findBackupEquipmentOffer(p, modulos);
@@ -641,14 +672,14 @@ function buildIntGoSection(c, modulos) {
         Planes Solo
       </div>
     </div>
-    <div class="plans-grid">${soloItems}</div>
+    ${soloItems}
 
     <div style="padding:6px 24px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,0.4);margin-bottom:8px">
         Planes Convergente (cliente Claro Fijo - doble datos)
       </div>
     </div>
-    <div class="plans-grid">${convItems}</div>
+    ${convItems}
 
     ${backupItems ? `
       <div style="padding:6px 24px">
