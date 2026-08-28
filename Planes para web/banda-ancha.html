@@ -100,11 +100,15 @@ body{
 .plan-item-precio{font-size:16px;font-weight:700;color:#4ade80;margin-bottom:6px}
 .plan-item-codigo{font-family:monospace;font-size:10px;background:rgba(56,189,248,0.1);color:#7dd3fc;padding:2px 6px;border-radius:4px}
 .plan-item-nota{font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px}
-.plan-equipment-offer{margin-top:10px;padding-top:10px;border-top:1px solid rgba(56,189,248,.22)}
-.plan-equipment-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#7dd3fc;margin-bottom:5px}
-.plan-equipment-model{font-size:12px;font-weight:700;color:#f8fafc}
-.plan-equipment-price{font-size:12px;color:#4ade80;margin-top:3px}
-.plan-equipment-terms{font-size:10px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4}
+.backup-table-wrap{margin:0 18px 16px;overflow-x:auto;border:1px solid rgba(56,189,248,.18);border-radius:8px}
+.backup-table{width:100%;min-width:760px;border-collapse:collapse;background:rgba(2,6,23,.28)}
+.backup-table th{padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;color:#7dd3fc;background:rgba(56,189,248,.08);white-space:nowrap}
+.backup-table td{padding:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#e2e8f0;vertical-align:middle}
+.backup-table tbody tr:hover{background:rgba(255,255,255,.04)}
+.backup-plan{font-size:16px;font-weight:800;color:#38bdf8}
+.backup-code{display:block;margin-top:3px;font:10px monospace;color:#94a3b8}
+.backup-price{font-weight:800;color:#4ade80;white-space:nowrap}
+.backup-note{display:block;margin-top:3px;font-size:10px;color:#94a3b8}
 
 /* Doble datos badge */
 .doble-badge{
@@ -317,6 +321,8 @@ body{
   .header-search input{width:100%}
   .container{padding:12px}
   .plans-grid,.oficina-grid,.iot-grid{padding:12px 14px}
+  .backup-table-wrap{margin:0 12px 14px}
+  .backup-table th,.backup-table td{padding:8px}
 }
 </style>
 </head>
@@ -478,7 +484,6 @@ function render() {
     if (card) container.appendChild(card);
   });
 }
-
 function toggleInalambricoAccordion(seccionKey) {
   openSectionKey = openSectionKey === seccionKey ? null : seccionKey;
   render();
@@ -594,21 +599,6 @@ function findBackupEquipmentOffer(plan, modulos) {
   return figu.find(e => /rt\s*410/i.test(String(e.modelo || ''))) || figu[0] || null;
 }
 
-function buildBackupEquipmentOffer(plan, modulos) {
-  const equipo = findBackupEquipmentOffer(plan, modulos);
-  if (!equipo) return '<div class="plan-equipment-offer"><div class="plan-equipment-label">Oferta de equipo para este plan</div><div class="plan-equipment-terms">Pendiente de publicacion.</div></div>';
-  const cuotas = [
-    equipo.fin_24 ? `24 meses: $${Number(equipo.fin_24).toFixed(2)}/mes` : '',
-    equipo.fin_36 ? `36 meses: $${Number(equipo.fin_36).toFixed(2)}/mes` : '',
-  ].filter(Boolean).join(' · ');
-  return `<div class="plan-equipment-offer">
-    <div class="plan-equipment-label">Oferta de equipo para este plan</div>
-    <div class="plan-equipment-model">${equipo.modelo}</div>
-    <div class="plan-equipment-price">Precio financiado: $${Number(equipo.precio_regular).toFixed(2)}</div>
-    <div class="plan-equipment-terms">${cuotas} · FIGU24 / FIGU36 · Requiere cliente Fijo o Cloud</div>
-  </div>`;
-}
-
 function buildIntGoSection(c, modulos) {
   const soloItems = (c.planes_solo || []).map(p => `
     <div class="plan-item">
@@ -626,14 +616,18 @@ function buildIntGoSection(c, modulos) {
       ${p.nota ? `<div class="plan-item-nota">${p.nota}</div>` : ''}
     </div>`).join('');
 
-  const backupItems = (c.backup || []).map(p => `
-    <div class="plan-item">
-      <div class="plan-item-datos">${p.datos}</div>
-      <div class="plan-item-precio">$${p.precio}/mes</div>
-      <div><span class="plan-item-codigo">${p.codigo}</span></div>
-      <div class="plan-item-nota">${p.uso}</div>
-      ${buildBackupEquipmentOffer(p, modulos)}
-    </div>`).join('');
+  const backupItems = (c.backup || []).map(p => {
+    const equipo = findBackupEquipmentOffer(p, modulos);
+    return `<tr>
+      <td><span class="backup-plan">${p.datos}</span><span class="backup-code">${p.codigo}</span></td>
+      <td class="backup-price">$${p.precio}/mes</td>
+      <td>${equipo?.modelo || 'Pendiente de publicacion'}<span class="backup-note">${p.uso}</span></td>
+      <td class="backup-price">${equipo ? `$${Number(equipo.precio_regular).toFixed(2)}` : '-'}</td>
+      <td>${equipo?.fin_24 ? `$${Number(equipo.fin_24).toFixed(2)}/mes` : '-'}</td>
+      <td>${equipo?.fin_36 ? `$${Number(equipo.fin_36).toFixed(2)}/mes` : '-'}</td>
+      <td>FIGU24 / FIGU36<span class="backup-note">Requiere Fijo o Cloud</span></td>
+    </tr>`;
+  }).join('');
 
   const equipos = (c.equipos || []).map(e => `
     <div class="equipo-item">
@@ -662,7 +656,12 @@ function buildIntGoSection(c, modulos) {
           Backup Fijo / Cloud
         </div>
       </div>
-      <div class="plans-grid">${backupItems}</div>` : ''}
+      <div class="backup-table-wrap">
+        <table class="backup-table">
+          <thead><tr><th>Plan</th><th>Renta</th><th>Equipo</th><th>Precio</th><th>24 meses</th><th>36 meses</th><th>Codigo</th></tr></thead>
+          <tbody>${backupItems}</tbody>
+        </table>
+      </div>` : ''}
 
     ${equipos ? `<div class="equipos-section">
       <div class="equipos-title">Equipos</div>

@@ -20,12 +20,22 @@ test('Inalambrico organiza sus modulos en acordeones compactos', () => {
   assert.match(portal, /event\.stopPropagation\(\);openModalIdx/);
 });
 
-test('Backup muestra en su tarjeta el equipo FIGU publicado para planes menores de 30', () => {
+test('Backup cruza el plan con el equipo FIGU publicado para planes menores de 30', () => {
   assert.match(portal, /function findBackupEquipmentOffer\(plan/);
   assert.match(portal, /seccion_key === 'equipos_precios_inalambrico'/);
   assert.match(portal, /financiamiento_gu/);
-  assert.match(portal, /Oferta de equipo para este plan/);
+  assert.match(portal, /Pendiente de publicacion/);
   assert.match(portal, /24 meses/);
   assert.match(portal, /36 meses/);
   assert.match(portal, /FIGU/);
+});
+
+test('Backup organiza plan y financiamiento en una tabla compacta', () => {
+  assert.match(portal, /class="backup-table-wrap"/);
+  assert.match(portal, /class="backup-table"/);
+  assert.match(portal, /<th>Plan<\/th>/);
+  assert.match(portal, /<th>Equipo<\/th>/);
+  assert.match(portal, /<th>24 meses<\/th>/);
+  assert.match(portal, /<th>36 meses<\/th>/);
+  assert.match(portal, /@media\(max-width:640px\)[\s\S]*\.backup-table/);
 });
