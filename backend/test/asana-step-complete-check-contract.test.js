@@ -10,5 +10,5 @@ test('Asana representa cada paso con un check accesible que lo completa', () => 
   assert.match(appHtml, /title="Completar \$\{esc\(s\.name\)\}"/);
   assert.match(appHtml, /onclick="avanzar\('\$\{o\.id\}','\$\{s\.id\}'\)"><\/button>/);
   assert.doesNotMatch(appHtml, /onclick="avanzar\('\$\{o\.id\}','\$\{s\.id\}'\)">✓<\/button>/);
-  assert.doesNotMatch(appHtml, />Completar<\/button>/);
+  assert.match(appHtml, /resolverLlamadaAsana/);
 });

@@ -24,7 +24,7 @@ test('Clientes calcula metricas de lineas desde line_kind y publica la alerta de
 test('Clientes muestra Todos como vista global y mantiene filtros de activos separados', async () => {
   const html = await readFile(appPath, 'utf8');
 
-  assert.match(html, /let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false;/);
+  assert.match(html, /let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false, cliSearchCursor=0, cliSearchVersion=0;/);
   assert.match(html, /const CLI_TABS=\[\['all','Todos'\],\['active','Activos'\],\['cancelled','Cancelados'\],\['following','Seguimiento'\],\['incomplete','Incompletos'\]\];/);
   assert.match(html, /function setCliTab\(t\)\{ clearTimeout\(cliSearchTimer\); cliTab=t; cliQ=''; cliRenewalFilter='';/);
   assert.match(html, /const searchScope=cliQ\?'all':cliTab;/);

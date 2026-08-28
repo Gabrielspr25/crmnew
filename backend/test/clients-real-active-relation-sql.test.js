@@ -13,8 +13,8 @@ test('la relacion activa del cliente cierra exactamente EXISTS, la agrupacion y 
 });
 
 test('el orden por vencimiento se aplica fuera del SELECT que calcula sus alias', () => {
-  assert.match(source, /SELECT \* FROM \(\s*SELECT c\.id/s);
-  assert.match(source, /\) AS client_rows\s*ORDER BY \$\{clientOrderSql\}/s);
+  assert.match(source, /WITH client_rows AS \(\$\{clientRowsSql\}\)/);
+  assert.match(source, /GROUP BY client_group_key\s*ORDER BY \$\{clientOrderSql\}/s);
   assert.ok(!source.includes('last_activity DESC NULLS LAST, c.created_at DESC'));
   assert.ok(!source.includes('primary_sale_date ASC NULLS LAST,\n        c.created_at DESC'));
 });

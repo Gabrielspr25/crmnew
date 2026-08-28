@@ -20,8 +20,7 @@ test('buscador de clientes conserva el foco despues de refrescar resultados', ()
 });
 
 test('Clientes muestra productos en columnas separadas en el listado', () => {
-  assert.match(appHtml, /const CLIENT_PRODUCT_COLS=/);
-  assert.match(appHtml, /CLIENT_PRODUCT_COLS\.map\(p=>`<th class="c">\$\{p\[1\]\}<\/th>`\)\.join\(''\)/);
-  assert.match(appHtml, /clientProductCells\(c\)/);
+  assert.match(appHtml, /const CLIENT_OPPORTUNITY_COLS=/);
+  assert.match(appHtml, /CLIENT_OPPORTUNITY_COLS\.map\(\(\[key\]\)=>`<td class="c">/);
   assert.doesNotMatch(appHtml, /<th>Productos<\/th>/);
 });

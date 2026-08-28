@@ -44,7 +44,8 @@ test('Clientes permite filtrar el listado por movil, fijo y convergente sin camb
   assert.match(html, /function cliClientServiceType\(client\)/);
   assert.match(html, /data-client-service-tab="\$\{value\}"/);
   assert.match(html, /\['convergente','Convergente'\]/);
-  assert.match(html, /client\.all_service_types/);
+  assert.match(html, /mobile_new_count/);
+  assert.match(html, /&service=\$\{service\}/);
 });
 
 test('la ficha del cliente separa lineas activas y canceladas en tabs por BAN', async () => {
