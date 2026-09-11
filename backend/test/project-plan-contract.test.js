@@ -39,7 +39,10 @@ test('Plan Maestro calcula avance y conteos sin guardar porcentaje manual', asyn
   assert.equal(summary.progress_percent > 0, true);
   assert.equal(summary.progress_percent < 100, true);
   assert.equal(summary.counts.bloqueados >= 1, true);
-  assert.equal(summary.production_status, 'NO');
+  // El estado de produccion se deriva de los items: desde el deploy del 2026-09-10 hay items en produccion.
+  const enProduccion = plan.items.filter((item) => item.production_status === 'terminado').length;
+  const esperado = enProduccion === 0 ? 'NO' : (enProduccion === plan.items.length ? 'SI' : 'PARCIAL');
+  assert.equal(summary.production_status, esperado);
 });
 
 test('Plan Maestro separa local y produccion y no termina items con bloqueo propio', async () => {
