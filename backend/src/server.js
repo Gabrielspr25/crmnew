@@ -25,7 +25,6 @@ import { motorOfertasRouter } from './routes/motorOfertasRoutes.js';
 import { prospectosRouter } from './routes/prospectosRoutes.js';
 import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
-import { directorioOperacionesRouter } from './routes/directorioOperacionesRoutes.js';
 import { reportsAiRouter } from './routes/reportsAiRoutes.js';
 import { subscriberHistoryRouter } from './routes/subscriberHistoryRoutes.js';
 
@@ -93,7 +92,6 @@ app.use('/api', prospectosRouter);        // Prospección masiva Google Places -
 app.use('/api', correosRouter);           // Correos: clientes con email + envío (mailto/SMTP)
 app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
-app.use('/api', directorioOperacionesRouter); // Directorio Operaciones Clientes Masivos
 app.use('/api', reportsAiRouter);             // Reportes inteligentes de solo lectura
 app.use('/api', subscriberHistoryRouter);      // Historial/bitacora por suscriptor
 

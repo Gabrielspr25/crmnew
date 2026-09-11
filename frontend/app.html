@@ -431,7 +431,6 @@
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
     <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas<span class="nav-badge" id="navOfertasAlertas" hidden title="Documentos vencidos o por vencer"></span></a>
     <a class="nav" href="#/prospeccion"><span class="d"></span>Prospección</a>
-    <a class="nav" href="#/directorio"><span class="d"></span>Directorio Operaciones</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
@@ -594,59 +593,6 @@ async function viewClientes(){
   <div class="card com-desktop-table" style="overflow-x:auto"><table style="min-width:1080px"><thead><tr>
     <th>Empresa</th><th>Tipo de BAN</th><th>Vendedor</th>${CLIENT_OPPORTUNITY_COLS.map(([,label])=>`<th class="c">${label}</th>`).join('')}<th></th>
   </tr></thead><tbody>${rows.map(tr).join('')||'<tr><td colspan="9" class="empty">Sin clientes en este filtro</td></tr>'}</tbody></table></div>`;
-}
-// ---- Directorio Operaciones: tabla independiente de Clientes/BANs ----
-let dirQ='', dirDistrict='', dirContacts=[];
-const DIR_FIELDS=[
-  ['district','Distrito'], ['code','Codigo'], ['full_name','Nombre'], ['employee_number','# Empleado'],
-  ['job_title','Puesto'], ['municipalities','Pueblos que comprende'], ['mobile','Celular'], ['email','Email'],
-];
-async function reDirectorioOperaciones(){ $('view').innerHTML=await viewDirectorioOperaciones(); }
-function dirSearch(value){ dirQ=String(value||'').trim(); reDirectorioOperaciones(); }
-function dirSetDistrict(value){ dirDistrict=value; reDirectorioOperaciones(); }
-function dirCanEdit(){ return ['admin','supervisor'].includes(String(currentUser&&currentUser.rol||'').toLowerCase()); }
-function dirEsc(value){ return esc(value||'—'); }
-function dirPhone(value){ return esc(fmtPhone(value)||'—'); }
-function dirEdit(id){
-  const contact=dirContacts.find((item)=>String(item.id)===String(id));
-  if(!contact) return;
-  openForm('Editar contacto',DIR_FIELDS.map(([key,label])=>({key,label,value:contact[key]||''})),async(values)=>{
-    await api('/api/directorio-operaciones/'+id,{method:'PUT',body:values});
-    reDirectorioOperaciones();
-  });
-}
-async function dirImportFile(input){
-  const file=input&&input.files&&input.files[0];
-  if(!file) return;
-  const form=new FormData(); form.append('file',file);
-  try{
-    const response=await fetch(API+'/api/directorio-operaciones/import',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
-    const result=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(result.error||'No se pudo actualizar el directorio');
-    alert('Directorio actualizado:\n'+result.total+' contactos leidos\n'+result.inserted+' nuevos\n'+result.updated+' actualizados\n'+result.unchanged+' sin cambios'+(result.ignored&&result.ignored.length?'\n'+result.ignored.length+' filas ignoradas por faltar nombre o empleado':''));
-    reDirectorioOperaciones();
-  }catch(error){ alert('No se pudo actualizar: '+error.message); }
-  finally{ input.value=''; }
-}
-async function viewDirectorioOperaciones(){
-  const params=new URLSearchParams(); if(dirQ)params.set('q',dirQ); if(dirDistrict)params.set('district',dirDistrict);
-  const data=await api('/api/directorio-operaciones?'+params.toString());
-  dirContacts=data.contacts||[];
-  const districts=data.districts||[];
-  const options=['<option value="">Todos los distritos</option>'].concat(districts.map((item)=>'<option value="'+esc(item.district)+'"'+(item.district===dirDistrict?' selected':'')+'>'+esc(item.district)+' ('+item.contacts+')</option>')).join('');
-  const rows=dirContacts.map((contact)=>'<tr>'
-    +'<td><b>'+dirEsc(contact.full_name)+'</b><div class="s" style="font-size:11px;margin-top:2px"># '+dirEsc(contact.employee_number)+'</div></td>'
-    +'<td>'+dirEsc(contact.district)+'</td><td>'+dirEsc(contact.job_title)+'</td><td>'+dirEsc(contact.municipalities)+'</td>'
-    +'<td>'+dirPhone(contact.mobile)+'</td><td>'+dirEsc(contact.email)+'</td>'
-    +(dirCanEdit()?'<td style="text-align:right"><button class="btn ghost" style="padding:5px 10px;font-size:11px" onclick="dirEdit(\''+contact.id+'\')">Editar</button></td>':'')
-    +'</tr>').join('');
-  return '<div class="head"><div><h1>Directorio Operaciones</h1><div class="s">Contactos operacionales de Clientes Masivos. Tabla independiente del CRM comercial.</div></div>'
-    +(dirCanEdit()?'<div><input id="dirFile" type="file" accept=".xlsx,.xls" style="display:none" onchange="dirImportFile(this)"><button class="btn" onclick="$(\'dirFile\').click()">Actualizar desde Excel</button></div>':'')+'</div>'
-    +'<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><span class="pill violet">'+(data.total||0)+' contactos</span>'
-    +'<select class="inp" style="width:250px" onchange="dirSetDistrict(this.value)">'+options+'</select>'
-    +'<input class="inp search" placeholder="Buscar nombre, empleado, email o pueblo" value="'+esc(dirQ)+'" oninput="dirSearch(this.value)"></div>'
-    +'<div class="card" style="overflow-x:auto"><table style="min-width:960px"><thead><tr><th>Contacto</th><th>Distrito</th><th>Puesto</th><th>Pueblos</th><th>Celular</th><th>Email</th>'+(dirCanEdit()?'<th></th>':'')+'</tr></thead><tbody>'
-    +(rows||'<tr><td colspan="7" class="empty">Sin contactos para este filtro.</td></tr>')+'</tbody></table></div>';
 }
 // ---- Modal de cliente (réplica ClientModal real, 5 tabs) ----
 let cliM=null, cliMTab='info', cliMSub='activas', cliMLineTab='todas';
@@ -4187,7 +4133,6 @@ async function payR(sid,m){await api('/api/comisiones/'+sid+'/'+m+'/pay',{method
     else if(route==='import')html=await viewImport();
         else if(route==='ofertas')html=await viewOfertas();
         else if(route==='prospeccion')html=await viewProspeccion();
-        else if(route==='directorio')html=await viewDirectorioOperaciones();
         else html=await viewClientes();
     $('view').innerHTML=html;
     if(route==='ofertas'){ await reOfertas(); return; }
