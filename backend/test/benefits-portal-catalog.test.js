@@ -139,6 +139,22 @@ test('catalogo publico agrupa fijo_benefits y beneficios de equipos especiales',
   assert.ok(catalog.beneficios.some((entry) => entry.categoria === 'Tabletas'));
 });
 
+// La mencion de Affinity del boletin de convergencia se muestra en Beneficios solo hasta que el modulo
+// Affinity publique su version: despues vive en su propia pestana.
+test('Affinity sale de Beneficios recien cuando su modulo tiene version publicada', () => {
+  const reglas = [
+    { id: 'aff', identidad_comercial: 'fijo_benefits|descuento_affinity|fijo', estado_confianza: 'confirmado', estado_publicacion: 'vigente', autoaplica: false, contrato: { beneficio: { tipo: 'descuento_affinity', porcentaje: 8 }, productos: ['fijo'] }, terminos: [] },
+    { id: 'dd', identidad_comercial: 'fijo_benefits|doble_data|movil', estado_confianza: 'confirmado', estado_publicacion: 'vigente', autoaplica: false, contrato: { beneficio: { tipo: 'doble_data' }, productos: ['movil'] }, terminos: [] },
+  ];
+
+  const antes = buildBenefitsPortalCatalog({ fixedVersion: version, fixedSource: claroFullSource, fixedRules: reglas, affinityPublicado: false });
+  assert.ok(antes.beneficios.some((entry) => entry.categoria === 'Affinity'), 'sin version propia, Affinity se sigue viendo en Beneficios');
+
+  const despues = buildBenefitsPortalCatalog({ fixedVersion: version, fixedSource: claroFullSource, fixedRules: reglas, affinityPublicado: true });
+  assert.equal(despues.beneficios.some((entry) => entry.categoria === 'Affinity'), false);
+  assert.ok(despues.beneficios.some((entry) => entry.categoria === 'Doble data'));
+});
+
 // Affinity tiene pagina propia en el portal; si tambien saliera aqui el vendedor lo veria duplicado.
 test('el catalogo de Beneficios no incluye Affinity: tiene su propia vista', () => {
   const catalog = buildBenefitsPortalCatalog({

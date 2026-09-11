@@ -272,14 +272,20 @@ function publishedRuleEntries(rules, version, source) {
 
 // Affinity no entra en este catalogo: tiene su propia pagina en el portal (`affinity.html`) porque sus
 // condiciones y terminos no caben en una fila. Se lee con readAffinityPortalDetail.
+// Mientras el modulo Affinity no tenga una version publicada, la mencion que trae el boletin de convergencia
+// se sigue mostrando aqui: si no, el vendedor se quedaria sin ver Affinity en ningun lado.
+const esAffinity = (rule) => rule?.contrato?.beneficio?.tipo === 'descuento_affinity';
+
 export function buildBenefitsPortalCatalog({
   fixedVersion,
   fixedSource,
   fixedRules = [],
   specialEquipmentEntries = [],
   advertencias = [],
+  affinityPublicado = false,
 } = {}) {
-  const fixedEntries = publishedRuleEntries(fixedRules, fixedVersion, fixedSource);
+  const reglasFijo = affinityPublicado ? asArray(fixedRules).filter((rule) => !esAffinity(rule)) : fixedRules;
+  const fixedEntries = publishedRuleEntries(reglasFijo, fixedVersion, fixedSource);
   const convergenceEntry = buildConvergenceEntry({ fixedVersion, fixedSource, fixedRules });
 
   const specialEntries = asArray(specialEquipmentEntries).map((entry) => ({
@@ -543,9 +549,10 @@ async function readSpecialEquipmentBenefits(db) {
 
 export async function readBenefitsPortalCatalog({ db } = {}) {
   if (!db?.query) throw new Error('db_requerida');
-  const [fixed, special] = await Promise.all([
+  const [fixed, special, affinityVersion] = await Promise.all([
     readFixedBenefits(db),
     readSpecialEquipmentBenefits(db),
+    readPublishedVersion(db, 'affinity_benefits'),
   ]);
   return buildBenefitsPortalCatalog({
     fixedVersion: fixed.fixedVersion,
@@ -553,5 +560,6 @@ export async function readBenefitsPortalCatalog({ db } = {}) {
     fixedRules: fixed.fixedRules,
     specialEquipmentEntries: special.entries,
     advertencias: special.advertencias,
+    affinityPublicado: Boolean(affinityVersion),
   });
 }
