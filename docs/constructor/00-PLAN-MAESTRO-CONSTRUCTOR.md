@@ -7,15 +7,15 @@
 - Fase: Plan Maestro local
 - Entorno: local
 - Ultima actualizacion: 2026-09-09
-- Avance visual: 54%
-- Produccion: NO
+- Avance visual: 56%
+- Produccion: PARCIAL
 
 El porcentaje de avance es solo una referencia visual del progreso. No representa calidad tecnica ni autorizacion para produccion.
 
 ## Resumen
 
-- Terminados: 1
-- En validacion: 21
+- Terminados: 2
+- En validacion: 20
 - Pendientes: 0
 - Bloqueados: 3
 - Bloqueados seguridad: 1
@@ -43,7 +43,7 @@ El porcentaje de avance es solo una referencia visual del progreso. No represent
 | PM-017 | Totales / Cotizacion | En validacion | En validacion | Pendiente | 21/21 motor-commercial-candidates cubre totales agregados y bloqueo por falta de fuente vigente. | Publicar o corregir trazabilidad de las fuentes oficiales vigentes antes de repetir la cotizacion. |
 | PM-018 | Validacion Integral | En validacion | Terminado | Pendiente | 5/5 validacion-maestra-constructor-local cubre 14 casos. | Revisar localmente las pantallas abiertas y decidir si se autoriza prueba controlada o migraciones pendientes. |
 | PM-019 | Promocion del Motor | Bloqueado | Bloqueado | Pendiente | 0/0 Pendiente. | No promover; esperar decision posterior tras prueba controlada. |
-| PM-020 | Produccion | En validacion | Terminado | Pendiente | 704/704 Suite completa en verde, incluidas las pruebas de configuracion del portal y apertura del Constructor. | Commit con autorizacion de Gabriel y luego lectura del servidor (migraciones aplicadas, nginx de ambos sitios) antes de subir. |
+| PM-020 | Produccion | Terminado | Terminado | Terminado | 704/704 Suite completa en verde, incluidas las pruebas de configuracion del portal y apertura del Constructor. | Gabriel sube Affinity e Inalambrico septiembre en el Admin de produccion. |
 | PM-021 | Identidad Comercial | Bloqueado seguridad | Bloqueado seguridad | Pendiente | 0/0 Bloqueo de seguridad documentado. | Mantener bloqueado hasta evidencia oficial o decision comercial documentada. |
 | PM-022 | Comparativas | En validacion | Terminado | Pendiente | 34/34 constructor-intelligent-consultation cubre envio manual a Comparativa, payload y bloqueo por mismatch. | Probar desde un cliente CRM real y revisar la comparativa generada. |
 | PM-023 | Comparativas | En validacion | Terminado | Pendiente | 13/13 comparativa-propuesta-guardado-contract cubre emojis, vista lado a lado, guardado HTML+PDF, HTML autocontenido, guardado en el CRM y el Excel con diseño Claro con respaldo plano; comparativa-fecha-vencimiento ejecuta compEndDate en zona -4 con las tres formas en que llega la fecha; client-profile-line-tabs-contract sigue en 9/9. | Abrir la comparativa de un cliente real, guardar propuesta y confirmar que queda en Comparativas guardadas. |

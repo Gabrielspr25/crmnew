@@ -1,7 +1,9 @@
 # DEPLOY — Sistema nuevo (newcrm)
 
 Guía para deployar el sistema nuevo en el servidor, **reemplazando al viejo**.
-Actualizado: 2026-06-29.
+Actualizado: 2026-09-10.
+
+> Servidor de producción: `ventaspro-server` (`vm-gabriel-crm`). Código en `/opt/crmp-nuevo`, backend en PM2 como `ventaspro-nuevo` (puerto 4001). `crmp.ss-group.cloud` y `ofertas.ss-group.cloud` salen de esa misma carpeta: un solo deploy actualiza los dos. Los respaldos van en `/home/gabriel/backups/`.
 
 > Regla de oro: **backup → migración autorizada → backend → frontend → verificación.**
 > No usar `git pull` en producción. Subir por `scp` y reiniciar PM2.
@@ -100,7 +102,7 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 3. **Backend deps**: `cd backend && npm install --omit=dev`.
 4. **Python**: `pip install -r scripts/requirements.txt` (pdfplumber).
 5. **Env**: crear `backend/.env` con §3 (¡`DEV_LOGIN=0`!).
-6. **Migración nueva**: correr `2026-06-29-prospectos.sql` (§4).
+6. **Migraciones nuevas** (§4). Ojo con el dueño de cada tabla: varias tablas de `public` son de `postgres` (por ejemplo `fuentes_comerciales`), y alterarlas como `crm_user` falla con `must be owner of table`. Esas se corren con `sudo -u postgres psql -d crm_pro -X -v ON_ERROR_STOP=1 -f archivo.sql`. Las tablas **nuevas** se crean como `crm_user` (el usuario de la app), para que la aplicación pueda escribir en ellas. Antes de migrar, verificar qué falta con consultas de solo lectura en vez de volver a correr todo.
 7. **Carpeta de subidas**: asegurar permisos de escritura en `PLANES_UPLOAD_DIR`.
 8. **Arrancar**: `pm2 start backend/src/server.js --name ventaspro-nuevo` (o reemplazar el proceso viejo).
 9. **nginx**: apuntar `crmp.ss-group.cloud` al `PORT` nuevo.

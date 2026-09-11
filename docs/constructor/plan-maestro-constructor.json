@@ -819,10 +819,10 @@
     {
       "id": "PM-020",
       "area": "Produccion",
-      "title": "Preparacion de deploy",
-      "status": "en_validacion",
+      "title": "Deploy 2026-09-10",
+      "status": "terminado",
       "local_status": "terminado",
-      "production_status": "pendiente",
+      "production_status": "terminado",
       "summary": "Gabriel pidio preparar el deploy el 2026-09-10 y definio la topologia: ofertas.ss-group.cloud es el sitio unico del portal y el Constructor; el CRM y la API viven en crmp.ss-group.cloud. Codigo local listo, suite 704/704; falta ejecutar con backup.",
       "done": [
         "Limites establecidos",
@@ -836,16 +836,21 @@
         "El boton Constructor y el del perfil del cliente abren ofertas.ss-group.cloud/oferta-const.html con la sesion en el hash, que el portal guarda y borra de la direccion",
         "La carga del Constructor ya no pide por GET la accion POST candidatos-alternativas (404 en cada apertura)",
         "Versiones de cache actualizadas en constructor-publications.js y portal-config.js",
-        "DEPLOY.md documenta los dos sitios, el paso de subida del portal y su verificacion"
+        "DEPLOY.md documenta los dos sitios, el paso de subida del portal y su verificacion",
+        "Commits 7e2b468 y e3a1c93; respaldos de base y codigo en /home/gabriel/backups (20260910-210719)",
+        "Comparacion archivo por archivo con el servidor: lo desplegado era una version anterior del mismo trabajo, sin cambios exclusivos de produccion",
+        "Prueba en copia aparte contra la base real antes de tocar produccion",
+        "Migraciones aplicadas: familia affinity (como postgres) y directorio de operaciones (como crm_user), 28 fuentes intactas",
+        "44 archivos aplicados en /opt/crmp-nuevo y PM2 reiniciado; verificado por los dominios publicos, CORS y cada pestana del portal",
+        "Affinity sigue visible en Beneficios hasta que su modulo publique una version en produccion"
       ],
       "remaining": [
-        "Commit del branch",
-        "Backup de crm_pro en produccion y verificacion de migraciones aplicadas",
-        "Subir backend por scp, reiniciar PM2 y subir Planes para web/ a ofertas.ss-group.cloud segun DEPLOY.md",
-        "Volver a subir y publicar boletines desde el Admin de produccion"
+        "Subir y publicar el boletin Affinity en el Admin de produccion",
+        "Publicar el boletin de Inalambrico de septiembre en produccion (hoy muestra el de agosto, vencido)",
+        "Corregir /api/comparativas: busca public.comparativas y en produccion la tabla esta en ventaspro_nuevo"
       ],
       "blocker": null,
-      "next_action": "Commit con autorizacion de Gabriel y luego lectura del servidor (migraciones aplicadas, nginx de ambos sitios) antes de subir.",
+      "next_action": "Gabriel sube Affinity e Inalambrico septiembre en el Admin de produccion.",
       "tests": {
         "passed": 704,
         "failed": 0,
