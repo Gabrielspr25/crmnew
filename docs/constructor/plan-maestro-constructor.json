@@ -842,12 +842,12 @@
         "Prueba en copia aparte contra la base real antes de tocar produccion",
         "Migraciones aplicadas: familia affinity (como postgres) y directorio de operaciones (como crm_user), 28 fuentes intactas",
         "44 archivos aplicados en /opt/crmp-nuevo y PM2 reiniciado; verificado por los dominios publicos, CORS y cada pestana del portal",
-        "Affinity sigue visible en Beneficios hasta que su modulo publique una version en produccion"
+        "Affinity sigue visible en Beneficios hasta que su modulo publique una version en produccion",
+        "Comparativas corregidas y desplegadas (61d0a25): usan ventaspro_nuevo.comparativas, responden errores en vez de colgarse; verificado en produccion con una insercion revertida"
       ],
       "remaining": [
         "Subir y publicar el boletin Affinity en el Admin de produccion",
-        "Publicar el boletin de Inalambrico de septiembre en produccion (hoy muestra el de agosto, vencido)",
-        "Corregir /api/comparativas: busca public.comparativas y en produccion la tabla esta en ventaspro_nuevo"
+        "Publicar el boletin de Inalambrico de septiembre en produccion (hoy muestra el de agosto, vencido)"
       ],
       "blocker": null,
       "next_action": "Gabriel sube Affinity e Inalambrico septiembre en el Admin de produccion.",
