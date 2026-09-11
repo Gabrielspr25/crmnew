@@ -1,7 +1,8 @@
 // Endpoints de BANs y Suscriptores (líneas).
 import { Router } from 'express';
-import { query } from '../db.js';
+import { pool, query } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { recordSubscriberChange } from '../services/subscriberHistoryService.js';
 
 export const linesRouter = Router();
 
@@ -28,15 +29,30 @@ linesRouter.post('/subscribers', requireAuth, async (req, res) => {
   const dup = await query(
     `SELECT 1 FROM subscribers WHERE phone = $1 AND status = 'activa' AND ban_id <> $2`, [phone, ban_id]);
   if (dup.rows[0]) return res.status(409).json({ error: 'Ese teléfono ya está activo en otro BAN' });
+  const c = await pool.connect();
   try {
-    const r = await query(
+    await c.query('BEGIN');
+    await c.query('SET LOCAL search_path TO public');
+    const r = await c.query(
       `INSERT INTO subscribers (ban_id, phone, plan_code, monthly_value) VALUES ($1,$2,$3,$4) RETURNING *`,
       [ban_id, phone, plan_code, monthly_value]);
+    await recordSubscriberChange({
+      db: c,
+      subscriberId: r.rows[0].id,
+      before: {},
+      after: r.rows[0],
+      user: req.user,
+      source: 'manual',
+      action: 'created',
+      metadata: { endpoint: '/api/subscribers' },
+    });
+    await c.query('COMMIT');
     res.status(201).json(r.rows[0]);
   } catch (e) {
+    await c.query('ROLLBACK').catch(() => {});
     if (String(e.message).includes('unique')) return res.status(409).json({ error: 'Esa línea ya existe en el BAN' });
     throw e;
-  }
+  } finally { c.release(); }
 });
 
 // PUT /api/subscribers/:id  -> actualizar / cambiar estado (activa/no_renueva/cancelada)
@@ -48,8 +64,30 @@ linesRouter.put('/subscribers/:id', requireAuth, async (req, res) => {
   }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
   vals.push(req.params.id);
-  const r = await query(
-    `UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
-  if (!r.rows[0]) return res.status(404).json({ error: 'Línea no existe' });
-  res.json(r.rows[0]);
+  const c = await pool.connect();
+  try {
+    await c.query('BEGIN');
+    await c.query('SET LOCAL search_path TO public');
+    const before = await c.query(`SELECT * FROM subscribers WHERE id = $1 FOR UPDATE`, [req.params.id]);
+    if (!before.rows[0]) {
+      await c.query('ROLLBACK');
+      return res.status(404).json({ error: 'Línea no existe' });
+    }
+    const r = await c.query(
+      `UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
+    await recordSubscriberChange({
+      db: c,
+      subscriberId: req.params.id,
+      before: before.rows[0],
+      after: r.rows[0],
+      user: req.user,
+      source: 'manual',
+      metadata: { endpoint: '/api/subscribers/:id' },
+    });
+    await c.query('COMMIT');
+    res.json(r.rows[0]);
+  } catch (e) {
+    await c.query('ROLLBACK').catch(() => {});
+    throw e;
+  } finally { c.release(); }
 });

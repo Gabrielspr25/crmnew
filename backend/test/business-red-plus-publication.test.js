@@ -49,3 +49,13 @@ test('la superficie movil usa las familias publicadas y excluye el bloque Busine
   assert.match(html, /movil_multilinea_business_red_sin_fronteras/);
   assert.match(html, /movil_multilinea_byop_ban/);
 });
+
+test('publicacion general movil conserva bloque Business Red Plus vigente', async () => {
+  const route = await readFile(new URL('../src/routes/motorOfertasRoutes.js', import.meta.url), 'utf8');
+
+  assert.match(route, /SELECT resumen FROM public\.ofertas_movil_versiones WHERE estado='vigente'/);
+  assert.match(route, /currentResumen\.business_red_plus/);
+  assert.match(route, /resumen\.business_red_plus = currentResumen\.business_red_plus/);
+  assert.match(route, /JSON\.stringify\(resumen\)/);
+  assert.doesNotMatch(route, /JSON\.stringify\(preview\.resumen\), JSON\.stringify\(preview\.advertencias\)/);
+});

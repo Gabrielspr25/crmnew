@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Oferta const.</title>
-<script src="constructor-publications.js?v=2026082301"></script>
+<script src="portal-config.js?v=2026091001"></script>
+<script src="constructor-publications.js?v=2026091001"></script>
 <script src="ofertas-logic.js?v=2026070311"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -17,6 +18,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 .wrap{max-width:1260px;margin:0 auto;padding:22px 24px 48px}
 .hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.hero h1{font-size:28px;color:#e2d8c8}.hero p{margin-top:6px;color:#b5aa9c;font-size:14px}
 .summary{display:flex;flex-wrap:wrap;gap:8px}.pill{border:1px solid rgba(45,212,191,.35);background:#0f172a;color:#c9f7ec;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}
+.entry-shell{border:1px solid rgba(45,212,191,.42);background:#121821;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22)}
+.entry-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.22)}
+.entry-head h2{font-size:18px;color:#e2d8c8}.entry-head p{font-size:12px;color:#b5aa9c;margin-top:3px}
+.entry-grid{display:grid;grid-template-columns:1.4fr .85fr .85fr;gap:12px;padding:14px 16px}
+.entry-card{border:1px solid rgba(45,212,191,.22);background:#111a30;border-radius:10px;padding:13px;display:grid;gap:10px;align-content:start}
+.entry-card.primary{border-color:rgba(56,189,248,.45);background:#0f1d2b}.entry-card.active{border-color:#2dd4bf;box-shadow:0 0 0 1px rgba(45,212,191,.18)}
+.entry-card h3{font-size:15px;color:#e2d8c8}.entry-card p{font-size:12px;color:#b5aa9c;line-height:1.38}
+.entry-query{width:100%;min-height:98px;resize:vertical;background:#0b1220;border:1px solid rgba(56,189,248,.28);border-radius:9px;color:#e2d8c8;padding:11px;font:inherit;font-size:13px}
+.entry-examples{display:flex;flex-wrap:wrap;gap:6px}.entry-example{border:1px solid rgba(56,189,248,.24);background:#0f172a;color:#b9c7d6;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800;cursor:pointer}
+.entry-actions{display:flex;gap:8px;flex-wrap:wrap}.entry-preview{border:1px dashed rgba(45,212,191,.26);border-radius:9px;padding:9px;color:#d6cfc4;font-size:12px;line-height:1.45}
+.consultation-result{display:none;border:1px solid rgba(56,189,248,.26);background:#0b1220;border-radius:9px;padding:10px;font-size:12px;line-height:1.45}.consultation-result.show{display:grid;gap:9px}.consultation-result h4{font-size:13px;color:#e2d8c8}.consultation-result table{width:100%;border-collapse:collapse}.consultation-result th,.consultation-result td{border:1px solid rgba(45,212,191,.18);padding:6px;text-align:left;vertical-align:top}.consultation-result th{background:#111a30;color:#67e8f9;font-size:10px;text-transform:uppercase}.consultation-actions{display:flex;gap:6px;flex-wrap:wrap}.consultation-actions button{border:1px solid rgba(56,189,248,.28);background:#111a30;color:#d6cfc4;border-radius:7px;padding:6px 8px;font-size:11px;font-weight:850;cursor:pointer}.consultation-actions button:last-child{background:#14532d;border-color:rgba(34,197,94,.45);color:#d1fae5}.consultation-alert{border:1px solid rgba(251,191,36,.32);background:#241f12;color:#fde68a;border-radius:8px;padding:7px}
+.crm-lines{display:grid;gap:7px;max-height:180px;overflow:auto}.crm-line{display:flex;gap:8px;align-items:flex-start;border:1px solid rgba(255,255,255,.1);background:#0f172a;border-radius:8px;padding:8px;font-size:12px}.crm-line input{margin-top:2px;accent-color:#22c55e}.crm-line b{display:block;color:#e2d8c8}.crm-line span{display:block;color:#b5aa9c;margin-top:2px}
 .step{background:#171b22;border:1px solid rgba(45,212,191,.55);border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.24)}
 .step.locked{display:none}.step.done .step-body{display:none}.step-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.24)}
 .step-head h2{font-size:17px;color:#e2d8c8}.step-head p{font-size:12px;color:#b5aa9c;margin-top:3px}.step-body{padding:16px}
@@ -30,11 +43,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 .device-name{font-size:14px;font-weight:950;color:#e2d8c8;line-height:1.2}.muted{font-size:12px;color:#b5aa9c;line-height:1.35}
 .offer-stack{display:grid;gap:6px;margin-top:4px}.offer-choice{border:1px solid rgba(255,255,255,.12);background:#111a30;border-radius:8px;padding:8px;cursor:pointer}.offer-choice.active{border-color:#22c55e;background:#10251c}.offer-choice b{display:block;color:#e2d8c8;font-size:12px;line-height:1.25}.offer-choice span{display:block;margin-top:3px;color:#b5aa9c;font-size:11px;line-height:1.3}.select-offer{margin-top:7px;border:1px solid rgba(34,197,94,.45);background:#14532d;color:#d1fae5;border-radius:7px;padding:7px 9px;font-size:11px;font-weight:900;text-align:center}
 .offer-choice.recommended{border-color:#22c55e;background:#10251c}.recommend-badge{display:inline-flex;margin-bottom:6px;border:1px solid rgba(34,197,94,.45);background:#14532d;color:#d1fae5;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:950;text-transform:uppercase}.recommend-badge.warn{background:#4a2b0d;color:#fed7aa;border-color:rgba(251,146,60,.5)}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:22px;z-index:100}.modal-backdrop.open{display:flex}.equipment-modal{width:min(1080px,96vw);max-height:88vh;overflow:hidden;background:#171b22;border:1px solid rgba(45,212,191,.55);border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.5);display:grid;grid-template-rows:auto auto 1fr}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.24)}.modal-head h3{font-size:17px;color:#e2d8c8}.modal-head p{font-size:12px;color:#b5aa9c;margin-top:3px}.modal-close{border:1px solid rgba(255,255,255,.16);background:#0f172a;color:#e2d8c8;border-radius:8px;padding:7px 10px;cursor:pointer}.brand-tabs{display:flex;gap:7px;overflow:auto;padding:10px 16px;border-bottom:1px solid rgba(45,212,191,.18)}.brand-tab{border:1px solid rgba(45,212,191,.35);background:#111a30;color:#d6cfc4;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850;cursor:pointer;white-space:nowrap}.brand-tab.active{background:#073b33;border-color:#2dd4bf;color:#c9f7ec}.modal-body{padding:0;overflow:hidden}.modal-picker{display:grid;grid-template-columns:320px 1fr;min-height:520px;max-height:calc(88vh - 116px)}.modal-device-list{border-right:1px solid rgba(45,212,191,.22);overflow:auto;padding:10px;background:#11161e}.modal-device-row{width:100%;border:1px solid transparent;background:transparent;color:#d6cfc4;text-align:left;border-radius:8px;padding:10px;cursor:pointer;display:grid;gap:3px}.modal-device-row:hover,.modal-device-row.active{background:#0f172a;border-color:rgba(45,212,191,.35)}.modal-device-row b{font-size:13px;color:#e2d8c8}.modal-device-row span{font-size:11px;color:#b5aa9c}.modal-offer-panel{overflow:auto;padding:14px 16px}.modal-selected-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.modal-selected-title h4{font-size:18px;color:#e2d8c8}.modal-selected-title span{font-size:12px;color:#b5aa9c}.modal-offer-list{display:grid;gap:8px}.modal-empty{border:1px dashed rgba(45,212,191,.28);border-radius:10px;padding:18px;color:#b5aa9c;font-size:13px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:22px;z-index:100}.modal-backdrop.open{display:flex}.equipment-modal{width:min(1080px,96vw);max-height:88vh;overflow:hidden;background:#171b22;border:1px solid rgba(45,212,191,.55);border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.5);display:grid;grid-template-rows:auto auto auto 1fr}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.24)}.modal-head h3{font-size:17px;color:#e2d8c8}.modal-head p{font-size:12px;color:#b5aa9c;margin-top:3px}.modal-close{border:1px solid rgba(255,255,255,.16);background:#0f172a;color:#e2d8c8;border-radius:8px;padding:7px 10px;cursor:pointer}.brand-tabs{display:flex;gap:7px;overflow:auto;padding:10px 16px;border-bottom:1px solid rgba(45,212,191,.18)}.sub-brand-tabs{padding-top:8px;padding-bottom:8px;background:#10151d}.sub-brand-tabs:empty{display:none}.brand-tab{border:1px solid rgba(45,212,191,.35);background:#111a30;color:#d6cfc4;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850;cursor:pointer;white-space:nowrap}.brand-tab.active{background:#073b33;border-color:#2dd4bf;color:#c9f7ec}.modal-body{padding:0;overflow:hidden}.modal-picker{display:grid;grid-template-columns:320px 1fr;min-height:520px;max-height:calc(88vh - 116px)}.modal-device-list{border-right:1px solid rgba(45,212,191,.22);overflow:auto;padding:10px;background:#11161e}.modal-device-row{width:100%;border:1px solid transparent;background:transparent;color:#d6cfc4;text-align:left;border-radius:8px;padding:10px;cursor:pointer;display:grid;gap:3px}.modal-device-row:hover,.modal-device-row.active{background:#0f172a;border-color:rgba(45,212,191,.35)}.modal-device-row b{font-size:13px;color:#e2d8c8}.modal-device-row span{font-size:11px;color:#b5aa9c}.modal-offer-panel{overflow:auto;padding:14px 16px}.modal-selected-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.modal-selected-title h4{font-size:18px;color:#e2d8c8}.modal-selected-title span{font-size:12px;color:#b5aa9c}.modal-offer-list{display:grid;gap:8px}.modal-empty{border:1px dashed rgba(45,212,191,.28);border-radius:10px;padding:18px;color:#b5aa9c;font-size:13px}
 .modal-device-row.device-tablet{background:#17192b;border-color:rgba(167,139,250,.26)}.modal-device-row.device-tablet:hover,.modal-device-row.device-tablet.active{border-color:rgba(167,139,250,.72);box-shadow:inset 3px 0 0 #a78bfa}.modal-device-row.device-modem{background:#101b20}.modal-device-row.device-modem:hover,.modal-device-row.device-modem.active{box-shadow:inset 3px 0 0 #2dd4bf}.device-kind{display:inline-flex;width:max-content;border:1px solid rgba(167,139,250,.38);background:#251f3d;color:#ddd6fe;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:950;text-transform:uppercase}.device-kind.modem{border-color:rgba(45,212,191,.35);background:#073b33;color:#c9f7ec}
 .line-event-select{width:100%;margin-top:8px;background:#0f172a;border:1px solid rgba(56,189,248,.26);border-radius:8px;color:#e2d8c8;padding:8px 9px;font-size:12px}
 .terms{border:1px solid rgba(251,191,36,.35);background:#241f12;border-radius:10px;padding:13px;margin-top:12px}.terms h3{font-size:14px;color:#facc15;margin-bottom:8px}.terms ul{padding-left:18px;color:#e7d7be;font-size:12px;line-height:1.55}
-.conditional-panel{display:none;border:1px solid rgba(251,191,36,.34);background:#17140c;border-radius:12px;padding:12px;margin-bottom:12px}.conditional-panel.show{display:block}.conditional-panel h3{font-size:14px;color:#facc15;margin-bottom:8px}.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}.info-card{border:1px solid rgba(255,255,255,.12);background:#111a30;border-radius:10px;padding:11px}.info-card b{display:block;color:#e2d8c8;font-size:13px;margin-bottom:5px}.info-card ul{padding-left:18px;color:#d6cfc4;font-size:12px;line-height:1.5}.info-card .muted{margin-top:6px}
+.conditional-panel{display:none;border:1px solid rgba(251,191,36,.34);background:#17140c;border-radius:12px;padding:12px;margin-bottom:12px}.conditional-panel.show{display:block}.conditional-panel h3{font-size:14px;color:#facc15;margin-bottom:8px}.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}.info-card{border:1px solid rgba(255,255,255,.12);background:#111a30;border-radius:10px;padding:11px}.info-card b{display:block;color:#e2d8c8;font-size:13px;margin-bottom:5px;overflow-wrap:anywhere}.info-card ul{padding-left:18px;color:#d6cfc4;font-size:12px;line-height:1.5}.info-card li,.line-note{overflow-wrap:anywhere}.info-card .muted{margin-top:6px}
 .service-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px}.check-card{border:1px solid rgba(45,212,191,.26);background:#111a30;border-radius:10px;padding:11px;display:flex;gap:10px;align-items:flex-start}.check-card input{margin-top:2px;width:18px;height:18px;accent-color:#22c55e}.check-card b{font-size:13px;color:#e2d8c8}.check-card span{display:block;margin-top:3px;font-size:12px;color:#b5aa9c}.service-price-select{margin-top:8px;width:100%;background:#0f172a;border:1px solid rgba(56,189,248,.28);border-radius:8px;color:#e2d8c8;padding:8px;font-size:12px}
 .insurance{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}.insurance th,.insurance td{border:1px solid rgba(45,212,191,.24);padding:8px;text-align:center}.insurance th{background:#131926;color:#e6d8b8}.insurance td:nth-child(2){text-align:left;color:#e2d8c8;font-weight:800}.insurance input[type=number]{width:86px;background:#0f172a;border:1px solid rgba(56,189,248,.25);border-radius:7px;color:#e2d8c8;padding:7px;text-align:center}.insurance input[type=checkbox]{width:18px;height:18px;accent-color:#22c55e}
 .proposal{display:grid;gap:12px}.comparison-head{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.comparison-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:12px}.comparison-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.summary-card{border:1px solid rgba(45,212,191,.24);background:#0f172a;border-radius:10px;padding:12px}.summary-card span{display:block;color:#b5aa9c;font-size:11px;text-transform:uppercase;font-weight:900}.summary-card b{display:block;color:#e2d8c8;font-size:20px;margin-top:4px}.summary-card.good b{color:#86efac}.summary-card.warn b{color:#fde68a}.autopay-toggle{display:flex;align-items:center;gap:8px;margin-top:8px;color:#d6cfc4;font-size:12px;font-weight:850}.autopay-toggle input{width:16px;height:16px;accent-color:#22c55e}.box{border:1px solid rgba(45,212,191,.24);background:#111a30;border-radius:10px;padding:13px}.box h3{font-size:14px;color:#e2d8c8;margin-bottom:8px}.box ul{padding-left:18px;font-size:12px;line-height:1.6;color:#d6cfc4}.compare-input{width:100%;background:#0f172a;border:1px solid rgba(56,189,248,.25);border-radius:7px;color:#e2d8c8;padding:8px;font-size:12px}.compare-mini{max-width:96px;text-align:right}.compare-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.print-area{background:#fff;color:#111;padding:24px}.print-area h1,.print-area h2,.print-area h3{color:#111}.print-area table{width:100%;border-collapse:collapse;font-size:12px}.print-area th,.print-area td{border:1px solid #bbb;padding:7px;text-align:left}.print-area th{background:#eee}.print-area .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.print-area .totals div{border:1px solid #bbb;padding:10px}.print-area .small{font-size:11px;color:#333;line-height:1.45}
@@ -57,11 +70,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 .service-price-line{margin-top:8px;display:grid;gap:3px;font-size:12px;color:#d6cfc4}.service-price-line strong{color:#86efac}.service-price-line em{font-style:normal;color:#b5aa9c;line-height:1.25}
 .product-builder{display:block}.product-family-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.product-family-tab{border:1px solid rgba(45,212,191,.35);background:#111a30;color:#d6cfc4;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:950;cursor:pointer}.product-family-tab.active{background:#064e3b;border-color:#2dd4bf;color:#d1fae5}.product-tech-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:-2px 0 9px}.product-tech-tab{border:1px solid rgba(56,189,248,.28);background:#0f172a;color:#b9c7d6;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;cursor:pointer}.product-tech-tab.active{background:#12304f;border-color:#38bdf8;color:#dff6ff}.product-tabs{display:none}.product-panel{border:1px solid rgba(45,212,191,.22);background:#111a30;border-radius:12px;padding:10px;min-height:0}.product-panel-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.product-panel-head input{width:260px;max-width:45%;background:#0f172a;border:1px solid rgba(56,189,248,.28);border-radius:9px;color:#e2d8c8;padding:8px 9px}.product-accordion{display:grid;gap:7px;max-height:390px;overflow:auto;padding-right:4px}.accordion-item{border:1px solid rgba(45,212,191,.24);background:#171b22;border-radius:9px;overflow:hidden}.accordion-head{width:100%;border:0;background:#111a30;color:#e2d8c8;padding:8px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;cursor:pointer}.accordion-head b{font-size:13px}.accordion-head span{font-size:11px;color:#b5aa9c}.accordion-head .chev{font-size:14px;color:#67e8f9}.accordion-body{display:none;padding:7px;border-top:1px solid rgba(45,212,191,.18)}.accordion-item.open .accordion-body{display:block}.accordion-item.open .accordion-head{background:#073b33}.product-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.product-list.compact{max-height:none;overflow:visible}.product-row{border:1px solid rgba(45,212,191,.20);background:#171b22;border-radius:7px;padding:7px;display:grid;grid-template-columns:1fr auto;gap:3px 6px;align-items:center;min-height:58px}.product-row b{color:#e2d8c8;font-size:11px;line-height:1.15}.product-row span{color:#b5aa9c;font-size:9.5px;line-height:1.18;grid-column:1/3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-row strong{color:#86efac;font-size:12px}.product-row button{justify-self:end;padding:5px 8px;border-radius:7px;font-size:10.5px}.selected-products{margin-top:10px}.selected-products table{width:100%;border-collapse:collapse;font-size:12px}.selected-products th,.selected-products td{border:1px solid rgba(45,212,191,.24);padding:8px;text-align:left}.selected-products th{background:#0f172a;color:#e6d8b8}.qty-input{width:70px;background:#0f172a;border:1px solid rgba(56,189,248,.25);border-radius:7px;color:#e2d8c8;padding:7px;text-align:center}
 @media(max-width:1180px){.plan-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.plan-card{min-height:104px}}
+@media(max-width:980px){.entry-grid{grid-template-columns:1fr}.entry-head{display:grid}}
 @media(max-width:980px){.device-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.device-tools{grid-template-columns:1fr}.modal-picker{grid-template-columns:1fr;min-height:0}.modal-device-list{border-right:0;border-bottom:1px solid rgba(45,212,191,.22);max-height:230px}}
 @media(max-width:980px){.comparison-head,.comparison-grid,.comparison-summary{grid-template-columns:1fr}.compare-actions{justify-content:flex-start}}
 @media(max-width:980px){.product-builder{grid-template-columns:1fr}.product-list{grid-template-columns:1fr}.product-panel-head{display:grid}.product-panel-head input{max-width:none;width:100%}}
 @media(max-width:640px){.hero{display:block}.wrap{padding:16px 14px 36px}.plan-controls{grid-template-columns:1fr}.device-grid{grid-template-columns:1fr}.device-tools{grid-template-columns:1fr}.lines-table{min-width:920px}.step-body{overflow:auto}}
-.equipment-modal{height:min(90vh,820px);max-height:calc(100vh - 24px);grid-template-rows:auto auto minmax(0,1fr)}
+.equipment-modal{height:min(90vh,820px);max-height:calc(100vh - 24px);grid-template-rows:auto auto auto minmax(0,1fr)}
 .modal-body{min-height:0}
 .modal-picker{height:100%;min-height:0;max-height:none}
 </style>
@@ -75,6 +89,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Equipos</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
   <a href="oferta-const.html" class="active">Oferta const.</a>
   <a href="ofertas.html">Ofertas</a>
 </nav>
@@ -82,6 +98,46 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   <div id="mobileVersionNotice" class="cp-note" style="display:none"></div>
   <section class="hero">
     <div><h1>Oferta const.</h1><p>Flujo basado en planes, ofertas, Fijo y Claro TV publicados desde el Admin.</p></div>
+    <div class="summary" id="topSummary"></div>
+  </section>
+
+  <section class="entry-shell" id="entryModes">
+    <div class="entry-head">
+      <div><h2>Constructor Comercial</h2><p>Tres entradas, un solo escenario comercial para evaluar en el Motor Comercial.</p></div>
+      <span class="pill" id="scenarioStatus">Modo manual</span>
+    </div>
+    <div class="entry-grid">
+      <div class="entry-card primary" id="consultationModeCard">
+        <h3>Consultar al asistente</h3>
+        <p>Convierte la necesidad del vendedor en intención estructurada. La consulta no decide promociones ni inventa reglas.</p>
+        <textarea class="entry-query" id="consultationQuery" placeholder="¿Qué necesitas preparar para este cliente?"></textarea>
+        <div class="entry-examples">
+          <button class="entry-example" type="button" onclick="useConsultationExample('Tengo 10 lineas para renovar y quiero Samsung')">10 lineas Samsung</button>
+          <button class="entry-example" type="button" onclick="useConsultationExample('No quiero pasar de $500 mensuales')">Maximo $500</button>
+          <button class="entry-example" type="button" onclick="useConsultationExample('Busca la combinacion con mayor ahorro')">Mayor ahorro</button>
+        </div>
+        <div class="entry-actions">
+          <button class="btn primary" type="button" onclick="prepareConsultationScenario()">Preparar opciones</button>
+          <button class="btn" type="button" onclick="startNewConsultation()">Nueva consulta</button>
+          <button class="btn" id="loadConsultationBtn" type="button" onclick="loadConsultationIntoConstructor()" disabled>Cargar propuesta al Constructor</button>
+        </div>
+        <div class="entry-preview" id="consultationPreview">Pendiente de consulta.</div>
+        <div class="consultation-result" id="consultationResult"></div>
+      </div>
+      <div class="entry-card" id="crmModeCard">
+        <h3>Traer cliente del CRM</h3>
+        <p id="crmEntrySummary">Abre el Constructor desde un cliente para cargar BAN y lineas sin modificar el CRM.</p>
+        <div class="crm-lines" id="crmLineSelector"></div>
+        <div class="entry-actions">
+          <button class="btn primary" type="button" onclick="startCrmMode()">Crear oferta</button>
+        </div>
+      </div>
+      <div class="entry-card active" id="manualModeCard">
+        <h3>Construir manualmente</h3>
+        <p>Conserva el flujo actual para construir desde cero. Genera el mismo escenario comercial normalizado.</p>
+        <button class="btn primary" type="button" onclick="startManualMode()">Construir manualmente</button>
+      </div>
+    </div>
   </section>
 
   <section class="step" id="stepPlan">
@@ -91,7 +147,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
         <div class="plan-card"><label>Tipo de plan</label><div class="segmented" data-group="tipo"><button class="segment-btn active" data-val="individual">Individual</button><button class="segment-btn" data-val="multilinea">Multilinea</button></div></div>
         <div class="plan-card" id="planIndWrap"><label>Plan individual</label><select class="plan-select" id="planInd" onchange="syncPlan();renderSummary()"><option value="">Cargando publicacion...</option></select></div>
         <div class="plan-card" id="planMultiWrap" style="display:none"><label>Plan multilinea</label><select class="plan-select" id="planMulti" onchange="syncPlan();renderSummary()"><option value="">Cargando publicacion...</option></select></div>
-        <div class="plan-card"><label>Contexto del cliente</label><button class="context-toggle" id="convergenteBtn" type="button" disabled>Benefits pendientes de publicacion<span>No se aplican reglas heredadas</span></button></div>
+        <div class="plan-card"><label>Contexto del cliente</label><button class="context-toggle" id="convergenteBtn" type="button" disabled>Beneficios pendientes de publicación<span>No se aplican reglas heredadas</span></button></div>
         <div class="plan-card"><label>Cantidad de lineas</label><input class="plan-input" id="lineas" type="number" min="1" step="1" value="1" oninput="syncPlan();renderSummary()"></div>
       </div>
       <div class="plan-action-row"><button class="btn primary" onclick="completePlan()">Ver equipos</button></div>
@@ -112,9 +168,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   </section>
 
   <section class="step locked" id="stepServicios">
-    <div class="step-head"><div><h2>3. Publicaciones complementarias</h2><p>Benefits, servicios y seguros se habilitan solo cuando tengan una publicación oficial.</p></div><span class="pill" id="servStatus">Pendiente de publicación</span></div>
+    <div class="step-head"><div><h2>3. Publicaciones complementarias</h2><p>Beneficios, servicios y seguros se habilitan solo cuando tengan una publicación oficial.</p></div><span class="pill" id="servStatus">Pendiente de publicación</span></div>
     <div class="step-body">
       <div class="conditional-panel" id="offerExtrasPanel"></div>
+      <div id="motorSimulationPanel"></div>
       <div class="service-list" id="serviciosList"></div>
       <div id="lineInsuranceSummary"></div>
       <div class="actions"><button class="btn" onclick="backToEquipo()">Volver atras</button><button class="btn primary" onclick="completeServicios()">Siguiente: fijo y Claro TV</button></div>
@@ -137,6 +194,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
         </div>
       </div>
       <div class="selected-products" id="selectedProducts"></div>
+      <div id="motorSimulationPanelProductos"></div>
       <div class="actions"><button class="btn" onclick="backToServicios()">Volver atras</button><button class="btn primary" onclick="completeProductos()">Revisar propuesta</button></div>
     </div>
   </section>
@@ -157,6 +215,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
       <button class="modal-close" onclick="closeEquipmentModal()">Cerrar</button>
     </div>
     <div class="brand-tabs" id="brandTabs"></div>
+    <div class="brand-tabs sub-brand-tabs" id="deviceSubBrandTabs"></div>
     <div class="modal-body">
       <div class="modal-picker" id="modalPicker">
         <div class="modal-device-list" id="modalDeviceList"></div>
@@ -177,7 +236,7 @@ const EVENTOS=[
   {id:'renovacion',label:'Renovacion'},
   {id:'adicional',label:'Linea adicional'}
 ];
-const state={tipo:'individual',planInd:0,planMulti:'',beneficio:'todos',eventos:['nueva'],lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'',openProductGroups:[],activeLineIndex:null,activeBrand:'Todos',selectedModalKey:null,motorEquipos:[],motorLoading:false,motorError:''};
+const state={sourceMode:'manual',commercialScenario:null,crmClient:null,crmFullBanLines:[],selectedCrmLineKeys:[],consultationIntent:null,consultationResult:null,consultationQuery:'',consultationDecisionFingerprint:null,consultationLoadBlocked:null,consultationLoadedIntoConstructor:false,consultationTraceVisible:false,tipo:'individual',planInd:0,planMulti:'',beneficio:'todos',eventos:['nueva'],lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'',openProductGroups:[],activeLineIndex:null,activeBrand:'Todos',activeDeviceBrand:'Todos',selectedModalKey:null,motorEquipos:[],motorLoading:false,motorError:'',motorRules:[],motorRulesVersion:null,motorSimulation:null,motorShadow:null};
 function $(id){return document.getElementById(id)}
 function money(v){return '$'+Number(v||0).toFixed(2)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -196,10 +255,10 @@ function returnToOffersPortal(){
 function crmToken(){try{return localStorage.getItem('vp_token')||''}catch(e){return ''}}
 async function crmApi(path,opts={}){
   const token=crmToken();
-  if(!token)throw new Error('No hay sesion del CRM en este dominio');
+  if(!token)throw new Error('Abre el Constructor desde el boton del CRM para cargar tu sesion');
   opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};
   if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}
-  const r=await fetch(path,opts);
+  const r=await fetch(portalApiUrl(path),opts);
   if(!r.ok)throw new Error(path+' -> '+r.status);
   return r.json();
 }
@@ -208,6 +267,7 @@ function fillPlanSelectors(){
   const multiline=$('planMulti');
   window.CONSTRUCTOR_PLAN_AMOUNTS=Object.fromEntries(mobilePlanCatalog.multiline.map(plan=>[plan.key,Number(plan.lineCosts[0]||0)]));
   window.CONSTRUCTOR_PLAN_LABELS=Object.fromEntries(mobilePlanCatalog.multiline.map(plan=>[plan.key,plan.label]));
+  window.CONSTRUCTOR_PLAN_CATALOG=Object.fromEntries(mobilePlanCatalog.multiline.map(plan=>[plan.key,plan]));
   individual.innerHTML=mobilePlanCatalog.individual.map(plan=>`<option value="${plan.regular}">${esc(plan.label)} · ${money(plan.regular)}</option>`).join('');
   multiline.innerHTML=mobilePlanCatalog.multiline.map(plan=>`<option value="${esc(plan.key)}">${esc(plan.label)}</option>`).join('');
   state.planInd=Number(individual.value||0);
@@ -224,6 +284,8 @@ async function loadCurrentPublications(){
   mobilePlanCatalog=constructorPublications.mobileCatalog;
   fixedProductGroups=constructorPublications.fixedGroups;
   claroTvProductGroups=constructorPublications.tvGroups;
+  state.motorRules=constructorPublications.motorRules||[];
+  state.motorRulesVersion=constructorPublications.motorRulesVersion||null;
   fillPlanSelectors();
   const version=constructorPublications.offersVersion;
   const statuses=[];
@@ -232,6 +294,7 @@ async function loadCurrentPublications(){
   statuses.push(constructorPublications.equipment.length?`Lista de Precios: ${constructorPublications.equipment.length} equipos`:'Lista de Precios: pendiente de publicacion');
   statuses.push(fixedProductGroups.length?'Fijo: publicado':'Fijo: pendiente de publicacion');
   statuses.push(claroTvProductGroups.length?'Claro TV: publicado':'Claro TV: pendiente de publicacion');
+  statuses.push(state.motorRulesVersion?`Motor Comercial: version ${esc(state.motorRulesVersion.numero||state.motorRulesVersion.id||'vigente')} en simulacion`:'Motor Comercial: sin reglas publicadas vigentes');
   if(notice){notice.style.display='block';notice.innerHTML=statuses.join(' · ');}
   $('planStatus').textContent=constructorPublications.ready?'Pendiente':'Pendiente de publicacion';
   document.querySelector('#stepPlan .btn.primary').disabled=!constructorPublications.ready;
@@ -245,20 +308,53 @@ function setTipoPlan(tipo){
 function activeSubscriberRows(client){
   return (client.subscribers||[]).filter(s=>!['cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora'].includes(String(s.status||'activo').toLowerCase()));
 }
-function applyCrmClientToConstructor(client){
-  const rows=activeSubscriberRows(client);
-  const count=Math.max(rows.length||1,Number(state.lineas||1));
+function crmLineKey(line,index){return String(line.id||line.subscriber_id||line.phone||index);}
+function normalizeCrmLine(line,index){
+  return {
+    id:crmLineKey(line,index),
+    subscriber_id:line.id||line.subscriber_id||null,
+    ban:line.ban_number||'',
+    phone:line.phone||'',
+    service_type:line.line_kind||line.line_type||line.product_type||'movil',
+    plan_code:line.price_code||line.plan_code||'',
+    plan_name:line.plan||'',
+    current_rent:Number(line.monthly_value||0),
+    equipment:line.equipment||line.item_ldesc||'',
+    activation_date:line.activation_date||line.contract_start_date||'',
+    end_date:line.contract_end_date||'',
+    term:line.contract_term||'',
+    remaining_payments:line.remaining_payments??null,
+    position:index+1,
+  };
+}
+function selectedCrmLines(){
+  const selected=new Set(state.selectedCrmLineKeys);
+  return state.crmFullBanLines.filter(line=>selected.has(line.id));
+}
+function applySelectedCrmLinesToRows(){
+  const selected=selectedCrmLines();
+  const count=Math.max(selected.length||1,1);
   setTipoPlan(count>1?'multilinea':'individual');
   $('lineas').value=String(count);
   syncPlan();
   state.currentRows=Array.from({length:count},(_,i)=>{
-    const s=rows[i]||{};
-    return {linea:i+1,ban:s.ban_number||'',telefono:s.phone||'',plan:s.plan||'Actual',costo:Number(s.monthly_value||0),equipo:s.equipment||'',autoCosto:false};
+    const s=selected[i]||{};
+    return {linea:i+1,ban:s.ban||'',telefono:s.phone||'',plan:s.plan_name||s.plan_code||'Actual',costo:Number(s.current_rent||0),equipo:s.equipment||'',autoCosto:false,subscriber_id:s.subscriber_id||null};
   });
+}
+function applyCrmClientToConstructor(client){
+  const rows=activeSubscriberRows(client);
+  state.crmClient=client;
+  state.crmFullBanLines=rows.map(normalizeCrmLine);
+  state.selectedCrmLineKeys=state.crmFullBanLines.map(line=>line.id);
+  applySelectedCrmLinesToRows();
+  state.sourceMode='crm';
   state.crmClientId=client.id;
   state.crmClientName=client.business_name||client.company||client.name||'';
   state.crmVendor=client.vendor_name||'';
   state.crmBan=(client.bans&&client.bans[0]&&client.bans[0].ban_number)||state.currentRows[0]?.ban||'';
+  updateCommercialScenario('crm');
+  renderEntryModes();
   renderSummary();
   if(!$('stepPropuesta').classList.contains('locked'))renderProposal();
 }
@@ -271,7 +367,768 @@ async function loadCrmClientContext(){
     console.warn('[crm] no se pudo cargar cliente',e);
   }
 }
-document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.tipo=btn.dataset.val;$('planIndWrap').style.display=state.tipo==='individual'?'flex':'none';$('planMultiWrap').style.display=state.tipo==='multilinea'?'flex':'none';syncPlan();renderSummary();});
+function modeLabel(){return state.sourceMode==='crm'?'CRM':state.sourceMode==='consultation'?'Consulta inteligente':'Manual';}
+function buildScenarioPayload(sourceMode=state.sourceMode){
+  const selectedRows=selectedOfferRows();
+  const context=buildMotorCommercialContext();
+  const selectedCrm=selectedCrmLines();
+  const firstBan=state.crmClient?.bans?.[0]||{};
+  const plan={tipo:state.tipo,nombre:planLabel(),individual_monto:state.planInd,multilinea_familia:state.planMulti,lineas:state.lineas};
+  return window.ConstructorPublications?.buildCommercialScenario?.({
+    source_mode:sourceMode,
+    client:{id:state.crmClientId||'',name:state.crmClientName||''},
+    ban:{number:state.crmBan||firstBan.ban_number||'',status:firstBan.status||''},
+    account_type:firstBan.account_type||state.crmAccountType||'',
+    full_ban_lines:state.crmFullBanLines,
+    selected_lines:sourceMode==='crm'?selectedCrm:context.lineas,
+    event:state.consultationIntent?.evento||state.lineEvent||state.eventos[0],
+    plan,
+    equipment_preferences:state.consultationIntent?.equipment_preferences||{},
+    selected_equipment:selectedRows.map(row=>({linea:row.linea,modelo:row.equipo?.modelo||'',oferta:row.oferta?.id||''})),
+    financing:{modalidad:'pendiente_seleccion_vendedor'},
+    budget:state.consultationIntent?.budget||null,
+    convergence:context.cliente?.convergente?{estado:'convergente'}:{estado:'no_confirmada'},
+    seller_preferences:state.consultationIntent?.seller_preferences||{},
+    original_query:state.consultationQuery||'',
+  })||null;
+}
+function updateCommercialScenario(sourceMode=state.sourceMode){
+  state.sourceMode=sourceMode;
+  state.commercialScenario=buildScenarioPayload(sourceMode);
+  const status=$('scenarioStatus');
+  if(status)status.textContent=sourceMode==='consultation'?`Modo ${modeLabel()}`:`Modo ${modeLabel()} · autoaplica=false`;
+  return state.commercialScenario;
+}
+function buildStableConsultationScenario(){
+  const current=state.commercialScenario||{};
+  const selectedCrm=selectedCrmLines();
+  const fullLines=state.crmFullBanLines.length?state.crmFullBanLines:(Array.isArray(current.full_ban_lines)?current.full_ban_lines:[]);
+  const firstBan=state.crmClient?.bans?.[0]||{};
+  return window.ConstructorPublications?.buildCommercialScenario?.({
+    source_mode:'consultation',
+    client:current.client||{id:state.crmClientId||'',name:state.crmClientName||''},
+    ban:current.ban||{number:state.crmBan||firstBan.ban_number||'',status:firstBan.status||''},
+    account_type:current.account_type||firstBan.account_type||state.crmAccountType||'',
+    full_ban_lines:fullLines,
+    selected_lines:selectedCrm.length?selectedCrm:(Array.isArray(current.selected_lines)?current.selected_lines:[]),
+    event:current.event||state.lineEvent||state.eventos[0],
+    plan:{},
+    equipment_preferences:{},
+    selected_equipment:[],
+    fixed_services:current.fixed_services||[],
+    productos:current.productos||[],
+    financing:{modalidad:'pendiente_seleccion_vendedor'},
+    budget:null,
+    convergence:current.convergence||{},
+    seller_preferences:{},
+    original_query:state.consultationQuery||'',
+  })||{
+    source_mode:'consultation',
+    autoaplica:false,
+    selected_equipment:[],
+    equipment_preferences:{},
+    budget:null,
+    seller_preferences:{},
+  };
+}
+function stableConsultationScenarioForCompare(scenario){
+  const prefs=scenario?.equipment_preferences||{};
+  const budget=scenario?.budget||{};
+  const seller=scenario?.seller_preferences||{};
+  return {
+    source_mode:scenario?.source_mode||'consultation',
+    client_id:scenario?.client?.id||null,
+    ban:scenario?.ban?.number||null,
+    selected_lines_count:Number(scenario?.selected_lines_count||scenario?.selected_lines?.length||0),
+    event:scenario?.event||null,
+    equipment_preferences:{
+      marca:prefs.marca||null,
+      modelo:prefs.modelo||null,
+      beneficio_objetivo:prefs.beneficio_objetivo||null,
+      cualquier_equipo:Boolean(prefs.cualquier_equipo),
+      mantener_equipos_actuales:Boolean(prefs.mantener_equipos_actuales),
+    },
+    budget:budget?.maximo_mensual?{maximo_mensual:Number(budget.maximo_mensual)}:null,
+    seller_preferences:{
+      objetivo:seller.objetivo||null,
+      respetar_marca:Boolean(seller.respetar_marca),
+      requiere_aclaracion:Boolean(seller.requiere_aclaracion),
+    },
+    autoaplica:false,
+  };
+}
+function consultationScenarioFingerprint(scenario){
+  return JSON.stringify(stableConsultationScenarioForCompare(scenario));
+}
+function validateConsultationScenarioSync(intent,scenario){
+  const issues=[];
+  const prefs=scenario?.equipment_preferences||{};
+  const budget=scenario?.budget||{};
+  const seller=scenario?.seller_preferences||{};
+  const count=Number(scenario?.selected_lines_count||scenario?.selected_lines?.length||0);
+  if(intent?.cantidad_lineas&&count!==Number(intent.cantidad_lineas))issues.push('cantidad');
+  if(intent?.equipment_preferences?.marca&&normalizeUiKey(prefs.marca)!==normalizeUiKey(intent.equipment_preferences.marca))issues.push('marca');
+  if(intent?.primary_equipment&&normalizeUiKey(prefs.modelo)!==normalizeUiKey(intent.primary_equipment))issues.push('equipo');
+  if(intent?.budget?.maximo_mensual&&Number(budget.maximo_mensual||0)!==Number(intent.budget.maximo_mensual))issues.push('presupuesto');
+  if(intent?.seller_preferences?.objetivo&&normalizeUiKey(seller.objetivo)!==normalizeUiKey(intent.seller_preferences.objetivo))issues.push('objetivo');
+  return {ok:issues.length===0,issues,code:'consulta_estado_desincronizado'};
+}
+function blockConsultationLoad(reason){
+  state.consultationLoadBlocked=reason||'consulta_constructor_mismatch';
+  const btn=$('loadConsultationBtn');
+  if(btn)btn.disabled=true;
+  renderConsultationResult();
+}
+function renderCrmLineSelector(){
+  const box=$('crmLineSelector');
+  if(!box)return;
+  if(!state.crmClient){
+    box.innerHTML='<div class="entry-preview">Sin cliente cargado. Usa esta opcion desde Clientes > Comparativas.</div>';
+    return;
+  }
+  box.innerHTML=state.crmFullBanLines.map((line,index)=>`<label class="crm-line"><input type="checkbox" ${state.selectedCrmLineKeys.includes(line.id)?'checked':''} onchange="toggleCrmLine('${esc(line.id)}',this.checked)"><span><b>${esc(line.phone||'Linea '+(index+1))}</b><span>BAN ${esc(line.ban||state.crmBan||'-')} · ${esc(line.plan_name||line.plan_code||'Sin plan')} · ${money(line.current_rent)}</span></span></label>`).join('')||'<div class="entry-preview">El BAN no tiene lineas activas disponibles.</div>';
+}
+function renderEntryModes(){
+  ['manual','crm','consultation'].forEach(mode=>{
+    const card=$(mode==='manual'?'manualModeCard':mode==='crm'?'crmModeCard':'consultationModeCard');
+    if(card)card.classList.toggle('active',state.sourceMode===mode);
+  });
+  const crmSummary=$('crmEntrySummary');
+  if(crmSummary){
+    const selected=selectedCrmLines().length;
+    crmSummary.textContent=state.crmClient
+      ? `Cliente cargado: ${state.crmClientName||'sin nombre'} · BAN ${state.crmBan||'-'} · ${selected} linea(s) seleccionada(s) de ${state.crmFullBanLines.length}.`
+      : 'Abre el Constructor desde un cliente para cargar BAN y lineas sin modificar el CRM.';
+  }
+  const hideManual=state.sourceMode==='consultation'&&!state.consultationLoadedIntoConstructor;
+  ['stepPlan','stepEquipo','stepServicios','stepPropuesta'].forEach(id=>{
+    const section=$(id);
+    if(section)section.style.display=hideManual?'none':'';
+  });
+  renderCrmLineSelector();
+  if(state.sourceMode!=='consultation'&&!(state.sourceMode==='consultation'&&state.consultationResult&&!state.consultationLoadedIntoConstructor)){
+    updateCommercialScenario(state.sourceMode);
+  }
+  renderConsultationPreview();
+}
+function toggleCrmLine(key,checked){
+  if(checked&&!state.selectedCrmLineKeys.includes(key))state.selectedCrmLineKeys.push(key);
+  if(!checked)state.selectedCrmLineKeys=state.selectedCrmLineKeys.filter(item=>item!==key);
+  if(!state.selectedCrmLineKeys.length&&state.crmFullBanLines[0])state.selectedCrmLineKeys=[state.crmFullBanLines[0].id];
+  applySelectedCrmLinesToRows();
+  updateCommercialScenario('crm');
+  renderEntryModes();
+  renderSummary();
+}
+function startCrmMode(){
+  if(!state.crmClient){alert('Abre el Constructor desde un cliente del CRM para traer BAN y lineas.');return;}
+  applySelectedCrmLinesToRows();
+  updateCommercialScenario('crm');
+  renderEntryModes();
+  renderLineRows();
+  $('stepPlan').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startManualMode(){
+  state.consultationLoadedIntoConstructor=false;
+  updateCommercialScenario('manual');
+  renderEntryModes();
+  $('stepPlan').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function parseConsultationIntent(text,baseScenario=null){
+  if(window.ConstructorPublications?.interpretCommercialConsultation){
+    const interpretation=window.ConstructorPublications.interpretCommercialConsultation({query:text,scenario:baseScenario||state.commercialScenario||buildStableConsultationScenario()||{}});
+    return {
+      cantidad_lineas:interpretation.intent.requested_lines,
+      evento:interpretation.intent.event,
+      equipment_preferences:interpretation.scenario_patch.equipment_preferences,
+      equipment_selections:interpretation.intent.equipment_selections||[],
+      selected_equipment:interpretation.scenario_patch.selected_equipment||[],
+      budget:interpretation.scenario_patch.budget,
+      seller_preferences:interpretation.scenario_patch.seller_preferences,
+      plan_family:interpretation.intent.plan_family,
+      convergence:interpretation.intent.convergence,
+      primary_equipment:interpretation.intent.primary_equipment,
+      brand_preference:interpretation.intent.brand_preference,
+      clarification_required:interpretation.clarification_required,
+      clarification_questions:interpretation.clarification_questions||[],
+      interpretation,
+      bloqueos:interpretation.bloqueos,
+    };
+  }
+  const clean=String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const lineMatch=clean.match(/(\d+)\s*(lineas|linea|renovaciones|equipos)/);
+  const budgetMatch=clean.match(/(?:\$|menos de|debajo de|pasar de|maximo|max)\s*([0-9]+(?:\.[0-9]+)?)/);
+  const brand=['samsung','apple','iphone','motorola','franklin'].find(brand=>clean.includes(brand));
+  const evento=clean.includes('renov')?'renovacion':clean.includes('port')?'portabilidad':clean.includes('adicional')?'adicional':clean.includes('nueva')?'nueva':null;
+  const goal=clean.includes('gratis')?'equipos_gratis':clean.includes('ahorro')?'mayor_ahorro':clean.includes('mant')?'mantener_planes':'preparar_opciones';
+  return {
+    cantidad_lineas:lineMatch?Number(lineMatch[1]):null,
+    evento,
+    equipment_preferences:{marca:brand==='iphone'?'apple':brand||null},
+    budget:budgetMatch?{maximo_mensual:Number(budgetMatch[1])}:null,
+    seller_preferences:{objetivo:goal},
+    bloqueos:['interprete_local','consulta_no_decide_promociones','motor_comercial_define_elegibilidad'],
+  };
+}
+function consultationEquipmentMotorRows(intent){
+  const requested=Number(intent?.cantidad_lineas||state.lineas||0);
+  if(!requested)return [];
+  if(intent?.clarification_required)return [];
+  const selections=consultationExpandedEquipmentSelections(intent);
+  return Array.from({length:requested},(_,index)=>({
+    linea:index+1,
+    resultado:'sin_promocion',
+    equipment:selections[index]?.modelo||intent?.primary_equipment||intent?.brand_preference||'equipo_no_confirmado',
+    source:'Motor Comercial publicado',
+    validity:state.motorRulesVersion?.vigencia||state.motorRulesVersion?.vigente_desde||null,
+    explanation:'El Motor no devolvio una promocion especifica de equipo para esta consulta local.',
+  }));
+}
+function normalizeUiKey(value){
+  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+function primaryCandidateScore(item,intent){
+  const wanted=normalizeUiKey(intent?.primary_equipment||'');
+  const model=normalizeUiKey(item?.equipo||item?.equipment||'');
+  const exactModel=wanted&&model.startsWith(wanted)?0:(wanted&&model.includes(wanted)?1:2);
+  const variantPenalty=/\b(plus|ultra|pro|max|fold|flip)\b/.test(model.replace(wanted,''))?1:0;
+  const benefit=normalizeUiKey(item?.tipo_beneficio||item?.resultado||'regular');
+  const benefitScore=benefit==='gratis'?0:(benefit==='descuento_porcentaje'||benefit==='descuento_monto'?1:2);
+  return exactModel*1000000+variantPenalty*100000+benefitScore*10000+Number(item?.mensualidad??9999);
+}
+function consultationMotorEquipmentRowsFromCandidates(candidateResult,intent){
+  const candidates=Array.isArray(candidateResult?.primary?.candidatos)?candidateResult.primary.candidatos:(Array.isArray(candidateResult?.candidatos)?candidateResult.candidatos:[]);
+  const requested=Number(intent?.cantidad_lineas||state.lineas||0);
+  if(!candidates.length)return consultationEquipmentMotorRows(intent);
+  const byLine=new Map();
+  candidates.forEach(item=>{
+    const key=Number(item.posicion||item.linea||0)||byLine.size+1;
+    const current=byLine.get(key);
+    if(current&&primaryCandidateScore(current.__raw,intent)<=primaryCandidateScore(item,intent))return;
+    const hasDiscount=Number(item.descuento||0)>0||Number(item.precio_promocion||0)<Number(item.precio_regular||0);
+    const resultado=item.tipo_beneficio==='financiado'&&!hasDiscount?'regular':(item.tipo_beneficio||'regular');
+    byLine.set(key,{
+      __raw:item,
+      linea:key,
+      equipment:item.equipo||'',
+      resultado,
+      monthly:item.mensualidad,
+      monthly_regular:item.mensualidad_regular,
+      monthly_net:item.mensualidad_neta??item.mensualidad,
+      precio_regular:item.precio_regular,
+      precio_promocion:item.precio_promocion,
+      descuento:item.descuento,
+      plazo:item.plazo,
+      source:item.fuente_publicacion||null,
+      validity:item.vigencia||null,
+      explanation:item.reason||'Decision recibida del Motor Comercial por posicion vigente.',
+    });
+  });
+  return Array.from({length:requested||byLine.size},(_,index)=>{
+    const found=byLine.get(index+1);
+    if(found)return Object.fromEntries(Object.entries(found).filter(([key])=>key!=='__raw'));
+    return {
+      linea:index+1,
+      resultado:'sin_promocion',
+      equipment:intent?.primary_equipment||intent?.brand_preference||'pendiente_seleccion_vendedor',
+      monthly:null,
+      monthly_regular:null,
+      monthly_net:null,
+      precio_regular:null,
+      descuento:null,
+      plazo:null,
+      source:'Motor Comercial publicado',
+      validity:state.motorRulesVersion?.vigencia||state.motorRulesVersion?.vigente_desde||null,
+      explanation:'El Motor no devolvio una promocion especifica de equipo para esta posicion.',
+    };
+  });
+}
+function sourceDisplayName(source){
+  if(!source)return '-';
+  if(typeof source==='string')return source;
+  return source.nombre_original||source.archivo||source.hoja||source.seccion||source.fuente_id||'-';
+}
+function consultationBenefitDisplay(value,item={}){
+  const key=normalizeUiKey(value);
+  if(key==='gratis')return 'Gratis';
+  if(key==='descuento porcentaje'||key==='descuento_porcentaje'){
+    const discount=Number(item.descuento||0);
+    const regular=Number(item.precio_regular||0);
+    const pct=regular>0&&discount>0?Math.round((discount/regular)*100):null;
+    return pct?`${pct}%`:'Descuento porcentual';
+  }
+  if(key==='descuento monto'||key==='descuento_monto')return `Descuento ${money(item.descuento||0)}`;
+  if(key==='regular'||key==='sin promocion'||key==='sin_promocion')return 'Regular';
+  if(key==='financiado')return 'Financiado';
+  if(key==='requiere revision'||key==='requiere_revision')return 'Requiere revision';
+  return value||'-';
+}
+function consultationPlanFamily(intent,line){
+  const scenarioPlan=state.commercialScenario?.plan||{};
+  const scenarioFamily=scenarioPlan.tipo==='multilinea'?scenarioPlan.multilinea_familia:null;
+  const family=intent?.plan_family||scenarioFamily||line.plan_familia||line.familia_business_red||(state.tipo==='multilinea'?'business_red_plus':null);
+  if(family==='plus')return 'business_red_plus';
+  if(family==='extreme')return 'business_red_extreme';
+  if(family==='supreme')return 'business_red_supreme';
+  if(family==='sinfronteras'||family==='sin_fronteras')return 'business_red_sin_fronteras';
+  return family;
+}
+function consultationPlanKeyFromFamily(family){
+  if(family==='business_red_plus')return 'plus';
+  if(family==='business_red_extreme')return 'extreme';
+  if(family==='business_red_supreme')return 'supreme';
+  if(family==='business_red_sin_fronteras')return 'sinfronteras';
+  return family||state.planMulti;
+}
+function consultationPlanLabelFromFamily(family){
+  if(!family)return '';
+  return ({
+    business_red_plus:'Business RED Plus',
+    business_red_extreme:'Business RED Extreme',
+    business_red_supreme:'Business RED Supreme',
+    business_red_sin_fronteras:'Business RED Sin Fronteras',
+  })[family]||planLabel();
+}
+function consultationExpandedEquipmentSelections(intent){
+  const selections=Array.isArray(intent?.selected_equipment)&&intent.selected_equipment.length
+    ? intent.selected_equipment
+    : (Array.isArray(intent?.equipment_selections)?intent.equipment_selections.map(item=>({modelo:item.equipo,marca:item.marca,categoria_producto:item.categoria,cantidad:item.cantidad})):[]);
+  return selections.flatMap(item=>Array.from({length:Number(item.cantidad||1)},()=>item));
+}
+function consultationEquipmentGroups(intent){
+  return Array.isArray(intent?.selected_equipment)&&intent.selected_equipment.length
+    ? intent.selected_equipment
+    : (Array.isArray(intent?.equipment_selections)?intent.equipment_selections.map(item=>({modelo:item.equipo,marca:item.marca,categoria_producto:item.categoria,cantidad:item.cantidad})):[]);
+}
+function consultationEquipmentSummary(intent){
+  const groups=consultationEquipmentGroups(intent);
+  if(groups.length)return groups.map(item=>{
+    const label=item.modelo||item.marca||item.categoria_producto||'equipo por confirmar';
+    const hasExplicitQuantity=Number(item.cantidad||0)>0;
+    const hasSpecificSelection=Boolean(item.modelo||(!item.marca&&item.categoria_producto)||hasExplicitQuantity);
+    return hasSpecificSelection?`${Number(item.cantidad||1)} x ${label}`:label;
+  }).join(' / ');
+  return intent?.primary_equipment||intent?.equipment_preferences?.marca||'equipo no determinado';
+}
+function consultationMotorLine(line,index,intent){
+  const planFamily=consultationPlanFamily(intent,line);
+  const isBusinessRed=String(planFamily||'').startsWith('business_red_');
+  const planKey=consultationPlanKeyFromFamily(planFamily);
+  const planAmount=isBusinessRed?Number(line.plan_monto||line.current_rent||window.CONSTRUCTOR_PLAN_AMOUNTS?.[planKey]||0):(state.tipo==='individual'?Number(state.planInd||0):Number(window.CONSTRUCTOR_PLAN_AMOUNTS?.[state.planMulti]||line.plan_monto||line.current_rent||0));
+  const equipment=consultationExpandedEquipmentSelections(intent)[index]||{};
+  return {
+    id:line.id||`consulta-${index+1}`,
+    tipo:isBusinessRed||state.tipo==='multilinea'?'multilinea_business_red':'individual',
+    familia_business_red:isBusinessRed?planFamily:(state.tipo==='multilinea'?consultationPlanFamily(intent,line):null),
+    modalidad_linea:intent?.evento==='byop'?'byop':'financiamiento',
+    plan:{codigo:planFamily==='business_red_plus'?'BREDP1':(planKey||line.plan_code||''),nombre:isBusinessRed?consultationPlanLabelFromFamily(planFamily):planLabel(),monto:planAmount},
+    evento:intent?.evento==='nueva'?'linea_nueva':(intent?.evento||line.evento||state.lineEvent||'linea_nueva'),
+    trade_in:{aplica:false,validado:false},
+    posicion_en_ban:Number(line.linea||line.position||index+1),
+    equipo_solicitado:equipment.modelo||intent?.primary_equipment||null,
+    categoria_producto:equipment.categoria_producto||intent?.equipment_preferences?.categoria_producto||null,
+  };
+}
+function consultationCandidateFilters(intent,mode='primary',selection=null){
+  const prefs=intent?.equipment_preferences||{};
+  const seller=intent?.seller_preferences||{};
+  const filters={};
+  const model=selection?.modelo||prefs.modelo;
+  const brand=selection?.marca||prefs.marca;
+  const category=selection?.categoria_producto||prefs.categoria_producto;
+  if(mode==='primary'&&model)filters.equipo=model;
+  if(brand&&(seller.respetar_marca||mode==='primary'||prefs.beneficio_objetivo==='gratis'))filters.fabricante=brand;
+  if((mode==='alternatives'||selection)&&category)filters.categoria_producto=category;
+  if(prefs.beneficio_objetivo==='gratis'||seller.objetivo==='buscar_equipos_gratis')filters.solo_gratis=true;
+  if(prefs.beneficio_objetivo==='50_por_ciento'||seller.objetivo==='buscar_equipos_50')filters.descuento_50=true;
+  if(intent?.budget?.maximo_mensual)filters.presupuesto_maximo=Number(intent.budget.maximo_mensual);
+  filters.evento=intent?.evento==='nueva'?'linea_nueva':intent?.evento;
+  filters.plan_familia=intent?.plan_family||(state.tipo==='multilinea'?'business_red_plus':null);
+  return Object.fromEntries(Object.entries(filters).filter(([,value])=>value!=null&&value!==''));
+}
+function buildConsultationScenarioFromVisibleIntent(intent,stableScenario){
+  const count=Number(intent?.cantidad_lineas||stableScenario?.selected_lines_count||stableScenario?.selected_lines?.length||1);
+  const sourceLines=Array.isArray(stableScenario?.selected_lines)&&stableScenario.selected_lines.length
+    ? stableScenario.selected_lines
+    : (Array.isArray(stableScenario?.full_ban_lines)?stableScenario.full_ban_lines:[]);
+  const selectedLines=Array.from({length:count},(_,index)=>{
+    const source=sourceLines[index]||sourceLines[0]||{};
+    return {
+      ...source,
+      linea:index+1,
+      position:index+1,
+      ban:source.ban||source.ban_number||stableScenario?.ban?.number||'',
+      evento:intent?.evento||stableScenario?.event||source.evento||null,
+      producto:source.producto||source.service_type||'movil',
+      plan_monto:Number(source.plan_monto??source.current_rent??0),
+    };
+  });
+  return {
+    ...stableScenario,
+    source_mode:'consultation',
+    selected_lines:selectedLines,
+    selected_lines_count:count,
+    event:intent?.evento||stableScenario?.event||null,
+    equipment_preferences:intent?.equipment_preferences||{},
+    selected_equipment:Array.isArray(intent?.selected_equipment)?intent.selected_equipment:[],
+    budget:intent?.budget||null,
+    convergence:intent?.convergence?{estado:intent.convergence}:(stableScenario?.convergence||{}),
+    seller_preferences:intent?.seller_preferences||{},
+    original_query:state.consultationQuery||'',
+    autoaplica:false,
+  };
+}
+function consultationScenarioForEvaluation(intent,scenario){
+  const planFamily=consultationPlanFamily(intent,{});
+  const count=Number(intent?.cantidad_lineas||scenario?.selected_lines_count||scenario?.selected_lines?.length||state.lineas||1);
+  const isBusinessRed=String(planFamily||'').startsWith('business_red_');
+  if(!isBusinessRed)return {...scenario,selected_equipment:intent?.selected_equipment||scenario?.selected_equipment||[]};
+  const planKey=consultationPlanKeyFromFamily(planFamily);
+  const planCatalog=window.CONSTRUCTOR_PLAN_CATALOG?.[planKey]||mobilePlanCatalog.multiline.find(plan=>plan.key===planKey)||{};
+  const lineCosts=Array.isArray(planCatalog.lineCosts)?planCatalog.lineCosts:[];
+  const autoPayLineCosts=Array.isArray(planCatalog.autoPayLineCosts)?planCatalog.autoPayLineCosts:[];
+  const regularTotal=Number(planCatalog.lineTotals?.[count-1]??lineCosts.slice(0,count).reduce((sum,value)=>sum+Number(value||0),0));
+  const autoPayTotal=Number(planCatalog.autoPayTotals?.[count-1]??autoPayLineCosts.slice(0,count).reduce((sum,value,index)=>sum+Number(value??lineCosts[index]??0),0));
+  const lineMonthly=Number(lineCosts[0]||window.CONSTRUCTOR_PLAN_AMOUNTS?.[planKey]||0);
+  const selectedLines=Array.from({length:count},(_,index)=>({
+    linea:index+1,
+    position:index+1,
+    ban:scenario?.ban?.number||'',
+    evento:intent?.evento||scenario?.event||'renovacion',
+    producto:'movil',
+    plan_monto:Number(lineCosts[index]??lineMonthly),
+    plan_monto_autopay:Number(autoPayLineCosts[index]??Math.max(0,Number(lineCosts[index]??lineMonthly)-Number(planCatalog.autoPayDiscount||10))),
+    plan_codigo:planCatalog.lineCodes?.[index]||null,
+  }));
+  return {
+    ...scenario,
+    selected_lines:selectedLines,
+    selected_lines_count:count,
+    event:intent?.evento||scenario?.event||'renovacion',
+    selected_equipment:intent?.selected_equipment||scenario?.selected_equipment||[],
+    plan:{...(scenario?.plan||{}),tipo:'multilinea',nombre:consultationPlanLabelFromFamily(planFamily),codigo:planFamily==='business_red_plus'?'BREDP1':(planKey||scenario?.plan?.codigo),codigo_sistema:planCatalog.lineCodes?.[count-1]||null,multilinea_familia:planFamily,lineas:count,total_mensual:regularTotal,total_mensual_autopay:autoPayTotal,autopay_assumed:false,line_costs:lineCosts.slice(0,count),autopay_line_costs:autoPayLineCosts.slice(0,count)},
+  };
+}
+async function loadConsultationMotorCandidates(intent,scenario){
+  if(!window.ConstructorPublications?.requestCommercialCandidates)return null;
+  if(intent?.clarification_required)return null;
+  const scenarioLines=Array.isArray(scenario?.selected_lines)?scenario.selected_lines:[];
+  const count=Number(intent?.cantidad_lineas||scenarioLines.length||state.lineas||1);
+  const sourceLines=Array.from({length:count},(_,index)=>scenarioLines[index]||scenarioLines[0]||{linea:index+1});
+  const lineas=sourceLines.map((line,index)=>consultationMotorLine({...line,linea:index+1,position:index+1},index,intent));
+  const expanded=consultationExpandedEquipmentSelections(intent);
+  const groups=consultationEquipmentGroups(intent);
+  const requestGroups=groups.length?groups:[null];
+  const primaryResults=[];
+  let start=0;
+  for(const group of requestGroups){
+    const amount=group?Number(group.cantidad||1):lineas.length;
+    const groupLines=lineas.slice(start,start+amount);
+    start+=amount;
+    if(!groupLines.length)continue;
+    const response=await window.ConstructorPublications.requestCommercialCandidates({
+      lineas:groupLines,
+      filtros:consultationCandidateFilters(intent,'primary',group),
+      contexto_ban:{beneficios_usados_por_oferta:{}},
+    });
+    primaryResults.push(response);
+  }
+  const primary={...(primaryResults[0]||{}),candidatos:primaryResults.flatMap(item=>item.candidatos||[])};
+  const promoted=new Set((primary.candidatos||[]).filter(item=>item.tipo_beneficio==='gratis'||item.tipo_beneficio==='descuento_porcentaje'||item.tipo_beneficio==='descuento_monto').map(item=>item.posicion));
+  const pending=lineas.filter(line=>!promoted.has(Number(line.posicion_en_ban)));
+  if(!pending.length)return {primary,alternatives:{...primary,candidatos:[]},pending};
+  const alternatives=await window.ConstructorPublications.requestCommercialCandidates({
+    lineas:pending,
+    filtros:consultationCandidateFilters(intent,'alternatives'),
+    contexto_ban:{beneficios_usados_por_oferta:{}},
+  });
+  return {primary,alternatives,pending};
+}
+function renderConsultationResult(){
+  const box=$('consultationResult');
+  if(!box)return;
+  const result=state.consultationResult;
+  if(!result){box.classList.remove('show');box.innerHTML='';return;}
+  box.classList.add('show');
+  if(result.blocked&&result.blocked_reason==='motor_result_required'){
+    box.innerHTML='<div class="consultation-alert">Consulta bloqueada: falta respuesta del Motor Comercial. No se genera recomendacion comercial desde la IA.</div>';
+    return;
+  }
+  if(result.blocked&&result.blocked_reason==='clarificacion_requerida'){
+    const seen=new Set();
+    const questions=(result.clarification_questions||[]).filter(q=>{
+      const key=String(q.campo||q.pregunta||'').toLowerCase();
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    }).map(q=>`<div class="consultation-alert"><b>${esc(q.pregunta)}</b><br>${esc((q.opciones||[]).join(' · '))}</div>`).join('');
+    box.innerHTML=questions||'<div class="consultation-alert">Necesito una aclaracion puntual antes de consultar el Motor Comercial.</div>';
+    return;
+  }
+  if(result.blocked&&result.blocked_reason==='consulta_estado_desincronizado'){
+    box.innerHTML='<div class="consultation-alert">La consulta visible no coincide con el escenario preparado. No se evaluo ninguna oferta.</div>';
+    return;
+  }
+  const summary=result.motor?.equipment_summary||{};
+  const proposal=result.motor?.proposal?.propuesta||{};
+  const lineRows=result.motor?.equipment_results||[];
+  const planRegularTotal=Number(result.scenario?.plan?.total_mensual||result.baseProposal?.precio_base_mensual||0);
+  const planAutoPayTotal=Number(result.scenario?.plan?.total_mensual_autopay||0);
+  const equipmentKnown=lineRows.length>0&&lineRows.every(item=>item.monthly!=null&&Number.isFinite(Number(item.monthly)));
+  const equipmentTotal=equipmentKnown?lineRows.reduce((sum,item)=>sum+Number(item.monthly||0),0):null;
+  const regularEquipmentKnown=lineRows.length>0&&lineRows.every(item=>item.precio_regular&&item.plazo);
+  const regularEquipmentMonthly=regularEquipmentKnown?lineRows.reduce((sum,item)=>sum+(Number(item.precio_regular||0)/Number(item.plazo||30)),0):null;
+  const discountTotal=regularEquipmentMonthly!=null&&equipmentTotal!=null?Math.max(0,regularEquipmentMonthly-equipmentTotal):null;
+  const estimatedRegularTotal=planRegularTotal&&equipmentTotal!=null?planRegularTotal+equipmentTotal:null;
+  const estimatedAutoPayTotal=planAutoPayTotal&&equipmentTotal!=null?planAutoPayTotal+equipmentTotal:null;
+  const planRows=planAutoPayTotal&&planAutoPayTotal!==planRegularTotal
+    ? [
+      {label:'Sin AutoPay',plan:planRegularTotal,total:estimatedRegularTotal},
+      {label:'Con AutoPay',plan:planAutoPayTotal,total:estimatedAutoPayTotal},
+    ]
+    : [{label:'Plan',plan:planRegularTotal,total:estimatedRegularTotal}];
+  const alternatives=result.alternatives?.alternatives||[];
+  const actionClick=action=>{
+  if(action==='Cargar al Constructor')return 'loadConsultationIntoConstructor()';
+  if(action==='Enviar a Comparativa')return 'sendConsultationToComparison()';
+  if(action==='Ver alternativas')return "toggleConsultationTrace(true)";
+  if(action==='Ver detalles')return 'toggleConsultationTrace()';
+  return 'return false';
+};
+  const visibleActions=(result.actions||[])
+    .map(action=>action==='Modificar propuesta'?'Modificar':action)
+    .filter(action=>['Modificar','Ver alternativas','Enviar a Comparativa','Ver detalles'].includes(action));
+  const actions=visibleActions.map(action=>`<button type="button" onclick="${actionClick(action==='Modificar'?'Modificar propuesta':action)}">${esc(action)}</button>`).join('');
+  const reviewRows=(result.alternatives?.requiere_revision||[]).map(item=>`<tr><td>${esc(item.equipo||'-')}</td><td>${esc(item.reason||'requiere_revision')}</td><td>${esc(sourceDisplayName(item.fuente_publicacion))}</td></tr>`).join('');
+  const alternativeRows=alternatives.length
+    ? alternatives.map(item=>`<tr><td>${esc(item.equipment||'-')}<span class="line-note">Disponible hasta ${esc(item.available_lines||1)} linea(s) pendiente(s)</span></td><td>${esc(consultationBenefitDisplay(item.benefit,item))}</td><td>${money(item.monthly)}</td><td>${esc(sourceDisplayName(item.source))}</td></tr>`).join('')
+    : '<tr><td colspan="4">Sin alternativas vigentes devueltas por el Motor para completar lineas.</td></tr>';
+  const lineRegularMonthly=item=>{
+    if(item.monthly_regular!=null&&Number.isFinite(Number(item.monthly_regular)))return Number(item.monthly_regular);
+    if(item.precio_regular&&item.plazo)return Number(item.precio_regular)/Number(item.plazo||30);
+    return null;
+  };
+  const lineNetMonthly=item=>item.monthly_net!=null?Number(item.monthly_net):(item.monthly!=null?Number(item.monthly):null);
+  const lineDiscountMonthly=item=>{
+    const regular=lineRegularMonthly(item);
+    const net=lineNetMonthly(item);
+    if(regular==null||net==null)return null;
+    return Math.max(0,regular-net);
+  };
+  const linePlanMonthly=item=>{
+    const index=Math.max(0,Number(item.linea||item.posicion||1)-1);
+    const costs=Array.isArray(result.scenario?.plan?.line_costs)?result.scenario.plan.line_costs:[];
+    const scenarioLine=Array.isArray(result.scenario?.selected_lines)?result.scenario.selected_lines[index]:null;
+    // Un plan de $0 se muestra como $0.00; solo el dato ausente es "No disponible".
+    const valor=costs[index]??scenarioLine?.plan_monto;
+    if(valor==null||valor==='')return null;
+    const monto=Number(valor);
+    return Number.isFinite(monto)?monto:null;
+  };
+  const missingPriceItems=[...new Set(lineRows.filter(item=>item.precio_regular==null||lineNetMonthly(item)==null).map(item=>item.equipment||result.selection?.equipment||'equipo').filter(Boolean))];
+  const missingPriceWarning=missingPriceItems.length?`<div class="consultation-alert">No puedo cerrar el total porque falta precio vigente para ${esc(missingPriceItems.join(', '))}.</div>`:'';
+  const moneyOrMissing=value=>value==null||!Number.isFinite(Number(value))?'Falta precio de fuente':money(value);
+  const costLineRows=lineRows.length
+    ? lineRows.map(item=>{
+      const regular=lineRegularMonthly(item);
+      const net=lineNetMonthly(item);
+      const discount=lineDiscountMonthly(item);
+      const plan=linePlanMonthly(item);
+      const total=plan!=null&&net!=null?plan+net:null;
+      return `<tr><td>${esc(item.linea||'-')}</td><td>${esc(item.equipment||result.selection?.equipment||'-')}</td><td>${item.precio_regular==null?'Falta precio de fuente':money(item.precio_regular)}</td><td>${esc(consultationBenefitDisplay(item.resultado,item))}</td><td>${moneyOrMissing(discount)}</td><td>${moneyOrMissing(net)}</td><td>${plan==null?'No disponible':money(plan)}</td><td>${moneyOrMissing(total)}</td></tr>`;
+    }).join('')
+    : '<tr><td colspan="8">Sin lineas devueltas por el Motor.</td></tr>';
+  const perLineRows=lineRows.length
+    ? lineRows.map(item=>{
+      const regular=lineRegularMonthly(item);
+      const net=lineNetMonthly(item);
+      const discount=lineDiscountMonthly(item);
+      return `<tr><td>${esc(item.linea||'-')}</td><td>${esc(item.equipment||result.selection?.equipment||'-')}</td><td>${esc(consultationBenefitDisplay(item.resultado,item))}</td><td>${item.precio_regular==null?'Falta precio de fuente':money(item.precio_regular)}</td><td>${item.plazo||'No disponible'}</td><td>${regular==null?'Falta precio de fuente':money(regular)}</td><td>${discount==null?'Falta precio de fuente':money(discount)}</td><td>${net==null?'Falta precio de fuente':money(net)}</td><td>${esc(sourceDisplayName(item.source))}</td></tr>`;
+    }).join('')
+    : '<tr><td colspan="9">Sin detalle por linea devuelto por el Motor.</td></tr>';
+  const commercial=result.commercial_response||{};
+  const appliedBenefits=(result.motor?.proposal?.reglas_aplicadas||[])
+    .filter(item=>!item.estado_confianza||item.estado_confianza==='confirmado')
+    .map(item=>String(item.nombre||item.beneficio||'').replace(/_/g,' ').trim())
+    .filter(item=>item&&normalizeUiKey(item)!=='benefit confirmado');
+  const benefitsHtml=result.scenario?.convergence?.estado==='convergente'
+    ? `<div><h4>Beneficios</h4>${appliedBenefits.length?`<ul>${appliedBenefits.map(item=>`<li>${esc(item)}</li>`).join('')}</ul>`:'<div class="line-note">Sin beneficios confirmados devueltos por el Motor para este escenario.</div>'}</div>`
+    : '';
+  const totalsHtml=missingPriceItems.length
+    ? '<div><h4>Totales</h4><div class="line-note">Total no disponible hasta completar precios de fuente.</div></div>'
+    : `<div><h4>Totales</h4><div class="entry-preview">Plan: ${money(planRegularTotal)}<br>Equipos antes de descuentos: ${money(regularEquipmentMonthly||0)}<br>Creditos/descuentos: -${money(discountTotal||0)}<br>Equipos netos: ${money(equipmentTotal||0)}<br><b>Total mensual: ${money(estimatedRegularTotal||0)}</b><br>Con AutoPay: ${planAutoPayTotal?money(estimatedAutoPayTotal||0):'No disponible'}</div></div>`;
+  const traceDisplay=state.consultationTraceVisible?'':'display:none';
+  box.innerHTML=`
+    ${state.consultationLoadBlocked?'<div class="consultation-alert">Carga bloqueada: el escenario cargado no coincide con la decision mostrada por Consulta. Revisa la seleccion antes de continuar.</div>':''}
+    ${result.blocked?'<div class="consultation-alert">Esta opcion requiere revision comercial. No se completa informacion faltante por inferencia.</div>':''}
+    ${missingPriceWarning}
+    <div><h4>${esc(commercial.title||'Cotizacion')}</h4></div>
+    <div><h4>Cotizacion por linea</h4><table><thead><tr><th>Linea</th><th>Equipo</th><th>Precio regular</th><th>Oferta</th><th>Credito/descuento</th><th>Equipo/mes neto</th><th>Plan/mes</th><th>Total linea</th></tr></thead><tbody>${costLineRows}</tbody></table></div>
+    ${totalsHtml}
+    ${benefitsHtml}
+    <div class="consultation-actions">${actions}</div>
+    <div id="consultationTrace" style="${traceDisplay}">
+      <table><thead><tr><th>Escenario</th><th>Total plan</th><th>Equipos regular</th><th>Creditos/descuentos equipos</th><th>Total equipos neto</th><th>Total mensual estimado</th></tr></thead><tbody>${planRows.map(row=>`<tr><td>${esc(row.label)}</td><td>${row.plan?money(row.plan):'Total pendiente de completar'}</td><td>${regularEquipmentMonthly==null?'Total pendiente de completar':money(regularEquipmentMonthly)}</td><td>${discountTotal==null?'Total pendiente de completar':money(discountTotal)}</td><td>${equipmentTotal==null?'Total pendiente de completar':money(equipmentTotal)}</td><td>${row.total==null?'Total pendiente de completar':money(row.total)}</td></tr>`).join('')}</tbody></table>
+      <div><h4>Detalle por linea</h4><table><thead><tr><th>Linea</th><th>Equipo</th><th>Resultado</th><th>Precio regular</th><th>Plazo</th><th>Mensualidad regular</th><th>Credito/descuento</th><th>Mensualidad neta</th><th>Fuente</th></tr></thead><tbody>${perLineRows}</tbody></table></div>
+      <div><h4>Opciones para completar lineas</h4><table><thead><tr><th>Equipo</th><th>Beneficio</th><th>Mensualidad</th><th>Fuente</th></tr></thead><tbody>${alternativeRows}</tbody></table></div>
+      ${reviewRows?`<div><h4>Requiere revision comercial</h4><table><thead><tr><th>Equipo</th><th>Motivo</th><th>Fuente</th></tr></thead><tbody>${reviewRows}</tbody></table></div>`:''}
+    </div>
+  `;
+}
+function toggleConsultationTrace(forceVisible){
+  state.consultationTraceVisible=typeof forceVisible==='boolean'?forceVisible:!state.consultationTraceVisible;
+  renderConsultationResult();
+}
+function useConsultationExample(text){
+  $('consultationQuery').value=text;
+  prepareConsultationScenario();
+}
+function startNewConsultation(){
+  state.consultationIntent=null;
+  state.consultationResult=null;
+  state.consultationQuery='';
+  state.consultationDecisionFingerprint=null;
+  state.consultationLoadBlocked=null;
+  state.consultationLoadedIntoConstructor=false;
+  state.consultationTraceVisible=false;
+  if($('consultationQuery'))$('consultationQuery').value='';
+  state.commercialScenario={...buildStableConsultationScenario(),consultation:null,autoaplica:false};
+  renderEntryModes();
+  renderConsultationResult();
+  renderSummary();
+  const btn=$('loadConsultationBtn');
+  if(btn)btn.disabled=true;
+}
+async function prepareConsultationScenario(){
+  const text=($('consultationQuery')?.value||'').trim();
+  if(!text){alert('Escribe que necesita preparar el vendedor.');return;}
+  state.consultationQuery=text;
+  state.consultationLoadBlocked=null;
+  state.consultationTraceVisible=false;
+  const stableScenario=buildStableConsultationScenario();
+  state.sourceMode='consultation';
+  const status=$('scenarioStatus');
+  if(status)status.textContent=`Modo ${modeLabel()}`;
+  state.consultationIntent=parseConsultationIntent(text,stableScenario);
+  state.consultationLoadedIntoConstructor=false;
+  const visibleIntentScenario=buildConsultationScenarioFromVisibleIntent(state.consultationIntent,stableScenario);
+  state.commercialScenario=consultationScenarioForEvaluation(state.consultationIntent,visibleIntentScenario);
+  const sync=validateConsultationScenarioSync(state.consultationIntent,state.commercialScenario);
+  if(!sync.ok){
+    state.consultationLoadBlocked=sync.code;
+    state.consultationResult={
+      ok:false,
+      blocked:true,
+      blocked_reason:sync.code,
+      sync_issues:sync.issues,
+      scenario:state.commercialScenario,
+      commercial_response:null,
+      generated_without_motor:false,
+      autoaplica:false,
+    };
+    renderEntryModes();
+    renderConsultationResult();
+    renderSummary();
+    const btn=$('loadConsultationBtn');
+    if(btn)btn.disabled=true;
+    return;
+  }
+  let motorCandidates=null;
+  let candidateResult=null;
+  if(!state.consultationIntent.clarification_required){
+    try{
+      candidateResult=await loadConsultationMotorCandidates(state.consultationIntent,state.commercialScenario);
+      motorCandidates=candidateResult?.alternatives||candidateResult?.primary||null;
+    }catch(e){
+      console.warn('[consulta] Motor candidatos no disponible',e);
+    }
+  }
+  state.consultationResult=window.ConstructorPublications?.evaluateCommercialConsultation?.({
+    query:text,
+    scenario:state.commercialScenario,
+    version:state.motorRulesVersion,
+    rules:state.motorRules,
+    motorEquipmentResults:consultationMotorEquipmentRowsFromCandidates(candidateResult,state.consultationIntent),
+    motorCandidates,
+  })||null;
+  state.consultationDecisionFingerprint=state.consultationResult?.scenario?consultationScenarioFingerprint(state.consultationResult.scenario):null;
+  renderEntryModes();
+  renderConsultationResult();
+  renderSummary();
+  const btn=$('loadConsultationBtn');
+  if(btn)btn.disabled=Boolean(state.consultationResult?.blocked||state.consultationLoadBlocked);
+}
+function renderConsultationPreview(){
+  const box=$('consultationPreview');
+  if(!box)return;
+  if(!state.consultationIntent){box.textContent='Pendiente de consulta.';return;}
+  if(state.consultationResult){box.textContent='Consulta evaluada. Revisa la cotizacion abajo.';return;}
+  const i=state.consultationIntent;
+  const planName=consultationPlanLabelFromFamily(i.plan_family);
+  const equipmentText=consultationEquipmentSummary(i);
+  const parts=[
+    i.cantidad_lineas?`${i.cantidad_lineas} linea(s)`:'lineas no especificadas',
+    i.evento?`evento ${i.evento}`:'evento no determinado',
+    planName?`plan ${planName}`:'plan no determinado',
+    equipmentText?`equipos ${equipmentText}`:'equipo no determinado',
+    i.budget?.maximo_mensual?`maximo ${money(i.budget.maximo_mensual)}`:'sin presupuesto',
+  ];
+  const pending=i.clarification_required?'<br><span class="muted">Necesito una aclaracion puntual antes de cotizar.</span>':'<br><span class="muted">Preparando cotizacion comercial.</span>';
+  box.innerHTML=`<b>Consulta actual</b><br>${esc(parts.join(' · '))}${pending}`;
+}
+function loadConsultationIntoConstructor(){
+  if(!state.consultationIntent){prepareConsultationScenario();if(!state.consultationIntent)return;}
+  if(state.consultationResult?.blocked){alert('La consulta esta bloqueada por revision comercial o falta de Motor.');return;}
+  const intent=state.consultationIntent;
+  if(intent.cantidad_lineas){$('lineas').value=String(intent.cantidad_lineas);}
+  const planKey=consultationPlanKeyFromFamily(intent.plan_family);
+  if(intent.plan_family||(intent.cantidad_lineas&&intent.cantidad_lineas>1)){setTipoPlan('multilinea');state.planMulti=planKey||state.planMulti;if($('planMulti')&&planKey)$('planMulti').value=planKey;}
+  if(intent.evento){state.eventos=[intent.evento];state.lineEvent=intent.evento;}
+  syncPlan();
+  state.cart.forEach(row=>{if(intent.evento)row.evento=intent.evento;});
+  if(intent.equipment_preferences?.marca&&$('buscarEquipo'))$('buscarEquipo').value=intent.equipment_preferences.marca;
+  updateCommercialScenario('consultation');
+  if(state.consultationDecisionFingerprint&&state.consultationDecisionFingerprint!==consultationScenarioFingerprint(state.commercialScenario)){
+    blockConsultationLoad('consulta_constructor_mismatch');
+    alert('Carga bloqueada: el escenario del Constructor no coincide con la decision mostrada por Consulta.');
+    return;
+  }
+  state.consultationLoadedIntoConstructor=true;
+  renderEntryModes();
+  renderLineRows();
+  $('stepPlan').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function sendConsultationToComparison(){
+  if(!CRM_CLIENT_ID){alert('Esta propuesta no esta conectada a un cliente del CRM. Abrela desde Clientes > Comparativas para enviarla al modulo existente.');return;}
+  if(!state.consultationResult||state.consultationResult.blocked){alert('La consulta esta bloqueada por revision comercial o falta de Motor.');return;}
+  try{
+    const currentFingerprint=consultationScenarioFingerprint(state.commercialScenario);
+    const body=window.ConstructorPublications.buildConsultationComparisonPayload({
+      result:state.consultationResult,
+      clientId:CRM_CLIENT_ID,
+      currentRows:state.currentRows||[],
+      status:'borrador',
+      expectedFingerprint:state.consultationDecisionFingerprint,
+      currentFingerprint,
+    });
+    const saved=await crmApi('/api/comparativas',{
+      method:'POST',
+      body:{
+        ...body,
+        source:'constructor_agente_comercial',
+      },
+    });
+    alert('Propuesta enviada a Comparativas. ID: '+saved.id);
+  }catch(e){
+    if(String(e.message||'').includes('consulta_comparativa_mismatch')){
+      blockConsultationLoad('consulta_comparativa_mismatch');
+      alert('Envio bloqueado: la propuesta mostrada no coincide con el escenario actual del Constructor.');
+      return;
+    }
+    alert('No se pudo enviar a Comparativas: '+e.message);
+  }
+}
+document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-group="tipo"] .segment-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.tipo=btn.dataset.val;$('planIndWrap').style.display=state.tipo==='individual'?'flex':'none';$('planMultiWrap').style.display=state.tipo==='multilinea'?'flex':'none';syncPlan();renderSummary();renderMotorCommercialSimulation();});
 function eventLabel(id){return (EVENTOS.find(e=>e.id===id)||{}).label||id;}
 function toggleEvento(id){
   if(state.eventos.includes(id)&&state.eventos.length>1)state.eventos=state.eventos.filter(e=>e!==id);
@@ -280,6 +1137,7 @@ function toggleEvento(id){
   if(!state.eventos.includes(state.lineEvent))state.lineEvent=state.eventos[0];
   if(state.equipo&&state.oferta){renderEquipos();renderTerms(state.equipo,state.oferta);}
   if(!$('stepServicios').classList.contains('locked')) renderOfferExtrasPanel();
+  if(!$('stepServicios').classList.contains('locked')) renderMotorCommercialSimulation();
   if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
   renderSummary();
 }
@@ -336,7 +1194,39 @@ function lineCostText(row){
 }
 function defaultPlazo(oferta){return oferta.plazos&&oferta.plazos.includes(30)?30:(oferta.plazos&&oferta.plazos[0])||30;}
 function selectedPlazo(row){return row&&row.plazo?Number(row.plazo):defaultPlazo(row&&row.oferta);}
-function paymentPerUnit(row){
+function rowCommercialDecision(row){
+  if(row?.commercialDecision)return row.commercialDecision;
+  if(!row||!row.equipo||!row.oferta)return null;
+  const planCost=state.tipo==='individual'?planRegularTotal():Number(planLineCosts()[Math.max(0,Number(row.linea||1)-1)]||0);
+  return window.ConstructorPublications?.buildManualCommercialDecision?.({
+    source:'flujo_anterior_fallback',
+    version:state.motorRulesVersion,
+    line:{linea:row.linea,evento:row.evento,plan_monto:planCost},
+    plan:{nombre:planLabel(),monto:planCost},
+    equipment:{item_code:row.equipo.item_code||row.equipo.itemCode||null,sap_code:row.equipo.sap_code||row.equipo.sapCode||null,modelo:row.equipo.modelo,precio_regular:row.equipo.precio},
+    offer:{id:row.oferta.id,nombre:row.oferta.titulo},
+    benefit:row.motorBeneficio||row.oferta.beneficioMotor||{tipo:row.oferta.beneficio,monto:row.oferta.credito||0},
+    terms:row.oferta.terminos||[],
+    validity:row.oferta.vigencia||{},
+    trace:{fuente:row.oferta.fuente?.hoja||row.oferta.fuente?.nombre||row.motorFuente?.hoja||null,seccion:row.oferta.fuente?.seccion||row.motorFuente?.seccion||null,pagina:row.oferta.fuente?.pagina||row.motorFuente?.pagina||null},
+    totals:{equipo_mensual:legacyPaymentPerUnit(row),equipo_regular:row.equipo.precio,precio_resultante:lineEquipmentPayTotal(row),plan_mensual:planCost},
+    selected:true
+  })||null;
+}
+function selectedCommercialDecision(row){return rowCommercialDecision(row);}
+function decisionPaymentPerUnit(row){
+  const decision=selectedCommercialDecision(row);
+  if(decision&&Number.isFinite(Number(decision.totals?.equipo_mensual)))return Number(decision.totals.equipo_mensual);
+  return legacyPaymentPerUnit(row);
+}
+function decisionOfferLabel(row){
+  const decision=selectedCommercialDecision(row);
+  if(decision?.benefit?.tipo==='descuento_monto')return `Descuento ${money(decision.benefit.monto||0)}`;
+  if(decision?.benefit?.tipo==='descuento_porcentaje')return `${Number(decision.benefit.porcentaje||0)}% descuento del equipo`;
+  if(decision?.benefit?.tipo==='gratis')return 'EQUIPO GRATIS';
+  return '';
+}
+function legacyPaymentPerUnit(row){
   if(!row||!row.equipo||!row.oferta) return 0;
   if(Number.isFinite(Number(row.motorPagoMensual))) return Number(row.motorPagoMensual);
   const t=L.calcularTablaComercial(row.oferta,row.equipo.precio);
@@ -349,8 +1239,11 @@ function paymentPerUnit(row){
   }
   return t.precioFinal||row.equipo.precio;
 }
+function paymentPerUnit(row){return decisionPaymentPerUnit(row);}
 function offerProposalLabel(row){
   if(!row||!row.oferta) return 'Pendiente';
+  const decisionLabel=decisionOfferLabel(row);
+  if(decisionLabel)return decisionLabel;
   if(row.oferta.beneficio==='gratis') return 'EQUIPO GRATIS';
   if(row.motorEsquema==='esquema_1') return `${Number(row.motorPorcentaje||0)}% descuento del equipo`;
   if(row.oferta.beneficio==='50pct') return '50% del valor del equipo';
@@ -381,7 +1274,11 @@ function offerActionPills(row){
   if(!row||!row.oferta) return '<span class="offer-pill pending">Pendiente</span>';
   const pills=[];
   if(row.oferta.beneficio==='gratis') pills.push('<span class="offer-pill free">Gratis</span>');
-  if(row.motorEsquema==='esquema_1'&&row.oferta.beneficio!=='gratis') pills.push(`<span class="offer-pill half">${Number(row.motorPorcentaje||0)}% descuento</span>`);
+  if(row.motorEsquema==='esquema_1'&&row.oferta.beneficio!=='gratis'){
+    if(row.motorBeneficio?.tipo==='descuento_monto') pills.push(`<span class="offer-pill half">Descuento ${money(row.motorBeneficio.monto||row.oferta.credito||0)}</span>`);
+    else if(Number(row.motorPorcentaje||0)>0) pills.push(`<span class="offer-pill half">${Number(row.motorPorcentaje||0)}% descuento</span>`);
+    else if(row.oferta.credito) pills.push(`<span class="offer-pill">Credito ${money(row.oferta.credito)}</span>`);
+  }
   if(row.oferta.beneficio==='50pct') pills.push('<span class="offer-pill half">50%</span>');
   if(L.requiresTradein(row.oferta,row.evento)) pills.push('<span class="offer-pill trade">Trade-in</span>');
   if(!pills.length&&row.oferta.beneficio==='credito') pills.push(`<span class="offer-pill">Credito ${money(row.oferta.credito)}</span>`);
@@ -497,6 +1394,7 @@ async function openEquipmentModal(index){
   ensureLineRows();
   state.activeLineIndex=index;
   state.activeBrand='Todos';
+  state.activeDeviceBrand='Todos';
   state.selectedModalKey=null;
   $('modalTitle').textContent=`Escoger equipo - Linea ${index+1}`;
   $('modalSubtitle').textContent=`${planLabel()} / ${eventLabel(state.cart[index].evento)}`;
@@ -506,9 +1404,8 @@ async function openEquipmentModal(index){
   if(isBusinessRedPlus())await loadMotorEligibleEquipment(index);
 }
 function closeEquipmentModal(){$('equipmentModal').classList.remove('open');}
-const MODEM_BRANDS=['Dlink','Franklin','Netgear','PCD','SenseConnect'];
 function isTablet(eq){return /ipad|tab/i.test(`${eq.marca} ${eq.modelo}`);}
-function isModem(eq){return eq.categoria==='modem'||MODEM_BRANDS.includes(eq.marca)||/mifi|modem|router/i.test(`${eq.marca} ${eq.modelo}`);}
+function isModem(eq){return String(eq.categoria||'').toLowerCase()==='modem'||/mifi|modem|router/i.test(String(eq.modelo||''));}
 function normalizedBrand(brand){const value=String(brand||'').trim().toLowerCase();if(/apple|iphone/.test(value))return 'Apple';return value?value.charAt(0).toUpperCase()+value.slice(1):'Sin marca';}
 function deviceTab(eq){if(isModem(eq))return 'Modem';if(isTablet(eq))return 'Tablets';return normalizedBrand(eq.marca);}
 function deviceKind(eq){if(isModem(eq))return 'modem';if(isTablet(eq))return 'tablet';return 'phone';}
@@ -524,8 +1421,23 @@ function availableBrands(){
 }
 function renderBrandTabs(){
   $('brandTabs').innerHTML=availableBrands().map(brand=>`<button class="brand-tab ${state.activeBrand===brand?'active':''}" data-brand="${esc(brand)}" onclick="setActiveBrand('${esc(brand)}')">${esc(brand)}</button>`).join('');
+  renderDeviceSubBrandTabs();
 }
-function setActiveBrand(brand){state.activeBrand=brand;state.selectedModalKey=null;renderBrandTabs();renderEquipos();}
+function availableDeviceSubBrands(){
+  if(!isBusinessRedPlus()||!(state.activeBrand==='Tabletas'||state.activeBrand==='Módems'))return [];
+  const list=state.motorEquipos.filter(eq=>state.activeBrand==='Tabletas'?isTablet(eq):isModem(eq));
+  const brands=[...new Set(list.map(eq=>normalizedBrand(eq.marca)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  return ['Todos',...brands];
+}
+function renderDeviceSubBrandTabs(){
+  const target=$('deviceSubBrandTabs');if(!target)return;
+  const brands=availableDeviceSubBrands();
+  if(!brands.length){target.innerHTML='';return;}
+  if(!brands.includes(state.activeDeviceBrand))state.activeDeviceBrand='Todos';
+  target.innerHTML=brands.map(brand=>`<button class="brand-tab ${state.activeDeviceBrand===brand?'active':''}" data-device-brand="${esc(brand)}" onclick="setActiveDeviceBrand('${esc(brand)}')">${esc(brand)}</button>`).join('');
+}
+function setActiveBrand(brand){state.activeBrand=brand;state.activeDeviceBrand='Todos';state.selectedModalKey=null;renderBrandTabs();renderEquipos();}
+function setActiveDeviceBrand(brand){state.activeDeviceBrand=brand;state.selectedModalKey=null;renderDeviceSubBrandTabs();renderEquipos();}
 function modalEquipoList(){
   const q=($('buscarEquipo').value||'').toLowerCase().trim();state.buscar=q;
   if(isBusinessRedPlus()){
@@ -534,6 +1446,7 @@ function modalEquipoList(){
     if(state.activeBrand==='Gama baja')list=list.filter(eq=>eq.segmento === 'gama_baja');
     if(state.activeBrand==='Tabletas')list=list.filter(isTablet);
     if(state.activeBrand==='Módems')list=list.filter(isModem);
+    if((state.activeBrand==='Tabletas'||state.activeBrand==='Módems')&&state.activeDeviceBrand&&state.activeDeviceBrand!=='Todos')list=list.filter(eq=>normalizedBrand(eq.marca)===state.activeDeviceBrand);
     return list;
   }
   const activeState={...lineState(state.activeLineIndex??0),buscar:q};
@@ -542,6 +1455,7 @@ function modalEquipoList(){
   return list.slice(0,80);
 }
 function renderEquipos(){
+  renderDeviceSubBrandTabs();
   if(isBusinessRedPlus()&&state.motorLoading){$('modalDeviceList').innerHTML='<div class="modal-empty">Cargando equipos de la Matriz uno...</div>';$('modalOfferPanel').innerHTML='';return;}
   if(isBusinessRedPlus()&&state.motorError){$('modalDeviceList').innerHTML=`<div class="modal-empty">${esc(state.motorError)}</div>`;$('modalOfferPanel').innerHTML='';return;}
   const list=modalEquipoList();
@@ -551,13 +1465,55 @@ function renderEquipos(){
   renderModalOfferPanel();
 }
 function selectModalDevice(key){state.selectedModalKey=key;renderEquipos();}
+function selectedMotorPlazo(item){
+  const plazos=Array.isArray(item?.plazos)?item.plazos:[];
+  if(plazos.some(p=>Number(p.meses)===30))return 30;
+  return Number(plazos[0]?.meses||30);
+}
+function motorSelectedPlan(item){
+  const plazo=selectedMotorPlazo(item);
+  return (item?.plazos||[]).find(p=>Number(p.meses)===plazo)||item?.plazos?.[0]||{meses:plazo,pago_mensual:0,precio_financiado:Number(item?.equipo?.precio_financiado||0)};
+}
+function motorBenefitLabel(item){
+  const benefit=item?.beneficio||{};
+  if(benefit.tipo==='gratis')return 'Equipo gratis';
+  if(benefit.tipo==='descuento_monto')return `Descuento oficial ${money(benefit.monto||0)}`;
+  if(benefit.tipo==='descuento_porcentaje')return `Descuento oficial ${Number(benefit.porcentaje||0)}%`;
+  return 'Financiamiento oficial';
+}
+function motorResultPrice(item){
+  return Number(motorSelectedPlan(item).precio_financiado||item?.equipo?.precio_financiado||0);
+}
+function motorSourceTrace(item){
+  const fuente=item?.fuente||{};
+  const parts=[fuente.hoja||'Ofertas Business Red Plus'];
+  if(fuente.pagina)parts.push(`pag. ${fuente.pagina}`);
+  if(fuente.seccion)parts.push(fuente.seccion);
+  return parts.join(' / ');
+}
+function motorVigenciaText(item){
+  const vigencia=item?.vigencia||{};
+  const desde=vigencia.desde||item?.fuente?.vigencia_desde;
+  const hasta=vigencia.hasta||item?.fuente?.vigencia_hasta;
+  if(desde&&hasta)return `${desde} al ${hasta}`;
+  if(desde)return `desde ${desde}`;
+  return 'Vigencia no determinada en API';
+}
+function hasMotorBlockingValidation(item){
+  return (item?.validaciones||[]).some(v=>String(v.estado||'bloqueante')!=='warning');
+}
 function renderModalOfferPanel(){
   const eq=modalEquipoList().find(item=>item.key===state.selectedModalKey);
   if(!eq){$('modalOfferPanel').innerHTML='<div class="modal-empty">Selecciona un equipo para ver ofertas.</div>';return;}
   if(eq.motor){
-    const monthly=Number(eq.motor.plazos?.[0]?.pago_mensual||0);
-    const financed=Number(eq.motor.equipo.precio_financiado||0);
-    $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)}</span></div><span>Matriz uno</span></div><div class="modal-offer-list"><div class="offer-choice recommended" onclick="assignMotorEquipment('${esc(eq.key)}')"><span class="recommend-badge">Aplica</span><b>Pago equipo en linea ${(state.activeLineIndex??0)+1}: ${money(monthly)}/mes</b><span>Precio financiado ${money(financed)} / 30 meses / Fuente: ${esc(eq.motor.fuente?.hoja||'Ofertas Business Red Plus')}</span><div class="select-offer">Escoger para linea ${(state.activeLineIndex??0)+1}</div></div></div>`;
+    const plan=motorSelectedPlan(eq.motor);
+    const monthly=Number(plan.pago_mensual||0);
+    const financed=motorResultPrice(eq.motor);
+    const regularMonthly=Number(plan.meses||30)>0?Number(eq.precio||0)/Number(plan.meses||30):0;
+    const condition=(eq.motor.condiciones||[])[0]||'Condicion publicada por Motor Comercial';
+    const applies=!hasMotorBlockingValidation(eq.motor);
+    const validationNote=(eq.motor.validaciones||[]).map(v=>v.motivo||v.mensaje||v.codigo).filter(Boolean).join(' / ');
+    $('modalOfferPanel').innerHTML=`<div class="modal-selected-title"><div><h4>${esc(eq.modelo)}</h4><span>${esc(eq.marca)} / Regular ${money(eq.precio)} / Mensualidad regular ${money(regularMonthly)}</span></div><span>Matriz uno</span></div><div class="modal-offer-list"><button type="button" class="offer-choice ${applies?'recommended':''}" ${applies?'':'disabled'} data-motor-equipment-key="${esc(eq.key)}" onclick="handleMotorEquipmentChoose(event)"><span class="recommend-badge ${applies?'':'warn'}">${applies?'Aplica':'No aplica'}</span><b>Pago equipo en linea ${(state.activeLineIndex??0)+1}: ${money(monthly)}/mes</b><span>${esc(motorBenefitLabel(eq.motor))} / Precio resultante ${money(financed)} / ${Number(plan.meses||30)} meses${plan.price_code?` / Codigo ${esc(plan.price_code)}`:''}</span><span>Condicion: ${esc(validationNote||condition)}</span><span>Fuente: ${esc(motorSourceTrace(eq.motor))}</span><span>Vigencia: ${esc(motorVigenciaText(eq.motor))}</span><div class="select-offer">${applies?`Escoger para linea ${(state.activeLineIndex??0)+1}`:'No disponible para esta linea'}</div></button></div>`;
     return;
   }
   const current=state.cart[state.activeLineIndex??0]||{};
@@ -578,7 +1534,22 @@ function assignOfferToLine(key,offerId){
   ensureLineRows();
   const index=state.activeLineIndex??0;
   const eq=L.getEquiposFiltrados({...lineState(index),buscar:''}).find(e=>e.key===key);const offer=(window.OFERTAS_DATA||[]).find(o=>o.id===offerId);
-  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:defaultPlazo(offer)};
+  const planCost=state.tipo==='individual'?planRegularTotal():Number(planLineCosts()[index]||0);
+  const commercialDecision=window.ConstructorPublications?.buildManualCommercialDecision?.({
+    source:'flujo_anterior_fallback',
+    version:state.motorRulesVersion,
+    line:{linea:index+1,evento:state.cart[index].evento,plan_monto:planCost},
+    plan:{nombre:planLabel(),monto:planCost},
+    equipment:{item_code:eq?.item_code||eq?.itemCode||null,sap_code:eq?.sap_code||eq?.sapCode||null,modelo:eq?.modelo,precio_regular:eq?.precio},
+    offer:{id:offer?.id,nombre:offer?.titulo},
+    benefit:{tipo:offer?.beneficio,monto:offer?.credito||0},
+    terms:offer?.terminos||[],
+    validity:offer?.vigencia||{},
+    trace:{fuente:offer?.fuente?.hoja||offer?.fuente?.nombre||null,seccion:offer?.fuente?.seccion||null,pagina:offer?.fuente?.pagina||null},
+    totals:{equipo_mensual:legacyPaymentPerUnit({equipo:eq,oferta:offer,plazo:defaultPlazo(offer)}),equipo_regular:eq?.precio,precio_resultante:lineEquipmentPayTotal({equipo:eq,oferta:offer,plazo:defaultPlazo(offer)}),plan_mensual:planCost},
+    selected:true
+  });
+  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:defaultPlazo(offer),commercialDecision};
   state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
   renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
 }
@@ -600,7 +1571,7 @@ function renderTerms(eq,o,index=state.activeLineIndex??0){
     <li>Plazos: ${esc((o.plazos||[]).join(', ')||'N/A')}</li>
     <li>Limite: ${o.lineaLimit||'segun boletin'} equipo(s)/linea(s) por BAN cuando aplique.</li>
     <li>Taxes/IVU: el cliente paga taxes sobre el precio regular al activar.</li>
-    <li>Benefits adicionales: pendientes de una publicación oficial independiente.</li>
+    <li>Beneficios adicionales: pendientes de una publicación oficial independiente.</li>
   </ul></div>`;
 }
 function completeEquipo(){$('stepEquipo').classList.add('done');$('stepServicios').classList.remove('locked');renderServicios();window.scrollTo({top:$('stepServicios').offsetTop-80,behavior:'smooth'});}
@@ -648,12 +1619,38 @@ function assignMotorEquipment(key){
   const index=state.activeLineIndex??0;
   const eq=state.motorEquipos.find(item=>item.key===key);if(!eq)return;
   const item=eq.motor;
-  const financed=Number(item.equipo.precio_financiado||0);
+  if(hasMotorBlockingValidation(item))return;
+  const plan=motorSelectedPlan(item);
+  const plazo=Number(plan.meses||selectedMotorPlazo(item));
+  const financed=Number(plan.precio_financiado||item.equipo.precio_financiado||0);
   const benefit=item.beneficio?.tipo==='gratis'?'gratis':'credito';
-  const offer={id:item.oferta.id,titulo:item.oferta.nombre,tipo:'multilinea',beneficio,credito:Math.max(0,eq.precio-financed),plazos:[30],eventos:[state.cart[index].evento],familias:['plus'],equipos:[eq],terminos:[`Fuente: ${item.fuente?.hoja||'Ofertas Business Red Plus'}`]};
-  state.cart[index]={...state.cart[index],equipo:eq,oferta:offer,plazo:30,motorEsquema:'esquema_1',motorPorcentaje:Number(item.beneficio?.porcentaje||0),motorPagoMensual:Number(item.plazos?.[0]?.pago_mensual||0),motorPrecioFinanciado:financed};
-  state.equipo=eq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
-  renderLineRows();renderTerms(eq,offer,index);renderSummary();closeEquipmentModal();
+  const selectedEq={...eq,item_code:item.equipo.item_code||item.equipo.id||eq.item_code||null,sap_code:item.equipo.sap_code||eq.sap_code||null,precio_financiado:financed,motorFuente:item.fuente||null,motorBeneficio:item.beneficio||null};
+  const discount=Number(item.beneficio?.monto||Math.max(0,Number(eq.precio||0)-financed));
+  const offer={id:item.oferta.id,titulo:item.oferta.nombre,tipo:'multilinea',beneficio:benefit,credito:discount,plazos:(item.plazos||[]).map(p=>Number(p.meses)).filter(Boolean),eventos:[state.cart[index].evento],familias:['plus'],equipos:[selectedEq],terminos:[`Fuente: ${motorSourceTrace(item)}`,`Vigencia: ${motorVigenciaText(item)}`,...(item.condiciones||[])],fuente:item.fuente||null,vigencia:item.vigencia||null,price_codes:item.price_codes||{},beneficioMotor:item.beneficio||null};
+  const planCost=Number(planLineCosts()[index]||0);
+  const commercialDecision=window.ConstructorPublications?.buildManualCommercialDecision?.({
+    source:'motor_comercial',
+    version:state.motorRulesVersion,
+    line:{linea:index+1,evento:state.cart[index].evento,plan_monto:planCost},
+    plan:{codigo:'BRPLUS',nombre:'Business Red Plus',monto:planCost},
+    equipment:{item_code:selectedEq.item_code,sap_code:selectedEq.sap_code,modelo:selectedEq.modelo,precio_regular:selectedEq.precio},
+    offer:{id:offer.id,nombre:offer.titulo},
+    benefit:item.beneficio||{},
+    terms:offer.terminos,
+    validity:item.vigencia||{},
+    trace:{fuente:item.fuente?.hoja||'Motor Comercial',seccion:item.fuente?.seccion||null,pagina:item.fuente?.pagina||null,regla_id:item.regla_id||item.id||null},
+    totals:{equipo_mensual:Number(plan.pago_mensual||0),equipo_regular:selectedEq.precio,precio_resultante:financed,plan_mensual:planCost},
+    selected:true
+  });
+  state.cart[index]={...state.cart[index],equipo:selectedEq,oferta:offer,plazo,commercialDecision,motorEsquema:'esquema_1',motorPorcentaje:Number(item.beneficio?.porcentaje||0),motorPagoMensual:Number(plan.pago_mensual||0),motorPrecioFinanciado:financed,motorPlazo:plazo,selectedMotorPlazo:plazo,motorItemCode:selectedEq.item_code,motorSapCode:selectedEq.sap_code,motorFuente:item.fuente||null,motorBeneficio:item.beneficio||null};
+  state.equipo=selectedEq;state.oferta=offer;state.lineEvent=state.cart[index].evento;
+  renderLineRows();renderTerms(selectedEq,offer,index);renderSummary();closeEquipmentModal();
+}
+function handleMotorEquipmentChoose(event){
+  if(event){event.preventDefault();event.stopPropagation();}
+  const key=event?.currentTarget?.dataset?.motorEquipmentKey;
+  const eq=state.motorEquipos.find(item=>item.key===key)||{};
+  if(key&&!hasMotorBlockingValidation(eq.motor))assignMotorEquipment(key);
 }
 function productGroups(){
   const fijo=fijoProductGroups();
@@ -694,14 +1691,16 @@ function addProductoAdicional(groupKey,index){
   if(!row)return;
   state.productosAdicionales.push({id:`${Date.now()}-${Math.random().toString(16).slice(2)}`,tipo:row.tipo,grupo:row.grupo||group.titulo,codigo:row.codigo||'-',descripcion:row.descripcion||row.nombre||'-',precio:productoPrecio(row),qty:1});
   renderProductosAdicionales();renderSummary();
+  renderMotorCommercialSimulation();
   if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
 }
-function removeProductoAdicional(id){state.productosAdicionales=state.productosAdicionales.filter(p=>p.id!==id);renderProductosAdicionales();renderSummary();if(!$('stepPropuesta').classList.contains('locked')) renderProposal()}
+function removeProductoAdicional(id){state.productosAdicionales=state.productosAdicionales.filter(p=>p.id!==id);renderProductosAdicionales();renderSummary();renderMotorCommercialSimulation();if(!$('stepPropuesta').classList.contains('locked')) renderProposal()}
 function updateProductoQty(id,value){
   const item=state.productosAdicionales.find(p=>p.id===id);
   if(!item)return;
   item.qty=Math.max(1,Number(value||1));
   renderProductosAdicionales();renderSummary();
+  renderMotorCommercialSimulation();
   if(!$('stepPropuesta').classList.contains('locked')) renderProposal();
 }
 function productosAdicionalesMonthlyTotal(){
@@ -747,13 +1746,104 @@ function collectSelectedServices(){
 }
 function renderServicios(){
   renderOfferExtrasPanel();
+  renderMotorCommercialSimulation();
   $('serviciosList').innerHTML='<div class="modal-empty">Servicios pendientes de publicacion. No se aplican valores heredados.</div>';
   renderSelectedLineInsuranceSummary();
 }
 function planAmount(){return L.getPlanNum(state);}
 function renderOfferExtrasPanel(){
   $('offerExtrasPanel').className='conditional-panel show';
-  $('offerExtrasPanel').innerHTML='<div class="info-card"><b>Benefits pendientes de publicacion</b><span>No se aplican bonos ni descuentos heredados.</span></div>';
+  $('offerExtrasPanel').innerHTML='<div class="info-card"><b>Beneficios pendientes de publicación</b><span>No se aplican bonos ni descuentos heredados.</span></div>';
+}
+function motorProductKey(value){
+  const text=String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  if(text.includes('claro tv')||text.includes('tv'))return 'claro_tv';
+  if(text.includes('fijo')||text.includes('internet')||text.includes('telefonia'))return 'fijo';
+  return 'movil';
+}
+function motorLineEvent(value){
+  const event=motorEvent(value||'nueva');
+  return event==='nueva'?'linea_nueva':event;
+}
+function buildMotorCommercialContext(){
+  const productSet=new Set(['movil']);
+  state.productosAdicionales.forEach(product=>productSet.add(motorProductKey(product.tipo||product.grupo||product.descripcion)));
+  const products=[...productSet];
+  const fixedSelected=products.includes('fijo')||products.includes('claro_tv');
+  const lineCosts=planLineCosts();
+  const lineas=Array.from({length:Number(state.lineas||1)},(_,i)=>{
+    const row=state.cart[i]||{};
+    return {
+      linea:i+1,
+      ban:state.crmBan||state.currentRows?.[i]?.ban||'',
+      evento:motorLineEvent(row.evento||state.lineEvent||state.eventos[0]),
+      producto:'movil',
+      plan_monto:Number(state.tipo==='individual'?planRegularTotal():(lineCosts[i]||0)),
+    };
+  });
+  return {
+    cliente:{id:state.crmClientId||null,nombre:state.crmClientName||'',ban:state.crmBan||state.currentRows?.[0]?.ban||'',convergente:products.includes('movil')&&fixedSelected},
+    lineas,
+    productos:products,
+  };
+}
+function buildMotorBaseProposal(){
+  return {
+    ...buildMotorCommercialContext(),
+    precio_base_mensual:planMonthlyCost()+productosAdicionalesMonthlyTotal(),
+    equipo_mensual:selectedOfferRows().reduce((sum,row)=>sum+Number(paymentPerUnit(row)||0),0),
+    ofertas:selectedOfferRows().map(row=>({
+      linea:row.linea,
+      evento:row.evento,
+      equipo:row.equipo?.modelo||'',
+      oferta:row.oferta?.id||'',
+      pago_mensual:paymentPerUnit(row),
+    })),
+  };
+}
+function motorRuleTitle(rule){
+  const contract=rule.contrato||rule;
+  const benefit=contract.beneficio||rule.beneficio||{};
+  return benefit.nombre||benefit.tipo||rule.identidad_comercial||rule.id||'Regla comercial';
+}
+function motorRuleSource(rule){
+  const contract=rule.contrato||rule;
+  const source=contract.traza?.fuente||rule.fuente||{};
+  return source.nombre_original||source.nombre||'Fuente oficial conservada en persistencia';
+}
+function motorRuleTrace(rule){
+  const contract=rule.contrato||rule;
+  const source=contract.traza?.fuente||rule.fuente||{};
+  const vigenciaDesde=contract.vigencia_desde||rule.vigencia_desde||source.vigencia_desde||'';
+  const vigenciaHasta=contract.vigencia_hasta||rule.vigencia_hasta||source.vigencia_hasta||'';
+  const vigencia=vigenciaDesde?` · Vigencia ${vigenciaDesde}${vigenciaHasta?` a ${vigenciaHasta}`:''}`:'';
+  return `${motorRuleSource(rule)}${vigencia}`;
+}
+function motorEquipmentSummary(){
+  const rows=selectedOfferRows();
+  if(!rows.length)return '<li>Sin equipo seleccionado.</li>';
+  return rows.map(row=>{
+    const model=row.equipo?.modelo||'Equipo';
+    const mensual=paymentPerUnit(row);
+    return `<li><b>${esc(model)}</b><span class="line-note">Mensualidad ${money(mensual)} · ${esc(offerProposalLabel(row))}</span></li>`;
+  }).join('');
+}
+function renderMotorCommercialSimulation(){
+  const panels=['motorSimulationPanel','motorSimulationPanelProductos'].map(id=>$(id)).filter(Boolean);
+  if(!panels.length||!window.ConstructorPublications?.evaluateCommercialProposal)return;
+  const proposal=window.ConstructorPublications.evaluateCommercialProposal({
+    version:state.motorRulesVersion,
+    rules:state.motorRules,
+    baseProposal:buildMotorBaseProposal(),
+  });
+  state.motorSimulation=proposal;
+  const version=proposal.version?.numero||proposal.version?.id||'sin version vigente';
+  const status=proposal.propuesta.bloqueada?'Bloqueada':'Evaluable';
+  const applied=proposal.reglas_aplicadas.slice(0,4).map(rule=>`<li><b>${esc(motorRuleTitle(rule))}</b><span class="line-note">${esc(rule.identidad_comercial||rule.id||'sin identidad')} · ${esc(motorRuleTrace(rule))}</span></li>`).join('');
+  const discarded=proposal.reglas_descartadas.slice(0,5).map(rule=>`<li><b>${esc(rule.identidad_comercial||rule.id||'regla')}</b><span class="line-note">Motivo: ${esc((rule.motivos||[]).join(', ')||'sin motivo')} · ${esc(motorRuleTrace(rule))}</span></li>`).join('');
+  const alternatives=proposal.alternativas.slice(0,4).map(option=>`<li><b>${esc(option.descripcion)}</b><span class="line-note">${money(option.total_estimado_mensual)} mensual estimado · descuento ${money(option.descuento_mensual_estimado)}</span></li>`).join('');
+  const markup=`<div class="box"><h3>Motor Comercial - modo evaluacion</h3><div class="comparison-summary"><div class="summary-card"><span>Version</span><b>${esc(version)}</b></div><div class="summary-card"><span>Estado</span><b>${esc(status)}</b></div><div class="summary-card"><span>Base</span><b>${money(proposal.propuesta.total_base_mensual)}</b></div><div class="summary-card good"><span>Propuesta local</span><b>${money(proposal.propuesta.total_estimado_mensual)}</b></div><div class="summary-card warn"><span>Descartadas</span><b>${proposal.reglas_descartadas.length}</b></div></div><div class="info-grid"><div class="info-card"><b>Equipo y mensualidad</b><ul>${motorEquipmentSummary()}</ul></div><div class="info-card"><b>Reglas aplicadas</b><ul>${applied||'<li>Sin reglas aplicables al contexto actual.</li>'}</ul></div><div class="info-card"><b>Reglas descartadas</b><ul>${discarded||'<li>Sin descartes.</li>'}</ul></div><div class="info-card"><b>Alternativas</b><ul>${alternatives||'<li>Sin alternativas calculadas.</li>'}</ul></div></div><p class="muted">combinaciones calculadas: ${proposal.combinaciones.length}. recomendacion generada en modo simulacion: ${esc(proposal.recomendacion.texto)} autoaplica=false.</p><p class="muted">comparacion contra comportamiento actual: no sustituye calculos existentes, no publica resultados definitivos y conserva trazabilidad por version, regla y fuente oficial.</p></div>`;
+  panels.forEach(panel=>{panel.innerHTML=markup;});
 }
 function renderSelectedLineInsuranceSummary(){
   $('lineInsuranceSummary').innerHTML='<div class="box"><h3>Seguros pendientes de publicacion</h3><p class="muted">No se calculan primas ni deducibles desde tablas heredadas.</p></div>';
@@ -837,7 +1927,7 @@ function linePaySummary(row){
 }
 function comparisonData(){
   const selected=selectedOfferRows();
-  return {
+  const data = {
     cliente:($('cmpCliente')&&$('cmpCliente').value)||state.crmClientName||'Cliente',
     ban:($('cmpBan')&&$('cmpBan').value)||state.crmBan||'',
     vendedor:($('cmpVendedor')&&$('cmpVendedor').value)||state.crmVendor||'',
@@ -854,10 +1944,13 @@ function comparisonData(){
     segurosCosto:0,
     productosCosto:productosAdicionalesMonthlyTotal(),
     productosAdicionales:state.productosAdicionales,
+    commercialDecisions:selected.map(row=>rowCommercialDecision(row)).filter(Boolean),
     seguroCosto:[],
     debitoCosto:0,
     notas:commercialNotes(selected)
   };
+  data.motorShadow=buildMotorShadowComparison(data);
+  return data;
 }
 function commercialNotes(selected){
   return selected.map(row=>`Linea ${row.linea}: aplicar exclusivamente los términos de la oferta publicada ${row.oferta?.id||''}.`);
@@ -890,13 +1983,66 @@ function cpEquipmentRows(d){
 function cpServicesList(){
   const products=state.productosAdicionales.map(productoAdicionalSummaryText);
   const published=products.length?products.map(item=>`<div class="cp-list-item">${esc(item)}</div>`).join(''):'<div class="cp-list-item">Sin productos Fijo o Claro TV agregados</div>';
-  return published+'<div class="cp-list-item">Benefits, servicios y seguros: pendientes de publicación oficial.</div>';
+  return published+'<div class="cp-list-item">Beneficios, servicios y seguros: pendientes de publicación oficial.</div>';
+}
+function buildMotorShadowComparison(d){
+  if(!window.ConstructorPublications?.evaluateCommercialShadowProposal)return null;
+  const shadow=window.ConstructorPublications.evaluateCommercialShadowProposal({
+    version:state.motorRulesVersion,
+    rules:state.motorRules,
+    currentProposal:{
+      totalActual:d.totalActual,
+      totalOferta:d.totalOferta,
+      planCosto:d.planCosto,
+      equipoCosto:d.equipoCosto,
+      productosCosto:d.productosCosto,
+      descuento_mensual_estimado:0,
+      beneficios:[]
+    },
+    baseProposal:buildMotorBaseProposal(),
+  });
+  state.motorShadow=shadow;
+  return shadow;
+}
+function cpShadowRuleRows(rules,empty){
+  const rows=(rules||[]).slice(0,6).map(rule=>`<li><b>${esc(rule.identidad_comercial||rule.id||'regla')}</b><span>${esc((rule.motivos||[]).join(', ')||motorRuleTitle(rule))} · ${esc(motorRuleTrace(rule))}</span></li>`).join('');
+  return rows||`<li>${esc(empty)}</li>`;
+}
+function cpShadowDiffRows(shadow){
+  const diffs=shadow?.diferencias||[];
+  if(!diffs.length)return '<li>Sin diferencias numéricas o de beneficios contra el flujo actual.</li>';
+  return diffs.map(diff=>{
+    if(diff.tipo==='lista')return `<li><b>${esc(diff.campo)}</b><span>Actual: ${esc(diff.actual.join(', ')||'sin beneficios')} · Motor: ${esc(diff.motor.join(', ')||'sin beneficios')}</span></li>`;
+    return `<li><b>${esc(diff.campo)}</b><span>Actual ${money(diff.actual)} · Motor ${money(diff.motor)} · Diferencia ${money(diff.diferencia)}</span></li>`;
+  }).join('');
+}
+function cpMotorShadowSection(d){
+  const shadow=d.motorShadow;
+  if(!shadow)return '<section class="cp-section"><h2>Motor Comercial - modo sombra</h2><p class="cp-small">Motor Comercial no disponible para comparacion.</p></section>';
+  const version=shadow.version?.numero||shadow.version?.id||'sin version';
+  return `<section class="cp-section">
+    <div class="cp-section-head"><h2>Motor Comercial - modo sombra</h2><span class="cp-small">Comparacion paralela; no modifica la propuesta del vendedor</span></div>
+    <div class="cp-cards">
+      <div class="cp-card"><div class="label">Version Motor</div><div class="value">${esc(version)}</div><small>Reglas publicadas vigentes</small></div>
+      <div class="cp-card"><div class="label">Total flujo actual</div><div class="value blue">${money(shadow.actual.total_flujo_actual)}</div><small>Valor que conserva esta propuesta</small></div>
+      <div class="cp-card"><div class="label">Total Motor</div><div class="value green">${money(shadow.motor.total_estimado_mensual)}</div><small>Simulacion sin autoaplicar</small></div>
+      <div class="cp-card"><div class="label">Descuento Motor</div><div class="value red">${money(shadow.motor.descuento_mensual_estimado)}</div><small>Beneficios elegibles en sombra</small></div>
+    </div>
+    <div class="cp-grid-2">
+      <div><h3>Diferencias detectadas</h3><ul class="cp-shadow-list">${cpShadowDiffRows(shadow)}</ul></div>
+      <div><h3>Reglas aplicadas por Motor</h3><ul class="cp-shadow-list">${cpShadowRuleRows(shadow.motor.reglas_aplicadas,'Sin reglas aplicadas por Motor.')}</ul></div>
+    </div>
+    <div class="cp-grid-2" style="margin-top:10px">
+      <div><h3>Reglas descartadas</h3><ul class="cp-shadow-list">${cpShadowRuleRows(shadow.motor.reglas_descartadas,'Sin reglas descartadas.')}</ul></div>
+      <div><h3>Resultado</h3><p class="cp-small">Modo: ${esc(shadow.modo)}. Autoaplica=${esc(shadow.autoaplica)}. Combinaciones: ${shadow.motor.combinaciones.length}. Estado Motor: ${shadow.motor.bloqueada?'bloqueado':'evaluable'}.</p><p class="cp-small">${esc(shadow.motor.recomendacion.texto)}</p></div>
+    </div>
+  </section>`;
 }
 function cpBonusConditions(d){
   const selected=d.selected||[];
   const tradeRows=selected.filter(row=>L.requiresTradein(row.oferta,row.evento)).map(row=>`Linea ${row.linea}: ${row.equipo.modelo}`);
   const tradeText=tradeRows.length?`<li><b>Trade-in requerido por la oferta publicada:</b> ${esc(tradeRows.join(' / '))}.</li>`:'<li>Trade-in: no requerido por las ofertas seleccionadas.</li>';
-  return `<div class="cp-note"><ul><li>Benefits adicionales: pendientes de publicación oficial; no se aplicaron reglas heredadas.</li>${tradeText}</ul></div>`;
+  return `<div class="cp-note"><ul><li>Beneficios adicionales: evaluados en modo sombra; no se autoaplican ni modifican el total del vendedor.</li>${tradeText}</ul></div>`;
 }
 function cpMonthlyCreditSummary(d){
   return `<div class="cp-breakdown">
@@ -932,6 +2078,7 @@ function cpCommercialMarkup(d,interactive){
       <div class="cp-card"><div class="label">Plan nuevo</div><div class="value">${esc(planLabel())}</div></div>
       <div class="cp-card"><div class="label">Plan publicado</div><div class="value red">${money(d.planRegularCosto)}</div></div>
       <div class="cp-card"><div class="label">Total mensual publicado</div><div class="value blue">${money(d.totalOferta)}</div><small>Plan + equipos + Fijo/TV seleccionados</small></div>
+      <div class="cp-card"><div class="label">Motor sombra</div><div class="value green">${money(d.motorShadow?.motor?.total_estimado_mensual||d.totalOferta)}</div><small>No modifica esta propuesta</small></div>
     </section>
     <section class="cp-section">
       <div class="cp-section-head"><h2>Plan actual</h2><span class="cp-small">Cuentas actuales y lineas existentes</span></div>
@@ -956,6 +2103,7 @@ function cpCommercialMarkup(d,interactive){
       <div class="cp-section-head"><h2>Condiciones publicadas</h2><span class="cp-small">Trade-in cuando la oferta vigente lo requiere</span></div>
       ${cpBonusConditions(d)}
     </section>
+    ${cpMotorShadowSection(d)}
     <footer class="cp-footer">
       <div><div class="cp-signature">Gabriel Sanchez</div><div class="cp-role">Corporate and retail account Director</div><div>Tel Of: 787-796-2099 | Cel: 787-319-0909</div><div><b>CLARO Agente de ventas SS</b></div><div>Email: gabriel.sanchez@claropr.com</div></div>
       <div class="cp-small">Propuesta preparada para ${esc(d.cliente||'Cliente')}</div>
@@ -1046,7 +2194,7 @@ function downloadComparisonExcel(){
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Productos publicados y complementos'),
     (products.length?products.map(item=>`<tr class="note"><td colspan="9">${excelCell(item)}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin productos Fijo o Claro TV seleccionados</td></tr>'),
-    '<tr class="note"><td colspan="9">Benefits, servicios y seguros pendientes de publicación oficial; no incluidos.</td></tr>',
+    '<tr class="note"><td colspan="9">Beneficios, servicios y seguros pendientes de publicación oficial; no incluidos.</td></tr>',
     '<tr class="spacer"><td colspan="9"></td></tr>',
     excelSection('Condiciones publicadas'),
     (conditionRows.length?conditionRows.map(r=>`<tr class="note"><td colspan="2">${excelCell(r[0])}</td><td colspan="2">${excelCell(r[1])}</td><td colspan="2">${excelCell(r[2])}</td><td colspan="3">${excelCell(r[3])}</td></tr>`).join(''):'<tr class="note"><td colspan="9">Sin requisitos de trade-in en las ofertas seleccionadas</td></tr>')
@@ -1080,7 +2228,7 @@ async function saveComparisonToCrm(status){
         lines:state.currentRows||[],
         notes:`Estado: ${status}. Plan: ${planLabel()}. Pago: ${d.modoPago||''}.`,
         source:'constructor_ofertas',
-        payload:{status,comparison:d,state,html:comparisonHtmlDocument()}
+        payload:{status,comparison:d,state,commercial_decisions:d.commercialDecisions,html:comparisonHtmlDocument()}
       }
     });
     const msg=status==='cerrada'?'Comparativa cerrada y guardada en CRM.':'Borrador guardado en CRM.';
@@ -1100,10 +2248,21 @@ function renderProposal(){
     function renderSummary(){
       const summary=$('topSummary');
       if(!summary)return;
+      if(state.sourceMode==='consultation'&&state.consultationResult&&!state.consultationLoadedIntoConstructor){
+        const intent=state.consultationIntent||{};
+        const scenarioPlan=state.consultationResult.scenario?.plan||state.commercialScenario?.plan||{};
+        const planName=consultationPlanLabelFromFamily(intent.plan_family)||scenarioPlan.nombre||'Plan por confirmar';
+        const count=Number(intent.cantidad_lineas||state.consultationResult.selection?.requested_lines||scenarioPlan.lineas||0);
+        const eventText=intent.evento?eventLabel(intent.evento):(state.consultationResult.scenario?.event||'evento no determinado');
+        const equipment=consultationEquipmentSummary(intent)||state.consultationResult.selection?.equipment||'equipo no determinado';
+            summary.innerHTML=`<span class="pill">${esc(modeLabel())}</span><span class="pill">${esc(planName)}</span><span class="pill">${count} linea(s)</span><span class="pill">${esc(eventText)}</span><span class="pill">${esc(equipment)}</span>`;
+        return;
+      }
       const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
-      summary.innerHTML=`<span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
+      if(state.sourceMode!=='consultation')updateCommercialScenario(state.sourceMode);
+      summary.innerHTML=`<span class="pill">${esc(modeLabel())}</span><span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
     }
-async function initConstructor(){await loadCurrentPublications();ensureLineRows();renderSummary();await loadCrmClientContext();}
+async function initConstructor(){await loadCurrentPublications();ensureLineRows();renderEntryModes();renderSummary();await loadCrmClientContext();}
 initConstructor();
 </script>
 </body>

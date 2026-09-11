@@ -32,6 +32,7 @@ function linea(posicion, evento = 'linea_nueva') {
     id: `linea-${posicion}`,
     tipo: 'multilinea_business_red',
     familia_business_red: 'business_red_plus',
+    modalidad_linea: 'financiamiento',
     plan: { codigo: 'BRPLUS', nombre: 'Business Red Plus', monto: 65 },
     evento,
     trade_in: { aplica: false, validado: false },
@@ -89,7 +90,7 @@ test('Esquema 1 incorpora Portafolio como gama baja desde la linea 5 sin duplica
   assert.equal(result.equipos.filter((item) => item.equipo.modelo_oficial === 'iPhone 17e').length, 1);
 });
 
-test('Esquema 1 incorpora tabletas y modems con financiamiento oficial sin descuento movil', () => {
+test('Esquema 1 incorpora tabletas y modems con descuento oficial Business Red Plus', () => {
   const equiposEspeciales = [
     { item_code: 'TAB-1', sap_code: 'SAP-TAB', marca: 'Samsung', modelo: 'Galaxy Tab S10', categoria: 'tablet', precio_regular: 899.99, mensualidades: [{ meses: 30, monto: 30 }] },
     { item_code: 'MODEM-1', sap_code: 'SAP-MOD', marca: 'Inseego', modelo: 'MiFi X Pro', categoria: 'modem', precio_regular: 359.99, mensualidades: [{ meses: 24, monto: 15 }] },
@@ -99,10 +100,120 @@ test('Esquema 1 incorpora tabletas y modems con financiamiento oficial sin descu
   const tablet = result.equipos.find((item) => item.equipo.modelo_oficial === 'Galaxy Tab S10');
   const modem = result.equipos.find((item) => item.equipo.modelo_oficial === 'MiFi X Pro');
   assert.equal(tablet.equipo.categoria, 'tablet');
-  assert.equal(tablet.beneficio.tipo, 'financiado');
-  assert.equal(tablet.plazos[0].pago_mensual, 30);
+  assert.deepEqual(tablet.beneficio, {
+    tipo: 'descuento_monto',
+    monto: 130,
+    aplicacion: 'credito_mensual',
+  });
+  assert.deepEqual(tablet.plazos.map((item) => item.meses), [24, 30]);
+  assert.equal(tablet.plazos.find((item) => item.meses === 30).precio_financiado, 769.99);
+  assert.equal(tablet.plazos.find((item) => item.meses === 30).pago_mensual, 25.67);
   assert.equal(modem.equipo.categoria, 'modem');
-  assert.equal(modem.plazos[0].meses, 24);
-  assert.equal(modem.fuente.hoja, 'Finan Modems- Tablets-Routers');
+  assert.equal(modem.plazos.find((item) => item.meses === 24).precio_financiado, 229.99);
+  assert.equal(modem.plazos.find((item) => item.meses === 24).pago_mensual, 9.58);
+  assert.equal(modem.fuente.hoja, 'Boletín Oferta Descuentos Modems, MIFI y Tablets');
+  assert.equal(modem.fuente.pagina, 6);
+  assert.equal(modem.autoaplica, false);
   assert.ok([tablet, modem].every((item) => item.segmento === 'equipos_especiales'));
+});
+
+test('BYOP conserva Business RED Plus como tipo pero no recibe promocion de equipo', () => {
+  const result = findBusinessRedPlusEligible({
+    block,
+    linea: {
+      ...linea(1, 'portabilidad'),
+      modalidad_linea: 'byop',
+      account_type: 'Business BYOP Corporate',
+    },
+    equiposEspeciales: [
+      { item_code: 'TAB-1', sap_code: 'SAP-TAB', marca: 'Samsung', modelo: 'Galaxy Tab S10', categoria: 'tablet', precio_regular: 899.99, mensualidades: [{ meses: 30, monto: 30 }] },
+    ],
+    today: '2026-08-23',
+  });
+
+  assert.equal(result.equipos.length, 0);
+  assert.equal(result.esquema, 'business_red_plus_byop');
+  assert.ok(result.validaciones.some((item) => item.codigo === 'byop_sin_promocion_equipo' && item.estado === 'informativo'));
+});
+
+test('accountType BYOP no bloquea ofertas si la modalidad de linea es financiamiento', () => {
+  const result = findBusinessRedPlusEligible({
+    block,
+    linea: {
+      ...linea(1, 'portabilidad'),
+      modalidad_linea: 'financiamiento',
+      account_type: 'Business BYOP Corporate',
+    },
+    today: '2026-08-23',
+  });
+
+  assert.ok(result.equipos.length > 0);
+  assert.equal(result.equipos[0].autoaplica, false);
+});
+
+test('descuento oficial de tabletas y modems conserva codigos Update Plus y Financiamiento por plazo', () => {
+  const result = findBusinessRedPlusEligible({
+    block,
+    linea: {
+      ...linea(1, 'portabilidad'),
+      modalidad_linea: 'update_plus',
+    },
+    equiposEspeciales: [
+      { item_code: 'MODEM-1', sap_code: 'SAP-MOD', marca: 'Inseego', modelo: 'MiFi X Pro', categoria: 'modem', precio_regular: 359.99, mensualidades: [{ meses: 24, monto: 15 }, { meses: 30, monto: 12 }] },
+    ],
+    today: '2026-08-23',
+  });
+
+  const modem = result.equipos.find((item) => item.equipo.modelo_oficial === 'MiFi X Pro');
+  assert.equal(modem.plazos.find((item) => item.meses === 24).price_code, 'U13024');
+  assert.equal(modem.plazos.find((item) => item.meses === 30).price_code, 'U13030');
+  assert.deepEqual(modem.price_codes.financiamiento, { 24: 'F13024', 30: 'F13030' });
+  assert.deepEqual(modem.price_codes.update_plus, { 24: 'U13024', 30: 'U13030' });
+});
+
+test('descuento de tabletas y modems respeta la vigencia de la fuente archivada', () => {
+  const equiposEspeciales = [
+    { item_code: 'TAB-1', sap_code: 'SAP-TAB', marca: 'Samsung', modelo: 'Galaxy Tab S10', categoria: 'tablet', precio_regular: 899.99, mensualidades: [{ meses: 30, monto: 30 }] },
+  ];
+  const specialDiscountVigencia = { desde: '2026-07-23', hasta: '2026-08-31' };
+
+  const vencida = findBusinessRedPlusEligible({ block, linea: linea(1), equiposEspeciales, today: '2026-09-07', specialDiscountVigencia });
+  const tablet = vencida.equipos.find((item) => item.segmento === 'equipos_especiales');
+  assert.ok(tablet);
+  assert.deepEqual(tablet.vigencia, specialDiscountVigencia);
+  assert.equal(tablet.fuente.vigencia_hasta, '2026-08-31');
+  assert.ok(tablet.validaciones.some((item) => item.codigo === 'fuente_vencida' && item.estado === 'warning'));
+  assert.equal(tablet.autoaplica, false);
+
+  const vigente = findBusinessRedPlusEligible({ block, linea: linea(1), equiposEspeciales, today: '2026-08-23', specialDiscountVigencia });
+  assert.equal(vigente.equipos.find((item) => item.segmento === 'equipos_especiales').validaciones.length, 0);
+
+  const previa = findBusinessRedPlusEligible({ block, linea: linea(1), equiposEspeciales, today: '2026-07-01', specialDiscountVigencia });
+  assert.equal(previa.equipos.filter((item) => item.segmento === 'equipos_especiales').length, 0);
+
+  const sinFuente = findBusinessRedPlusEligible({ block, linea: linea(1), equiposEspeciales, today: '2026-08-23' });
+  assert.deepEqual(sinFuente.equipos.find((item) => item.segmento === 'equipos_especiales').vigencia, { desde: '2026-07-23', hasta: null });
+});
+
+test('equipo solicitado fuera del esquema se resuelve desde el catalogo de precios vigente', () => {
+  const equipmentCatalog = [
+    {
+      item_code: '33762H', sap_code: '7013495', marca: 'Apple', modelo: 'iPhone 17 256GB Black', categoria: 'celular', precio_regular: 829.99,
+      mensualidades: [{ meses: 30, monto: 27.67 }],
+      fuente: { tipo: 'lista_precios', nombre: 'Lista de Precios vigente', vigencia_desde: '2026-08-01', vigencia_hasta: '2026-10-28', estado_publicacion: 'vigente' },
+    },
+  ];
+  const solicitud = { ...linea(3), equipo_solicitado: 'iPhone 17' };
+
+  const result = findBusinessRedPlusEligible({ block, linea: solicitud, equipmentCatalog, today: '2026-08-23' });
+  const resolved = result.equipos.find((item) => item.segmento === 'catalogo_precio_regular');
+  assert.ok(resolved);
+  assert.equal(resolved.equipo.modelo_oficial, 'iPhone 17 256GB');
+  assert.equal(resolved.equipo.precio_regular, 829.99);
+  assert.equal(resolved.plazos[0].pago_mensual, 27.67);
+  assert.equal(resolved.beneficio.tipo, 'financiado');
+  assert.equal(resolved.autoaplica, false);
+
+  const sinCatalogo = findBusinessRedPlusEligible({ block, linea: solicitud, today: '2026-08-23' });
+  assert.equal(sinCatalogo.equipos.some((item) => item.segmento === 'catalogo_precio_regular'), false);
 });

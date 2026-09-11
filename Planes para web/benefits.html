@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business - Beneficios vigentes</title>
+<script src="portal-config.js?v=2026091001"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
+.header{background:#c81e28;border-bottom:2px solid #ffb703;padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.brand-logo{font-size:24px;font-weight:950;color:#fff;letter-spacing:0}
+.brand-text{flex:1;min-width:0}.brand-title{font-size:15px;font-weight:800;color:#fff}.brand-sub{font-size:12px;color:rgba(255,255,255,.82);margin-top:2px}
+.header-search{display:flex;align-items:center;gap:8px;background:#171b22;border:1px solid rgba(110,231,249,.55);border-radius:8px;padding:8px 12px;min-width:260px}
+.header-search input{width:100%;background:transparent;border:0;outline:0;color:#e2d8c8;font-size:14px}
+.nav{display:flex;gap:4px;overflow:auto;background:#151821;border-bottom:1px solid rgba(110,231,249,.24);padding:0 24px}
+.nav a{color:#b9c7d6;text-decoration:none;padding:12px 14px;font-size:13px;font-weight:750;border-bottom:2px solid transparent;white-space:nowrap}.nav a:hover{color:#fff}.nav a.active{color:#7dd3fc;border-bottom-color:#67e8f9}
+.filters{padding:14px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#151821;border-bottom:1px solid rgba(110,231,249,.14)}
+.filter-btn{border:1px solid rgba(45,212,191,.42);background:#1b202a;color:#cec4b7;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+.filter-btn.active{background:#073b33;border-color:#2dd4bf;color:#c9f7ec}.count{margin-left:auto;color:#a99f92;font-size:12px;font-weight:700}
+.wrap{max-width:1480px;margin:0 auto;padding:22px 24px 44px}
+.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}.hero h1{font-size:26px;color:#e2d8c8}.hero p{font-size:13px;color:#b5aa9c;margin-top:5px;line-height:1.45}.summary{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.pill{border:1px solid rgba(45,212,191,.35);background:#0f172a;color:#c9f7ec;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}
+.tablewrap{border:1px solid rgba(45,212,191,.28);border-radius:8px;overflow:auto;background:#141821}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:940px;table-layout:auto}
+thead th{position:sticky;top:0;background:#1b2130;color:#9ee7f0;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:900;padding:9px 12px;border-bottom:1px solid rgba(45,212,191,.3);white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top;line-height:1.35}
+tbody tr:hover{background:#181d28}tbody tr.open{background:#161c27}
+.cat{color:#67e8f9;font-weight:800;white-space:nowrap}
+.val{color:#86efac;font-weight:900;white-space:nowrap;font-size:14px}
+.prod{color:#e2d8c8;white-space:nowrap}
+.cat{width:150px}.val{width:120px}.prod{width:120px}
+.cond{color:#cec4b7;overflow-wrap:break-word}
+.vig{color:#b5aa9c;white-space:nowrap;font-size:12px;width:150px}
+/* El nombre del PDF no debe estirar la fila: completo en el detalle. */
+.src{color:#9aa6b5;font-size:12px;width:220px;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.more{border:1px solid rgba(110,231,249,.35);background:#111a30;color:#9ee7f0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.more:hover{border-color:#67e8f9;color:#cffafe}
+.overlay{position:fixed;inset:0;background:rgba(4,7,12,.72);display:flex;align-items:center;justify-content:center;padding:24px;z-index:200}
+.overlay[hidden]{display:none}
+.modal{background:#141821;border:1px solid rgba(45,212,191,.4);border-radius:10px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:15px 18px;background:#1b2130;border-bottom:1px solid rgba(45,212,191,.24);border-radius:10px 10px 0 0}
+.modal-cat{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#67e8f9;font-weight:900}
+.modal-name{font-size:18px;font-weight:900;color:#e2d8c8;margin-top:3px;line-height:1.2}
+.modal-val{font-size:24px;font-weight:950;color:#86efac;white-space:nowrap}
+.modal-body{padding:16px 18px;overflow:auto}
+.modal-body b{color:#9ee7f0;font-size:11px;text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:4px}
+.modal-body .campo{margin-bottom:13px;font-size:13px;line-height:1.45;color:#d6cfc4}
+.close{border:1px solid rgba(255,255,255,.22);background:#111a30;color:#d6cfc4;border-radius:6px;width:30px;height:30px;font-size:16px;cursor:pointer;line-height:1;flex:none}
+.close:hover{border-color:#fca5a5;color:#fecaca}
+.terms{display:flex;gap:6px;flex-wrap:wrap}.term{border:1px solid rgba(255,255,255,.12);background:#111a30;color:#d6cfc4;border-radius:999px;padding:5px 9px;font-size:11px;line-height:1.3}
+.empty,.error{border:1px dashed rgba(45,212,191,.35);background:#111a30;border-radius:8px;padding:28px;text-align:center;color:#b5aa9c}.error{border-color:rgba(248,113,113,.5);color:#fecaca;background:#2a1115}
+@media(max-width:780px){.header{display:grid}.header-search{min-width:0}.hero{display:block}.summary{justify-content:flex-start;margin-top:10px}.wrap{padding:16px 14px 36px}.count{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand-logo">CLARO</div>
+  <div class="brand-text">
+    <div class="brand-title">Beneficios vigentes</div>
+    <div class="brand-sub" id="versionLabel">Motor Comercial publicado</div>
+  </div>
+  <label class="header-search">
+    <span>Buscar</span>
+    <input type="search" id="searchInput" placeholder="beneficio, producto, fuente...">
+  </label>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html">Lista de Equipos</a>
+  <a href="servicios.html">Servicios</a>
+  <a href="benefits.html" class="active">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
+  <a href="directorio-fijo.html">Directorio de fijo</a>
+  <a href="oferta-const.html">Oferta const.</a>
+  <a href="ofertas.html">Ofertas</a>
+</nav>
+
+<div class="filters" id="filters"></div>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Beneficios vigentes</h1>
+      <p>Lectura directa de reglas confirmadas, publicadas y vigentes del Motor Comercial. El Portal no guarda una copia comercial.</p>
+    </div>
+    <div class="summary" id="summary"></div>
+  </section>
+  <section id="benefitsGrid">
+    <div class="empty">Cargando beneficios vigentes...</div>
+  </section>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <div class="modal-head">
+      <div>
+        <div class="modal-cat" id="modalCat"></div>
+        <div class="modal-name" id="modalName"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="modal-val" id="modalVal"></span>
+        <button class="close" type="button" id="modalClose" aria-label="Cerrar">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const API_URL = (window.PORTAL_API_BASE || '') + '/api/fuentes-comerciales/benefits-vigentes';
+let allBenefits = [];
+let activeCategory = 'Todos';
+let searchText = '';
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function fmtDate(value){
+  if(!value) return 'Sin fecha final publicada';
+  return String(value).slice(0,10);
+}
+
+function sourceText(item){
+  const parts = [item?.fuente?.nombre, item?.fuente?.seccion, item?.fuente?.pagina ? `pag. ${item.fuente.pagina}` : ''];
+  return parts.filter(Boolean).join(' · ') || 'Fuente publicada';
+}
+
+// En la tabla se muestra el nombre legible del boletin; el nombre de archivo completo va en el detalle.
+function sourceShort(item){
+  const nombre = item?.fuente?.nombre;
+  if(!nombre) return 'Fuente publicada';
+  return String(nombre)
+    .replace(/\.(pdf|xlsx?|docx?)$/i, '')
+    .replace(/^\d{4}-\d{2}-\d{2}--?/, '')
+    .replace(/-\d{6,}$/, '')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+}
+
+function matchesSearch(item){
+  const blob = JSON.stringify(item).toLowerCase();
+  return !searchText || blob.includes(searchText);
+}
+
+function visibleBenefits(){
+  return allBenefits.filter(item => (activeCategory === 'Todos' || item.categoria === activeCategory) && matchesSearch(item));
+}
+
+function renderFilters(categories){
+  const filters = document.getElementById('filters');
+  const values = ['Todos', ...categories];
+  filters.innerHTML = values.map(category => `<button class="filter-btn ${category === activeCategory ? 'active' : ''}" type="button" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('') + '<span class="count" id="countLabel"></span>';
+  filters.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', () => {
+      activeCategory = button.dataset.category;
+      render();
+    });
+  });
+}
+
+function renderSummary(data){
+  const summary = document.getElementById('summary');
+  summary.innerHTML = `
+    <span class="pill">${data?.resumen?.total_beneficios || allBenefits.length} beneficios</span>
+    <span class="pill">${(data?.resumen?.dominios || []).join(' + ') || 'Motor Comercial'}</span>
+    <span class="pill">autoaplica=false</span>
+  `;
+}
+
+function vigenciaTexto(item){
+  const desde = item?.vigencia?.desde;
+  const hasta = item?.vigencia?.hasta;
+  if(!desde && !hasta) return 'Segun publicacion';
+  return `${desde ? String(desde).slice(0,10) : '—'} a ${hasta ? String(hasta).slice(0,10) : 'sin fecha fin'}`;
+}
+
+function renderRow(item, index){
+  return `
+    <tr data-row="${index}">
+      <td class="cat">${escapeHtml(item.categoria)}</td>
+      <td class="val">${escapeHtml(item.beneficio)}</td>
+      <td class="prod">${escapeHtml(item.producto_afectado)}</td>
+      <td class="cond">${escapeHtml(item.condicion_principal || 'Segun regla publicada')}</td>
+      <td class="vig">${escapeHtml(vigenciaTexto(item))}</td>
+      <td class="src" title="${escapeHtml(sourceText(item))}">${escapeHtml(sourceShort(item))}</td>
+      <td><button class="more" type="button" data-detail="${index}">Detalle</button></td>
+    </tr>`;
+}
+
+let ultimoBoton = null;
+
+function abrirDetalle(item, boton){
+  ultimoBoton = boton;
+  const campos = [
+    ['Condicion principal', item.condicion_principal],
+    ['Producto afectado', item.producto_afectado],
+    ['Evento', item.convergencia_evento],
+    ['Limite', item.limite],
+    ['Compatibilidad', item.compatibilidad],
+    ['Vigencia', vigenciaTexto(item)],
+    ['Fuente oficial', sourceText(item)],
+  ].filter(([, valor]) => valor)
+    .map(([etiqueta, valor]) => `<div class="campo"><b>${escapeHtml(etiqueta)}</b>${escapeHtml(valor)}</div>`).join('');
+  const terms = (item.terminos_principales || []).map(term => `<span class="term">${escapeHtml(term)}</span>`).join('');
+
+  document.getElementById('modalCat').textContent = item.categoria || '';
+  document.getElementById('modalName').textContent = item.nombre || item.categoria || '';
+  document.getElementById('modalVal').textContent = item.beneficio || '';
+  document.getElementById('modalBody').innerHTML = campos +
+    `<div class="campo"><b>Terminos oficiales</b><div class="terms">${terms || '<span class="term">Sin terminos estructurados en la publicacion</span>'}</div></div>`;
+  document.getElementById('overlay').hidden = false;
+  document.getElementById('modalClose').focus();
+}
+
+function cerrarDetalle(){
+  document.getElementById('overlay').hidden = true;
+  if(ultimoBoton) ultimoBoton.focus();
+}
+
+function render(){
+  const categories = [...new Set(allBenefits.map(item => item.categoria).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  renderFilters(categories);
+  const items = visibleBenefits();
+  const count = document.getElementById('countLabel');
+  if(count) count.textContent = `${items.length} visibles / ${allBenefits.length} publicados`;
+  const grid = document.getElementById('benefitsGrid');
+  if(!items.length){
+    grid.innerHTML = '<div class="empty">No hay beneficios para el filtro seleccionado.</div>';
+    return;
+  }
+  grid.innerHTML = `<div class="tablewrap"><table>
+    <thead><tr><th>Categoria</th><th>Beneficio</th><th>Producto</th><th>Condicion principal</th><th>Vigencia</th><th>Fuente oficial</th><th></th></tr></thead>
+    <tbody>${items.map(renderRow).join('')}</tbody></table></div>`;
+  grid.querySelectorAll('button[data-detail]').forEach(button => {
+    button.addEventListener('click', () => abrirDetalle(items[Number(button.dataset.detail)], button));
+  });
+}
+
+document.getElementById('modalClose').addEventListener('click', cerrarDetalle);
+document.getElementById('overlay').addEventListener('click', event => {
+  if(event.target.id === 'overlay') cerrarDetalle();
+});
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && !document.getElementById('overlay').hidden) cerrarDetalle();
+});
+
+async function loadBenefits(){
+  try{
+    const response = await fetch(API_URL, { cache: 'no-store' });
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    allBenefits = Array.isArray(data.beneficios) ? data.beneficios : [];
+    document.getElementById('versionLabel').textContent = `Motor Comercial · ${allBenefits.length} beneficios vigentes`;
+    renderSummary(data);
+    render();
+  }catch(error){
+    document.getElementById('benefitsGrid').innerHTML = '<div class="error">No se pudo leer el catálogo de beneficios publicado. No se usaron datos estáticos.</div>';
+    document.getElementById('summary').innerHTML = '<span class="pill">Sin lectura vigente</span>';
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', event => {
+  searchText = event.target.value.trim().toLowerCase();
+  render();
+});
+
+loadBenefits();
+</script>
+</body>
+</html>

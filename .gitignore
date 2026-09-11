@@ -5,6 +5,8 @@ tmp/
 .worktrees/
 backend/eng.traineddata
 documentos-ofertas/
+backend/uploads/
+CREDENCIAL-PRIVADA.txt
 .env
 .claude/
 .local-fixtures/

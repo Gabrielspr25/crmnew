@@ -1,4 +1,5 @@
 const LINE_TYPES = new Set(['individual', 'multilinea_business_red']);
+const LINE_MODALITIES = new Set(['financiamiento', 'update_plus', 'contrato', 'byop']);
 const EVENTS = new Set(['linea_nueva', 'portabilidad', 'renovacion', 'linea_adicional']);
 const BUSINESS_RED_FAMILIES = new Set([
   'business_red_plus',
@@ -8,7 +9,7 @@ const BUSINESS_RED_FAMILIES = new Set([
 ]);
 
 function isBusinessRedPlan(plan = {}) {
-  return /^BR(?:PLUS|EXT|EXTREME|SUP|SUPREME|SF|SIN)/i.test(String(plan.codigo || ''));
+  return /^BR(?:PLUS|EXT|EXTREME|SUP|SUPREME|SF|SIN|EDP|EDE|EDS|EDSF)/i.test(String(plan.codigo || ''));
 }
 
 export function validateLineaMovil(linea) {
@@ -24,6 +25,12 @@ export function validateLineaMovil(linea) {
   if (!EVENTS.has(linea.evento)) errors.push({ codigo: 'evento_invalido', campo: 'evento' });
   if (!linea.trade_in || typeof linea.trade_in !== 'object') {
     errors.push({ codigo: 'trade_in_requerido', campo: 'trade_in' });
+  }
+  if (linea.modalidad_linea != null && !LINE_MODALITIES.has(linea.modalidad_linea)) {
+    errors.push({ codigo: 'modalidad_linea_invalida', campo: 'modalidad_linea' });
+  }
+  if (linea.account_type != null && !String(linea.account_type).trim()) {
+    errors.push({ codigo: 'account_type_invalido', campo: 'account_type' });
   }
 
   if (linea.tipo === 'multilinea_business_red') {

@@ -14,8 +14,10 @@ Antes de modificar codigo, datos, contratos o documentacion:
 ## Repositorio activo
 
 - `C:\Users\Gabriel\Documentos\Programas\newcrm` es el CRM activo y el destino de toda implementacion nueva.
-- `VentasProui` esta en proceso de retiro. Solo puede consultarse para entender funcionalidad heredada.
-- No implementar, corregir, documentar ni desplegar en `VentasProui`, salvo orden explicita del usuario para una operacion puntual.
+- Proyecto comercial activo: `newcrm`.
+- Admin Ofertas, Motor Comercial y Constructor pertenecen al mismo proyecto `newcrm`.
+- No usar proyectos heredados como referencia en documentacion, limites, arquitectura ni futuras implementaciones de este flujo comercial.
+- No implementar, corregir, documentar ni desplegar fuera de `newcrm`, salvo orden explicita del usuario para una operacion puntual.
 - `originales/` es un archivo historico. Sus `AGENTS.md` y `CLAUDE.md` no son instrucciones activas de `newcrm`.
 - `ofertas-proui` es un proyecto separado del portal. No modificarlo salvo que la tarea lo indique expresamente.
 
@@ -43,6 +45,13 @@ Antes de modificar ofertas, equipos, bonos, seguros, promociones o elegibilidad:
 5. No inventar herencia, alcance, plazo, seguro, trade-in, bono ni limite BAN.
 
 El Admin Ofertas existente usa `backend/src/routes/planesRoutes.js`, `backend/src/routes/equiposRoutes.js`, `public.planes_modulos` y `public.equipos_*`. Cualquier motor nuevo debe coexistir con esas rutas hasta que exista una migracion aprobada.
+
+### Plan Maestro del Constructor
+
+- El estado ejecutivo del Constructor Comercial, Motor Comercial, Fuentes, Servicios/Benefits y Agente Comercial vive en `docs/constructor/plan-maestro-constructor.json`.
+- El MD `docs/constructor/00-PLAN-MAESTRO-CONSTRUCTOR.md` debe generarse desde ese JSON y no mantenerse como segunda verdad manual.
+- Toda tarea de estos flujos debe actualizar el Plan Maestro antes de declararse terminada.
+- El Plan Maestro es solo seguimiento: no activa promociones, no cambia reglas, no autoriza produccion y no reemplaza fuentes oficiales.
 
 ### Fuente comercial: Lista de Equipos
 

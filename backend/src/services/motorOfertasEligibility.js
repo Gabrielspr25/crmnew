@@ -83,7 +83,7 @@ export function findEligibleEquipment({ offers = [], request = {}, version = {} 
       }
       equipos.push({
         equipo: { ...equipment },
-        oferta: { id: offer.id, nombre: offer.nombre || offer.id },
+        oferta: { id: offer.id, nombre: offer.nombre || offer.id, limite_ban: offer.limite_ban || null },
         plazos: [...(equipment.plazos || [])],
         beneficio: benefit.benefit,
         aplicacion_automatica: automatic,

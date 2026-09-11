@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const clientsRealSource = readFileSync(new URL('../src/routes/clientsReal.js', import.meta.url), 'utf8');
+const searchServiceSource = readFileSync(new URL('../src/services/clientSearchQuery.js', import.meta.url), 'utf8');
 const clientRowsDefinition = clientsRealSource.slice(
   clientsRealSource.indexOf('const clientRowsSql ='),
   clientsRealSource.indexOf('const conn = await pool.connect();')
@@ -24,10 +25,14 @@ test('busqueda de clientes incluye nombre, empresa, BAN, telefono y email', () =
   assert.match(clientsRealSource, /else if \(tab === 'cancelled'\) \{\s*conds\.push\(CANCELLED_CLIENT_SQL\);/);
   assert.match(clientsRealSource, /if \(!hasSearch && SERVICE_CLIENT_SQL\[service\]\) conds\.push\(SERVICE_CLIENT_SQL\[service\]\)/);
   assert.match(clientsRealSource, /if \(!hasSearch && tab !== 'cancelled' && RENEWAL_CLIENT_SQL\[renewal\]\)/);
-  assert.match(clientsRealSource, /EXISTS \(SELECT 1 FROM bans bq WHERE bq\.client_id = c\.id AND CAST\(bq\.ban_number AS text\) ILIKE/);
-  assert.match(clientsRealSource, /EXISTS \(SELECT 1 FROM subscribers sq JOIN bans bqs ON sq\.ban_id = bqs\.id WHERE bqs\.client_id = c\.id AND CAST\(sq\.phone AS text\) ILIKE/);
-  assert.match(clientsRealSource, /c\.business_name ILIKE/);
-  assert.match(clientsRealSource, /c\.email ILIKE/);
+  // El filtro de busqueda vive en el servicio puro clientSearchQuery.js y la ruta lo consume.
+  assert.match(clientsRealSource, /import \{ buildClientSearchFilter \} from '\.\.\/services\/clientSearchQuery\.js'/);
+  assert.match(clientsRealSource, /const busqueda = buildClientSearchFilter\(q, params\.length\)/);
+  assert.match(searchServiceSource, /EXISTS \(SELECT 1 FROM bans bq WHERE bq\.client_id = c\.id AND CAST\(bq\.ban_number AS text\) ILIKE/);
+  assert.match(searchServiceSource, /EXISTS \(SELECT 1 FROM subscribers sq JOIN bans bqs ON sq\.ban_id = bqs\.id WHERE bqs\.client_id = c\.id AND CAST\(sq\.phone AS text\) ILIKE/);
+  assert.match(searchServiceSource, /c\.name ILIKE/);
+  assert.match(searchServiceSource, /c\.business_name ILIKE/);
+  assert.match(searchServiceSource, /c\.email ILIKE/);
   assert.match(clientRowsDefinition, /SELECT c\.id, c\.name, c\.business_name, c\.business_name AS company,\s*c\.email,/);
   assert.match(listQueryBlock, /ORDER BY \$\{clientOrderSql\}\s+LIMIT \$\$\{params\.length \+ 1\} OFFSET \$\$\{params\.length \+ 2\}/);
   assert.match(clientsRealSource, /const total = await conn\.query\(\s*`WITH client_rows AS \(\$\{clientRowsSql\}\)/);

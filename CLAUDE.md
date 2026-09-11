@@ -6,9 +6,11 @@ Leer al inicio de cada sesion despues de `AGENTS.md`.
 
 `newcrm` es el sistema activo. Toda funcionalidad nueva del CRM se disena, documenta, implementa y prueba aqui.
 
-`VentasProui` es legado en proceso de retiro. Puede consultarse para identificar comportamiento previo, pero no es fuente arquitectonica ni destino de cambios. Una pieza heredada solo se traslada despues de validarla contra la arquitectura y las fuentes actuales de `newcrm`.
+Proyecto comercial activo: `newcrm`. Admin Ofertas, Motor Comercial y Constructor pertenecen al mismo proyecto.
 
-La carpeta `originales/` conserva documentacion historica de `VentasProui`. No gobierna este repositorio.
+No usar proyectos heredados como referencia en documentacion, limites, arquitectura ni futuras implementaciones del flujo comercial. Cualquier comportamiento debe validarse contra la arquitectura y las fuentes actuales de `newcrm`.
+
+La carpeta `originales/` conserva documentacion historica. No gobierna este repositorio.
 
 ## Runtime real
 
@@ -70,6 +72,6 @@ Estado de version, y solo de version:
 - No aplicar automaticamente reglas vencidas o sin fuente.
 - Una oferta vencida puede permanecer visible mientras espera reemplazo, pero debe bloquear aplicacion automatica.
 - JavaScript, HTML y matrices exploratorias sirven para comparar; nunca sustituyen una fuente comercial oficial.
+- Toda tarea relacionada con Constructor, Motor Comercial, Fuentes, Servicios/Benefits o Agente Comercial debe actualizar `docs/constructor/plan-maestro-constructor.json` y regenerar `docs/constructor/00-PLAN-MAESTRO-CONSTRUCTOR.md` antes de declararse terminada.
 
 Actualizado: 2026-07-12.
-

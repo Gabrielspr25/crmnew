@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Inalambrico / IoT</title>
+<script src="portal-config.js?v=2026091001"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -109,6 +110,11 @@ body{
 .backup-code{display:block;margin-top:3px;font:10px monospace;color:#94a3b8}
 .backup-price{font-weight:800;color:#4ade80;white-space:nowrap}
 .backup-note{display:block;margin-top:3px;font-size:10px;color:#94a3b8}
+.equipo-cell{display:flex;align-items:center;gap:10px;min-width:180px}
+.equipo-img{width:46px;height:46px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);flex-shrink:0}
+.equipo-placeholder{width:46px;height:46px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.14);display:flex;align-items:center;justify-content:center;color:#7dd3fc;font-weight:800;font-size:14px;flex-shrink:0}
+.equipo-main{font-weight:700;color:#f1f5f9}
+.equipo-sub{display:block;margin-top:3px;font-size:10px;color:#94a3b8}
 
 /* Doble datos badge */
 .doble-badge{
@@ -347,6 +353,8 @@ body{
   <a href="banda-ancha.html" class="active">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Benefits</a>
+  <a href="affinity.html">Affinity</a>
     
   <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
@@ -358,7 +366,7 @@ body{
 </div>
 
 <script>
-const API_BASE = '';
+const API_BASE = window.PORTAL_API_BASE || '';
 let allModulos = [];
 let _modals = [];
 let openSectionKey = null;
@@ -616,6 +624,48 @@ function findRegularEquipmentOffer(plan, modulos) {
   return equipos.find(e => equipmentModelKey(e.modelo) === key) || null;
 }
 
+function formatMoney(value, suffix = '') {
+  if (value == null || value === '') return '-';
+  const number = Number(value);
+  return Number.isFinite(number) ? `$${number.toFixed(2)}${suffix}` : String(value);
+}
+
+function equipmentImageUrl(equipment) {
+  return equipment?.imagen_url || equipment?.image_url || equipment?.foto_url || equipment?.imagen || null;
+}
+
+function equipmentInitials(value) {
+  return String(value || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '?';
+}
+
+function buildEquipmentCell(equipment, fallbackName = '') {
+  const name = equipment?.modelo || equipment?.nombre || fallbackName || 'Pendiente de publicacion';
+  const image = equipmentImageUrl(equipment);
+  const media = image
+    ? `<img class="equipo-img" src="${image}" alt="${name}">`
+    : `<span class="equipo-placeholder">${equipmentInitials(name)}</span>`;
+  const code = equipment?.item_code || equipment?.codigo || '';
+  return `<div class="equipo-cell">${media}<div><div class="equipo-main">${name}</div>${code ? `<span class="equipo-sub">${code}</span>` : ''}</div></div>`;
+}
+
+function specialOffersForProduct(productName, offers) {
+  const needle = String(productName || '').toLowerCase();
+  return (offers || []).filter(offer => String(offer.producto || '').toLowerCase().includes(needle));
+}
+
+function financingLabel(equipment, offer) {
+  const terms = offer?.plazo_meses || [];
+  if (terms.length) return `${terms.join(' o ')} meses`;
+  const available = [['fin_12', '12 meses'], ['fin_24', '24 meses'], ['fin_30', '30 meses'], ['fin_36', '36 meses']]
+    .filter(([field]) => equipment?.[field] != null)
+    .map(([, label]) => label);
+  return available.length ? available.join(' / ') : '-';
+}
+
+function offerCodeLabel(offer, fallback = '') {
+  return (offer?.codigos || []).length ? offer.codigos.join(' / ') : (fallback || 'No indicado');
+}
+
 function buildPlanOfferRows(plans, modulos, convergent) {
   return (plans || []).map(plan => {
     const equipo = findRegularEquipmentOffer(plan, modulos);
@@ -701,21 +751,30 @@ function buildIntGoSection(c, modulos) {
 }
 
 function buildOficinaSection(c) {
-  const planItems = (c.planes || []).map(p => `
-    <div class="oficina-item">
-      <div class="oficina-name">${p.nombre}</div>
-      <div class="oficina-precio">$${p.precio}<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.5)">/mes</span></div>
-      <div class="oficina-autopay">$${p.precio_autopago}/mes con AutoPago</div>
-      <ul class="oficina-features">
-        <li>Internet ${p.internet}</li>
-        <li>${p.datos} de datos</li>
-        ${p.velocidad_reducida ? `<li>${p.velocidad_reducida} al agotar datos</li>` : ''}
-        ${(p.incluye||[]).map(i => `<li>${i}</li>`).join('')}
-      </ul>
-      <span class="oficina-codigo">${p.codigo}</span>
-    </div>`).join('');
+  const ofertas = specialOffersForProduct('Claro Oficina', c.ofertas_especiales_normalizadas || []);
+  const equipos = c.equipos || [];
+  const equipoDefault = equipos[0] || null;
+  const planItems = (c.planes || []).map(p => {
+    const offer = ofertas.find(item => item.plan_exacto && Number(item.plan_exacto) === Number(p.precio)) || ofertas[0] || null;
+    const equipo = equipos.find(item => equipmentModelKey(item.modelo || item.nombre) === equipmentModelKey(offer?.equipo)) || equipoDefault;
+    const condiciones = [
+      p.precio_autopago != null ? `${formatMoney(p.precio_autopago, '/mes')} con AutoPago` : '',
+      p.internet ? `Internet ${p.internet}` : '',
+      p.datos ? `${p.datos} de datos` : '',
+      p.velocidad_reducida ? `${p.velocidad_reducida} al agotar datos` : '',
+      ...(p.incluye || [])
+    ].filter(Boolean).join(' · ');
+    return `<tr>
+      <td><span class="backup-plan">${p.nombre}</span><span class="backup-code">${p.codigo || ''}</span></td>
+      <td class="backup-price">${formatMoney(p.precio, '/mes')}</td>
+      <td>${buildEquipmentCell(equipo, offer?.equipo)}</td>
+      <td class="backup-price">${formatMoney(offer?.precio_oferta ?? equipo?.precio_regular)}</td>
+      <td>${financingLabel(equipo, offer)}</td>
+      <td>${offerCodeLabel(offer, p.codigo)}<span class="backup-note">${condiciones}</span></td>
+    </tr>`;
+  }).join('');
 
-  const equipos = (c.equipos || []).map(e => `
+  const equiposHtml = equipos.map(e => `
     <div class="equipo-item">
       <span class="equipo-nombre">${e.nombre}</span>
       <span class="equipo-costo">${e.costo}</span>
@@ -724,8 +783,13 @@ function buildOficinaSection(c) {
   const nota = c.nota ? `<div class="plan-footer" style="padding:10px 24px;font-size:11px;color:rgba(255,255,255,0.35)">${c.nota}</div>` : '';
 
   return `
-    <div class="oficina-grid">${planItems}</div>
-    ${equipos ? `<div class="equipos-section"><div class="equipos-title">Equipos</div>${equipos}</div>` : ''}
+    <div class="backup-table-wrap">
+      <table class="backup-table oficina-table">
+        <thead><tr><th>Plan</th><th>Renta</th><th>Equipo</th><th>Precio</th><th>Meses financiados</th><th>Codigo</th></tr></thead>
+        <tbody>${planItems}</tbody>
+      </table>
+    </div>
+    ${equiposHtml ? `<div class="equipos-section"><div class="equipos-title">Equipos en orden del boletin</div>${equiposHtml}</div>` : ''}
     ${nota}`;
 }
 
@@ -823,14 +887,35 @@ function buildEquiposPreciosSection(c) {
       </div>`;
   };
 
-  const ofertas = (c.ofertas_especiales || []).map(o => `
-    <div class="oferta-card">
-      <div class="oferta-num">${o.num || '-'}</div>
-      <div>
-        <div class="oferta-modelo">${o.modelo}</div>
-        ${(o.detalles || []).map(d => `<div class="oferta-detalle">- ${d}</div>`).join('')}
-      </div>
-    </div>`).join('');
+      function formatSpecialOfferPrice(o) {
+        if (Number(o.precio_oferta) === 0) return 'Gratis';
+        return o.precio_oferta == null ? 'Pendiente' : `$${Number(o.precio_oferta).toFixed(2)}`;
+      }
+
+      function buildStructuredSpecialOffers(ofertas_especiales_normalizadas) {
+        const rows = (ofertas_especiales_normalizadas || []).map(o => {
+          const plan = o.plan_exacto ? `$${Number(o.plan_exacto).toFixed(2)}` : (o.plan_minimo ? `Desde $${Number(o.plan_minimo).toFixed(2)}` : (o.plan_maximo_exclusivo ? `Menor de $${Number(o.plan_maximo_exclusivo).toFixed(2)}` : 'No indicado'));
+          const plazo = (o.plazo_meses || []).length ? `${o.plazo_meses.join(' o ')} meses` : 'No indicado';
+          const condicion = [o.producto, o.convergente ? 'Cliente convergente' : '', o.pago_mensual ? `Paga $${Number(o.pago_mensual).toFixed(2)}/mes` : ''].filter(Boolean).join(' · ');
+          const codigo = (o.codigos || []).length ? o.codigos.join(' / ') : 'No indicado';
+          return `<tr><td>${plan}</td><td>${o.equipo || ''}</td><td class="backup-price">${formatSpecialOfferPrice(o)}</td><td>${plazo}</td><td>${condicion}</td><td>${codigo}</td></tr>`;
+        }).join('');
+        if (!rows) return '';
+        return `<div class="backup-table-wrap"><table class="backup-table">
+          <thead><tr><th>Plan</th><th>Equipo</th><th>Oferta</th><th>Plazo</th><th>Condicion</th><th>Codigo</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>`;
+      }
+
+      const ofertasNormalizadas = buildStructuredSpecialOffers(c.ofertas_especiales_normalizadas);
+      const ofertas = ofertasNormalizadas || (c.ofertas_especiales || []).map(o => `
+        <div class="oferta-card">
+          <div class="oferta-num">${o.num || '-'}</div>
+          <div>
+            <div class="oferta-modelo">${o.modelo}</div>
+            ${(o.detalles || []).map(d => `<div class="oferta-detalle">- ${d}</div>`).join('')}
+          </div>
+        </div>`).join('');
 
   return `
     <div style="padding:16px 24px 4px">
@@ -838,12 +923,12 @@ function buildEquiposPreciosSection(c) {
           ${tablaFin(c.financiamiento_of, 'Financiamiento FIOF - Oferta Convergente', ['fin_12','fin_24','fin_30','fin_36'])}
           ${tablaFin(c.financiamiento_gu, 'Financiamiento FIGU - Oferta Convergente (planes &lt;$30)', ['fin_24','fin_36'])}
     </div>
-    ${ofertas ? `
-      <div class="ep-ofertas-section">
-        <div class="ep-ofertas-title">Ofertas Especiales Vigentes</div>
-        <div class="ep-ofertas-grid">${ofertas}</div>
-      </div>` : ''}`;
-}
+        ${ofertas ? `
+          <div class="ep-ofertas-section">
+            <div class="ep-ofertas-title">Ofertas Especiales Vigentes</div>
+            ${ofertasNormalizadas || `<div class="ep-ofertas-grid">${ofertas}</div>`}
+          </div>` : ''}`;
+    }
 
 document.getElementById('searchInput').addEventListener('input', () => render());
 

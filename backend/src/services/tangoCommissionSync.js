@@ -139,6 +139,25 @@ export function mapTangoCommissionSale(sale = {}, commission = null) {
     vendorName: readVendorName(sale) || readVendorName(commission || {}),
     saleTypeId: typeId,
     saleTypeName: typeName,
+    equipment: firstValue(
+      sale?.equipo,
+      sale?.equipment,
+      sale?.modelo,
+      sale?.equipment_model,
+      sale?.device?.model,
+    ),
+    itemId: firstValue(
+      sale?.itemid,
+      sale?.item_id,
+      sale?.itemcode,
+      sale?.item_code,
+      sale?.device?.item_id,
+    ),
+    contractTerm: positiveOrNull(firstValue(
+      sale?.meses,
+      sale?.contract_term,
+      sale?.contractTerm,
+    )),
     companyEarnings: total,
     vendorCommission: numberOrNull(firstValue(
       commission?.comisionvendedor, commission?.com_vendedor, commission?.vendor_commission,

@@ -3,7 +3,9 @@ import { test } from 'node:test';
 
 import {
   buildProspectDedupeKey,
+  getApifyPreviewStatus,
   normalizeApifyItems,
+  startApifyPreview,
   validateApifyPreviewCriteria,
 } from '../src/services/prospectosApifyService.js';
 import { createAirtableClient } from '../src/services/prospectosAirtableService.js';
@@ -47,6 +49,45 @@ test('preview Apify valida criterios mínimos y normaliza sin secretos ni persis
   assert.equal(prospects[0].phone, '(787) 555-0101');
   assert.equal(prospects[0].dedupe_key, 'google:ChIJ-123');
   assert.equal(prospects[0].airtable_record_id, undefined);
+});
+
+test('preview Apify conserva una cantidad solicitada de 500 lugares', () => {
+  const criteria = validateApifyPreviewCriteria({ rubro: 'farmacia', zona: 'Dorado', cantidad: 500 });
+  assert.equal(criteria.cantidad, 500);
+});
+
+test('preview Apify inicia el actor sin esperar sus resultados', async () => {
+  const calls = [];
+  const result = await startApifyPreview({ rubro: 'farmacia', zona: 'Dorado', cantidad: 25 }, {
+    token: 'test-token',
+    actorId: 'actor-id',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return { ok: true, json: async () => ({ data: { id: 'run-1', defaultDatasetId: 'dataset-1', status: 'READY' } }) };
+    },
+  });
+
+  assert.equal(result.status, 'running');
+  assert.equal(result.run_id, 'run-1');
+  assert.equal(result.dataset_id, 'dataset-1');
+  assert.match(calls[0].url, /\/acts\/actor-id\/runs\?/);
+  assert.doesNotMatch(calls[0].url, /run-sync/);
+});
+
+test('consulta de preview Apify devuelve resultados cuando el run terminó', async () => {
+  let call = 0;
+  const result = await getApifyPreviewStatus({ run_id: 'run-1', dataset_id: 'dataset-1', criteria: { rubro: 'farmacia', zona: 'Dorado', cantidad: 25, filtros: {} } }, {
+    token: 'test-token',
+    fetchImpl: async () => {
+      call += 1;
+      if (call === 1) return { ok: true, json: async () => ({ data: { status: 'SUCCEEDED', defaultDatasetId: 'dataset-1' } }) };
+      return { ok: true, json: async () => ([{ placeId: 'p-1', title: 'Farmacia Uno', phone: '787-000', website: 'https://uno.test' }]) };
+    },
+  });
+
+  assert.equal(result.status, 'succeeded');
+  assert.equal(result.total_raw, 1);
+  assert.equal(result.data[0].name, 'Farmacia Uno');
 });
 
 test('dedupe prefiere placeId y cae a nombre+telefono o nombre+direccion+ciudad', () => {

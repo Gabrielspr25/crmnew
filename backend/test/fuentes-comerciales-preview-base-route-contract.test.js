@@ -7,6 +7,7 @@ import http from 'node:http';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { requireAdmin, requireAuth } from '../src/auth.js';
+import { buildBasesInformativasPreviews } from '../src/services/basesInformativasPreview.js';
 import {
   createCambiarEstadoBaseInformativaHandler,
   createGuardarBaseBorradoresHandler,
@@ -28,6 +29,32 @@ function previewItem(categoria, total) {
     codigo: `${categoria}-${index + 1}`,
     descripcion: `${categoria} ${index + 1}`,
   }));
+  const reglasNormalizadas = candidatos.map((item, index) => {
+    const tipoRegla = categoria === 'fijo' && index >= 80
+      ? 'accesorio'
+      : categoria === 'fijo' && index >= 65
+        ? 'beneficio'
+        : 'estructura_base';
+    return {
+      tipo_regla: tipoRegla,
+      codigo: item.codigo,
+      llave_comercial: `${item.categoria}|${item.seccion_key}|${item.codigo}`,
+      valor: { precio_regular: null },
+      estado_confianza: 'confirmado',
+      estado_publicacion: 'borrador',
+    };
+  });
+  const resumenReglas = categoria === 'fijo'
+    ? {
+        total,
+        por_tipo: { estructura_base: 65, beneficio: 15, accesorio: 1 },
+        por_confianza: { confirmado: total },
+      }
+    : {
+        total,
+        por_tipo: { estructura_base: total },
+        por_confianza: { confirmado: total },
+      };
   return {
     categoria,
     pagina: categoria === 'fijo' ? 'fijos' : 'claro_tv',
@@ -38,6 +65,8 @@ function previewItem(categoria, total) {
     fuente_sha256: 'a'.repeat(64),
     fecha_actualizacion_base: '2026-08-16',
     registros_normalizados: candidatos,
+    reglas_normalizadas: reglasNormalizadas,
+    resumen_reglas: resumenReglas,
     candidatos_publicos: candidatos,
     modulos_generados: [{ pagina: categoria, seccion_key: `${categoria}_modulo`, contenido: { filas: candidatos } }],
     contenido_excluido: [],
@@ -67,6 +96,10 @@ function makePool(sourceRows = []) {
       queries.push({ sql, params });
       assert.doesNotMatch(sql, /\bINSERT\b|\bUPDATE\b|\bDELETE\b/i);
       assert.doesNotMatch(sql, /planes_modulos/i);
+      if (/SELECT DISTINCT ON \(categoria\)/.test(sql)) {
+        assert.match(sql, /WHERE estado = 'publicada'/);
+        return { rows: [] };
+      }
       assert.match(sql, /FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/);
       return { rows: sourceRows };
     },
@@ -354,11 +387,66 @@ test('preview-base devuelve Fijo 81 y Claro TV 9 sin mezclar categorias ni expon
     assert.equal(res.json.resumen.fijo, 81);
     assert.equal(res.json.resumen.claro_tv, 9);
     assert.equal(res.json.previews.fijo.candidatos_publicos.length, 81);
+    assert.equal(res.json.previews.fijo.reglas_normalizadas.length, 81);
+    assert.equal(res.json.previews.fijo.resumen_reglas.total, 81);
+    assert.equal(res.json.previews.fijo.resumen_reglas.por_tipo.estructura_base, 65);
+    assert.equal(res.json.previews.fijo.resumen_reglas.por_tipo.beneficio, 15);
+    assert.equal(res.json.previews.fijo.resumen_reglas.por_tipo.accesorio, 1);
+    assert.deepEqual(res.json.previews.fijo.resumen_reglas.por_confianza, { confirmado: 81 });
+    assert.equal(res.json.previews.fijo.reglas_normalizadas[0].estado_confianza, 'confirmado');
+    assert.equal(res.json.previews.fijo.reglas_normalizadas[0].llave_comercial.includes('$'), false);
     assert.equal(res.json.previews.claro_tv.candidatos_publicos.length, 9);
     assert.ok(res.json.previews.fijo.candidatos_publicos.every((item) => item.categoria === 'fijo'));
     assert.ok(res.json.previews.claro_tv.candidatos_publicos.every((item) => item.categoria === 'claro_tv'));
     const serialized = JSON.stringify(res.json);
     assert.doesNotMatch(serialized, /ruta_relativa|nombre_archivado|filePath|allowedRoot|stderr|outside\.pdf|uploads/);
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('preview-base acepta Inalambrico IoT y usa el parser de equipos inalambricos', async () => {
+  const ws = makeWorkspace();
+  try {
+    let scriptUsed = null;
+    const parser = async (script) => {
+      scriptUsed = script;
+      return {
+        secciones_detectadas: ['internet_on_the_go', 'claro_oficina', 'iot_telemetria'],
+        secciones: [{
+          key: 'internet_on_the_go',
+          titulo: "MiFi's Internet On The Go",
+          equipos: [{
+            item_code: '33638H',
+            material_sap: '7013126',
+            modelo: 'Franklin JEXstream RG2100 5G',
+            precio_regular: 249.99,
+            fin_24: 12.5,
+          }],
+        }],
+      };
+    };
+    const app = makeApp({
+      pool: makePool([source({
+        familia: 'inalambrico_iot',
+        nombre_original: 'Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf',
+      })]),
+      parser,
+      previewBuilder: buildBasesInformativasPreviews,
+      uploadDir: ws.uploads,
+    });
+
+    const res = await request(app, 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
+      token: tokenFor('admin'),
+      body: { fecha_actualizacion_base: '2026-09-01' },
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(scriptUsed, 'parse_equipos_pdf.py');
+    assert.equal(res.json.resumen.inalambrico, 1);
+    assert.equal(res.json.previews.inalambrico.modulos_generados.length, 4);
+    assert.equal(res.json.previews.inalambrico.candidatos_publicos[0].codigo, '33638H');
+    assert.equal(res.json.previews.inalambrico.candidatos_publicos[0].precio_regular, 249.99);
   } finally {
     ws.cleanup();
   }
@@ -397,7 +485,7 @@ test('preview-base no ejecuta escrituras ni toca planes_modulos', async () => {
       body: { fecha_actualizacion_base: '2026-08-16' },
     });
     assert.equal(res.status, 200);
-    assert.equal(pool.queries.length, 1);
+    assert.equal(pool.queries.length, 2);
     assert.ok(pool.queries.every(({ sql }) => !/\bINSERT\b|\bUPDATE\b|\bDELETE\b|planes_modulos/i.test(sql)));
   } finally {
     ws.cleanup();
@@ -419,6 +507,7 @@ test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro T
         if (/INSERT INTO public\.bases_informativas_publicaciones/.test(sql)) {
           return { rows: [publicacionRow(params[0], 'borrador')] };
         }
+        if (/SELECT DISTINCT ON \(categoria\)/.test(sql)) return { rows: [] };
         throw new Error(`consulta inesperada: ${sql}`);
       },
     };
@@ -438,6 +527,13 @@ test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro T
         assert.doesNotThrow(() => JSON.parse(params[index]));
       }
     }
+    const fijoInsert = insertQueries.find(({ params }) => params[0] === 'fijo');
+    const fijoAuditoria = JSON.parse(fijoInsert.params[11]);
+    assert.equal(fijoAuditoria.reglas_normalizadas.length, 81);
+    assert.equal(fijoAuditoria.resumen_reglas.total, 81);
+    assert.equal(fijoAuditoria.resumen_reglas.por_tipo.estructura_base, 65);
+    assert.equal(fijoAuditoria.resumen_reglas.por_tipo.beneficio, 15);
+    assert.equal(fijoAuditoria.resumen_reglas.por_tipo.accesorio, 1);
   } finally {
     ws.cleanup();
   }
@@ -461,7 +557,19 @@ test('validar, aprobar y publicar respetan estados y delegan la proyeccion trans
       if (/SELECT \* FROM public\.publicar_base_informativa\(\$1,\$2\)/.test(sql)) {
         if (estado !== 'aprobada') throw new Error(`solo una base informativa aprobada puede publicarse; estado actual: ${estado}`);
         estado = 'publicada';
-        return { rows: [publicacionRow('fijo', estado)] };
+        return { rows: [{
+          ...publicacionRow('fijo', estado),
+          modulos_generados: [{
+            seccion_key: 'fijo_telefonia',
+            vigencia_desde: '2026-08-01',
+            vigencia_hasta: '2026-08-31',
+            contenido: { filas: [] },
+          }],
+        }] };
+      }
+      if (/UPDATE public\.fuentes_comerciales/.test(sql)) {
+        assert.deepEqual(params, [UUID, '2026-08-01', '2026-08-31']);
+        return { rows: [] };
       }
       throw new Error(`consulta inesperada: ${sql}`);
     },
@@ -485,4 +593,5 @@ test('validar, aprobar y publicar respetan estados y delegan la proyeccion trans
   assert.equal(publicar.status, 200);
   assert.equal(publicar.json.publicacion.estado, 'publicada');
   assert.ok(queries.some(({ sql }) => /publicar_base_informativa/.test(sql)));
+  assert.ok(queries.some(({ sql }) => /UPDATE public\.fuentes_comerciales/.test(sql)));
 });

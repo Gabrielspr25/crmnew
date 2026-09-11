@@ -45,7 +45,7 @@ test('Lista de Precios separa archivar, previsualizar y publicar en backend', ()
 });
 
 test('un UUID que contiene 403 no se informa como falta de permiso', () => {
-  const source = app.match(/function fcMensajeApi\(e\)\{[\s\S]*?\n\}/)?.[0];
+  const source = app.match(/function fcMensajeApi\(e,key\)\{[\s\S]*?\n\}/)?.[0];
   assert.ok(source, 'fcMensajeApi debe existir');
   const context = {};
   vm.runInNewContext(source, context);
@@ -61,5 +61,16 @@ test('Lista de Precios permite generar vista previa desde la fuente ya guardada'
 
 test('una carga duplicada recupera la fuente por el hash calculado del archivo', () => {
   assert.match(fuentes, /const uploadSha256 = crypto\.createHash\('sha256'\)\.update\(req\.file\.buffer\)\.digest\('hex'\)/);
-  assert.match(fuentes, /\[familia, uploadSha256\]/);
+  assert.match(fuentes, /WHERE sha256=\$1 LIMIT 1/);
+  assert.match(fuentes, /\[uploadSha256\]/);
+});
+
+test('la carga de fuente expone diagnostico de hash y revision para la UI', () => {
+  assert.match(fuentes, /revision_status: versioning\.codigo/);
+  assert.match(fuentes, /duplicate: false/);
+  assert.match(fuentes, /duplicate: true/);
+  assert.match(fuentes, /sha256: uploadSha256/);
+  assert.match(fuentes, /matched_source_id: versioning\.previous\?\.id \|\| null/);
+  assert.match(fuentes, /matched_revision_id: fuenteRow\.id/);
+  assert.match(fuentes, /reason: versioning\.message/);
 });

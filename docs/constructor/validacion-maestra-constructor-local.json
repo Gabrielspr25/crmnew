@@ -1,0 +1,386 @@
+{
+  "ok": true,
+  "generated_at": "2026-09-04T18:40:34.896Z",
+  "entorno": "local",
+  "produccion": false,
+  "autoaplica": false,
+  "fuente_motor": {
+    "ofertas_movil_version": "2",
+    "ofertas_estado": "vigente",
+    "business_red_plus_plan": {
+      "monto": 65,
+      "nombre": "Business Red Plus"
+    }
+  },
+  "casos": [
+    {
+      "id": "VM-001",
+      "nombre": "8 renovaciones Samsung A37",
+      "entrada": "8 renovaciones Samsung A37",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "candidatos": {
+          "total": 0,
+          "por_beneficio": {},
+          "requiere_revision": 0,
+          "fuentes": []
+        },
+        "plan": {
+          "regular": 280,
+          "autopay": 200
+        }
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "business_red_plus vigente local",
+        "candidatos por posicion"
+      ]
+    },
+    {
+      "id": "VM-002",
+      "nombre": "10 renovaciones Samsung S26",
+      "entrada": "10 renovaciones Samsung S26",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "candidatos": {
+          "total": 30,
+          "por_beneficio": {
+            "gratis": 3,
+            "descuento_porcentaje": 4,
+            "financiado": 23
+          },
+          "requiere_revision": 0,
+          "fuentes": [
+            "C:/Users/Gabriel/Dropbox/Boletines Vigentes PYMES/27 AL 16 DE SEPTIEMBRE 2026/Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx"
+          ]
+        },
+        "plan_regular": 350,
+        "plan_autopay": 250,
+        "equipos_neto_estimado": 224,
+        "total_regular_estimado": 574,
+        "total_autopay_estimado": 474,
+        "nota_equipo": "Usa $28/mes como mensualidad regular vigente del Constructor para el caso visual S26."
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "tabla Business RED Plus 1-10",
+        "constructor-publications-runtime"
+      ]
+    },
+    {
+      "id": "VM-003",
+      "nombre": "5 renovaciones mixtas",
+      "entrada": "3 iPhone Pro + 2 Samsung S26",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "lineas": 5,
+        "equipos": [
+          {
+            "modelo": "iPhone Pro",
+            "cantidad": 3
+          },
+          {
+            "modelo": "Samsung Galaxy S26",
+            "cantidad": 2
+          }
+        ],
+        "plan": {
+          "regular": 175,
+          "autopay": 125
+        }
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "Agente Comercial conserva equipos multiples"
+      ]
+    },
+    {
+      "id": "VM-004",
+      "nombre": "Caso mixto + 2 tablets",
+      "entrada": "3 iPhone Pro + 2 S26 + 2 tablets",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "catalogo_tablets_ipads": 22,
+        "benefit_tabletas_publicado": true
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "catalogo canonico local",
+        "Benefits consolidado local"
+      ]
+    },
+    {
+      "id": "VM-005",
+      "nombre": "Cliente convergente",
+      "entrada": "cliente convergente",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "benefits": [
+          "Convergencia",
+          "Streaming",
+          "Doble data",
+          "Doble velocidad"
+        ]
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "fijo_benefits publicado local"
+      ]
+    },
+    {
+      "id": "VM-006",
+      "nombre": "Cliente no convergente",
+      "entrada": "cliente no convergente",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "descarte": "beneficios que requieren convergencia no se aplican sin evidencia"
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "constructor-intelligent-consultation"
+      ]
+    },
+    {
+      "id": "VM-007",
+      "nombre": "BYOP",
+      "entrada": "Business RED Plus BYOP",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "candidatos": {
+          "total": 0,
+          "por_beneficio": {},
+          "requiere_revision": 0,
+          "fuentes": []
+        },
+        "resultado": "byop_sin_promocion_equipo"
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "business-red-plus-eligibility"
+      ]
+    },
+    {
+      "id": "VM-008",
+      "nombre": "Presupuesto maximo",
+      "entrada": "no pasar de $500",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "presupuesto_maximo": 500,
+        "agente_conserva_presupuesto": true
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "constructor-intelligent-consultation"
+      ]
+    },
+    {
+      "id": "VM-009",
+      "nombre": "Movil + Fijo",
+      "entrada": "movil + fijo",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "productos": [
+          "movil",
+          "fijo"
+        ],
+        "benefits_fijo_publicados": true
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "validacion-integral-tres-modos-fijo-convergencia-v1"
+      ]
+    },
+    {
+      "id": "VM-010",
+      "nombre": "3 meses gratis",
+      "entrada": "le corresponden 3 meses gratis?",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "benefit_detectado": true,
+        "requiere_motor_servicios": true
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "servicios-benefits-consolidado-local"
+      ]
+    },
+    {
+      "id": "VM-011",
+      "nombre": "Limites por BAN",
+      "entrada": "lineas fuera de cupo promocional",
+      "modo": "manual",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "candidato_restante_s26": {
+          "total": 21,
+          "por_beneficio": {
+            "financiado": 21
+          },
+          "requiere_revision": 0,
+          "fuentes": [
+            "C:/Users/Gabriel/Dropbox/Boletines Vigentes PYMES/27 AL 16 DE SEPTIEMBRE 2026/Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx"
+          ]
+        }
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "motor-commercial-candidates"
+      ]
+    },
+    {
+      "id": "VM-012",
+      "nombre": "FUENTE_AMBIGUA",
+      "entrada": "candidato con fuente ambigua",
+      "modo": "manual",
+      "status": "bloqueo_esperado",
+      "decision_motor": {
+        "autoaplica": false,
+        "requiere_revision": 0
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "requiere_revision",
+      "bloqueos": [
+        "FUENTE_AMBIGUA no se muestra como recomendacion automatica"
+      ],
+      "evidencia": [
+        "motor-commercial-candidates"
+      ]
+    },
+    {
+      "id": "VM-013",
+      "nombre": "Cambio de precio por nueva revision",
+      "entrada": "IoT septiembre vs revision anterior",
+      "modo": "manual",
+      "status": "bloqueo_esperado",
+      "decision_motor": {
+        "autoaplica": false,
+        "fuente_septiembre": "C302B8EB28036D2B877C907230C887BAB541F5A3A208C633CDEC8D00EA04E076"
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "requiere_revision",
+      "bloqueos": [
+        "Comparacion anterior vs nueva queda pendiente hasta tener/publicar ambas revisiones en el mismo flujo local"
+      ],
+      "evidencia": [
+        "auditoria-publicaciones-plan-maestro"
+      ]
+    },
+    {
+      "id": "VM-014",
+      "nombre": "Consulta progresiva/agente",
+      "entrada": "Tengo este cliente -> 3 iPhone Pro y 2 S26 -> 2 tablets -> Benefits",
+      "modo": "agente",
+      "status": "equivalente_local",
+      "decision_motor": {
+        "autoaplica": false,
+        "conserva_commercialScenario": true,
+        "bloquea_sin_motor": true,
+        "external_provider": false
+      },
+      "decision_flujo_anterior": "fallback_preservado_no_sustituido",
+      "comparacion": "equivalente_en_modo_sombra",
+      "bloqueos": [],
+      "evidencia": [
+        "agente-comercial-persistente-local-v1"
+      ]
+    }
+  ],
+  "validacion_tres_entradas": [
+    {
+      "modo": "CRM",
+      "escenario_base": "Business RED Plus / renovacion / 10 lineas / S26",
+      "decision_motor": {
+        "plan_regular": 350,
+        "plan_autopay": 250,
+        "equipos_neto_estimado": 224,
+        "total_regular_estimado": 574,
+        "total_autopay_estimado": 474,
+        "autoaplica": false
+      },
+      "equivalente": true
+    },
+    {
+      "modo": "Manual",
+      "escenario_base": "Business RED Plus / renovacion / 10 lineas / S26",
+      "decision_motor": {
+        "plan_regular": 350,
+        "plan_autopay": 250,
+        "equipos_neto_estimado": 224,
+        "total_regular_estimado": 574,
+        "total_autopay_estimado": 474,
+        "autoaplica": false
+      },
+      "equivalente": true
+    },
+    {
+      "modo": "Agente/Consulta",
+      "escenario_base": "Business RED Plus / renovacion / 10 lineas / S26",
+      "decision_motor": {
+        "plan_regular": 350,
+        "plan_autopay": 250,
+        "equipos_neto_estimado": 224,
+        "total_regular_estimado": 574,
+        "total_autopay_estimado": 474,
+        "autoaplica": false
+      },
+      "equivalente": true
+    }
+  ],
+  "resumen": {
+    "total_casos": 14,
+    "equivalentes_locales": 12,
+    "bloqueos_esperados": 2,
+    "fallas": 0,
+    "listo_para_promocion": false
+  },
+  "conclusion": "LISTO_PARA_PRUEBA_CONTROLADA",
+  "riesgos": [
+    "No promover Motor como fuente definitiva hasta cerrar fuentes no publicadas y bloqueos esperados.",
+    "Persistencia durable del Agente requiere migracion futura aprobada.",
+    "REDPLUS $60 vs BREDP1 $65 sigue bloqueado por seguridad comercial.",
+    "La comparacion de precio IoT anterior/nueva requiere completar el flujo con ambas revisiones."
+  ]
+}

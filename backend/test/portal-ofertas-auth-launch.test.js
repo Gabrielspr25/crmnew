@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const page = await readFile(new URL('../../frontend/app.html', import.meta.url), 'utf8');
 
 function loadPortalUrlBuilder({ hostname, origin, token }) {
-  const start = page.indexOf('function buildPortalOfertasUrl(){');
+  const start = page.indexOf('function buildPortalOfertasUrl(');
   const end = page.indexOf('\nfunction abrirPortalOfertas()', start);
   assert.notEqual(start, -1, 'El CRM debe construir una URL autenticada para el portal');
   assert.notEqual(end, -1, 'El CRM debe tener la accion que abre el portal autenticado');
@@ -23,6 +23,7 @@ function loadPortalUrlBuilder({ hostname, origin, token }) {
   return context.buildPortalOfertasUrl();
 }
 
+// Local: el propio CRM sirve el portal bajo /constructor.
 test('abre el portal local con crm_origin y el JWT en el hash', () => {
   const url = new URL(loadPortalUrlBuilder({
     hostname: '127.0.0.1',
@@ -30,11 +31,26 @@ test('abre el portal local con crm_origin y el JWT en el hash', () => {
     token: 'jwt-local',
   }));
 
-  assert.equal(url.origin, 'http://127.0.0.1:4173');
-  assert.equal(url.pathname, '/oferta-const.html');
+  assert.equal(url.origin, 'http://127.0.0.1:4012');
+  assert.equal(url.pathname, '/constructor/oferta-const.html');
   assert.equal(url.searchParams.get('crm_origin'), 'http://127.0.0.1:4012');
   assert.equal(new URLSearchParams(url.hash.slice(1)).get('crm_token'), 'jwt-local');
   assert.equal(url.searchParams.has('crm_token'), false);
+});
+
+// Produccion: portal y Constructor son un solo sitio, ofertas.ss-group.cloud.
+test('en produccion abre el Constructor en ofertas.ss-group.cloud con la sesion en el hash', () => {
+  const url = new URL(loadPortalUrlBuilder({
+    hostname: 'crmp.ss-group.cloud',
+    origin: 'https://crmp.ss-group.cloud',
+    token: 'jwt-prod',
+  }));
+
+  assert.equal(url.origin, 'https://ofertas.ss-group.cloud');
+  assert.equal(url.pathname, '/oferta-const.html');
+  assert.equal(new URLSearchParams(url.hash.slice(1)).get('crm_token'), 'jwt-prod');
+  assert.equal(url.searchParams.has('crm_token'), false, 'el token nunca va en la query: quedaria en logs del servidor');
+  assert.equal(url.searchParams.has('crm_origin'), false, 'en produccion el portal ya sabe cual es el CRM');
 });
 
 test('no abre un portal sin token CRM', () => {

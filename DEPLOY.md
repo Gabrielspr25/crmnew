@@ -17,6 +17,18 @@ Actualizado: 2026-06-29.
   - Schema `public` → data real (clients, bans, subscribers, sales_opportunities, etc.) + tablas nuevas (ver §4).
 - Puerto: `PORT` del `.env` (local 4000; en prod, detrás de nginx).
 
+### Dos sitios en producción (decisión 2026-09-10)
+
+| Sitio | Qué sirve | Carpeta del repo |
+|---|---|---|
+| `crmp.ss-group.cloud` | CRM y **toda la API** (`/api/...`) | `backend/` + `frontend/app.html` |
+| `ofertas.ss-group.cloud` | **Sitio único** del portal de ofertas **y** del Constructor (`oferta-const.html`) | `Planes para web/` (estático) |
+
+- El portal no tiene backend propio: todas sus páginas llaman a `https://crmp.ss-group.cloud/api/...`. Lo resuelve `Planes para web/portal-config.js`, que se carga primero en cada página. En local, el mismo archivo usa el propio CRM (que sirve el portal bajo `/constructor`).
+- El CRM abre el Constructor en `https://ofertas.ss-group.cloud/oferta-const.html` con la sesión en el hash (`#crm_token=...`). El portal la guarda en su dominio y la borra de la dirección.
+- La API acepta llamadas desde el portal porque el backend usa `cors()` abierto.
+- Cada vez que cambie `portal-config.js` o `constructor-publications.js`, subir el `?v=` en las páginas que los cargan: si no, los navegadores siguen usando la copia vieja en caché.
+
 ---
 
 ## 2. Requisitos en el servidor
@@ -91,8 +103,9 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 6. **Migración nueva**: correr `2026-06-29-prospectos.sql` (§4).
 7. **Carpeta de subidas**: asegurar permisos de escritura en `PLANES_UPLOAD_DIR`.
 8. **Arrancar**: `pm2 start backend/src/server.js --name ventaspro-nuevo` (o reemplazar el proceso viejo).
-9. **nginx**: apuntar el dominio al `PORT` nuevo. El portal de ofertas sigue aparte (`ofertas.ss-group.cloud`); el CRM lo enlaza.
-10. **Verificación** (§6).
+9. **nginx**: apuntar `crmp.ss-group.cloud` al `PORT` nuevo.
+10. **Portal**: subir el contenido de `Planes para web/` a la raíz de `ofertas.ss-group.cloud` (portal y Constructor en el mismo sitio). No subir `admin-equipos.html` ni `equipos.js`: son restos sin uso.
+11. **Verificación** (§6).
 
 > Frontend: **no hay build**. `app.html` se sirve estático con `Cache-Control: no-store`.
 
@@ -105,6 +118,8 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 - Cada módulo carga data real: Clientes, Asana Seg., Comisiones, Vendedores, Metas, Configuración (tabs), Importador, OCR, Admin Ofertas (Equipos + Planes), Correos, Prospección.
 - Admin Planes: subir un PDF de boletín → Analizar muestra diff → Aplicar publica (verificar `GET /api/planes-modulos/:pagina`).
 - Correos: lista clientes con email; "Abrir en Outlook" arma el correo.
+- **Portal** (`ofertas.ss-group.cloud`): cada pestaña carga datos (Planes Fijos, Claro TV, Planes Móviles, Inalámbrico/IoT, Lista de Equipos, Beneficios, Affinity). En la consola del navegador, `window.PORTAL_API_BASE` debe ser `https://crmp.ss-group.cloud` y no debe haber llamadas a `ofertas.ss-group.cloud/api`.
+- **Constructor**: botón "Constructor" del CRM y "Abrir constructor de ofertas" del perfil de un cliente abren `ofertas.ss-group.cloud/oferta-const.html`, cargan el cliente y la dirección queda sin `crm_token`.
 
 ---
 

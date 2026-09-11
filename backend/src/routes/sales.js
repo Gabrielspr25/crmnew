@@ -11,6 +11,7 @@ import {
   mapTangoCommissionSale,
   PYMES_TANGO_TYPE_NAMES,
 } from '../services/tangoCommissionSync.js';
+import { recordSubscriberChange } from '../services/subscriberHistoryService.js';
 
 export const salesRouter = Router();
 
@@ -150,48 +151,66 @@ async function saveSalesTrace(db, mapped, relation, reviewReason) {
   return result.rows[0]?.inserted ? 'created' : 'updated';
 }
 
-async function resolveSubscriber(db, mapped, relation) {
-  const bySale = await db.query(
-    `SELECT id, ban_id
-       FROM public.subscribers
-      WHERE tango_ventaid = $1
-      LIMIT 1
-      FOR UPDATE`,
-    [mapped.tangoVentaId]
-  );
-  if (bySale.rows[0] && bySale.rows[0].ban_id !== relation.banId) {
-    return { subscriberId: null, reason: 'venta_tango_asignada_a_otro_ban' };
-  }
-
+async function resolveSubscriber(db, mapped, relation, user) {
   if (!isValidSubscriberPhone(mapped.phone)) {
     return { subscriberId: null, reason: 'suscriptor_tango_invalido' };
   }
 
-  const byPhone = await db.query(
-      `SELECT id, ban_id
-         FROM public.subscribers
-       WHERE phone_norm = $1
-         OR regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') = $1
+  const byPhoneAndBan = await db.query(
+    `SELECT s.id, s.ban_id
+       FROM public.subscribers s
+      WHERE s.ban_id = $2
+        AND LOWER(COALESCE(s.status, '')) IN ('activo','activa','active','a')
+        AND (
+          s.tango_ventaid = $3
+          OR s.phone_norm = $1
+          OR regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g') = $1
+        )
+      ORDER BY CASE WHEN s.phone_norm = $1 THEN 0 ELSE 1 END, s.updated_at DESC
       LIMIT 1
       FOR UPDATE`,
-    [mapped.phone]
+    [mapped.phone, relation.banId, mapped.tangoVentaId]
   );
-  const existing = bySale.rows[0] || byPhone.rows[0] || null;
-  if (existing && existing.ban_id !== relation.banId) {
-    return { subscriberId: null, reason: 'suscriptor_asignado_a_otro_ban' };
+  const existing = byPhoneAndBan.rows[0] || null;
+
+  if (!existing) {
+    const activeElsewhere = await db.query(
+      `SELECT s.id, s.ban_id
+         FROM public.subscribers s
+        WHERE LOWER(COALESCE(s.status, '')) IN ('activo','activa','active','a')
+          AND (
+            s.tango_ventaid = $2
+            OR s.phone_norm = $1
+            OR regexp_replace(COALESCE(s.phone, ''), '\\D', '', 'g') = $1
+          )
+        LIMIT 1
+        FOR UPDATE`,
+      [mapped.phone, mapped.tangoVentaId]
+    );
+    if (activeElsewhere.rows[0]) {
+      return { subscriberId: null, reason: 'suscriptor_activo_asignado_a_otro_ban' };
+    }
   }
 
   if (existing) {
+    const before = (await db.query(`SELECT * FROM public.subscribers WHERE id = $1 FOR UPDATE`, [existing.id])).rows[0];
     await db.query(
       `UPDATE public.subscribers
-          SET tango_ventaid = COALESCE(tango_ventaid, $1),
-              price_code = COALESCE(NULLIF(price_code, ''), $2),
-              plan = COALESCE(NULLIF(plan, ''), $2),
-              monthly_value = COALESCE(monthly_value, $3),
-              line_kind = COALESCE(NULLIF(line_kind, ''), $4),
-              line_type = COALESCE(NULLIF(line_type, ''), $5),
-              activation_date = COALESCE(activation_date, $6),
-              contract_start_date = COALESCE(contract_start_date, $6),
+          SET tango_ventaid = $1,
+              price_code = COALESCE($2, NULLIF(price_code, '')),
+              plan = COALESCE($2, NULLIF(plan, '')),
+              monthly_value = COALESCE($3, monthly_value),
+              line_kind = COALESCE($4, NULLIF(line_kind, '')),
+              line_type = COALESCE($5, NULLIF(line_type, '')),
+              contract_start_date = COALESCE($6, contract_start_date),
+              equipment = COALESCE($8, equipment),
+              item_id = COALESCE($9, item_id),
+              contract_term = COALESCE($10, contract_term),
+              contract_end_date = CASE
+                WHEN $6::date IS NOT NULL AND $10::int IS NOT NULL
+                  THEN ($6::date + make_interval(months => $10::int))::date
+                ELSE contract_end_date
+              END,
               updated_at = now()
         WHERE id = $7`,
       [
@@ -202,8 +221,21 @@ async function resolveSubscriber(db, mapped, relation) {
         mapped.lineType,
         mapped.saleDate,
         existing.id,
+        mapped.equipment,
+        mapped.itemId,
+        mapped.contractTerm,
       ]
     );
+    const after = (await db.query(`SELECT * FROM public.subscribers WHERE id = $1`, [existing.id])).rows[0];
+    await recordSubscriberChange({
+      db,
+      subscriberId: existing.id,
+      before,
+      after,
+      user,
+      source: 'sistema',
+      metadata: { importer: 'Tango V2', tango_ventaid: mapped.tangoVentaId },
+    });
     return { subscriberId: existing.id, created: false, reason: null };
   }
 
@@ -225,6 +257,30 @@ async function resolveSubscriber(db, mapped, relation) {
       mapped.saleDate,
     ]
   );
+  await recordSubscriberChange({
+    db,
+    subscriberId: inserted.rows[0].id,
+    before: {},
+    after: {
+      ban_id: relation.banId,
+      phone: mapped.phone,
+      phone_norm: mapped.phone,
+      status: 'activo',
+      tango_ventaid: mapped.tangoVentaId,
+      price_code: mapped.priceCode,
+      plan: mapped.priceCode,
+      monthly_value: mapped.monthlyValue,
+      line_kind: mapped.lineKind,
+      line_type: mapped.lineType,
+      activation_date: mapped.saleDate,
+      contract_start_date: mapped.saleDate,
+    },
+    user,
+    source: 'sistema',
+    action: 'created',
+    comment: 'Registro creado desde sincronizacion Tango V2.',
+    metadata: { importer: 'Tango V2', tango_ventaid: mapped.tangoVentaId },
+  });
   return { subscriberId: inserted.rows[0].id, created: true, reason: null };
 }
 
@@ -260,7 +316,7 @@ async function saveCommissionReport(db, subscriberId, mapped, hasta) {
   );
 }
 
-async function syncOneSale(mapped, hasta, eligibility) {
+async function syncOneSale(mapped, hasta, eligibility, user) {
   const db = await pool.connect();
   try {
     await db.query('BEGIN');
@@ -272,7 +328,7 @@ async function syncOneSale(mapped, hasta, eligibility) {
     }
 
     const relation = await resolveClientAndBan(db, mapped);
-    const subscriber = await resolveSubscriber(db, mapped, relation);
+    const subscriber = await resolveSubscriber(db, mapped, relation, user);
     const reviewReason = subscriber.reason;
     const action = await saveSalesTrace(db, mapped, relation, reviewReason);
     if (!reviewReason) await saveCommissionReport(db, subscriber.subscriberId, mapped, hasta);
@@ -394,7 +450,7 @@ salesRouter.post('/sync', requireAuth, requireAdmin, async (req, res) => {
       }
       if (isClaroTv) summary.claro_tv_pymes++;
       try {
-        const result = await syncOneSale(mapped, hasta, eligibility);
+        const result = await syncOneSale(mapped, hasta, eligibility, req.user);
         if (result.action === 'created') summary.ventas_creadas++;
         else summary.ventas_actualizadas++;
         if (result.clientCreated) summary.clientes_creados++;

@@ -1,0 +1,879 @@
+{
+  "generated_at": "2026-09-04T17:57:38.850Z",
+  "workspace": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm",
+  "fuentes_consultadas": [
+    "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas",
+    "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026"
+  ],
+  "resumen": {
+    "total_fuentes": 35,
+    "por_dominio": {
+      "accesorios": 2,
+      "bono_portabilidad": 1,
+      "business_red_plus": 5,
+      "byop": 1,
+      "convergencia_benefits": 2,
+      "fijo": 3,
+      "inalambrico_iot": 2,
+      "lista_precios": 1,
+      "ofertas_financiamiento": 6,
+      "otros": 10,
+      "tabletas_modems_mifi": 2
+    },
+    "por_origen": {
+      "boletines_vigentes_dropbox": 26,
+      "archivo_newcrm": 9
+    },
+    "grupos_revision": [
+      {
+        "grupo": "boletin extension nuevo plan multilinea business red plus byop ban",
+        "archivos": [
+          {
+            "nombre": "Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260529.pdf",
+            "origen": "boletines_vigentes_dropbox",
+            "sha256": "65FBAD6C946FA4C6FD6F634D4AF1912E5108C99E4F96440BD8A4394F1697AF81",
+            "dominio_inferido": "business_red_plus",
+            "estado_archivo_newcrm": "coincide_hash_archivado"
+          },
+          {
+            "nombre": "Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260803.pdf",
+            "origen": "boletines_vigentes_dropbox",
+            "sha256": "E29A8847C0D95EE293DFFB063816B4E6E64145F6C9C1381859B318407E8BECAB",
+            "dominio_inferido": "business_red_plus",
+            "estado_archivo_newcrm": "no_archivado_por_hash"
+          }
+        ]
+      },
+      {
+        "grupo": "tabla ofertas update plus y financiamiento 27 de agosto al 16 de septiembre de pymes",
+        "archivos": [
+          {
+            "nombre": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES-rv.xlsx",
+            "origen": "boletines_vigentes_dropbox",
+            "sha256": "0969EB1C4ACD841CF23AFB18C6505A53BFE8EE179431046FFD6712A77F0E82D6",
+            "dominio_inferido": "ofertas_financiamiento",
+            "estado_archivo_newcrm": "no_archivado_por_hash"
+          },
+          {
+            "nombre": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx",
+            "origen": "boletines_vigentes_dropbox",
+            "sha256": "BC46975EE50C0A33AA1A7474422001F8947DB5F8D7ECD9DB550D18881BEC48B0",
+            "dominio_inferido": "ofertas_financiamiento",
+            "estado_archivo_newcrm": "no_archivado_por_hash"
+          }
+        ]
+      }
+    ]
+  },
+  "fuentes": [
+    {
+      "nombre": "Boletín Oferta de accesorios de Motorola - 1 al 31 de agosto de 2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletín Oferta de accesorios de Motorola - 1 al 31 de agosto de 2026.pdf",
+      "ruta_relativa_origen": "Boletín Oferta de accesorios de Motorola - 1 al 31 de agosto de 2026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "5E5C15B7CCF573872206902E92055F578814C169E231953CFEE4E1B79499A6F7",
+      "bytes": 1497213,
+      "modificado": "2026-08-05T20:53:33.000Z",
+      "dominio_inferido": "accesorios",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin oferta de accesorios de motorola de agosto de",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletín regulares de accesorios-  27 de agosto al 16 de septiembre de 2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletín regulares de accesorios-  27 de agosto al 16 de septiembre de 2026.pdf",
+      "ruta_relativa_origen": "Boletín regulares de accesorios-  27 de agosto al 16 de septiembre de 2026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "0E2A1F007CD814921BDFAADF92B5C472A5A795EB32D9FB2A86D51C4080433511",
+      "bytes": 1053522,
+      "modificado": "2026-08-27T16:21:16.000Z",
+      "dominio_inferido": "accesorios",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "27 de agosto al 16 de septiembre de 2026"
+      },
+      "grupo_revision": "boletin regulares de accesorios 27 de agosto al 16 de septiembre de",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletín Extensión Oferta Limitada Nuevos Bonos de Portabilidad Móvil hasta $500 PYMES- 260803.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletín Extensión Oferta Limitada Nuevos Bonos de Portabilidad Móvil hasta $500 PYMES- 260803.pdf",
+      "ruta_relativa_origen": "Boletín Extensión Oferta Limitada Nuevos Bonos de Portabilidad Móvil hasta $500 PYMES- 260803.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "3E79747EF29D7E5990E70F245CF7F621E3C560CF7B611DF352D34B6070E9F8B2",
+      "bytes": 482056,
+      "modificado": "2026-08-04T15:05:08.000Z",
+      "dominio_inferido": "bono_portabilidad",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin extension oferta limitada nuevos bonos de portabilidad movil hasta 500 pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260529.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\PLANES MOVILES VIGENTES\\Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260529.pdf",
+      "ruta_relativa_origen": "PLANES MOVILES VIGENTES\\Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260529.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "65FBAD6C946FA4C6FD6F634D4AF1912E5108C99E4F96440BD8A4394F1697AF81",
+      "bytes": 631640,
+      "modificado": "2026-06-01T13:48:59.000Z",
+      "dominio_inferido": "business_red_plus",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin extension nuevo plan multilinea business red plus byop ban",
+      "estado_archivo_newcrm": "coincide_hash_archivado",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\byop\\2026-07-25--Boletin-Extension-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN-260529.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260803.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\PLANES MOVILES VIGENTES\\Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260803.pdf",
+      "ruta_relativa_origen": "PLANES MOVILES VIGENTES\\Boletin Extensión Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-260803.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "E29A8847C0D95EE293DFFB063816B4E6E64145F6C9C1381859B318407E8BECAB",
+      "bytes": 734482,
+      "modificado": "2026-08-04T15:05:15.000Z",
+      "dominio_inferido": "business_red_plus",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin extension nuevo plan multilinea business red plus byop ban",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-17 marzo de 2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-17 marzo de 2026.pdf",
+      "ruta_relativa_origen": "Boletin Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-17 marzo de 2026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "622BE7555054932C95A2F9B20A9C7A657FA291CBECA1C47373332B0434DA0769",
+      "bytes": 562095,
+      "modificado": "2026-03-17T15:01:22.000Z",
+      "dominio_inferido": "business_red_plus",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin nuevo plan multilinea business red plus byop ban 17 marzo de",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "ruta_relativa_origen": "Boletin Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "42C17492F7398FE1A2C09374364C9C67050B7A08CD7DF216E0FE53676BCF6DFA",
+      "bytes": 1244521,
+      "modificado": "2025-08-12T19:50:28.000Z",
+      "dominio_inferido": "business_red_plus",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin nuevos planes multilineas business red pymes sub",
+      "estado_archivo_newcrm": "coincide_hash_archivado",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\planes-multilinea\\2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\PLANES MOVILES VIGENTES\\Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "ruta_relativa_origen": "PLANES MOVILES VIGENTES\\Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "42C17492F7398FE1A2C09374364C9C67050B7A08CD7DF216E0FE53676BCF6DFA",
+      "bytes": 1244521,
+      "modificado": "2025-08-12T19:50:28.000Z",
+      "dominio_inferido": "business_red_plus",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "nuevos planes multilineas business red pymes sub",
+      "estado_archivo_newcrm": "coincide_hash_archivado",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\planes-multilinea\\2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Boletin-Extension-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN-260529.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\movil\\byop\\2026-07-25--Boletin-Extension-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN-260529.pdf",
+      "ruta_relativa_origen": "movil\\byop\\2026-07-25--Boletin-Extension-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN-260529.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "65FBAD6C946FA4C6FD6F634D4AF1912E5108C99E4F96440BD8A4394F1697AF81",
+      "bytes": 631640,
+      "modificado": "2026-06-01T13:48:59.000Z",
+      "dominio_inferido": "byop",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 boletin extension nuevo plan multilinea business red plus byop ban",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\byop\\2026-07-25--Boletin-Extension-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN-260529.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Boletin-Beneficios-Convergencia-Claro-Full-PYMES-23JUL2026-260713.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\convergencia\\2026-07-25--Boletin-Beneficios-Convergencia-Claro-Full-PYMES-23JUL2026-260713.pdf",
+      "ruta_relativa_origen": "convergencia\\2026-07-25--Boletin-Beneficios-Convergencia-Claro-Full-PYMES-23JUL2026-260713.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "E50A2FB7F1D40E45ACB93CA312B44ED8EFD67CF556796C44F529723938C4C9EB",
+      "bytes": 2087088,
+      "modificado": "2026-07-23T18:02:53.000Z",
+      "dominio_inferido": "convergencia_benefits",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 boletin beneficios convergencia claro full pymes 23jul2026",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\convergencia\\2026-07-25--Boletin-Beneficios-Convergencia-Claro-Full-PYMES-23JUL2026-260713.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Beneficios Convergencia Claro Full PYMES @23.JUL.2026 (16)-260713.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\FIJO\\Boletin Beneficios Convergencia Claro Full PYMES @23.JUL.2026 (16)-260713.pdf",
+      "ruta_relativa_origen": "FIJO\\Boletin Beneficios Convergencia Claro Full PYMES @23.JUL.2026 (16)-260713.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "E50A2FB7F1D40E45ACB93CA312B44ED8EFD67CF556796C44F529723938C4C9EB",
+      "bytes": 2087088,
+      "modificado": "2026-07-22T23:25:00.000Z",
+      "dominio_inferido": "convergencia_benefits",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin beneficios convergencia claro full pymes 23 jul 16",
+      "estado_archivo_newcrm": "coincide_hash_archivado",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\convergencia\\2026-07-25--Boletin-Beneficios-Convergencia-Claro-Full-PYMES-23JUL2026-260713.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "BOLETIN PLANES NEGOCIOS 23JUN@20SEPT'26-260623.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\FIJO\\BOLETIN PLANES NEGOCIOS 23JUN@20SEPT'26-260623.pdf",
+      "ruta_relativa_origen": "FIJO\\BOLETIN PLANES NEGOCIOS 23JUN@20SEPT'26-260623.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "BA29307B2AACA72DFC40728D090ADEEEF3A0EB085D9BC14223E07288FC2C910F",
+      "bytes": 2830660,
+      "modificado": "2026-06-24T13:19:28.000Z",
+      "dominio_inferido": "fijo",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "23jun@20sept'26"
+      },
+      "grupo_revision": "boletin planes negocios 23jun 20sept 26",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "IPMPLS JULIO 2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\FIJO\\IPMPLS JULIO 2026.pdf",
+      "ruta_relativa_origen": "FIJO\\IPMPLS JULIO 2026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "44E4498A3C1BB744BE960056D6D9A22510D3E3443787E594F36AD1A166132B75",
+      "bytes": 5537803,
+      "modificado": "2026-07-31T13:49:26.000Z",
+      "dominio_inferido": "fijo",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "ipmpls julio",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "LISTADO ESTRUCTURA PLANES PYMESNEGOCIOS TODOS @2026(15)-260330.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\FIJO\\LISTADO ESTRUCTURA PLANES PYMESNEGOCIOS TODOS @2026(15)-260330.pdf",
+      "ruta_relativa_origen": "FIJO\\LISTADO ESTRUCTURA PLANES PYMESNEGOCIOS TODOS @2026(15)-260330.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "771F75CEF8C801831339E922586F6CF4CB2B4E9B62578E27B53C7622D7E7DBE0",
+      "bytes": 448421,
+      "modificado": "2026-08-02T19:49:55.000Z",
+      "dominio_inferido": "fijo",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "listado estructura planes pymesnegocios todos 15",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Boletin-INT-Go-Claro-Oficina-IoT-1al30junio2026-CORP.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\inalambrico-iot\\2026-07-25--Boletin-INT-Go-Claro-Oficina-IoT-1al30junio2026-CORP.pdf",
+      "ruta_relativa_origen": "inalambrico-iot\\2026-07-25--Boletin-INT-Go-Claro-Oficina-IoT-1al30junio2026-CORP.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "9BC7EC97EB1C6B16F33CCD0B6245C5A37D0F07FBC2304979C38A153B791AAAF7",
+      "bytes": 1445483,
+      "modificado": "2026-05-27T18:46:00.000Z",
+      "dominio_inferido": "inalambrico_iot",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "1al30junio2026"
+      },
+      "grupo_revision": "07 25 boletin int go claro oficina iot 1al30junio2026 corp",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\inalambrico-iot\\2026-07-25--Boletin-INT-Go-Claro-Oficina-IoT-1al30junio2026-CORP.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf",
+      "ruta_relativa_origen": "Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "C302B8EB28036D2B877C907230C887BAB541F5A3A208C633CDEC8D00EA04E076",
+      "bytes": 1487844,
+      "modificado": "2026-09-02T14:29:18.209Z",
+      "dominio_inferido": "inalambrico_iot",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "1al30sept2026"
+      },
+      "grupo_revision": "boletin int go claro oficina y iot 1al30sept2026 corp",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Lista de Precios 3 de septiembre al 28 de octubre de 2026-PYM-CORP.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Lista de Precios 3 de septiembre al 28 de octubre de 2026-PYM-CORP.xlsx",
+      "ruta_relativa_origen": "Lista de Precios 3 de septiembre al 28 de octubre de 2026-PYM-CORP.xlsx",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".xlsx",
+      "sha256": "7292BE168C2134EEFCACE773FE4C34EF62EF5FA4CCCDFD4C2BDB9EF705987538",
+      "bytes": 113617,
+      "modificado": "2026-09-04T13:48:10.000Z",
+      "dominio_inferido": "lista_precios",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "3 de septiembre al 28 de octubre de 2026"
+      },
+      "grupo_revision": "lista de precios 3 de septiembre al 28 de octubre de pym corp",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [
+        "Ofertas Tablets y Modems",
+        "Finan Equipos Móvil",
+        "Finan Modems- Tablets-Routers",
+        "Planes familiares FAM09A y R",
+        "Planes Fam Otros LOC10A y R",
+        "Precios modems, tablets, HP",
+        "Accesorios"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Tabla-Ofertas-Financiamiento-23al29julio-2026-CORPORATIVO.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\movil\\ofertas-financiamiento\\2026-07-25--Tabla-Ofertas-Financiamiento-23al29julio-2026-CORPORATIVO.xlsx",
+      "ruta_relativa_origen": "movil\\ofertas-financiamiento\\2026-07-25--Tabla-Ofertas-Financiamiento-23al29julio-2026-CORPORATIVO.xlsx",
+      "origen": "archivo_newcrm",
+      "extension": ".xlsx",
+      "sha256": "E47EE2C01CB09F34EAAD66E106D7BE9834E8ADC20B579D877B6C398E2F6FE68F",
+      "bytes": 442152,
+      "modificado": "2026-07-23T18:02:45.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 tabla ofertas financiamiento 23al29julio corporativo",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\ofertas-financiamiento\\2026-07-25--Tabla-Ofertas-Financiamiento-23al29julio-2026-CORPORATIVO.xlsx"
+      ],
+      "hojas_excel": [
+        "Ofertas con desc plan $35-$85",
+        "Ofertas Equipos en Portafolio",
+        "Ofertas Equipos en Li",
+        "Ofertas Planes y Bonos",
+        "Planes de Lista",
+        "PLANES PROMOCIONALES"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-09-01--Ofertas-Update-Plus-Financiamiento-27ago-16sept-2026.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\movil\\ofertas-financiamiento\\2026-09-01--Ofertas-Update-Plus-Financiamiento-27ago-16sept-2026.xlsx",
+      "ruta_relativa_origen": "movil\\ofertas-financiamiento\\2026-09-01--Ofertas-Update-Plus-Financiamiento-27ago-16sept-2026.xlsx",
+      "origen": "archivo_newcrm",
+      "extension": ".xlsx",
+      "sha256": "33332298704723F3A3D859E70798371CC0A4D42B64ED90F2C212401DBF9E1091",
+      "bytes": 212590,
+      "modificado": "2026-08-27T17:31:53.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "09 01 ofertas update plus financiamiento 27ago 16sept",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\ofertas-financiamiento\\2026-09-01--Ofertas-Update-Plus-Financiamiento-27ago-16sept-2026.xlsx"
+      ],
+      "hojas_excel": [
+        "Ofertas con desc plan $35-$85",
+        "NUEVO Ofer desc plan $50 a $80 ",
+        "Ofertas Red Plus",
+        "Ofertas Equipos en Portafolio ",
+        "Ofertas Equipos en Liquidación",
+        "Ofertas Botaderos- Nuevos",
+        "Ofertas Botaderos- Refurbished",
+        "PLANES UPDATE"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Nuevas Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026-PYM-Corp-rv.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin Nuevas Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026-PYM-Corp-rv.pdf",
+      "ruta_relativa_origen": "Boletin Nuevas Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026-PYM-Corp-rv.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "88B88916EE73034F14AA82B8B202A5B74D98B04442F7EC07674FFADF7B18424A",
+      "bytes": 803676,
+      "modificado": "2026-09-01T00:24:24.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "27 de agosto al 16 de septiembre de 2026"
+      },
+      "grupo_revision": "boletin nuevas ofertas update plus y financiamiento 27 de agosto al 16 de septiembre de pym corp",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf",
+      "ruta_relativa_origen": "Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "4DEDB16B1CE149CB0EC785ADED4E75FBA871B2DE805745AB9B145AC580641042",
+      "bytes": 1266152,
+      "modificado": "2026-06-22T16:04:23.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin planes vigentes update plus y financiamiento pym corp",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES-rv.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES-rv.xlsx",
+      "ruta_relativa_origen": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES-rv.xlsx",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".xlsx",
+      "sha256": "0969EB1C4ACD841CF23AFB18C6505A53BFE8EE179431046FFD6712A77F0E82D6",
+      "bytes": 596958,
+      "modificado": "2026-09-01T00:24:18.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "27 de agosto al 16 de septiembre de 2026"
+      },
+      "grupo_revision": "tabla ofertas update plus y financiamiento 27 de agosto al 16 de septiembre de pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [
+        "Ofertas con desc plan $35-$85",
+        "Ofertas Business Red Plus",
+        "Ofertas Equipos en Portafolio",
+        "Ofertas Equipos en Li",
+        "Ofertas Planes y Bonos",
+        "Planes de Lista",
+        "PLANES PROMOCIONALES"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx",
+      "ruta_relativa_origen": "Tabla Ofertas Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026- PYMES.xlsx",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".xlsx",
+      "sha256": "BC46975EE50C0A33AA1A7474422001F8947DB5F8D7ECD9DB550D18881BEC48B0",
+      "bytes": 594639,
+      "modificado": "2026-08-27T16:21:08.000Z",
+      "dominio_inferido": "ofertas_financiamiento",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "27 de agosto al 16 de septiembre de 2026"
+      },
+      "grupo_revision": "tabla ofertas update plus y financiamiento 27 de agosto al 16 de septiembre de pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [
+        "Ofertas con desc plan $35-$85",
+        "Ofertas Business Red Plus",
+        "Ofertas Equipos en Portafolio",
+        "Ofertas Equipos en Li",
+        "Ofertas Planes y Bonos",
+        "Planes de Lista",
+        "PLANES PROMOCIONALES"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\movil\\planes-multilinea\\2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf",
+      "ruta_relativa_origen": "movil\\planes-multilinea\\2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "42C17492F7398FE1A2C09374364C9C67050B7A08CD7DF216E0FE53676BCF6DFA",
+      "bytes": 1244521,
+      "modificado": "2025-08-12T19:50:28.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 boletin nuevos planes multilineas business red pymes sub",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\planes-multilinea\\2026-07-25--Boletin-Nuevos-Planes-Multilineas-Business-Red-PYMES-SUB-240802-rv.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--Lista-de-Precios-28mayo-31julio-2026-PYM-CORP.xlsx",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\equipos\\listas-precios\\2026-07-25--Lista-de-Precios-28mayo-31julio-2026-PYM-CORP.xlsx",
+      "ruta_relativa_origen": "equipos\\listas-precios\\2026-07-25--Lista-de-Precios-28mayo-31julio-2026-PYM-CORP.xlsx",
+      "origen": "archivo_newcrm",
+      "extension": ".xlsx",
+      "sha256": "F212C79E423E49952557B13CF744858CECFB8EB13D2EAEB7E7907F591D2B76C8",
+      "bytes": 111863,
+      "modificado": "2026-07-19T02:04:03.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 lista de precios 28mayo 31julio pym corp",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\equipos\\listas-precios\\2026-07-25--Lista-de-Precios-28mayo-31julio-2026-PYM-CORP.xlsx"
+      ],
+      "hojas_excel": [
+        "Ofertas Tablets y Modems",
+        "Finan Equipos Móvil",
+        "Finan Modems- Tablets-Routers",
+        "Planes familiares FAM09A y R",
+        "Planes Fam Otros LOC10A y R",
+        "Precios modems, tablets, HP",
+        "Accesorios"
+      ],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-25--LISTADO-ESTRUCTURA-PLANES-PYMESNEGOCIOS-TODOS-2026-15-260330.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\fijo\\estructura-planes\\2026-07-25--LISTADO-ESTRUCTURA-PLANES-PYMESNEGOCIOS-TODOS-2026-15-260330.pdf",
+      "ruta_relativa_origen": "fijo\\estructura-planes\\2026-07-25--LISTADO-ESTRUCTURA-PLANES-PYMESNEGOCIOS-TODOS-2026-15-260330.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "1253AFDDAB051440C06A1EAE160D700178182DCC5930A87DCDCD3027DA59E236",
+      "bytes": 381117,
+      "modificado": "2026-06-10T14:53:56.290Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 25 listado estructura planes pymesnegocios todos 15",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\fijo\\estructura-planes\\2026-07-25--LISTADO-ESTRUCTURA-PLANES-PYMESNEGOCIOS-TODOS-2026-15-260330.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletín Lanzamiento Motorola Razr Fold 20 de agosto de 2026 en adelante- PYMES.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletín Lanzamiento Motorola Razr Fold 20 de agosto de 2026 en adelante- PYMES.pdf",
+      "ruta_relativa_origen": "Boletín Lanzamiento Motorola Razr Fold 20 de agosto de 2026 en adelante- PYMES.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "B183501520ADFAC61D018BE480623AE61B44331DA691F6E3380AB22DE53B70D1",
+      "bytes": 1990744,
+      "modificado": "2026-08-20T16:31:53.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "20 de agosto de 2026 en adelante"
+      },
+      "grupo_revision": "boletin lanzamiento motorola razr fold 20 de agosto de en adelante pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletin Preventa Samsung Z Flip8, Z Fold 8, Z Fold 8 Ultra-22 de julio al 6 de agosto de 2026-rv 08042026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletin Preventa Samsung Z Flip8, Z Fold 8, Z Fold 8 Ultra-22 de julio al 6 de agosto de 2026-rv 08042026.pdf",
+      "ruta_relativa_origen": "Boletin Preventa Samsung Z Flip8, Z Fold 8, Z Fold 8 Ultra-22 de julio al 6 de agosto de 2026-rv 08042026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "E301E9FF881723C8829F8709C9FF5031DDCDA96FE5AEA16AE8B8D31CDD73542D",
+      "bytes": 1458459,
+      "modificado": "2026-08-05T20:53:39.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "detectada_nombre_archivo",
+        "texto": "22 de julio al 6 de agosto de 2026"
+      },
+      "grupo_revision": "boletin preventa samsung z flip8 z fold 8 z fold 8 ultra 22 de julio al 6 de agosto de",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "BOLETIN_INICIATIVAS_PYMES_-_$0_DEP+AUTOPAY_DE_14NOV@31DIC_2025-251113[1].pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\BOLETIN_INICIATIVAS_PYMES_-_$0_DEP+AUTOPAY_DE_14NOV@31DIC_2025-251113[1].pdf",
+      "ruta_relativa_origen": "BOLETIN_INICIATIVAS_PYMES_-_$0_DEP+AUTOPAY_DE_14NOV@31DIC_2025-251113[1].pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "83B837367D9EDE99AE04AD34D288386D892AF8A17DF0D5817D683D349135C656",
+      "bytes": 599652,
+      "modificado": "2025-11-15T15:27:48.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin iniciativas pymes 0 dep autopay de 14nov 31dic 2025 1",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "guia productos pymes.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\guia productos pymes.pdf",
+      "ruta_relativa_origen": "guia productos pymes.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "E420D385470025BCF3AC34146E7B41776D75FBDE2C6A99FD8CDAA0FD43DFF3D2",
+      "bytes": 2003894,
+      "modificado": "2025-09-03T15:03:51.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "guia productos pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Guia.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\PROCESOS\\Guia.pdf",
+      "ruta_relativa_origen": "PROCESOS\\Guia.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "DD1E61708C758F19A4297ABD69F257A55DCA5253E8208D7B775D8179415F4515",
+      "bytes": 911759,
+      "modificado": "2026-01-16T16:27:34.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "guia",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "MSV ENO-2026-120 TRASPASO  DE SERVICIO EN CUENTAS PYMES.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\MSV ENO-2026-120 TRASPASO  DE SERVICIO EN CUENTAS PYMES.pdf",
+      "ruta_relativa_origen": "MSV ENO-2026-120 TRASPASO  DE SERVICIO EN CUENTAS PYMES.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "0319AA1A4773FD8A0AF9BA83DCC58925C7FA9FA4C56925AF50132BD73459D902",
+      "bytes": 643845,
+      "modificado": "2026-08-28T14:15:47.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "msv eno 120 traspaso de servicio en cuentas pymes",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "PROCESO MOVIL PYMES DIC 22 2025.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\PROCESOS\\PROCESO MOVIL PYMES DIC 22 2025.pdf",
+      "ruta_relativa_origen": "PROCESOS\\PROCESO MOVIL PYMES DIC 22 2025.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "30BFD35D5A7098D712BD70390B49376E513FD819425CE9ABA93D83762E0FA0B5",
+      "bytes": 3550439,
+      "modificado": "2026-01-16T18:45:46.000Z",
+      "dominio_inferido": "otros",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "proceso movil pymes dic 22",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "2026-07-26--Boletin-Oferta-Descuentos-Modems-MIFI-Tablets-23julio2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Documentos\\Programas\\newcrm\\documentos-ofertas\\movil\\ofertas-financiamiento\\modems-tablets\\2026-07-26--Boletin-Oferta-Descuentos-Modems-MIFI-Tablets-23julio2026.pdf",
+      "ruta_relativa_origen": "movil\\ofertas-financiamiento\\modems-tablets\\2026-07-26--Boletin-Oferta-Descuentos-Modems-MIFI-Tablets-23julio2026.pdf",
+      "origen": "archivo_newcrm",
+      "extension": ".pdf",
+      "sha256": "BDCD529BC1F2ABD8D71D0DCDA23F5142F67480249E00EF3451DEE1CDD61DECF5",
+      "bytes": 589212,
+      "modificado": "2026-07-23T18:02:28.000Z",
+      "dominio_inferido": "tabletas_modems_mifi",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "07 26 boletin oferta descuentos modems mifi tablets 23julio2026",
+      "estado_archivo_newcrm": "archivado_en_newcrm",
+      "coincidencias_archivo_newcrm": [
+        "documentos-ofertas\\movil\\ofertas-financiamiento\\modems-tablets\\2026-07-26--Boletin-Oferta-Descuentos-Modems-MIFI-Tablets-23julio2026.pdf"
+      ],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    },
+    {
+      "nombre": "Boletín Oferta Descuentos Modems, MIFI y Tablets planes multilíneas Update Plus y Financiamiento 23 de julio de 2026.pdf",
+      "ruta": "C:\\Users\\Gabriel\\Dropbox\\Boletines Vigentes PYMES\\27 AL 16 DE SEPTIEMBRE 2026\\Boletín Oferta Descuentos Modems, MIFI y Tablets planes multilíneas Update Plus y Financiamiento 23 de julio de 2026.pdf",
+      "ruta_relativa_origen": "Boletín Oferta Descuentos Modems, MIFI y Tablets planes multilíneas Update Plus y Financiamiento 23 de julio de 2026.pdf",
+      "origen": "boletines_vigentes_dropbox",
+      "extension": ".pdf",
+      "sha256": "FECA6EBCD95E93FBC19F35959D7699784335151B3A86702FE1E5AC325CE5553D",
+      "bytes": 719426,
+      "modificado": "2026-09-02T14:32:05.826Z",
+      "dominio_inferido": "tabletas_modems_mifi",
+      "vigencia_inferida": {
+        "estado": "requiere_revision",
+        "texto": null
+      },
+      "grupo_revision": "boletin oferta descuentos modems mifi y tablets planes multilineas update plus y financiamiento 23 de julio de",
+      "estado_archivo_newcrm": "no_archivado_por_hash",
+      "coincidencias_archivo_newcrm": [],
+      "hojas_excel": [],
+      "estado_publicacion": "no_determinado_por_inventario",
+      "siguiente_accion": "preview_diff_publicacion_local_si_corresponde"
+    }
+  ]
+}

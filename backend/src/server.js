@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { login, requireAuth, devLogin } from './auth.js';
+import { login, requireAuth, requireAdmin, devLogin } from './auth.js';
 import { salesRouter } from './routes/sales.js';
 import { clientsRouter } from './routes/clients.js';
 import { linesRouter } from './routes/lines.js';
@@ -27,7 +27,15 @@ import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
 import { directorioOperacionesRouter } from './routes/directorioOperacionesRoutes.js';
 import { reportsAiRouter } from './routes/reportsAiRoutes.js';
+import { subscriberHistoryRouter } from './routes/subscriberHistoryRoutes.js';
 
+
+// Una consulta que falla dentro de una ruta async no debe tumbar el CRM entero:
+// antes, un error de SQL en una sola pantalla mataba el proceso y todo dejaba de responder.
+// Queda registrado en el log para poder corregirlo, pero el servidor sigue en pie.
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', (err && err.message) || err);
+});
 
 const app = express();
 app.set('trust proxy', 1);
@@ -87,6 +95,7 @@ app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
 app.use('/api', directorioOperacionesRouter); // Directorio Operaciones Clientes Masivos
 app.use('/api', reportsAiRouter);             // Reportes inteligentes de solo lectura
+app.use('/api', subscriberHistoryRouter);      // Historial/bitacora por suscriptor
 
 
 const PORT = process.env.PORT || 4000;

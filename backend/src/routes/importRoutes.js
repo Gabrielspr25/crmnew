@@ -7,6 +7,7 @@ import { logAudit } from './misc.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
 import { resolvePlanMonthlyValueFromCatalog } from '../services/planRateCatalog.js';
 import { normalizeImportedSubscriber } from '../services/subscriberClassification.js';
+import { recordSubscriberChange } from '../services/subscriberHistoryService.js';
 
 export const importRouter = Router();
 const dig = (s) => String(s || '').replace(/\D/g, '');
@@ -214,6 +215,9 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
     bans_estado_recalculado: 0, omitidas: 0,
     detalles: [], errores: [],
   };
+  const importBatchId = String(req.body?.batch_id || req.body?.batchId || `import-${Date.now()}`);
+  const importFilename = txt(req.body?.filename) || txt(req.body?.file_name) || txt(req.body?.import_filename);
+  const importName = txt(req.body?.import_name) || 'Importador CRM';
   const bansTocados = new Set(); // para recalcular estado del BAN según sus líneas al final
   const c = await pool.connect();
   try {
@@ -356,7 +360,9 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
           const sf = await c.query(`SELECT s.*, b.ban_number AS ban_actual
               FROM public.subscribers s
               LEFT JOIN public.bans b ON b.id = s.ban_id
-             WHERE s.phone=$1 LIMIT 1`, [subPhone]);
+             WHERE s.phone=$1
+             LIMIT 1
+             FOR UPDATE OF s`, [subPhone]);
           if (sf.rows[0]) {
                 const desired = await fillMissingMonthlyValueFromCatalog(r, subscriberValuesFromRow(r), sf.rows[0]);
             if (subStatus) desired.status = subStatus;
@@ -375,7 +381,19 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             }
             if (sets.length) {
               vals.push(sf.rows[0].id);
-              await c.query(`UPDATE public.subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length}`, vals);
+              const updated = await c.query(`UPDATE public.subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
+              await recordSubscriberChange({
+                db: c,
+                subscriberId: sf.rows[0].id,
+                before: sf.rows[0],
+                after: updated.rows[0],
+                user: req.user,
+                source: 'importador',
+                metadata: { row: i + 1, ban, subscriber: subPhone, importer: importName },
+                importBatchId,
+                importName,
+                importFilename,
+              });
               out.subs_actualizados++;
               detalleSuscriptor = { fila: i + 1, BAN: ban || null, suscriptor: subPhone, accion: changes.some(change => change.campo === 'BAN') ? 'reasignado_BAN' : 'actualizado', cambios: changes.map(change => ({ entidad: 'suscriptor', ...change })) };
             } else out.sin_cambios++;
@@ -383,7 +401,21 @@ importRouter.post('/import/apply', requireAuth, async (req, res) => {
             const cols = ['ban_id', 'phone', 'status'], vals = [banId, subPhone, subStatus || 'activo'];
                 const desired = await fillMissingMonthlyValueFromCatalog(r, subscriberValuesFromRow(r));
             for (const [column, value] of Object.entries(desired)) { cols.push(column); vals.push(value); }
-            await c.query(`INSERT INTO public.subscribers (${cols.join(',')}) VALUES (${cols.map((_, j) => '$' + (j + 1)).join(',')})`, vals);
+            const inserted = await c.query(`INSERT INTO public.subscribers (${cols.join(',')}) VALUES (${cols.map((_, j) => '$' + (j + 1)).join(',')}) RETURNING *`, vals);
+            await recordSubscriberChange({
+              db: c,
+              subscriberId: inserted.rows[0].id,
+              before: {},
+              after: inserted.rows[0],
+              user: req.user,
+              source: 'importador',
+              action: 'created',
+              comment: 'Registro creado desde importacion inicial.',
+              metadata: { row: i + 1, ban, subscriber: subPhone, importer: importName },
+              importBatchId,
+              importName,
+              importFilename,
+            });
             out.subs_creados++;
             detalleSuscriptor = {
               fila: i + 1, BAN: ban || null, suscriptor: subPhone, accion: 'creado',
@@ -462,8 +494,35 @@ importRouter.post('/import/bajas', requireAuth, async (req, res) => {
   const c = await pool.connect();
   try {
     await c.query('BEGIN');
+    const beforeSubscribers = (await c.query(
+      `SELECT *
+         FROM public.subscribers
+        WHERE status IS DISTINCT FROM 'cancelado'
+          AND NOT (phone = ANY($1))
+        FOR UPDATE`,
+      [phones],
+    )).rows;
     const rs = await c.query(`UPDATE public.subscribers SET status = 'cancelado', updated_at = now()
-      WHERE status IS DISTINCT FROM 'cancelado' AND NOT (phone = ANY($1))`, [phones]);
+      WHERE status IS DISTINCT FROM 'cancelado' AND NOT (phone = ANY($1))
+      RETURNING *`, [phones]);
+    const afterById = new Map(rs.rows.map(row => [String(row.id), row]));
+    const importBatchId = String(req.body?.batch_id || req.body?.batchId || `import-bajas-${Date.now()}`);
+    for (const before of beforeSubscribers) {
+      const after = afterById.get(String(before.id));
+      if (!after) continue;
+      await recordSubscriberChange({
+        db: c,
+        subscriberId: before.id,
+        before,
+        after,
+        user: req.user,
+        source: 'importador',
+        metadata: { importer: 'Importador CRM', action: 'bajas', archivo_telefonos: phones.length, archivo_bans: bans.length },
+        importBatchId,
+        importName: 'Importador CRM',
+        importFilename: txt(req.body?.filename) || txt(req.body?.file_name) || txt(req.body?.import_filename),
+      });
+    }
     const rb = await c.query(`UPDATE public.bans SET status = 'C', updated_at = now()
       WHERE status IS DISTINCT FROM 'C' AND NOT (ban_number = ANY($1))`, [bans]);
     await c.query('COMMIT');

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Constructor de Ofertas (PYMES 9-22 jun)</title>
+<script src="portal-config.js?v=2026091001"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
@@ -178,6 +179,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Equipos</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
   <a href="oferta-const.html">Oferta const.</a>
   <a href="ofertas.html" class="active">Ofertas</a>
 </nav>
@@ -292,7 +295,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   </div>
 </div>
 
-<script src="constructor-publications.js?v=2026082301"></script>
+<script src="constructor-publications.js?v=2026091001"></script>
 <script src="ofertas-logic.js?v=2026082301"></script>
 <script>
 window.OFERTAS_DATA = [];
@@ -655,7 +658,7 @@ function renderWizardBody(){
       <div class="helper-note">Si repites el mismo modelo con la misma oferta, el sistema lo agrupa en una sola fila.</div>`;
   } else if(step.id === 'firmas'){
     html = `
-      <div class="helper-note">Benefits, seguros, impuestos y condiciones adicionales se incorporan solo desde una publicación oficial.</div>
+      <div class="helper-note">Beneficios, seguros, impuestos y condiciones adicionales se incorporan solo desde una publicación oficial.</div>
       <div class="form-grid">
         ${field('Firma vendedor', 'firma_vendedor', proposal.firma_vendedor)}
         ${field('Cargo vendedor', 'cargo_vendedor', proposal.cargo_vendedor)}
@@ -756,7 +759,7 @@ function renderProposalPreview(){
         </tbody>
       </table>
 
-      <section class="proposal-notes-box">Benefits, seguros, impuestos y condiciones adicionales: pendientes de publicación oficial.</section>
+      <section class="proposal-notes-box">Beneficios, seguros, impuestos y condiciones adicionales: pendientes de publicación oficial.</section>
     </article>
 
     <article class="proposal-page page-two">

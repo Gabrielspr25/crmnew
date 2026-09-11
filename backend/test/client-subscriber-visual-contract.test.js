@@ -8,7 +8,7 @@ test('las lineas del perfil separan telefono, servicio y flujo de acciones', () 
   assert.match(appSource, /\.subscriber-phone\{/);
   assert.match(appSource, /\.subscriber-service\{/);
   assert.match(appSource, /\.subscriber-workflow\{/);
-  assert.match(appSource, /class="subscriber-phone">\$\{esc\(s\.phone\|\|'\u2014'\)\}<\/span>/);
+  assert.match(appSource, /class="subscriber-phone">\$\{fmtPhone\(s\.phone\)\|\|'\u2014'\}<\/span>/);
   assert.match(appSource, /class="subscriber-service(?: subscriber-badges)?">/);
   assert.match(appSource, /class="subscriber-workflow">/);
 });
@@ -28,14 +28,14 @@ test('la fila muestra fecha fin en una sola linea y no repite inicio', () => {
 
 test('el modal del cliente usa una sola banda horizontal por suscriptor', () => {
   assert.match(appSource, /id="cliModal" style="max-width:1540px;width:99vw"/);
-  assert.match(appSource, /\.subscriber-row\{display:grid;grid-template-columns:100px 78px 112px 90px 88px 88px 60px 50px minmax\(450px,1fr\);/);
+  assert.match(appSource, /\.subscriber-row\{display:grid;grid-template-columns:120px 78px 122px 92px 88px 88px 60px 50px minmax\(450px,1fr\);/);
   assert.match(appSource, /<div class="subscriber-row \$\{isCanceled\?'line-canceled':'line-active'\}">/);
-  assert.match(appSource, /<div class="subscriber-workflow">\$\{workflow\}<div class="subscriber-actions">/);
+  assert.match(appSource, /<div class="subscriber-workflow"><div class="subscriber-note">\$\{lastNote\}<\/div>\$\{workflow\}<div class="subscriber-actions">/);
 });
 
 test('las acciones quedan dentro del scroll interno y no fuera del modal', () => {
   assert.match(appSource, /\.subscriber-table\{display:flex;flex-direction:column;gap:6px;overflow-x:auto;/);
-  assert.match(appSource, /@media\(max-width:1500px\)\{\.subscriber-row\{grid-template-columns:96px 76px 108px 86px 84px 84px 58px 48px minmax\(438px,1fr\);min-width:1188px;/);
+  assert.match(appSource, /@media\(max-width:1500px\)\{\.subscriber-row\{grid-template-columns:120px 76px 118px 88px 84px 84px 58px 48px minmax\(438px,1fr\);min-width:1224px;/);
   assert.doesNotMatch(appSource, /\.subscriber-actions\{grid-column:-2\/-1;/);
   assert.doesNotMatch(appSource, /\.subscriber-meta\{grid-column:1\/7;/);
 });

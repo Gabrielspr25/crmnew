@@ -10,8 +10,10 @@ const deployDoc = readFileSync(new URL('../../DEPLOY.md', import.meta.url), 'utf
 
 test('Prospeccion publica preview y save Apify autenticados sin tocar clients', () => {
   assert.match(routeSource, /post\('\/prospectos\/apify\/preview', requireAuth/);
+  assert.match(routeSource, /post\('\/prospectos\/apify\/preview\/status', requireAuth/);
   assert.match(routeSource, /post\('\/prospectos\/apify\/save', requireAuth/);
-  assert.match(routeSource, /fetchApifyPreview/);
+  assert.match(routeSource, /startApifyPreview/);
+  assert.match(routeSource, /getApifyPreviewStatus/);
   assert.match(routeSource, /saveSelectedApifyProspects/);
   assert.doesNotMatch(routeSource, /INSERT INTO\s+public\.clients/i);
   assert.doesNotMatch(routeSource, /UPDATE\s+public\.clients/i);
@@ -30,6 +32,7 @@ test('frontend de Prospeccion tiene formulario Apify, preview seleccionable y gu
   assert.match(appHtml, /Prospección · Apify/);
   assert.match(appHtml, /prApifyPreview/);
   assert.match(appHtml, /\/api\/prospectos\/apify\/preview/);
+  assert.match(appHtml, /\/api\/prospectos\/apify\/preview\/status/);
   assert.match(appHtml, /\/api\/prospectos\/apify\/save/);
   assert.match(appHtml, /Guardar seleccionados/);
   assert.match(appHtml, /type="checkbox"/);

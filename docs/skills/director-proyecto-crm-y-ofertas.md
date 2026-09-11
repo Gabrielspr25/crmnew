@@ -122,6 +122,9 @@ El archivo completa y actualiza. No borra informacion valida por celdas vacias n
 ## Ventas y comisiones
 
 - Tango V2 es la fuente de ventas y comisiones.
+- Al sincronizar una renovacion, identificar primero el BAN y seleccionar unicamente el suscriptor activo de ese BAN. Una coincidencia cancelada se conserva como historial y nunca recibe la renovacion.
+- La renovacion actualiza en el suscriptor activo los datos explicitamente entregados por Tango: venta, codigo de plan, renta, fecha de inicio contractual, plazo, tipo de linea y, solo si viene informado, equipo e item. No inferir el modelo desde subsidios, notas o importes.
+- Si el mismo telefono esta activo en otro BAN, dejar la venta pendiente de revision; no moverla ni duplicarla automaticamente.
 - Sincronizar solo categorias PYMES confirmadas: BA Corp New/Ren, PYMES Fijo New/Ren, PYMES Update New/Ren, Corp Update New/Ren, Cloud Negocios, Office 365 Negocios y Telemetria New/Ren.
 - Claro TV se vincula si la venta corresponde a un cliente PYMES existente; no se incorpora como venta masiva separada.
 - Una venta cancelada debe reflejarse como cancelada y no contar en comisiones o cartera activa. Conservar historial y trazabilidad.

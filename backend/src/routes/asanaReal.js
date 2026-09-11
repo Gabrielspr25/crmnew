@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { isSeller, sellerScope } from '../services/sellerScope.js';
+import { recordSubscriberChange } from '../services/subscriberHistoryService.js';
 
 export const asanaRealRouter = Router();
 let asanaListCache = { at: 0, rows: null };
@@ -872,9 +873,20 @@ asanaRealRouter.post('/asana-real/voz', requireAuth, async (req, res) => {
       const banId = ban.rows[0].id;
       const sub = await c.query(
         `INSERT INTO subscribers (ban_id, phone, phone_norm, status, line_kind, line_type)
-         VALUES ($1,$2,$2,'activo',$3,$4) RETURNING id`,
+         VALUES ($1,$2,$2,'activo',$3,$4) RETURNING *`,
         [banId, subscriberDigits, lineKind, lineType]);
       const subscriberId = sub.rows[0].id;
+      await recordSubscriberChange({
+        db: c,
+        subscriberId,
+        before: {},
+        after: sub.rows[0],
+        user: req.user,
+        source: 'manual',
+        action: 'created',
+        comment: 'Registro creado desde Cliente Voz.',
+        metadata: { endpoint: '/api/asana-real/from-voice', source: 'cliente_voz' },
+      });
       const opp = await c.query(
         `INSERT INTO sales_opportunities (client_id, title, opportunity_type, status, source, created_by)
          VALUES ($1,$2,'manual','activa','cliente_voz',$3) RETURNING id`,

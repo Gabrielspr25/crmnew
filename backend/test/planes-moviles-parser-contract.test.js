@@ -5,8 +5,10 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const parser = new URL('../../scripts/parse_planes_moviles_pdf.py', import.meta.url);
-const basePdfPath = 'C:/Users/Gabriel/Dropbox/Boletines Vigentes PYMES/6 AL 26 DE AGOSTO 2026/Boletin Planes Vigentes Update Plus y Financiamiento 20260619-PYM-CORP.pdf';
-const byopPdfPath = 'C:/Users/Gabriel/Dropbox/Boletines Vigentes PYMES/6 AL 26 DE AGOSTO 2026/Boletin Nuevo Plan Multilinea Business Red Plus-BYOP-BAN-17 marzo de 2026.pdf';
+// Los PDFs se leen de documentos-ofertas/ (carpeta local, fuera de git) y no de Dropbox: la carpeta de Dropbox
+// cambia de nombre con cada ciclo de boletines y rompia esta prueba.
+const basePdfPath = fileURLToPath(new URL('../../documentos-ofertas/movil/planes-base/2026-06-19--Boletin-Planes-Vigentes-Update-Plus-Financiamiento-PYM-CORP.pdf', import.meta.url));
+const byopPdfPath = fileURLToPath(new URL('../../documentos-ofertas/movil/byop/2026-03-17--Boletin-Nuevo-Plan-Multilinea-Business-Red-Plus-BYOP-BAN.pdf', import.meta.url));
 
 function runParser(pdfPath) {
   assert.equal(fs.existsSync(pdfPath), true, `falta PDF real: ${pdfPath}`);

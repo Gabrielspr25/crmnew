@@ -29,7 +29,7 @@ test('Constructor nuevo consume exclusivamente publicaciones actuales', () => {
 test('Constructor no ofrece servicios, seguros ni beneficios sin publicacion oficial', () => {
   assert.match(constructorPage, /Servicios pendientes de publicaci[oó]n/);
   assert.match(constructorPage, /Seguros pendientes de publicaci[oó]n/);
-  assert.match(constructorPage, /Benefits pendientes de publicaci[oó]n/);
+  assert.match(constructorPage, /(?:Benefits|Beneficios) pendientes de publicaci[oó]n/);
   assert.doesNotMatch(constructorPage, /const SERVICIOS\s*=\s*\[/);
   assert.doesNotMatch(constructorPage, /const SEGUROS\s*=\s*\[/);
   assert.doesNotMatch(constructorPage, /Bono Portabilidad \$150/);

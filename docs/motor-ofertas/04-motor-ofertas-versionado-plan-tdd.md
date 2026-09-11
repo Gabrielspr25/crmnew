@@ -13,7 +13,8 @@
 ## Guardas de ejecucion
 
 - Trabajar solo en `C:\Users\Gabriel\Documentos\Programas\newcrm`.
-- Consultar `VentasProui` solo para comportamiento heredado; no modificarlo.
+- Admin Ofertas, Motor Comercial y Constructor pertenecen al mismo proyecto `newcrm`.
+- No usar proyectos heredados como referencia en documentacion, limites, arquitectura ni futuras implementaciones de este flujo comercial.
 - No modificar `frontend/app.html` ni `Planes para web/`.
 - No modificar `/api/equipos-lista` ni `/api/planes-modulos` salvo una correccion minima exigida por una prueba de compatibilidad.
 - Crear la migracion, pero no ejecutarla contra ninguna base.
@@ -1207,7 +1208,7 @@ Confirmar:
 
 - no aparece `frontend/app.html`;
 - no aparece `Planes para web/`;
-- no aparece ningun archivo de `VentasProui`;
+- no aparece ningun archivo externo al proyecto `newcrm`;
 - la migracion existe pero no fue ejecutada;
 - no se ejecuto ningun backfill;
 - no se inicio servidor persistente;

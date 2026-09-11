@@ -20,6 +20,13 @@ export function normalizeOperationalStatus(status) {
   return text(status);
 }
 
+export function normalizeLineType(lineType) {
+  const value = text(lineType).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (['NEW', 'LINEA_NUEVA', 'LINEA NUEVA', 'NUEVA'].includes(value)) return 'NEW';
+  if (['REN', 'RENOVACION', 'RENEWAL'].includes(value)) return 'REN';
+  return value;
+}
+
 export function normalizeImportedSubscriber(row = {}) {
   const normalized = { ...row };
   const derivedKind = typeToLineKind(normalized.product_type);

@@ -19,3 +19,8 @@ test('modal guarda revision GPON sin editar el suscriptor completo', () => {
   assert.match(appHtml, /gpon_applies/);
   assert.match(appHtml, /await refreshCli\(\)/);
 });
+
+test('modal no muestra estado de revision GPON en lineas moviles', () => {
+  assert.doesNotMatch(appHtml, /Sin revision/);
+  assert.match(appHtml, /const workflow=cliGponReviewControls\(s,kind\)\|\|'';/);
+});

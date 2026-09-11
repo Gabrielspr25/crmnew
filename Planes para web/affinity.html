@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claro Business - Affinity</title>
+<script src="portal-config.js?v=2026091001"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc4;min-height:100vh;border:3px solid #10b981;border-image:linear-gradient(180deg,#22d3ee,#10b981,#8b5cf6) 1}
+.header{background:#c81e28;border-bottom:2px solid #ffb703;padding:14px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.brand-logo{font-size:24px;font-weight:950;color:#fff}
+.brand-text{flex:1;min-width:0}.brand-title{font-size:15px;font-weight:800;color:#fff}.brand-sub{font-size:12px;color:rgba(255,255,255,.82);margin-top:2px}
+.nav{display:flex;gap:4px;overflow:auto;background:#151821;border-bottom:1px solid rgba(110,231,249,.24);padding:0 24px}
+.nav a{color:#b9c7d6;text-decoration:none;padding:12px 14px;font-size:13px;font-weight:750;border-bottom:2px solid transparent;white-space:nowrap}.nav a:hover{color:#fff}.nav a.active{color:#7dd3fc;border-bottom-color:#67e8f9}
+.wrap{max-width:1480px;margin:0 auto;padding:22px 24px 44px}
+.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap}
+.hero h1{font-size:26px;color:#e2d8c8}.hero p{font-size:13px;color:#b5aa9c;margin-top:5px;line-height:1.45;max-width:760px}
+.summary{display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid rgba(45,212,191,.35);background:#0f172a;color:#c9f7ec;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}
+.pill.amber{border-color:rgba(245,158,11,.45);color:#fde68a;background:#231a08}
+.prog{background:#141821;border:1px solid rgba(45,212,191,.3);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.prog:nth-child(2n){border-color:rgba(139,92,246,.34)}
+.prog-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 16px;background:#1b2130;border-bottom:1px solid rgba(45,212,191,.22);flex-wrap:wrap}
+.prog-title{font-size:17px;font-weight:900;color:#e2d8c8}
+.prog-sub{font-size:12px;color:#9aa6b5;margin-top:3px}
+.prog-val{font-size:26px;font-weight:950;color:#86efac;white-space:nowrap}
+.code{border:1px solid rgba(110,231,249,.4);background:#0f172a;color:#9ee7f0;border-radius:6px;padding:4px 9px;font-size:12px;font-weight:900;letter-spacing:.03em}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#9ee7f0;font-weight:900;padding:9px 16px;border-bottom:1px solid rgba(45,212,191,.22);white-space:nowrap;width:230px;vertical-align:top;background:#161c27}
+td{padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.06);color:#d6cfc4;line-height:1.4}
+tr:last-child th,tr:last-child td{border-bottom:0}
+.terms{padding:13px 16px;border-top:1px solid rgba(45,212,191,.18);background:#10151f}
+.terms b{color:#9ee7f0;font-size:11px;text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:7px}
+.terms ol{margin:0;padding-left:20px}.terms li{font-size:12px;color:#cec4b7;line-height:1.5;margin-bottom:4px}
+.nota{border:1px solid rgba(245,158,11,.4);background:#231a08;color:#fde68a;border-radius:6px;padding:9px 12px;font-size:12px;margin:12px 16px;line-height:1.4}
+.empty,.error{border:1px dashed rgba(45,212,191,.35);background:#111a30;border-radius:8px;padding:28px;text-align:center;color:#b5aa9c}
+.error{border-color:rgba(248,113,113,.5);color:#fecaca;background:#2a1115}
+.fuente{font-size:12px;color:#8e99a8;margin-top:14px;line-height:1.5}
+@media(max-width:780px){.header{display:grid}.hero{display:block}.summary{margin-top:10px}.wrap{padding:16px 14px 36px}table,tbody,tr,th,td{display:block;width:auto}th{border-bottom:0;padding-bottom:2px;background:transparent}td{padding-top:0}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="brand-logo">CLARO</div>
+  <div class="brand-text">
+    <div class="brand-title">Affinity</div>
+    <div class="brand-sub" id="versionLabel">Programa de descuento para empleados de grupos y organizaciones</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="index.html">Planes Fijos</a>
+  <a href="claro-tv.html">Claro TV</a>
+  <a href="movil.html">Planes Moviles</a>
+  <a href="banda-ancha.html">Inalambrico / IoT</a>
+  <a href="equipos.html">Lista de Equipos</a>
+  <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html" class="active">Affinity</a>
+  <a href="directorio-fijo.html">Directorio de fijo</a>
+  <a href="oferta-const.html">Oferta const.</a>
+  <a href="ofertas.html">Ofertas</a>
+</nav>
+
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Affinity</h1>
+      <p>Descuento para empleados de grupos, organizaciones y companias clientes de Claro. Lectura directa del boletin oficial publicado en el Motor Comercial.</p>
+    </div>
+    <div class="summary" id="summary"></div>
+  </section>
+  <section id="programas"><div class="empty">Cargando programa Affinity...</div></section>
+  <div class="fuente" id="fuente"></div>
+</main>
+
+<script>
+const API_URL = (window.PORTAL_API_BASE || '') + '/api/fuentes-comerciales/affinity-vigente';
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+const PRODUCTO_LABEL = { movil: 'Movil', fijo: 'Fijo' };
+
+function vigenciaTexto(vigencia){
+  const desde = vigencia?.desde ? String(vigencia.desde).slice(0,10) : null;
+  const hasta = vigencia?.hasta ? String(vigencia.hasta).slice(0,10) : null;
+  if(!desde && !hasta) return 'Segun publicacion';
+  return `Desde ${desde || '—'} ${hasta ? `hasta ${hasta}` : '· sin fecha de fin publicada'}`;
+}
+
+function renderPrograma(programa){
+  const filas = programa.condiciones.map(item => `<tr><th>${escapeHtml(item.etiqueta)}</th><td>${escapeHtml(item.valor)}</td></tr>`).join('');
+  const cops = programa.codigos_facturacion.length
+    ? `<tr><th>Codigo de facturacion</th><td>${escapeHtml(programa.codigos_facturacion.join(' · '))}</td></tr>`
+    : '';
+  const terminos = (programa.terminos || []).map(term => `<li>${escapeHtml(term)}</li>`).join('');
+  return `
+    <article class="prog">
+      <div class="prog-head">
+        <div>
+          <div class="prog-title">${escapeHtml(PRODUCTO_LABEL[programa.producto] || programa.producto)}</div>
+          <div class="prog-sub">${escapeHtml(programa.aplicacion || 'Descuento publicado')} · ${escapeHtml(vigenciaTexto(programa.vigencia))}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          ${programa.codigo ? `<span class="code">${escapeHtml(programa.codigo)}</span>` : ''}
+          <span class="prog-val">${escapeHtml(programa.beneficio)}</span>
+        </div>
+      </div>
+      <table><tbody>${filas}${cops}</tbody></table>
+      ${programa.aclaracion ? `<div class="nota">${escapeHtml(programa.aclaracion)}</div>` : ''}
+      ${terminos ? `<div class="terms"><b>Terminos y condiciones oficiales</b><ol>${terminos}</ol></div>` : ''}
+    </article>`;
+}
+
+async function load(){
+  try{
+    const response = await fetch(API_URL, { cache: 'no-store' });
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const contenedor = document.getElementById('programas');
+
+    if(!data.publicado || !data.programas.length){
+      contenedor.innerHTML = '<div class="empty">Todavia no hay una version de Affinity publicada en el Motor Comercial.</div>';
+      document.getElementById('summary').innerHTML = '<span class="pill amber">Sin publicacion vigente</span>';
+      return;
+    }
+
+    contenedor.innerHTML = data.programas.map(renderPrograma).join('');
+    document.getElementById('versionLabel').textContent = `Version ${data.version.numero} vigente · ${data.programas.length} servicios con descuento`;
+    document.getElementById('summary').innerHTML = data.programas
+      .map(p => `<span class="pill">${escapeHtml(PRODUCTO_LABEL[p.producto] || p.producto)} ${escapeHtml(p.beneficio)}</span>`)
+      .join('') + '<span class="pill">autoaplica=false</span>';
+    document.getElementById('fuente').textContent = data.fuente
+      ? `Fuente oficial: ${data.fuente.nombre}${data.fuente.vigencia_hasta ? ` · vigencia hasta ${data.fuente.vigencia_hasta}` : ''}`
+      : '';
+  }catch(error){
+    document.getElementById('programas').innerHTML = '<div class="error">No se pudo leer el programa Affinity publicado. No se usaron datos estaticos.</div>';
+    document.getElementById('summary').innerHTML = '<span class="pill amber">Sin lectura vigente</span>';
+  }
+}
+
+load();
+</script>
+</body>
+</html>

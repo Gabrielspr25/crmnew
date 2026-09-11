@@ -54,9 +54,10 @@ test('la ficha del cliente separa lineas activas y canceladas en tabs por BAN', 
   assert.match(html, /const activeRows=renderSubscriberRows\(visibleLines\(active\),/);
   assert.match(html, /const canceledRows=renderSubscriberRows\(visibleLines\(canceled\),/);
   assert.match(html, /const statusTabs=/);
-  assert.match(html, /onclick="setCliMSub\('activas'\)"/);
-  assert.match(html, /onclick="setCliMSub\('canceladas'\)"/);
-  assert.match(html, /const selectedRows=cliMSub==='canceladas'\?canceledRows:activeRows/);
+  assert.match(html, /const banTab=cliBanSubTab\(b\.id\)/);
+  assert.match(html, /onclick="setCliBanSubTab\('\$\{b\.id\}','activas'\)"/);
+  assert.match(html, /onclick="setCliBanSubTab\('\$\{b\.id\}','canceladas'\)"/);
+  assert.match(html, /const selectedRows=banTab==='canceladas'\?canceledRows:activeRows/);
   assert.doesNotMatch(html, /subscriber-section canceled/);
 });
 
@@ -106,7 +107,7 @@ test('la comparativa usa fecha fin real en vencimiento y separa cuentas BAN', as
   assert.match(block, /function compEndDate\(s\)/);
   assert.match(block, /function compDateOnly\(value\)/);
   assert.match(block, /function compTodayOnly\(\)/);
-  assert.match(block, /return d<compTodayOnly\(\)\?'Vencido':fmtDate\(raw\)/);
+  assert.match(block, /return d<compTodayOnly\(\)\?'Vencido':compFmtDateOnly\(d\)/);
   assert.match(block, /function compBanCount\(rows\)/);
   assert.match(block, /function compBanDisplay\(s,order\)/);
   assert.match(block, /compEndDate\(s\)/);
@@ -130,8 +131,9 @@ test('la propuesta interactiva usa campos comerciales editables de oferta', asyn
   const block = html.slice(start, end);
 
   assert.match(block, /compReadOffer\(\)/);
-  assert.match(block, /const offerRows=compOffer\.length\?compOffer:act\.map\(s=>\(\{ban:compBanDisplay\(s,banOrder\),phone:s\.phone\|\|'',plan:'',cost:'',notes:''\}\)\)/);
-  assert.match(block, /const proposal=offerRows\.map\(r=>\[r\.ban\|\|'', r\.phone\|\|'', r\.plan\|\|'', r\.cost\|\|'', 0, '', r\.notes\|\|''\]\)/);
+  // El telefono se muestra formateado con fmtPhone.
+  assert.match(block, /const offerRows=compOffer\.length\?compOffer:act\.map\(s=>\(\{ban:compBanDisplay\(s,banOrder\),phone:fmtPhone\(s\.phone\)\|\|'',plan:'',cost:'',notes:''\}\)\)/);
+  assert.match(block, /const proposal=offerRows\.map\(r=>\[r\.ban\|\|'', fmtPhone\(r\.phone\)\|\|'', r\.plan\|\|'', r\.cost\|\|'', 0, '', r\.notes\|\|''\]\)/);
 
   const template = await readFile(new URL('../../frontend/propuesta-template.html', import.meta.url), 'utf8');
   assert.match(template, /--flow-gap:clamp\(4px,\.65vw,8px\)/);

@@ -19,7 +19,8 @@ test('Cliente Voz exige BAN y suscriptor antes de crear oportunidad', () => {
   assert.match(appHtml, /id="vz_ban"/);
   assert.match(appHtml, /id="vz_sub"/);
   assert.match(appHtml, /ban_number:\$\(\'vz_ban\'\)\.value\.trim\(\)/);
-  assert.match(appHtml, /subscriber:\$\(\'vz_sub\'\)\.value\.trim\(\)/);
+  // El suscriptor se normaliza a 10 digitos antes de enviarse.
+  assert.match(appHtml, /subscriber:normalizePhone\(\$\(\'vz_sub\'\)\.value\)/);
   assert.match(appHtml, /Falta el BAN/);
   assert.match(appHtml, /Falta el suscriptor/);
   assert.match(asanaSource, /const \{ empresa, telefono, ban_number, subscriber, product_key, qty, monto, nota \} = req\.body \|\| \{\};/);

@@ -249,6 +249,169 @@ test('el diff de registros usa categoria, seccion y codigo como identidad comerc
   assert.deepEqual(diff.modificados[0].cambios.map((item) => item.campo).sort(), ['descripcion', 'precio']);
 });
 
+test('Fijo genera reglas normalizadas con confianza y precio fuera de la identidad', () => {
+  const fijo = buildPreviews().previews.find((item) => item.categoria === 'fijo');
+  const reglas = fijo.reglas_normalizadas;
+
+  assert.ok(Array.isArray(reglas));
+  assert.equal(reglas.length, fijo.candidatos_publicos.length);
+
+  const regla = reglas.find((item) => item.codigo === 'A878' && item.llave_comercial.endsWith('|base') && item.tipo_regla === 'estructura_base');
+  assert.ok(regla);
+  assert.equal(regla.estado_confianza, 'confirmado');
+  assert.equal(regla.estado_publicacion, 'borrador');
+  assert.equal(regla.estado_comercial, 'vigente');
+  assert.equal(regla.llave_comercial.includes('54.99'), false);
+  assert.equal(regla.valor.precio_regular, 54.99);
+  assert.equal(regla.accion, 'mantener_o_actualizar_base');
+  assert.equal(regla.prioridad, 10);
+  assert.deepEqual(regla.condiciones.requisitos, []);
+  assert.ok(regla.traza.fuente_nombre);
+  assert.ok(regla.traza.seccion_origen);
+  assert.equal(fijo.auditoria.reglas_normalizadas.length, reglas.length);
+});
+
+test('Fijo resume reglas normalizadas por tipo y confianza para el Admin', () => {
+  const fijo = buildPreviews().previews.find((item) => item.categoria === 'fijo');
+
+  assert.deepEqual(fijo.resumen_reglas.por_confianza, { confirmado: 81 });
+  assert.equal(fijo.resumen_reglas.por_tipo.estructura_base, 65);
+  assert.equal(fijo.resumen_reglas.por_tipo.beneficio, 15);
+  assert.equal(fijo.resumen_reglas.por_tipo.accesorio, 1);
+  assert.equal(fijo.resumen_reglas.total, 81);
+});
+
+test('Claro TV genera reglas normalizadas separadas de Fijo', () => {
+  const claroTv = buildPreviews().previews.find((item) => item.categoria === 'claro_tv');
+
+  assert.equal(claroTv.reglas_normalizadas.length, 9);
+  assert.equal(claroTv.resumen_reglas.total, 9);
+  assert.deepEqual(claroTv.resumen_reglas.por_tipo, { estructura_base: 9 });
+  assert.deepEqual(claroTv.resumen_reglas.por_confianza, { confirmado: 9 });
+  assert.ok(claroTv.reglas_normalizadas.every((regla) => String(regla.familia || '').startsWith('claro_tv')));
+  assert.ok(claroTv.reglas_normalizadas.every((regla) => !regla.llave_comercial.startsWith('fijo|')));
+});
+
+test('Inalambrico IoT genera modulos publicables sin depender de planes_modulos existentes', () => {
+  const parsed = {
+    secciones_detectadas: ['internet_on_the_go', 'claro_oficina', 'iot_telemetria'],
+    secciones: [
+      {
+        key: 'internet_on_the_go',
+        titulo: "MiFi's Internet On The Go",
+        equipos: [{
+          item_code: '33638H',
+          material_sap: '7013126',
+          modelo: 'Franklin JEXstream RG2100 5G',
+          precio_regular: 249.99,
+          fin_12: 25,
+          fin_24: 12.5,
+          fin_30: 10,
+          fin_36: 8.33,
+        }],
+      },
+      {
+        key: 'claro_oficina',
+        titulo: 'Modems Claro Oficina',
+        equipos: [{
+          item_code: '33578H',
+          material_sap: '7012893',
+          modelo: 'PCD R402X Black Router - 4G',
+          precio_regular: 99.99,
+          fin_12: 8.33,
+          fin_24: 4.17,
+          fin_30: 3.33,
+          fin_36: 2.78,
+        }],
+      },
+    ],
+    financiamiento_of: [],
+    financiamiento_gu: [],
+    ofertas_especiales: [],
+    ofertas_especiales_normalizadas: [],
+  };
+
+  const { previews } = buildBasesInformativasPreviews({
+    parsed,
+    fuente: {
+      id: fuente.id,
+      familia: 'inalambrico_iot',
+      nombre_original: 'Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf',
+      sha256: fuente.sha256,
+      fecha_actualizacion_base: '2026-09-01',
+    },
+  });
+  const inalambrico = previews.find((item) => item.categoria === 'inalambrico');
+
+  assert.ok(inalambrico);
+  assert.equal(inalambrico.publicable, true);
+  assert.deepEqual(inalambrico.modulos_generados.map((item) => item.seccion_key), [
+    'internet_on_the_go',
+    'claro_oficina',
+    'iot_telemetria',
+    'equipos_precios_inalambrico',
+  ]);
+  assert.equal(inalambrico.candidatos_publicos.length, 2);
+  const rg2100 = inalambrico.candidatos_publicos.find((item) => item.codigo === '33638H');
+  assert.equal(rg2100.descripcion, 'Franklin JEXstream RG2100 5G');
+  assert.equal(rg2100.precio_regular, 249.99);
+  assert.deepEqual(rg2100.financiamiento, { '12': 25, '24': 12.5, '30': 10, '36': 8.33 });
+  assert.equal(rg2100.producto, 'internet_on_the_go');
+  assert.equal(rg2100.tipo_registro, 'equipo');
+  assert.equal(inalambrico.reglas_normalizadas.some((regla) => regla.tipo_regla === 'precio_regular_equipo'), true);
+  assert.equal(inalambrico.reglas_normalizadas.some((regla) => regla.tipo_regla === 'promocion_equipo'), false);
+});
+
+test('Inalambrico IoT detecta cambio de precio contra la revision publicada anterior', () => {
+  const previousModules = [{
+    pagina: 'inalambrico',
+    seccion_key: 'equipos_precios_inalambrico',
+    titulo: 'Equipos y precios Inalambrico / IoT',
+    tipo: 'tabla',
+    contenido: { filas: [{
+      categoria: 'inalambrico_equipo',
+      seccion_key: 'equipos_precios_inalambrico',
+      codigo: '33638H',
+      descripcion: 'Franklin JEXstream RG2100 5G',
+      precio_regular: 299.99,
+      precio: 299.99,
+      producto: 'internet_on_the_go',
+      tipo_registro: 'equipo',
+    }] },
+  }];
+  const parsed = {
+    secciones_detectadas: ['internet_on_the_go', 'claro_oficina', 'iot_telemetria'],
+    secciones: [{
+      key: 'internet_on_the_go',
+      titulo: "MiFi's Internet On The Go",
+      equipos: [{
+        item_code: '33638H',
+        material_sap: '7013126',
+        modelo: 'Franklin JEXstream RG2100 5G',
+        precio_regular: 249.99,
+        fin_24: 12.5,
+      }],
+    }],
+  };
+
+  const { previews } = buildBasesInformativasPreviews({
+    parsed,
+    fuente: {
+      id: fuente.id,
+      familia: 'inalambrico_iot',
+      nombre_original: 'Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf',
+      sha256: fuente.sha256,
+      fecha_actualizacion_base: '2026-09-01',
+    },
+    publicacionesAnteriores: { inalambrico: previousModules },
+  });
+  const inalambrico = previews.find((item) => item.categoria === 'inalambrico');
+  const cambio = inalambrico.diferencias.registros.modificados.find((item) => item.codigo === '33638H');
+
+  assert.ok(cambio);
+  assert.ok(cambio.cambios.some((item) => item.campo === 'precio_regular' && item.antes === 299.99 && item.ahora === 249.99));
+});
+
 test('el diff de registros ignora cambios solo de ubicacion y orden de filas', () => {
   const previous = [{
     seccion_key: 'fijo_telefonia',
@@ -410,4 +573,13 @@ test('preview movil combina base y BYOP-BAN sin mezclar ofertas temporales', () 
   assert.equal(movil.auditoria.fuentes.length, 2);
   assert.equal(movil.candidatos_publicos.some((row) => /^GRED/.test(row.codigo)), false);
   assert.equal(movil.candidatos_publicos.some((row) => ['BREDP1', 'BREDE1', 'BREDS1', 'BREDSF1'].includes(row.codigo)), false);
+  assert.equal(movil.reglas_normalizadas.length, 48);
+  assert.equal(movil.resumen_reglas.total, 48);
+  assert.deepEqual(movil.resumen_reglas.por_tipo, { estructura_base: 48 });
+  assert.deepEqual(movil.resumen_reglas.por_confianza, { confirmado: 48 });
+  assert.ok(movil.reglas_normalizadas.some((regla) => regla.llave_comercial === 'movil_planes_individuales|movil_planes_individuales|BREDSF'));
+  assert.ok(movil.reglas_normalizadas.some((regla) => regla.llave_comercial === 'movil_multilinea_business_red|movil_multilinea_business_red|ML2'));
+  assert.ok(movil.reglas_normalizadas.some((regla) => regla.llave_comercial === 'movil_multilinea_byop_ban|movil_multilinea_byop_ban|BREDP1015'));
+  assert.ok(movil.reglas_normalizadas.every((regla) => !/^GRED/.test(regla.codigo || '')));
+  assert.ok(movil.reglas_normalizadas.every((regla) => !regla.llave_comercial.includes('150')));
 });

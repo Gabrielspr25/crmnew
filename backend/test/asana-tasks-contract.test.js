@@ -48,6 +48,18 @@ test('Asana muestra Mi dia y permite tareas sin cliente', () => {
   assert.match(app, /Selecciona la hora de la tarea/);
 });
 
+test('Asana separa resumen y clientes en tabs visuales', () => {
+  assert.match(app, /let asanaMainTab='resumen'/);
+  assert.match(app, /function setAsanaMainTab\(tab\)/);
+  assert.match(app, /Tarjetas y mi d[ií]a/);
+  assert.match(app, /Clientes/);
+  assert.match(app, /asana-tab-panel/);
+  assert.match(app, /asanaMainTab==='resumen'\?\`\$\{asanaSummary\}\s*\$\{asanaDailyAgenda\(agenda\.items,agenda\.can_view_team\)\}`/);
+  assert.match(app, /asanaMainTab==='clientes'\?\`\$\{asanaClientsTools\}\s*\$\{asanaClientsTable\}`/);
+  assert.match(app, /const asanaClientsTools=/);
+  assert.match(app, /const asanaClientsTable=/);
+});
+
 test('oportunidad permite agendar el paso actual como tarea', () => {
   assert.match(app, /Agendar tarea/);
   assert.match(app, /asanaTaskStepId/);

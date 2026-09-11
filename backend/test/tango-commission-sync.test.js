@@ -36,6 +36,24 @@ test('mapea una venta PYMES con sus datos operativos y comisión real', () => {
   assert.equal(mapped.lineType, 'REN');
 });
 
+test('mapea datos explícitos de la renovación sin inventar el equipo', () => {
+  const mapped = mapTangoCommissionSale({
+    ...sale,
+    meses: 30,
+    equipo: 'iPhone 17 256GB',
+    itemid: 'IP17256',
+  }, { ventaid: 80124, total: 10 });
+
+  assert.equal(mapped.contractTerm, 30);
+  assert.equal(mapped.equipment, 'iPhone 17 256GB');
+  assert.equal(mapped.itemId, 'IP17256');
+
+  const withoutEquipment = mapTangoCommissionSale({ ...sale, meses: 24 }, { ventaid: 80124, total: 10 });
+  assert.equal(withoutEquipment.contractTerm, 24);
+  assert.equal(withoutEquipment.equipment, null);
+  assert.equal(withoutEquipment.itemId, null);
+});
+
 test('incluye una venta PYMES con comisión y excluye una Claro Update aunque tenga comisión', () => {
   assert.equal(shouldCreateOperationalRelation(mapTangoCommissionSale(sale, { ventaid: 80124, total: 1 })), true);
 

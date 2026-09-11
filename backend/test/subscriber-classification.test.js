@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { normalizeImportedSubscriber, normalizeOperationalStatus } from '../src/services/subscriberClassification.js';
+import { normalizeImportedSubscriber, normalizeLineType, normalizeOperationalStatus } from '../src/services/subscriberClassification.js';
+
+test('normaliza tipos de linea visibles al contrato NEW o REN', () => {
+  assert.equal(normalizeLineType('LINEA_NUEVA'), 'NEW');
+  assert.equal(normalizeLineType('Renovación'), 'REN');
+  assert.equal(normalizeLineType('REN'), 'REN');
+  assert.equal(normalizeLineType('PORTABILIDAD'), 'PORTABILIDAD');
+});
 
 test('clasifica PRODUCT_TYPE operativo sin depender de una columna manual', () => {
   assert.equal(normalizeImportedSubscriber({ product_type: 'G' }).line_kind, 'movil');

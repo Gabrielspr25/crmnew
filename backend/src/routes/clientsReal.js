@@ -9,6 +9,7 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { buildClientSearchFilter } from '../services/clientSearchQuery.js';
 
 export const clientsRealRouter = Router();
 
@@ -162,18 +163,9 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   const hasSearch = Boolean(q && q.trim());
   if (hasSearch) {
     conds.push(ALL_CLIENT_SQL);
-    params.push(`%${q.trim()}%`);
-    conds.push(`(
-      c.name ILIKE $${params.length}
-      OR c.business_name ILIKE $${params.length}
-      OR c.owner_name ILIKE $${params.length}
-      OR c.contact_person ILIKE $${params.length}
-      OR c.email ILIKE $${params.length}
-      OR CAST(c.phone AS text) ILIKE $${params.length}
-      OR CAST(c.cellular AS text) ILIKE $${params.length}
-      OR EXISTS (SELECT 1 FROM bans bq WHERE bq.client_id = c.id AND CAST(bq.ban_number AS text) ILIKE $${params.length})
-      OR EXISTS (SELECT 1 FROM subscribers sq JOIN bans bqs ON sq.ban_id = bqs.id WHERE bqs.client_id = c.id AND CAST(sq.phone AS text) ILIKE $${params.length})
-    )`);
+    const busqueda = buildClientSearchFilter(q, params.length);
+    params.push(...busqueda.params);
+    conds.push(`(${busqueda.sql})`);
     conds.push(`NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`);
   } else if (tab === 'all') {
     conds.push(ALL_CLIENT_SQL);
@@ -413,9 +405,18 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
               s.activation_date, s.contract_start_date, s.contract_term, s.remaining_payments, s.contract_end_date,
               s.cancel_reason, s.tango_ventaid, s.equipment, s.product_type, s.price_code, s.item_id, s.payments_made,
               gr.gpon_applies, gr.gpon_note, gr.reviewed_at AS gpon_reviewed_at,
+              sh_last.last_history_comment_at, sh_last.comment AS last_history_comment,
               b.ban_number, b.id AS ban_id
          FROM subscribers s JOIN bans b ON b.id = s.ban_id
          LEFT JOIN subscriber_gpon_reviews gr ON gr.subscriber_id = s.id
+         LEFT JOIN LATERAL (
+           SELECT COALESCE(comment_updated_at, created_at) AS last_history_comment_at, comment
+             FROM subscriber_history sh_last
+            WHERE sh_last.subscriber_id = s.id
+              AND NULLIF(TRIM(COALESCE(sh_last.comment,'')),'') IS NOT NULL
+            ORDER BY COALESCE(comment_updated_at, created_at) DESC, id DESC
+            LIMIT 1
+         ) sh_last ON true
         WHERE b.client_id = $1 ORDER BY b.ban_number, s.phone`, [req.params.id]);
     let ventasTango = { rows: [] };
     const salesTable = await conn.query(`

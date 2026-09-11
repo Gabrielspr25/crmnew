@@ -49,3 +49,11 @@ test('Planes Solo y Convergente muestran equipo y pago en tablas compactas', () 
   assert.match(portal, /<th>Pago equipo<\/th>/);
   assert.match(portal, /Oferta convergente/);
 });
+
+test('Ofertas especiales se muestran con el mismo formato estructurado del parser', () => {
+  assert.match(portal, /ofertas_especiales_normalizadas/);
+  assert.match(portal, /function buildStructuredSpecialOffers/);
+  assert.match(portal, /<th>Plan<\/th><th>Equipo<\/th><th>Oferta<\/th><th>Plazo<\/th><th>Condicion<\/th><th>Codigo<\/th>/);
+  assert.match(portal, /formatSpecialOfferPrice/);
+  assert.match(portal, /FIOF|FIGU/);
+});

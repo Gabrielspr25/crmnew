@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matriz de reglas - Portal y Constructor</title>
+  <style>
+    :root{--bg:#0f1220;--panel:#171b2d;--line:#2b3150;--text:#f4f6ff;--muted:#aab2d5;--accent:#65d6ad;--warn:#ffbf5f;--bad:#ff7b7b;--blue:#7ba7ff}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+    header{padding:22px 24px 12px;border-bottom:1px solid var(--line)}
+    h1{margin:0 0 6px;font-size:24px}
+    p{margin:0;color:var(--muted);line-height:1.45}
+    main{padding:18px 24px 28px}
+    .toolbar{display:grid;grid-template-columns:minmax(240px,1fr) 170px 170px 170px 170px;gap:10px;margin-bottom:14px}
+    input,select{width:100%;background:#101426;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+    .cards{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+    .card b{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .card span{font-size:22px;color:var(--accent);font-weight:700}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#101426}
+    table{width:100%;border-collapse:collapse;min-width:2100px}
+    th,td{border-bottom:1px solid var(--line);padding:10px;vertical-align:top;text-align:left;font-size:13px;line-height:1.35}
+    th{position:sticky;top:0;background:#1b2036;color:#ffcf70;z-index:1}
+    tr:hover td{background:#151a2e}
+    .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin:0 4px 4px 0;color:#dce4ff;background:#202642;font-size:12px}
+    .base{color:var(--blue)} .oferta{color:var(--warn)} .mixto{color:var(--accent)}
+    .rules{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+    ol,ul{margin:8px 0 0 20px;padding:0;color:var(--muted);line-height:1.5}
+    li{margin:5px 0}
+    .empty{display:none;padding:18px;color:var(--warn);text-align:center}
+    @media(max-width:1100px){.toolbar,.cards,.rules{grid-template-columns:1fr}main,header{padding-left:14px;padding-right:14px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Matriz de reglas para Portal y Constructor</h1>
+    <p>La categoria se decide por contenido y seccion oficial, no por extension. El Constructor consume reglas normalizadas, no documentos.</p>
+  </header>
+  <main>
+    <section class="toolbar" aria-label="Filtros">
+      <input id="q" placeholder="Buscar regla, llave, nivel, beneficio...">
+      <select id="area"><option value="">Todas las areas</option></select>
+      <select id="tipo"><option value="">Todos los tipos</option><option>Estructura/base</option><option>Oferta/beneficio</option><option>Precio/equipo</option><option>Mixto</option><option>Control</option></select>
+      <select id="formato"><option value="">Todos los formatos</option><option>PDF</option><option>Excel</option><option>No aplica</option></select>
+      <select id="nivel"><option value="">Todos los niveles</option><option>Cliente</option><option>BAN</option><option>Linea</option><option>Plan</option><option>Equipo</option><option>Producto</option><option>Combinacion</option></select>
+    </section>
+    <section class="cards">
+      <div class="card"><b>Reglas visibles</b><span id="count">0</span></div>
+      <div class="card"><b>Estructura/base</b><span id="baseCount">0</span></div>
+      <div class="card"><b>Ofertas/beneficios</b><span id="offerCount">0</span></div>
+      <div class="card"><b>Precio/equipo</b><span id="priceCount">0</span></div>
+      <div class="card"><b>Bloqueos clave</b><span>9</span></div>
+    </section>
+    <section class="table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>Tipo</th><th>Que se puede subir</th><th>Formatos</th><th>Que debe identificar</th><th>Nivel de aplicacion</th><th>Llave comercial minima</th><th>Accion al detectar cambio</th><th>Acumulacion / prioridad</th><th>Destino</th><th>Uso en Constructor</th><th>Que no debe hacer</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty">No hay reglas con esos filtros.</div>
+    </section>
+    <section class="rules">
+      <div class="card"><b>Prioridad de lectura</b><ol><li>Estructura/base define plan o precio regular.</li><li>Lista de Precios define precio base de equipo.</li><li>Nuevo precio oficial actualiza base; oferta temporal no.</li><li>Oferta temporal se aplica encima de la base.</li><li>Sin fuente vigente, no hay aplicacion automatica.</li><li>Contradiccion bloquea solo la regla afectada.</li><li>Inalambrico/IoT puede ser mixto.</li></ol></div>
+      <div class="card"><b>Clasificacion por seccion</b><ul><li>La pregunta inicial orienta, no decide todo el archivo.</li><li>Una fuente puede producir varios bloques comerciales.</li><li>Nombre de archivo ayuda, pero no prueba por si solo.</li><li>Si no hay evidencia suficiente, queda en revision manual.</li></ul></div>
+      <div class="card"><b>Beneficios y acumulacion</b><ul><li>Compatible, no compatible, sustituye o acumula.</li><li>Maximo por BAN, linea, cliente o evento.</li><li>Calcular todas las combinaciones validas.</li><li>Recomendar una opcion sin ocultar alternativas.</li></ul></div>
+      <div class="card"><b>Estado de confianza</b><ul><li>Confirmado.</li><li>Requiere revision.</li><li>Contradiccion.</li><li>Fuente incompleta.</li><li>Independiente del estado de publicacion.</li></ul></div>
+      <div class="card"><b>Identidad vs valor</b><ul><li>La llave comercial identifica el mismo plan, equipo u oferta.</li><li>Precio, descuento y beneficio son valores versionados.</li><li>Un cambio de precio no crea otro producto.</li><li>Nunca borrar: reemplazar, vencer o archivar.</li></ul></div>
+      <div class="card"><b>Regla de oro</b><ul><li>Nunca inferir elegibilidad por ausencia de restriccion.</li><li>Si el evento no esta confirmado, queda no determinado.</li><li>Sin fuente oficial o decision comercial, no se aplica automaticamente.</li><li>Los terminos bloquean solo si la oferta depende de terminos faltantes.</li></ul></div>
+    </section>
+  </main>
+  <script>
+    const data = [
+      ['Fijo - estructura/base','Estructura/base','Listado o estructura oficial de planes fijos: telefonia, internet, 2Play, 3Play, cargos base','PDF o Excel','Codigos de planes fijos tipo A... o numericos validos; precios base; velocidad; cargo mensual; condiciones permanentes','Plan / producto','codigo_plan + tipo_servicio + velocidad','Nuevo, modifica, reemplaza o vence estructura anterior; nunca borrar. El precio base es atributo versionado, no identidad','Base primero; no acumula con otra base vigente contradictoria','Base de Planes Fijos del portal','Lee el plan base y precio normal antes de aplicar beneficios','No tratar ofertas, rebajas o beneficios como estructura base'],
+      ['Fijo - ofertas/beneficios','Oferta/beneficio','Boletines de ofertas fijas, beneficios de convergencia, ofertas de velocidad, meses gratis, doble play, triple play, combinaciones con movil o Claro TV','PDF o Excel','Producto principal afectado, beneficio, convergencia, elegibilidad, vigencia, restricciones y fuente','Cliente / BAN / linea / plan / combinacion','producto_principal + beneficio + condicion + plan_base + tipo_cliente + vigencia','Crea o modifica regla de oferta; si contradice otra regla vigente bloquea solo esa combinacion','Puede acumular, sustituir o ser incompatible segun terminos oficiales','Ofertas Fijo / Benefits','Aplica encima de la estructura base si el cliente cumple condiciones','No reemplazar estructura salvo cambio explicito de estructura o precio base'],
+      ['Claro TV - estructura/base','Estructura/base','Listado oficial de planes, paquetes, servicios y cargos Claro TV','PDF o Excel','Planes o paquetes Claro TV reconocibles, precios base, servicios incluidos','Plan / producto','codigo_paquete + servicio','Nuevo, modifica, reemplaza o vence base anterior. El precio base es atributo versionado, no identidad','Base primero; contradiccion bloquea esa base','Base Claro TV del portal','Lee el plan o paquete base','No mezclar promociones como precio base'],
+      ['Claro TV - ofertas/beneficios','Oferta/beneficio','Descuentos, combos, promociones o beneficios ligados a Claro TV, aunque crucen con Fijo o Movil','PDF o Excel','Beneficio, requisito, vigencia, combinacion aplicable y fuente','Cliente / BAN / linea / producto / combinacion','producto_principal + beneficio + condicion + paquete + vigencia','Crea o modifica regla de oferta; bloqueo por contradiccion puntual','Acumula o sustituye solo si terminos lo permiten','Ofertas Claro TV / Benefits','Aplica la promocion si coincide con la seleccion del cliente','No reemplazar catalogo base si solo es oferta'],
+      ['Movil - estructura/base','Estructura/base','Planes moviles base: individuales, multilinea, Business RED, BYOP/BAN si aplica como estructura','PDF o Excel','Codigos moviles, precio base, lineas, familia, condiciones permanentes','Plan / BAN / linea','familia_plan + codigo_plan + cantidad_lineas','Nuevo, modifica, reemplaza o vence estructura anterior. El precio base es atributo versionado, no identidad','Base primero; no mezcla con ofertas temporales','Base Planes Moviles del portal','Lee plan base, cantidad de lineas y cargo regular','No meter Nuevas Ofertas, trade-in o financiamiento como base'],
+      ['Movil - ofertas/beneficios','Oferta/beneficio','Nuevas ofertas, financiamiento, trade-in, bonos, equipos promocionales, streaming, portabilidad, descuentos, terminos','PDF o Excel; puede requerir ambos','Oferta, equipo, plan minimo, cliente convergente/no convergente, trade-in, plazo, codigo/job/price code, vigencia y fuente','Cliente / BAN / linea / plan / equipo','familia_plan + codigo_plan + evento + equipo + plazo + tipo_cliente + codigo_oferta','Crea o modifica oferta; si falta PDF de terminos queda bloqueada','Calcula todas las combinaciones validas; recomienda una sin ocultar alternativas','Ofertas Moviles','Cruza plan base + equipo + evento + elegibilidad; aplica la mejor oferta vigente valida','No inventar precio ni condicion si no esta en fuente oficial'],
+      ['Lista de Precios / Equipos','Precio/equipo','Tabla oficial de equipos, precios, mensualidades, plazos, precios por plan','Excel principalmente; PDF solo si es fuente oficial procesable','Item code, modelo, precio regular, plazos, mensualidad, plan minimo, familia de equipo','Equipo / plan','item_code + plazo + plan_minimo','Actualiza precio base con vigente_desde/vigente_hasta y conserva historial. El precio es atributo versionado','Precio regular; no acumula con ofertas','Lista de Precios publicada','Sirve como precio base de equipos; ofertas pueden consultarla','No cambiar precios por una oferta salvo nuevo precio oficial'],
+      ['Cambio oficial de precio dentro de boletin','Precio/equipo','Seccion de boletin con cambio de precio, nuevo precio de equipo o actualizacion oficial','PDF o Excel','Senal explicita de cambio oficial, equipo afectado, precio anterior/nuevo, vigencia y fuente','Equipo / plan','item_code + plazo + plan_minimo','Cierra precio anterior y crea precio base nuevo con fuente del boletin. El nuevo precio es valor versionado, no identidad','Reemplaza precio base; no es descuento temporal','Actualiza Lista de Precios con trazabilidad','Usa el nuevo precio como base vigente','No tratar como descuento temporal si el boletin dice que el precio cambio'],
+      ['Oferta temporal de equipo/precio','Oferta/beneficio','Gratis, descuento, credito mensual, financiamiento especial, oferta por job/codigo, precio promocional sujeto a condiciones','PDF o Excel','Plan minimo, convergente, plazo, job, codigo, evento, fechas','Cliente / BAN / linea / equipo / plan','equipo + beneficio + plan_minimo + plazo + tipo_cliente + evento + vigencia','Crea o modifica oferta temporal; vence sin alterar base','Acumula, sustituye o excluye segun terminos','Ofertas vigentes','Aplica como beneficio sobre el precio base','No sobrescribir Lista de Precios si no dice nuevo precio oficial'],
+      ['Accesorios','Oferta/beneficio','Boletines o tablas de accesorios que no reemplazan planes base ni precios de equipos principales','PDF o Excel','Item de accesorio, descuento, cliente elegible, convergencia, vigencia, familia y fuente','Producto / accesorio / cliente','item_accesorio + beneficio + condicion + vigencia','Crea oferta o precio oficial de accesorio segun texto de fuente','Solo aplica si la propuesta incluye accesorio elegible','Ofertas/beneficios de accesorios o modulo de accesorios','Aplica descuento o beneficio si la propuesta lo incluye','No meter accesorios en estructura de Fijo, Movil o Claro TV'],
+      ['Inalambrico / IoT','Mixto','Claro Hogar, Claro Oficina, Internet OnTheGo, IoT, modem/tablet, precios, equipos y ofertas especiales','PDF o Excel','Excepcion: una fuente puede traer estructura y ofertas juntas; separar planes/base, equipos, precios, ofertas, elegibilidad y codigos','Plan / equipo / producto / cliente / BAN','producto + plan + equipo + precio + beneficio + condicion + vigencia','Divide la fuente por seccion: base, precio, oferta, terminos o revision','Puede contener base y oferta en una fuente; se separa internamente','Base Inalambrico/IoT y Ofertas Inalambrico segun contenido','Lee estructura y ofertas desde la misma fuente separada internamente','No obligar a escoger solo estructura u oferta'],
+      ['Benefits / Convergencia','Oferta/beneficio','Beneficios por cliente convergente/no convergente, meses gratis, descuentos cruzados, bonos','PDF o Excel','Beneficio, linea afectada, condicion de convergencia, vigencia y fuente original','Cliente / BAN / combinacion','beneficio + linea_afectada + condicion_convergencia + vigencia','Crea regla de beneficio y marca compatibilidad con otras ofertas','Definir compatible, no compatible, sustituye, acumula, maximo por BAN/linea/cliente','Benefits / Ofertas vigentes','Compara beneficios entre lineas para escoger el aplicable/mejor','No duplicar beneficios en varias lineas sin fuente y prioridad clara'],
+      ['Ofertas combinadas','Oferta/beneficio','Ofertas que cruzan Fijo, Movil, Claro TV o Inalambrico','PDF o Excel','Linea/producto principal afectado y lineas relacionadas; condicion que activa la oferta','Cliente / BAN / combinacion','producto_principal + lineas_requeridas + beneficio + condicion + vigencia','Crea regla en la linea principal y relaciona impactos cruzados','Evalua combinacion completa; no duplica beneficios','Modulo de ofertas de la linea principal, con etiquetas de impacto cruzado','Evalua elegibilidad por todas las lineas requeridas','No clasificar por nombre del archivo solamente'],
+      ['Terminos y condiciones','Control','PDFs de terminos, restricciones, vigencias, codigos, limites BAN, exclusiones','PDF','Reglas de elegibilidad, limites, excepciones, vencimiento, codigos aplicables','Regla / oferta / cliente / BAN / linea','oferta_id + tipo_termino + limite + vigencia','Completa o bloquea reglas asociadas','Manda sobre beneficios si limita elegibilidad','Adjuntos/auditoria de la oferta','Bloquea o habilita ofertas segun reglas oficiales','No publicar una oferta si faltan terminos necesarios'],
+      ['Historial y vigencia','Control','Toda fuente oficial cargada','PDF o Excel','Archivo original, hash, usuario, fecha de carga, vigencia, estado, fuente reemplazada','Fuente / regla / publicacion','fuente_hash + seccion + regla_comercial + vigencia','Nuevo, modifica, reemplaza, vence, archiva; nunca borrar','Mantiene auditoria y permite revertir','Historial de fuentes y publicaciones','Permite comparar version anterior vs nueva','No borrar ni sobrescribir sin trazabilidad'],
+      ['Portal','Control','Solo contenido aprobado/publicado','No aplica','Base vigente, ofertas vigentes, vencidas marcadas, fuente visible','Publicacion','pagina + modulo + version + vigencia','Publica solo version aprobada','Muestra vigente y marca vencido','Portal de ofertas','Muestra al vendedor lo vigente y trazable','No mostrar borradores como vigentes'],
+      ['Constructor','Control','No recibe documentos; consume datos normalizados','No aplica','Plan base + equipo/precio + oferta + benefit + elegibilidad + vigencia','Cliente / BAN / linea / plan / equipo / combinacion','seleccion_cliente + plan + equipo + evento + tipo_cliente + ofertas_validas','Calcula combinaciones validas y recomendaciones','Recomienda una opcion, pero muestra alternativas validas','Motor del Constructor','Calcula propuesta, carrito, comparativa y mejor beneficio valido','No usar HTML/JS ni datos viejos como fuente comercial']
+    ];
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const areas = [...new Set(data.map(r => r[0].split(' - ')[0]))].sort();
+    $('area').insertAdjacentHTML('beforeend', areas.map(a => `<option>${esc(a)}</option>`).join(''));
+    function tagClass(value){ if(value.includes('Estructura')) return 'base'; if(value.includes('Oferta')) return 'oferta'; if(value.includes('Mixto')) return 'mixto'; return ''; }
+    function render(){
+      const q = $('q').value.trim().toLowerCase();
+      const area = $('area').value;
+      const tipo = $('tipo').value;
+      const formato = $('formato').value;
+      const nivel = $('nivel').value;
+      const filtered = data.filter(r => {
+        const text = r.join(' ').toLowerCase();
+        return (!q || text.includes(q)) && (!area || r[0].startsWith(area)) && (!tipo || r[1] === tipo) && (!formato || r[3].includes(formato)) && (!nivel || r[5].includes(nivel));
+      });
+      $('rows').innerHTML = filtered.map(r => `<tr>${r.map((c,i) => `<td>${i===1?`<span class="tag ${tagClass(c)}">${esc(c)}</span>`:esc(c)}</td>`).join('')}</tr>`).join('');
+      $('empty').style.display = filtered.length ? 'none' : 'block';
+      $('count').textContent = filtered.length;
+      $('baseCount').textContent = filtered.filter(r => r[1] === 'Estructura/base').length;
+      $('offerCount').textContent = filtered.filter(r => r[1] === 'Oferta/beneficio').length;
+      $('priceCount').textContent = filtered.filter(r => r[1] === 'Precio/equipo').length;
+    }
+    ['q','area','tipo','formato','nivel'].forEach(id => $(id).addEventListener('input', render));
+    render();
+  </script>
+</body>
+</html>

@@ -25,12 +25,13 @@ La especificacion se adapta a la arquitectura comprobada el 2026-07-12:
 - frontend estatico en `frontend/app.html`, sin build;
 - portal local en `Planes para web/`, servido bajo `/constructor`.
 
-El plan anterior para `VentasProui` no se copia. En particular, se eliminan sus supuestos sobre `server-FINAL.js`, `src/backend/controllers`, `tests/vigia`, Vitest, build React y rutas de archivos de produccion del CRM viejo.
+La especificacion no copia supuestos de proyectos heredados. En particular, se eliminan supuestos sobre `server-FINAL.js`, `src/backend/controllers`, `tests/vigia`, Vitest, build React y rutas de archivos de produccion ajenas a `newcrm`.
 
 ## Regla de repositorios
 
 - `newcrm` es el unico destino de esta implementacion.
-- `VentasProui` puede consultarse para entender una funcionalidad heredada, pero no se modifica.
+- Admin Ofertas, Motor Comercial y Constructor pertenecen al mismo proyecto `newcrm`.
+- No usar proyectos heredados como referencia en documentacion, limites, arquitectura ni futuras implementaciones de este flujo comercial.
 - `ofertas-proui` no se conecta ni se modifica en esta fase.
 - `originales/` es archivo historico, no fuente activa de instrucciones.
 
@@ -73,6 +74,17 @@ Hojas verificadas de la lista de precios:
 - `Accesorios`.
 
 Los archivos `docs/motor-ofertas/02*.xlsx` son matrices de investigacion. Sirven como fixtures y comparacion, pero no crean una version vigente por si solos.
+
+## Versionado global de fuentes comerciales
+
+La identidad primaria de un archivo oficial es su `sha256`.
+
+- Mismo `sha256`: es el mismo archivo. Admin Ofertas debe reportar `fuente_duplicada` y no crear otra fuente, aunque cambie el nombre mostrado o el módulo elegido.
+- Mismo `nombre_original`, misma `familia` y misma vigencia con `sha256` distinto: es una nueva revisión de la misma fuente. Se permite archivar, analizar y comparar contra la última publicación vigente sin sobrescribir el historial anterior.
+- Mismo `nombre_original` y misma `familia` con vigencia distinta y `sha256` distinto: es una nueva versión de vigencia de esa fuente. No se modifica la vigencia de registros anteriores para esquivar bloqueos.
+- Los consumidores comerciales deben leer la última revisión publicada y vigente para la identidad comercial aprobada. Una revisión en borrador, no aprobada o reemplazada no sustituye a la publicada.
+
+Esta regla aplica a todos los módulos de Admin Ofertas: Lista de Precios, Planes Móviles, Fijo, Claro TV, Servicios, Directorio Fijo, Inalámbrico/IoT, Ofertas Vigentes, Benefits y futuras fuentes. La revisión del documento no cambia reglas comerciales por sí sola; solo habilita preview, diff, aprobación y publicación explícita.
 
 ## Arquitectura actual que debe coexistir
 

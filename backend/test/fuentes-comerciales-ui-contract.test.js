@@ -28,8 +28,27 @@ test('Lista de fuentes muestra metadatos operativos y etiqueta Ofertas móviles'
   assert.match(appHtml, /f\.sha256/);
 });
 
+test('Centro de Cargas avisa documentos vencidos o por vencer y lleva el conteo al menu', () => {
+  assert.match(appHtml, /const OF_ALERTA_DIAS=30;/);
+  assert.match(appHtml, /\/api\/fuentes-comerciales\/alertas-vencimiento\?dias='\+OF_ALERTA_DIAS/);
+  assert.match(appHtml, /function ofRenderVigenciaAlertas\(alertas\)/);
+  assert.match(appHtml, /\$\{ofRenderVigenciaAlertas\(data\.alertas\)\}/);
+  assert.match(appHtml, /id="navOfertasAlertas"/);
+  assert.match(appHtml, /async function ofRefreshNavAlertas\(\)/);
+  assert.match(appHtml, /var porVencer=dias!=null&&dias>=0&&dias<=OF_ALERTA_DIAS;/);
+  assert.match(appHtml, /'Buscar documento nuevo'/);
+  assert.match(appHtml, /Subir documento nuevo/);
+});
+
 test('Fuentes comerciales no reutiliza el nombre de la función preview como estado', () => {
   assert.doesNotMatch(appHtml, /let\s+[^;]*\bfcPreviewPlanesFijos\s*=/);
   assert.match(appHtml, /let\s+[^;]*\bfcPreviewPlanesFijosData\s*=/);
   assert.match(appHtml, /async function fcPreviewPlanesFijos\(/);
+});
+
+test('Admin distingue duplicado exacto de nueva revision de fuente', () => {
+  // Un duplicado exacto se reconoce por hash y no crea otra fuente ni otra revision.
+  assert.match(appHtml, /Archivo id[eé]ntico: ya estaba guardado con el mismo SHA-256 [^']*'\+?hashCorto\+?'\. No se cre[oó] una revisi[oó]n nueva\./);
+  assert.match(appHtml, /Nueva revision detectada/);
+  assert.match(appHtml, /r\.versionado&&r\.versionado\.tipo==='nueva_revision_misma_fuente'/);
 });

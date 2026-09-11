@@ -17,7 +17,7 @@ function numberOrNull(value) {
 export function validateApifyPreviewCriteria(input = {}) {
   const rubro = cleanText(input.rubro);
   const zona = cleanText(input.zona);
-  const cantidad = Math.min(Math.max(Number(input.cantidad) || 20, 1), 200);
+  const cantidad = Math.min(Math.max(Number(input.cantidad) || 20, 1), 500);
   const filtros = {
     telefono: Boolean(input.filtros?.telefono),
     website: Boolean(input.filtros?.website),
@@ -116,6 +116,87 @@ export function buildApifyGoogleMapsInput(criteria) {
     scrapePlaceDetailPage: true,
     skipClosedPlaces: true,
     includeWebResults: criteria.filtros.website,
+  };
+}
+
+function getApifyConfig(options = {}) {
+  const token = options.token || process.env.APIFY_API_TOKEN;
+  const actorId = options.actorId || process.env.APIFY_GOOGLE_MAPS_ACTOR_ID || DEFAULT_ACTOR_ID;
+  if (!token) {
+    const err = new Error('APIFY_API_TOKEN no configurado en backend.');
+    err.statusCode = 503;
+    throw err;
+  }
+  if (!actorId) {
+    const err = new Error('APIFY_GOOGLE_MAPS_ACTOR_ID no configurado en backend.');
+    err.statusCode = 503;
+    throw err;
+  }
+  return { token, actorId };
+}
+
+async function readApifyJson(response) {
+  if (response.ok) return response.json();
+  const detail = await response.text().catch(() => '');
+  const err = new Error(`Apify ${response.status}: ${detail.slice(0, 180)}`);
+  err.statusCode = 502;
+  throw err;
+}
+
+export async function startApifyPreview(criteriaInput, options = {}) {
+  const criteria = validateApifyPreviewCriteria(criteriaInput);
+  const { token, actorId } = getApifyConfig(options);
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const url = `${APIFY_API_BASE}/acts/${encodeURIComponent(actorId)}/runs?token=${encodeURIComponent(token)}`;
+  const payload = await readApifyJson(await fetchImpl(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildApifyGoogleMapsInput(criteria)),
+  }));
+  const run = payload?.data;
+  if (!run?.id) {
+    const err = new Error('Apify no devolvió un identificador de ejecución.');
+    err.statusCode = 502;
+    throw err;
+  }
+  return { status: 'running', run_id: run.id, dataset_id: run.defaultDatasetId || null, criteria };
+}
+
+export async function getApifyPreviewStatus(input = {}, options = {}) {
+  const runId = cleanText(input.run_id);
+  const datasetId = cleanText(input.dataset_id);
+  const criteria = validateApifyPreviewCriteria(input.criteria || {});
+  if (!runId) {
+    const err = new Error('Falta la ejecución de Apify a consultar.');
+    err.statusCode = 400;
+    throw err;
+  }
+  const { token } = getApifyConfig(options);
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const runPayload = await readApifyJson(await fetchImpl(`${APIFY_API_BASE}/actor-runs/${encodeURIComponent(runId)}?token=${encodeURIComponent(token)}`));
+  const run = runPayload?.data;
+  const runStatus = cleanText(run?.status).toUpperCase();
+  if (runStatus === 'FAILED' || runStatus === 'ABORTED' || runStatus === 'TIMED-OUT') {
+    const err = new Error(`La búsqueda en Apify terminó con estado ${runStatus || 'desconocido'}.`);
+    err.statusCode = 502;
+    throw err;
+  }
+  if (runStatus !== 'SUCCEEDED') return { status: 'running', run_id: runId, dataset_id: run?.defaultDatasetId || datasetId, criteria };
+
+  const resolvedDatasetId = cleanText(run?.defaultDatasetId || datasetId);
+  if (!resolvedDatasetId) {
+    const err = new Error('Apify terminó sin dataset de resultados.');
+    err.statusCode = 502;
+    throw err;
+  }
+  const rawItems = await readApifyJson(await fetchImpl(`${APIFY_API_BASE}/datasets/${encodeURIComponent(resolvedDatasetId)}/items?token=${encodeURIComponent(token)}&clean=true&format=json`));
+  return {
+    status: 'succeeded',
+    run_id: runId,
+    dataset_id: resolvedDatasetId,
+    criteria,
+    total_raw: Array.isArray(rawItems) ? rawItems.length : 0,
+    data: normalizeApifyItems(rawItems, criteria),
   };
 }
 

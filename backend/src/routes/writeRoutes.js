@@ -6,7 +6,8 @@ import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { applyPlanCodeDefaults } from '../services/planCode.js';
 import { resolvePlanRateWithFallback } from '../services/planRateCatalog.js';
-import { normalizeOperationalStatus } from '../services/subscriberClassification.js';
+import { normalizeLineType, normalizeOperationalStatus } from '../services/subscriberClassification.js';
+import { recordSubscriberChange } from '../services/subscriberHistoryService.js';
 
 export const writeRouter = Router();
 const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
@@ -123,6 +124,7 @@ writeRouter.put('/bans-real/:id', requireAuth, async (req, res) => {
 // AGREGAR suscriptor a un BAN
 writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) => {
   const b = req.body || {}; const ph = onlyDigits(b.phone);
+  const lineType = normalizeLineType(b.line_type);
   const planDefaults = applyPlanCodeDefaults({
     plan: b.plan,
     price_code: b.price_code,
@@ -131,6 +133,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
   if (ph.length !== 10) return res.status(400).json({ error: 'El teléfono debe tener 10 dígitos' });
   if (ph.startsWith('100')) return res.status(422).json({ error: 'El codigo interno 100 no es un suscriptor y no se puede guardar' });
   if (!VALID_SUBSCRIBER_PHONE.test(ph)) return res.status(422).json({ error: 'El suscriptor debe comenzar con 787, 939 o 989' });
+  if (lineType && !['NEW', 'REN'].includes(lineType)) return res.status(422).json({ error: 'Tipo de línea inválido. Selecciona Línea nueva o Renovación.' });
   if (b.remaining_payments && !b.contract_end_date) b.contract_end_date = contractEndFromRemainingPayments(b.remaining_payments);
   const suppliedMonthlyValue = Number(b.monthly_value);
   const resolvedPlanRate = Number.isFinite(suppliedMonthlyValue) && suppliedMonthlyValue > 0
@@ -156,26 +159,40 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
           throw err;
         }
       }
-      const existing = await c.query(
-        `SELECT s.id, s.status AS previous_status, b.ban_number AS previous_ban_number, s.ban_id
+      const activeElsewhere = await c.query(
+        `SELECT s.*, b.ban_number AS previous_ban_number
            FROM subscribers s
            LEFT JOIN bans b ON b.id = s.ban_id
           WHERE s.phone_norm = $1::text
-          LIMIT 1`,
-        [ph]
+            AND s.ban_id <> $2
+            AND LOWER(TRIM(COALESCE(s.status, ''))) IN ('activo', 'activa', 'active', 'a')
+          LIMIT 1
+          FOR UPDATE OF s`,
+        [ph, req.params.banId]
       );
-      if (existing.rows[0] && String(existing.rows[0].ban_id) !== String(req.params.banId)) {
-        const err = new Error(`El teléfono ya existe en el BAN ${existing.rows[0].previous_ban_number || 'desconocido'}. No se reasignó automáticamente.`);
+      if (activeElsewhere.rows[0]) {
+        const err = new Error(`El teléfono ya está activo en el BAN ${activeElsewhere.rows[0].previous_ban_number || 'desconocido'}. Cancélalo antes de activarlo en otro BAN.`);
         err.statusCode = 409;
-        err.existing = existing.rows[0];
+        err.existing = activeElsewhere.rows[0];
         throw err;
       }
-      return c.query(
+      const existing = await c.query(
+        `SELECT s.*, b.ban_number AS previous_ban_number
+          FROM subscribers s
+           LEFT JOIN bans b ON b.id = s.ban_id
+          WHERE s.phone_norm = $1::text
+            AND s.ban_id = $2
+          LIMIT 1
+          FOR UPDATE OF s`,
+        [ph, req.params.banId]
+      );
+      const upserted = await c.query(
         `WITH existing AS (
          SELECT s.id, s.status AS previous_status, b.ban_number AS previous_ban_number
            FROM subscribers s
            LEFT JOIN bans b ON b.id = s.ban_id
           WHERE s.phone_norm = $2::text
+            AND s.ban_id = $1
           LIMIT 1
        ),
        upsert AS (
@@ -185,7 +202,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
            product_type, price_code, payments_made, status
           )
           VALUES ($1,$2::text,$2::text,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'activo')
-         ON CONFLICT (phone_norm) WHERE phone_norm IS NOT NULL AND phone_norm <> ''
+         ON CONFLICT (ban_id, phone_norm) WHERE phone_norm IS NOT NULL AND phone_norm <> ''
          DO UPDATE SET
            ban_id = EXCLUDED.ban_id,
            phone = EXCLUDED.phone,
@@ -216,7 +233,7 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
         planDefaults.plan || null,
         resolvedPlanRate.value,
         b.line_kind || null,
-        b.line_type || null,
+        lineType || null,
         b.equipment || null,
         b.activation_date || null,
         b.contract_start_date || null,
@@ -227,6 +244,24 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
         planDefaults.price_code || null,
         b.payments_made ? Number(b.payments_made) || null : null,
       ]);
+      const row = upserted.rows[0];
+      if (row?.id) {
+        const after = await c.query(`SELECT * FROM subscribers WHERE id = $1`, [row.id]);
+        await recordSubscriberChange({
+          db: c,
+          subscriberId: row.id,
+          before: existing.rows[0] || {},
+          after: after.rows[0] || {},
+          user: req.user,
+          source: 'manual',
+          action: row.inserted ? 'created' : 'updated',
+          metadata: {
+            endpoint: '/api/bans-real/:banId/subscribers',
+            plan_rate_source: resolvedPlanRate.source,
+          },
+        });
+      }
+      return upserted;
     });
     res.status(r.rows[0]?.inserted ? 201 : 200).json(r.rows[0]);
   } catch (e) { res.status(e.statusCode || 500).json({ error: e.message, existing: e.existing || null }); }
@@ -239,6 +274,12 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
   }
   const body = req.body || {};
   if ('status' in body) body.status = normalizeOperationalStatus(body.status);
+  if ('line_type' in body) {
+    body.line_type = normalizeLineType(body.line_type);
+    if (body.line_type && !['NEW', 'REN'].includes(body.line_type)) {
+      return res.status(422).json({ error: 'Tipo de línea inválido. Selecciona Línea nueva o Renovación.' });
+    }
+  }
   if ('plan' in body || 'price_code' in body || 'contract_term' in body) {
     const planDefaults = applyPlanCodeDefaults(body);
     if ('plan' in body) body.plan = planDefaults.plan;
@@ -259,7 +300,21 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
   vals.push(req.params.id);
   try {
-    const r = await wp(c => c.query(`UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals));
+    const r = await wp(async c => {
+      const before = await c.query(`SELECT * FROM subscribers WHERE id = $1 FOR UPDATE`, [req.params.id]);
+      if (!before.rows[0]) return { rows: [] };
+      const updated = await c.query(`UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
+      await recordSubscriberChange({
+        db: c,
+        subscriberId: req.params.id,
+        before: before.rows[0],
+        after: updated.rows[0],
+        user: req.user,
+        source: 'manual',
+        metadata: { endpoint: '/api/subscribers-real/:id' },
+      });
+      return updated;
+    });
     if (!r.rows[0]) return res.status(404).json({ error: 'Suscriptor no existe' });
     res.json({ ok: true });
   } catch (e) {

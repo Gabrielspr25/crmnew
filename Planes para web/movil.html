@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Planes Moviles PYMES</title>
+<script src="portal-config.js?v=2026091001"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -282,6 +283,8 @@ body{
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
     
   <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
@@ -313,9 +316,7 @@ body{
 </div>
 
 <script>
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? window.location.origin
-  : 'https://crmp.ss-group.cloud';
+const API_BASE = window.PORTAL_API_BASE || '';
 let allModulos = [];
 let publishedOffers = [];
 let businessRedPlus = null;

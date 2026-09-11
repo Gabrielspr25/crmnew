@@ -1,12 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { vigenciaFromSources } from '../src/routes/motorOfertasRoutes.js';
+import { vigenciaFromName, vigenciaFromSources } from '../src/routes/motorOfertasRoutes.js';
+
+test('el preview movil expone las revisiones del normalizador como advertencias para el admin', () => {
+  const route = fs.readFileSync(new URL('../src/routes/motorOfertasRoutes.js', import.meta.url), 'utf8');
+  assert.match(route, /parsed\.revisiones \|\| \[\]\)\.map\(item => \(\{ \.\.\.item, tipo: 'revision' \}\)\)/);
+});
+
+test('vigenciaFromName entiende nombres oficiales compactos y con anio suelto', () => {
+  assert.deepEqual(vigenciaFromName('Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf'), { desde: '2026-09-01', hasta: '2026-09-30' });
+  assert.deepEqual(vigenciaFromName('Tabla Ofertas Financiamiento del 27 de agosto al 16 de septiembre 2026.xlsx'), { desde: '2026-08-27', hasta: '2026-09-16' });
+  assert.deepEqual(vigenciaFromName('Lista de equipos sin fecha.xlsx'), { desde: null, hasta: null });
+});
 
 test('el motor movil toma sus dos fuentes comerciales y expone una version temporal autorizada', () => {
   const route = fs.readFileSync(new URL('../src/routes/motorOfertasRoutes.js', import.meta.url), 'utf8');
   const server = fs.readFileSync(new URL('../src/server.js', import.meta.url), 'utf8');
   assert.match(route, /normalizeOfferWorkbooks/);
+  assert.match(route, /reglas_normalizadas:\s*parsed\.reglas_normalizadas/);
+  assert.match(route, /resumen_reglas:\s*parsed\.resumen_reglas/);
   assert.match(route, /vencida_pendiente_reemplazo/);
   assert.match(route, /motorOfertasRouter\.post\('\/preview'/);
   assert.match(route, /motorOfertasRouter\.post\('\/publicar'/);

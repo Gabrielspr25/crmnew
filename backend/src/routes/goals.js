@@ -62,7 +62,7 @@ goalsRouter.get('/cumplimiento', requireAuth, async (req, res) => {
              AND ($1::date IS NULL OR date_trunc('month', s.sale_date) = date_trunc('month', $1::date))
              AND ($2::text IS NULL OR LOWER(TRIM(s.vendor_name))=LOWER(TRIM($2))))::int AS sold_qty
        FROM products p
-       LEFT JOIN goals g ON g.product_key = p.key AND g.scope = CASE WHEN $2::text IS NULL THEN 'negocio' ELSE 'vendedor' END
+       LEFT JOIN goals g ON g.product_key = p.key AND g.scope::text = CASE WHEN $2::text IS NULL THEN 'negocio' ELSE 'vendedor' END
             AND ($2::text IS NULL OR LOWER(TRIM(g.salesperson))=LOWER(TRIM($2)))
             AND ($1::date IS NULL OR date_trunc('month', g.month) = date_trunc('month', $1::date))
       ORDER BY p.sort_order`, [month || null, seller || null]);

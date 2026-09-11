@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { fetchApifyPreview } from '../services/prospectosApifyService.js';
+import { getApifyPreviewStatus, startApifyPreview } from '../services/prospectosApifyService.js';
 import { createAirtableClient } from '../services/prospectosAirtableService.js';
 import { saveSelectedApifyProspects } from '../services/prospectosProspectionService.js';
 import { createProspectosRepository } from '../services/prospectosRepository.js';
@@ -164,10 +164,19 @@ async function runHarvest(rubros, municipios, maxPages) {
 }
 
 // ─── Endpoints ────────────────────────────────────────────────────────────────
-// Preview Apify: no guarda filas CRM ni Airtable. Los secretos viven solo en backend.
+// Preview Apify: inicia el actor sin bloquear la petición web. No guarda filas CRM ni Airtable.
 prospectosRouter.post('/prospectos/apify/preview', requireAuth, async (req, res) => {
   try {
-    const preview = await fetchApifyPreview(req.body || {});
+    const preview = await startApifyPreview(req.body || {});
+    res.json({ ok: true, ...preview });
+  } catch (e) {
+    res.status(e.statusCode || 502).json({ ok: false, error: e.message });
+  }
+});
+
+prospectosRouter.post('/prospectos/apify/preview/status', requireAuth, async (req, res) => {
+  try {
+    const preview = await getApifyPreviewStatus(req.body || {});
     res.json({ ok: true, ...preview });
   } catch (e) {
     res.status(e.statusCode || 502).json({ ok: false, error: e.message });

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Planes Fijos PYMES</title>
+<script src="portal-config.js?v=2026091001"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -223,6 +224,8 @@ code{
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
 
   <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
@@ -241,7 +244,7 @@ code{
 </div>
 
 <script>
-const API_BASE = '';  // mismo origen (proxy nginx †’ :3001)
+const API_BASE = window.PORTAL_API_BASE || '';  // mismo origen (proxy nginx †’ :3001)
 const TECH_FILTERS = {
   all: 'Todos',
   'cobre-vrad': 'Cobre/VRAD',

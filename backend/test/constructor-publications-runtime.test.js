@@ -39,6 +39,43 @@ test('normaliza el catalogo movil publicado sin inventar precios de linea', () =
   assert.equal(catalog.multiline[0].lineCosts[3], 35);
 });
 
+test('catalogo Business RED Plus calcula acumulados oficiales y no multiplica primera linea', () => {
+  const loader = loaderContext();
+  const catalog = loader.mobileCatalog([
+    {
+      seccion_key: 'movil_multilinea_business_red',
+      contenido: {
+        autopay_descuento: 10,
+        filas: [
+          { familia: 'Business Red Plus', cantidad_lineas: 1, codigo: 'BREDP1', precio_regular: 65 },
+          { familia: 'Business Red Plus', cantidad_lineas: 2, codigo: 'BREDP2', precio_regular: 45 },
+          { familia: 'Business Red Plus', cantidad_lineas: 3, codigo: 'BREDP3', precio_regular: 20 },
+          { familia: 'Business Red Plus', cantidad_lineas: 4, codigo: 'BREDP4', precio_regular: 30 },
+          { familia: 'Business Red Plus', cantidad_lineas: 5, codigo: 'BREDP5', precio_regular: 15 },
+          { familia: 'Business Red Plus', cantidad_lineas: 6, codigo: 'BREDP6', precio_regular: 35 },
+          { familia: 'Business Red Plus', cantidad_lineas: 7, codigo: 'BREDP7', precio_regular: 35 },
+          { familia: 'Business Red Plus', cantidad_lineas: 8, codigo: 'BREDP8', precio_regular: 35 },
+          { familia: 'Business Red Plus', cantidad_lineas: 9, codigo: 'BREDP9', precio_regular: 35 },
+          { familia: 'Business Red Plus', cantidad_lineas: 10, codigo: 'BREDP10', precio_regular: 35 },
+        ],
+      },
+    },
+  ]);
+  const plus = catalog.multiline.find(plan => plan.key === 'plus');
+  const expectedRegularTotals = [65, 110, 130, 160, 175, 210, 245, 280, 315, 350];
+  const expectedAutoPayTotals = [55, 90, 100, 120, 125, 150, 175, 200, 225, 250];
+
+  assert.ok(plus);
+  expectedRegularTotals.forEach((total, index) => {
+    assert.equal(plus.lineTotals[index], total, `regular ${index + 1} lineas`);
+    if (index > 0) assert.notEqual(plus.lineTotals[index], (index + 1) * plus.lineCosts[0], `no multiplicar BREDP1 para ${index + 1}`);
+  });
+  expectedAutoPayTotals.forEach((total, index) => {
+    assert.equal(plus.autoPayTotals[index], total, `autopay ${index + 1} lineas`);
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(plus.lineCodes)), ['BREDP1', 'BREDP2', 'BREDP3', 'BREDP4', 'BREDP5', 'BREDP6', 'BREDP7', 'BREDP8', 'BREDP9', 'BREDP10']);
+});
+
 test('rechaza modulos sin metadata de publicacion vigente', async () => {
   const payloads = {
     '/api/ofertas-movil/vigente': { version: { datos: [{ id: 'oferta-1' }] } },

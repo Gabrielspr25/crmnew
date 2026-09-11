@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business - Claro TV PYMES</title>
+<script src="portal-config.js?v=2026091001"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -52,6 +53,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Benefits</a>
+  <a href="affinity.html">Affinity</a>
     
   <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
@@ -170,7 +173,7 @@ function moduleRows(modulo){
 }
 async function loadClaroTv(){
   try{
-    const r=await fetch('/api/planes-modulos/claro_tv');
+    const r=await fetch(portalApiUrl('/api/planes-modulos/claro_tv'));
     if(!r.ok)throw new Error('api');
     const data=await r.json();
     if(!data.publicacion)return showUnavailable('No existe una publicación vigente de Claro TV.');

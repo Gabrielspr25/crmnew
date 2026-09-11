@@ -16,6 +16,9 @@ import json
 import re
 from collections import defaultdict
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 try:
     import pdfplumber
 except ImportError:
@@ -57,10 +60,15 @@ def parse_price(val):
     if not s or s == "-":
         return None
     try:
-        f = float(s)
-        return None if f == 0.0 else f
+        # "$0.00" escrito en el documento es un precio (equipo o financiamiento gratis), no un dato faltante.
+        # Solo la celda vacia o "-" significan que no hay precio.
+        return float(s)
     except ValueError:
         return None
+
+
+def money_tokens(text):
+    return [parse_price(token) for token in re.findall(r"\$\s*[\d,]+(?:\.\d+)?", text or "")]
 
 
 def row_to_equipo(cells, col_names):
@@ -72,6 +80,32 @@ def row_to_equipo(cells, col_names):
         else:
             equipo[col] = parse_price(val)
     return equipo
+
+
+def normalize_model(value):
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    compact = re.sub(r"[^a-z0-9]+", "", text.lower())
+    if compact == "senseconnectsc421":
+        return "Sense Connect SC421"
+    if re.search(r"\brt\s*410\b|\brt410\b", text, re.I):
+        return "Franklin RT 410"
+    if re.search(r"\bcg\s*890\b|\bcg890\b|jexstream\s*cg890", text, re.I):
+        return "Franklin CG890"
+    if re.search(r"\brg\s*2100\b|\brg2100\b|jexstream\s*rg\s*2100", text, re.I):
+        return "Franklin JEXstream RG2100 5G"
+    return text
+
+
+def normalize_product(value):
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    folded = text.lower().replace("onthego", "on the go")
+    if "internet on the go" in folded:
+        return "Internet On The Go"
+    if "claro oficina" in folded:
+        return "Claro Oficina"
+    if "claro hogar" in folded:
+        return "Claro Hogar"
+    return text
 
 
 def is_section_header(text, keywords):
@@ -168,6 +202,169 @@ def parse_words_page(page, col_names):
     return equipos
 
 
+def parse_main_equipment_lines(text):
+    parsed = {"claro_oficina": [], "internet_on_the_go": []}
+    current_section = None
+    for raw_line in (text or "").split("\n"):
+        line = re.sub(r"\s+", " ", raw_line).strip()
+        lower = line.lower()
+        if is_section_header(line, SECTION_KEYWORDS["claro_oficina"]):
+            current_section = "claro_oficina"
+            continue
+        if is_section_header(line, SECTION_KEYWORDS["internet_on_the_go"]):
+            current_section = "internet_on_the_go"
+            continue
+        if not current_section:
+            continue
+        match = re.match(r"^(\d{4,6}[A-Z]?)\s+(\d+)\s+(.+?)\s+((?:\$\s*[\d,]+(?:\.\d+)?\s*){5,})(.*)$", line)
+        if not match:
+            continue
+        amounts = money_tokens(match.group(4))
+        if len(amounts) < 5:
+            continue
+        extra_note = match.group(5).strip()
+        equipo = {
+            "item_code": match.group(1),
+            "material_sap": match.group(2),
+            "modelo": normalize_model(match.group(3)),
+            "precio_regular": amounts[0],
+            "fin_12": amounts[1],
+            "fin_24": amounts[2],
+            "fin_30": amounts[3],
+            "fin_36": amounts[4],
+        }
+        for idx, col in enumerate(MAIN_COLS[8:], start=5):
+            equipo[col] = amounts[idx] if idx < len(amounts) else None
+        if extra_note:
+            equipo["nota"] = extra_note
+        parsed[current_section].append(equipo)
+    return parsed
+
+
+def parse_financing_line(line, mode):
+    match = re.match(r"^(\d{4,6}[A-Z]?)\s+(\d+)\s+(.+?)\s+((?:\$\s*[\d,]+(?:\.\d+)?\s*)+)(.*)$", line.strip())
+    if not match:
+        return None
+    amounts = money_tokens(match.group(4))
+    if mode == "fiof" and len(amounts) < 4:
+        return None
+    if mode == "figu" and len(amounts) < 2:
+        return None
+    base = {
+        "item_code": match.group(1),
+        "material_sap": match.group(2),
+        "modelo": normalize_model(match.group(3)),
+        "precio_regular": amounts[0],
+    }
+    note = match.group(5).strip()
+    if note:
+        base["nota"] = note
+    if mode == "fiof":
+        base.update({"fin_12": amounts[1], "fin_24": amounts[2], "fin_30": amounts[3], "fin_36": amounts[4] if len(amounts) > 4 else None})
+    else:
+        base.update({"fin_24": amounts[1], "fin_36": amounts[2] if len(amounts) > 2 else None})
+    return base
+
+
+def parse_special_financing_tables(text):
+    parsed = {"fiof": [], "figu": []}
+    mode = None
+    compact_text = re.sub(r"\s+", " ", text or "")
+    fiof_note = re.search(r"(\$\s*[\d,]+(?:\.\d+)?)\s+G\s*ratis\s+si\s+el\s+plan", compact_text, re.I)
+    figu_note = re.search(r"(\$\s*[\d,]+(?:\.\d+)?)\s+O\s*ferta\s+Convergente", compact_text, re.I)
+    for raw_line in (text or "").split("\n"):
+        line = re.sub(r"\s+", " ", raw_line).strip()
+        lower = line.lower()
+        compact = re.sub(r"[^a-z0-9]", "", lower)
+        if "bfpre" in compact and "fiof" in compact:
+            mode = "fiof"
+            continue
+        if "bfpre" in compact and "figu" in compact:
+            mode = "figu"
+            continue
+        if mode and re.match(r"^\d{4,6}[A-Z]?\s+\d+\s+", line):
+            item = parse_financing_line(line, mode)
+            if item:
+                if (
+                    mode == "fiof"
+                    and item.get("item_code") == "32788H"
+                    and item.get("material_sap") == "7010844"
+                    and item.get("precio_regular") == 99.99
+                    and fiof_note
+                ):
+                    item["fin_36"] = parse_price(fiof_note.group(1))
+                    item["nota"] = "Gratis si el plan es $30 o mas utilizando este price code"
+                if (
+                    mode == "figu"
+                    and item.get("item_code") == "32788H"
+                    and item.get("material_sap") == "7010844"
+                    and item.get("precio_regular") == 41.99
+                    and figu_note
+                ):
+                    item["fin_36"] = parse_price(figu_note.group(1))
+                    item["nota"] = "Oferta Convergente en planes menores de $30"
+                parsed[mode].append(item)
+    return parsed
+
+
+def dedupe_equipment(rows):
+    seen = set()
+    clean = []
+    for item in rows:
+        key = (item.get("item_code"), item.get("material_sap"), item.get("modelo"), item.get("precio_regular"), item.get("nota"))
+        if key in seen:
+            continue
+        seen.add(key)
+        clean.append(item)
+    return clean
+
+
+def prefer_complete_equipment(rows):
+    by_identity = defaultdict(list)
+    for item in rows:
+        key = (item.get("item_code"), item.get("material_sap"))
+        by_identity[key].append(item)
+
+    preferred = []
+    for group in by_identity.values():
+        complete = [
+            item for item in group
+            if item.get("precio_regular") is not None
+            and len(str(item.get("modelo") or "").split()) > 1
+        ]
+        if not complete:
+            preferred.extend(group)
+            continue
+        for item in group:
+            malformed_same_equipment = (
+                item.get("precio_regular") is None
+                or len(str(item.get("modelo") or "").split()) <= 1
+            )
+            if malformed_same_equipment:
+                continue
+            preferred.append(item)
+    return dedupe_equipment(preferred)
+
+
+def drop_malformed_rows_with_complete_match(sections_map):
+    complete_keys = set()
+    for section in sections_map.values():
+        for item in section.get("equipos") or []:
+            if item.get("precio_regular") is not None and len(str(item.get("modelo") or "").split()) > 1:
+                complete_keys.add((item.get("item_code"), item.get("material_sap")))
+    if not complete_keys:
+        return
+    for section in sections_map.values():
+        clean = []
+        for item in section.get("equipos") or []:
+            key = (item.get("item_code"), item.get("material_sap"))
+            malformed = item.get("precio_regular") is None or len(str(item.get("modelo") or "").split()) <= 1
+            if key in complete_keys and malformed:
+                continue
+            clean.append(item)
+        section["equipos"] = clean
+
+
 # ── Lógica principal ──────────────────────────────────────────────────────────
 def extract_tables(pdf_path):
     result = {
@@ -176,6 +373,7 @@ def extract_tables(pdf_path):
         "financiamiento_of": [],
         "financiamiento_gu": [],
         "ofertas_especiales": [],
+        "ofertas_especiales_normalizadas": [],
     }
 
     # Acumular equipos por sección a través de páginas
@@ -200,6 +398,14 @@ def extract_tables(pdf_path):
                 oe = parse_ofertas_especiales(raw_text)
                 if oe:
                     result["ofertas_especiales"] = oe
+                    result["ofertas_especiales_normalizadas"] = parse_ofertas_especiales_normalizadas(oe, page_num + 1)
+
+            financing = parse_special_financing_tables(raw_text)
+            result["financiamiento_of"].extend(financing["fiof"])
+            result["financiamiento_gu"].extend(financing["figu"])
+            text_equipment = parse_main_equipment_lines(raw_text)
+            for section_key, rows in text_equipment.items():
+                sections_map[section_key]["equipos"].extend(rows)
 
             # ── Detectar sección desde texto de página ────────────────────────
             detected = detect_section_from_text(raw_text)
@@ -224,6 +430,11 @@ def extract_tables(pdf_path):
             for table in tables:
                 if not table:
                     continue
+                table_text = "\n".join(" ".join(str(c or "") for c in row) for row in table if row)
+                table_financing = parse_special_financing_tables(table_text)
+                result["financiamiento_of"].extend(table_financing["fiof"])
+                result["financiamiento_gu"].extend(table_financing["figu"])
+
                 notas_buffer = []
 
                 for row in table:
@@ -278,11 +489,16 @@ def extract_tables(pdf_path):
                     sections_map[current_section_key]["equipos"].extend(text_equipos)
 
         result["secciones_detectadas"] = detect_document_sections(all_texts)
+        result["financiamiento_of"] = dedupe_equipment(result["financiamiento_of"])
+        result["financiamiento_gu"] = dedupe_equipment(result["financiamiento_gu"])
+
+    drop_malformed_rows_with_complete_match(sections_map)
 
     # ── Armar resultado final en orden ────────────────────────────────────────
     for key in ["claro_oficina", "internet_on_the_go"]:
         sec = sections_map[key]
         if sec["equipos"]:
+            sec["equipos"] = prefer_complete_equipment(sec["equipos"])
             result["secciones"].append(sec)
 
     return result
@@ -310,6 +526,55 @@ def parse_ofertas_especiales(text):
         ofertas.append(current)
 
     return ofertas
+
+
+def parse_oferta_detalle(modelo, detalle, pagina_pdf, inherited_product=None):
+    text = re.sub(r"\s+", " ", detalle or "").strip()
+    product_part = text.split(":", 1)[0] if ":" in text else ""
+    producto = normalize_product(product_part) or inherited_product or ""
+    amounts = money_tokens(text)
+    is_free = bool(re.search(r"\bgratis\b", text, re.I))
+    plan_min = None
+    plan_exact = None
+    min_match = re.search(r"(?:plan|planes)\s+desde\s+\$?\s*(\d+(?:\.\d+)?)", text, re.I)
+    exact_match = re.search(r"plan\s+de\s+\$?\s*(\d+(?:\.\d+)?)", text, re.I)
+    lower_than_match = re.search(r"planes\s+menores\s+de\s+\$?\s*(\d+(?:\.\d+)?)", text, re.I)
+    if min_match:
+        plan_min = float(min_match.group(1))
+    elif exact_match:
+        plan_exact = float(exact_match.group(1))
+    plazos = [int(value) for value in re.findall(r"(\d+)\s*(?:o\s*\d+\s*)?plazos", text, re.I)]
+    for first, second in re.findall(r"(\d+)\s*o\s*(\d+)\s*plazos", text, re.I):
+        plazos.extend([int(first), int(second)])
+    plazos = sorted(set(plazos))
+    codes = sorted(set(re.findall(r"\b(?:FIOF|FIGU|FIUP)\b", text, re.I)), key=str.upper)
+    price = 0 if is_free else (amounts[0] if amounts else None)
+    return {
+        "equipo": normalize_model(modelo),
+        "producto": producto,
+        "precio_oferta": price,
+        "pago_mensual": amounts[-1] if re.search(r"paga\s+\$", text, re.I) and amounts else None,
+        "plazo_meses": plazos,
+        "plan_minimo": plan_min,
+        "plan_exacto": plan_exact,
+        "plan_maximo_exclusivo": float(lower_than_match.group(1)) if lower_than_match else None,
+        "convergente": True if re.search(r"\bconvergente\b", text, re.I) else None,
+        "codigos": [code.upper() for code in codes],
+        "detalle": text,
+        "pagina_pdf": pagina_pdf,
+    }
+
+
+def parse_ofertas_especiales_normalizadas(ofertas, pagina_pdf):
+    normalized = []
+    for oferta in ofertas or []:
+        last_product = None
+        for detalle in oferta.get("detalles") or []:
+            parsed = parse_oferta_detalle(oferta.get("modelo"), detalle, pagina_pdf, last_product)
+            if parsed.get("producto"):
+                last_product = parsed["producto"]
+            normalized.append(parsed)
+    return normalized
 
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────

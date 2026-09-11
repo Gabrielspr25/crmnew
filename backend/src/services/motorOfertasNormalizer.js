@@ -1,4 +1,5 @@
 import XLSX from 'xlsx';
+import { parseRangoVigencia } from './vigenciaTexto.js';
 
 const ACCENTS = /[\u0300-\u036f]/g;
 const WORD_NUMBERS = { uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
@@ -147,6 +148,83 @@ function benefitFrom(offerText) {
   return { tipo: 'financiado' };
 }
 
+function countBy(items, pick) {
+  return items.reduce((acc, item) => {
+    const key = pick(item) || 'sin_clasificar';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function commercialKeyForOffer(offer) {
+  const events = (offer.eventos || []).length ? offer.eventos.join(',') : 'evento_no_determinado';
+  const families = (offer.familias || []).length ? offer.familias.join(',') : offer.tipo_linea;
+  return ['ofertas_moviles', offer.id, offer.plan?.min ?? 'plan_no_determinado', events, families].join('|');
+}
+
+function confidenceForOffer(offer, contradictions) {
+  const sourceRow = offer.fuente?.fila;
+  const hasBlocking = (contradictions || []).some((item) => item.bloqueante && item.fuente?.fila === sourceRow);
+  if (hasBlocking || offer.estado_comercial === 'contradiccion') return 'contradiccion';
+  if (offer.estado_comercial === 'requiere_revision') return 'requiere_revision';
+  if (!offer.eventos?.length) return 'requiere_revision';
+  return 'confirmado';
+}
+
+function normalizedRuleFromOffer(offer, contradictions) {
+  const estadoConfianza = confidenceForOffer(offer, contradictions);
+  return {
+    fuente_comercial_id: offer.fuente?.fuente_id || null,
+    seccion_origen: 'ofertas_equipos_en_portafolio',
+    tipo_regla: 'oferta_temporal',
+    familia: 'ofertas_moviles',
+    producto: offer.tipo_linea,
+    codigo: offer.id,
+    nombre: offer.nombre,
+    llave_comercial: commercialKeyForOffer(offer),
+    valor: {
+      beneficio: offer.beneficio,
+      equipos: (offer.equipos || []).map((equipo) => ({
+        modelo_comercial: equipo.modelo_comercial,
+        sku_sif: equipo.sku_sif,
+        sap: equipo.sap,
+        precio_regular: equipo.precio_regular,
+        plazos: equipo.plazos,
+      })),
+    },
+    condiciones: {
+      plan: offer.plan,
+      eventos: offer.eventos,
+      familias: offer.familias,
+      modalidad_linea: offer.modalidad_linea,
+      account_types: offer.account_types || [],
+      trade_in: offer.trade_in,
+      limite_ban: offer.limite_ban,
+    },
+    accion: 'publicar_oferta_temporal',
+    prioridad: 20,
+    vigencia_desde: null,
+    vigencia_hasta: null,
+    estado_confianza: estadoConfianza,
+    estado_publicacion: 'borrador',
+    estado_comercial: offer.estado_comercial,
+    traza: {
+      archivo: offer.fuente?.archivo || null,
+      hoja: offer.fuente?.hoja || null,
+      fila: offer.fuente?.fila || null,
+      texto_original: offer.texto_original,
+    },
+  };
+}
+
+function rulesSummary(reglasNormalizadas) {
+  return {
+    total: reglasNormalizadas.length,
+    por_tipo: countBy(reglasNormalizadas, (regla) => regla.tipo_regla),
+    por_confianza: countBy(reglasNormalizadas, (regla) => regla.estado_confianza),
+  };
+}
+
 function familiesFrom(termsText) {
   const source = fold(termsText);
   if (/\bboth\b/.test(source)) return { families: [], ambiguity: true };
@@ -158,13 +236,24 @@ function familiesFrom(termsText) {
   return { families, ambiguity: false };
 }
 
+function parseAccountTypes(value) {
+  return cellText(value)
+    .split(/\n|;|,/)
+    .map((item) => text(item))
+    .filter(Boolean)
+    .filter((item, index, list) => list.findIndex((candidate) => fold(candidate) === fold(item)) === index);
+}
+
+// Fila marcadora de matriz: solo fracciones de descuento (0..1) sin texto, al menos 4 posiciones de linea.
+// El primer valor no tiene que ser 1: el formato del 27 de agosto publica grupos que arrancan en 50%.
 function discountMarker(row) {
-  const values = row.map((value) => {
-    if (value === '' || value == null) return null;
+  const cells = row.filter((value) => value !== '' && value != null);
+  if (cells.length < 4) return null;
+  const values = cells.map((value) => {
     const number = Number(value);
     return Number.isFinite(number) && number >= 0 && number <= 1 ? number : null;
-  }).filter((value) => value != null);
-  return values[0] === 1 && values.length >= 4 ? values : null;
+  });
+  return values.some((value) => value == null) ? null : values;
 }
 
 function extractPriceCodes(value) {
@@ -198,7 +287,7 @@ function businessModelRows(rows, headerRow, nextMarkerRow) {
   for (let index = headerRow + 1; index < (nextMarkerRow ?? rows.length); index += 1) {
     const row = rows[index] || [];
     const model = cellText(row[modelIndex]).replace(/\*/g, '').trim();
-    if (!model || fold(model) === 'modelo') continue;
+    if (!model || fold(model) === 'modelo' || /^[\d.,%\s]+$/.test(model)) continue;
     const regular = parseMoney(row[priceIndex]);
     if (regular == null) continue;
     result.push({
@@ -211,13 +300,47 @@ function businessModelRows(rows, headerRow, nextMarkerRow) {
   return result;
 }
 
+function findBusinessRedPlusSheet(workbook) {
+  return workbook.SheetNames.find((name) => {
+    const normalized = fold(name);
+    return normalized === 'ofertas business red plus' || normalized === 'ofertas red plus';
+  });
+}
+
+function parseBusinessRedPlanAmount(rows) {
+  for (const row of rows.slice(0, 10)) {
+    const joined = row.map(text).join(' ');
+    const match = joined.match(/red\s+plus\s*\$?\s*(\d+(?:\.\d+)?)/i);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function parseSpanishDate(textValue, defaultYear = null) {
+  const parsed = parseRangoVigencia(textValue, { defaultYear });
+  return parsed ? { desde: parsed.desde, hasta: parsed.hasta } : null;
+}
+
+function parseWorkbookValidity(rows, fileName = null) {
+  const defaultYear = String(fileName || '').match(/\b(20\d{2})\b/)?.[1] || null;
+  for (const row of rows.slice(0, 12)) {
+    const parsed = parseSpanishDate(row.map(text).join(' '), defaultYear);
+    if (parsed) return parsed;
+  }
+  return { desde: null, hasta: null };
+}
+
 export function parseBusinessRedPlusWorkbook({ buffer, fileName = null, sourceId = null }) {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
-  const sheetName = workbook.SheetNames.find((name) => fold(name) === 'ofertas business red plus');
-  if (!sheetName) throw new Error('Hoja obligatoria ausente: Ofertas Business Red Plus');
+  const sheetName = findBusinessRedPlusSheet(workbook);
+  if (!sheetName) throw new Error('Hoja obligatoria ausente: Ofertas Business Red Plus u Ofertas Red Plus');
   const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+  const planAmount = parseBusinessRedPlanAmount(rows);
+  const vigencia = parseWorkbookValidity(rows, fileName);
   const markers = rows.map(discountMarker).map((value, index) => (value ? index : -1)).filter((index) => index >= 0);
   const warnings = [];
+  if (planAmount == null) warnings.push({ codigo: 'monto_business_red_plus_no_determinado', hoja: sheetName });
+  if (!vigencia.desde || !vigencia.hasta) warnings.push({ codigo: 'vigencia_business_red_plus_no_determinada', hoja: sheetName });
   const groups = markers.map((markerRow, markerIndex) => {
     const lineDiscounts = discountMarker(rows[markerRow]);
     const nextMarkerRow = markers[markerIndex + 1];
@@ -250,8 +373,9 @@ export function parseBusinessRedPlusWorkbook({ buffer, fileName = null, sourceId
   }).filter(Boolean);
   if (groups.length !== 4) warnings.push({ codigo: 'matrices_business_red_plus_incompletas', esperado: 4, encontrado: groups.length, hoja: sheetName });
   return {
-    plan: { nombre: 'Business Red Plus', monto: 65 },
+    plan: { nombre: 'Business Red Plus', monto: planAmount },
     line_order_dependent: true,
+    vigencia,
     groups,
     warnings,
     source: { archivo: fileName, fuente_id: sourceId, hoja: sheetName },
@@ -298,6 +422,7 @@ export function normalizeOfferWorkbooks({ financingBuffer, priceListBuffer, sour
   const ofertaColumn = columnIndex(header, 'oferta');
   const planColumn = columnIndex(header, 'plan');
   const equipmentColumn = columnIndex(header, 'equipos');
+  const accountTypesColumn = columnIndex(header, 'account types');
   const termsColumn = ['terminos', 'condiciones'].map((key) => columnIndex(header, key)).find((index) => index >= 0);
   const priceOverrides = indexPriceOverrides(rows, sheetName, fileNames.tabla_financiamiento, sourceIds.tabla_financiamiento);
   const offers = [];
@@ -314,6 +439,7 @@ export function normalizeOfferWorkbooks({ financingBuffer, priceListBuffer, sour
     const parsedTerms = parseTerms(termsText);
     const family = familiesFrom(termsText);
     const source = { archivo: fileNames.tabla_financiamiento || null, hoja: sheetName, fila: index + 1, fuente_id: sourceIds.tabla_financiamiento || null };
+    const accountTypes = accountTypesColumn >= 0 ? parseAccountTypes(row[accountTypesColumn]) : [];
     const normalizedEquipment = splitModels(equipmentText).map((model) => {
       const override = priceOverrides.get(normalizeCommercialModel(model));
       const candidates = override ? [override] : (priceIndex.byModel.get(normalizeCommercialModel(model)) || []);
@@ -335,14 +461,17 @@ export function normalizeOfferWorkbooks({ financingBuffer, priceListBuffer, sour
         fuente_precio: exact ? { ...exact.fuente, archivo: fileNames.lista_precios || null, fuente_id: sourceIds.lista_precios || null } : null,
       };
     });
-    if (family.ambiguity) contradictions.push({ codigo: 'alcance_ambiguous_both', bloqueante: true, estado: 'abierta', fuente: source });
+    const revisiones = [];
+    if (family.ambiguity) revisiones.push({ codigo: 'alcance_ambiguous_both', bloqueante: true, estado: 'abierta', fuente: source });
     offers.push({
       id: `oferta-${index + 1}`,
       nombre: text(offerText.split('\n')[0]),
-      estado_comercial: family.ambiguity ? 'contradiccion' : 'confirmada',
+      estado_comercial: family.ambiguity ? 'requiere_revision' : 'confirmada',
       vigencia_documental: 'pendiente_confirmacion',
       tipo_linea: family.families.length ? 'multilinea_business_red' : 'individual',
       familias: family.families,
+      modalidad_linea: 'no_determinada',
+      account_types: accountTypes,
       plan,
       eventos: parseEvents(offerText, termsText),
       trade_in: { renovacion_requerido: /requiere trade\s*-?\s*in/i.test(offerText) && !/no requiere trade\s*-?\s*in/i.test(offerText) },
@@ -351,11 +480,17 @@ export function normalizeOfferWorkbooks({ financingBuffer, priceListBuffer, sour
       equipos: normalizedEquipment,
       fuente: source,
       texto_original: { oferta: offerText, plan: planText, terminos: termsText },
+      revisiones,
     });
   }
+  const revisiones = offers.flatMap((offer) => offer.revisiones || []);
+  const reglasNormalizadas = offers.map((offer) => normalizedRuleFromOffer(offer, contradictions));
   return {
     offers,
     contradictions,
+    revisiones,
+    reglas_normalizadas: reglasNormalizadas,
+    resumen_reglas: rulesSummary(reglasNormalizadas),
     inventory: { financingSheets: workbook.SheetNames, priceSheets: priceIndex.sheetNames },
     summary: { offers: offers.length, equipment: offers.reduce((total, offer) => total + offer.equipos.length, 0), blockingContradictions: contradictions.filter((item) => item.bloqueante).length },
   };

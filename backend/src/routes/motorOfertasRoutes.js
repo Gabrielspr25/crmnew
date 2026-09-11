@@ -8,7 +8,9 @@ import { requireAdmin, requireAuth } from '../auth.js';
 import { pool, query } from '../db.js';
 import { normalizeOfferWorkbooks, parseBusinessRedPlusWorkbook } from '../services/motorOfertasNormalizer.js';
 import { diffBusinessRedMultilinea, parseBusinessRedMultilineaText } from '../services/businessRedMultilineaPdf.js';
-import { findBusinessRedPlusEligible } from '../services/businessRedPlusEligibility.js';
+import { findBusinessRedPlusEligible, findBusinessRedPlusCommercialCandidates } from '../services/businessRedPlusEligibility.js';
+import { readSpecialDiscountVigencia } from '../services/benefitsPortalCatalog.js';
+import { parseRangoVigencia } from '../services/vigenciaTexto.js';
 
 export const motorOfertasRouter = Router();
 
@@ -23,6 +25,81 @@ async function versionVigente(_req, res) {
   const hoy = new Date().toISOString().slice(0, 10);
   const estado_vigencia = version.vigencia_hasta && version.vigencia_hasta < hoy ? 'vencida_pendiente_reemplazo' : 'vigente';
   res.json({ ok: true, version: { ...version, business_red_plus: version.resumen?.business_red_plus || null, vigencia: { desde: version.vigencia_desde, hasta: version.vigencia_hasta }, estado_vigencia } });
+}
+
+function moneyTermsFromFinancing(financiamiento = {}) {
+  return Object.entries(financiamiento || {})
+    .map(([meses, monto]) => ({ meses: Number(meses), monto: Number(monto) }))
+    .filter((item) => Number.isFinite(item.meses) && item.meses > 0 && Number.isFinite(item.monto));
+}
+
+async function loadCurrentEquipmentPriceCatalog() {
+  const catalog = [];
+  const lista = await query(`SELECT v.item_code, v.sap_code, v.modelo, v.marca, v.categoria, v.precio_regular,
+      v.mensualidades, v.upload_id, u.nombre_archivo, u.sha256, u.vigencia_inicio, u.vigencia_fin,
+      u.vigencia_documental
+    FROM public.v_equipos_vigentes v
+    LEFT JOIN public.equipos_uploads u ON u.id=v.upload_id
+    WHERE COALESCE(v.fuera_portafolio, false)=false
+    ORDER BY v.categoria, v.marca, v.modelo`);
+  for (const item of lista.rows) {
+    catalog.push({
+      item_code: item.item_code,
+      sap_code: item.sap_code,
+      modelo: item.modelo,
+      marca: item.marca,
+      categoria: item.categoria,
+      precio_regular: item.precio_regular,
+      mensualidades: item.mensualidades || [],
+      upload_id: item.upload_id,
+      fuente: {
+        tipo: 'lista_precios',
+        nombre: item.nombre_archivo || 'Lista de equipos vigente',
+        sha256: item.sha256 || null,
+        vigencia_desde: item.vigencia_inicio || null,
+        vigencia_hasta: item.vigencia_fin || null,
+        estado_publicacion: item.vigencia_documental || 'vigente',
+      },
+    });
+  }
+
+  const inalambrico = await query(`SELECT pm.seccion_key, pm.titulo, pm.boletin_ref,
+      pm.vigencia_desde, pm.vigencia_hasta,
+      fila->>'codigo' AS item_code,
+      fila->>'material_sap' AS sap_code,
+      COALESCE(fila->>'modelo', fila->>'descripcion') AS modelo,
+      fila->>'fabricante' AS marca,
+      COALESCE(fila->>'tipo_producto', fila->>'categoria') AS categoria,
+      fila->>'precio_regular' AS precio_regular,
+      fila->'financiamiento' AS financiamiento
+    FROM public.planes_modulos pm
+    CROSS JOIN LATERAL jsonb_array_elements(pm.contenido->'filas') AS fila
+    WHERE pm.pagina='inalambrico'
+      AND pm.activo=true
+      AND COALESCE(fila->>'tipo_registro','equipo')='equipo'
+      AND NULLIF(fila->>'precio_regular','') IS NOT NULL
+    ORDER BY pm.orden, pm.id`);
+  for (const item of inalambrico.rows) {
+    catalog.push({
+      item_code: item.item_code,
+      sap_code: item.sap_code,
+      modelo: item.modelo,
+      marca: item.marca,
+      categoria: item.categoria,
+      precio_regular: item.precio_regular,
+      mensualidades: moneyTermsFromFinancing(item.financiamiento),
+      fuente: {
+        tipo: 'inalambrico_iot',
+        nombre: item.boletin_ref || 'Inalambrico / IoT publicado',
+        seccion: item.titulo,
+        seccion_key: item.seccion_key,
+        vigencia_desde: item.vigencia_desde || null,
+        vigencia_hasta: item.vigencia_hasta || null,
+        estado_publicacion: 'vigente',
+      },
+    });
+  }
+  return catalog;
 }
 
 motorOfertasRouter.get('/version-vigente', requireAuth, versionVigente);
@@ -47,6 +124,7 @@ motorOfertasRouter.post('/elegibles', async (req, res) => {
     FROM public.v_equipos_vigentes
     WHERE categoria IN ('tablet', 'modem') AND COALESCE(fuera_portafolio, false)=false
     ORDER BY categoria, marca, modelo`);
+  const [equipmentCatalog, specialDiscountVigencia] = await Promise.all([loadCurrentEquipmentPriceCatalog(), readSpecialDiscountVigencia(pool)]);
   const result = findBusinessRedPlusEligible({
     block: {
       ...block,
@@ -55,9 +133,47 @@ motorOfertasRouter.post('/elegibles', async (req, res) => {
     linea: req.body?.linea,
     offers: rows[0].datos || [],
     equiposEspeciales: especiales.rows,
+    equipmentCatalog,
+    specialDiscountVigencia,
     version: { estado: rows[0].estado },
   });
   const invalidContract = result.validaciones.some((item) => item.campo);
+  if (invalidContract) return res.status(422).json({ ok: false, codigo: 'contrato_linea_invalido', ...result });
+  res.json({ ok: true, ...result });
+});
+
+motorOfertasRouter.post('/candidatos-alternativas', async (req, res) => {
+  const { rows } = await query(`SELECT id, numero, estado, vigencia_desde, vigencia_hasta, datos, resumen
+    FROM public.ofertas_movil_versiones WHERE estado='vigente' ORDER BY numero DESC LIMIT 1`);
+  if (!rows[0]) return res.status(404).json({ ok: false, codigo: 'sin_version_publicada' });
+  const block = rows[0].resumen?.business_red_plus || null;
+  if (!block) return res.status(404).json({ ok: false, codigo: 'esquema_business_red_plus_no_publicado' });
+  const especiales = await query(`SELECT item_code, sap_code, modelo, marca, categoria, precio_regular, mensualidades, upload_id
+    FROM public.v_equipos_vigentes
+    WHERE categoria IN ('tablet', 'modem') AND COALESCE(fuera_portafolio, false)=false
+    ORDER BY categoria, marca, modelo`);
+  const [equipmentCatalog, specialDiscountVigencia] = await Promise.all([loadCurrentEquipmentPriceCatalog(), readSpecialDiscountVigencia(pool)]);
+  const result = findBusinessRedPlusCommercialCandidates({
+    block: {
+      ...block,
+      vigencia: block.vigencia || { desde: rows[0].vigencia_desde, hasta: rows[0].vigencia_hasta },
+    },
+    lineas: Array.isArray(req.body?.lineas) ? req.body.lineas : [],
+    grupos: Array.isArray(req.body?.grupos) ? req.body.grupos : [],
+    offers: rows[0].datos || [],
+    equiposEspeciales: especiales.rows,
+    equipmentCatalog,
+    specialDiscountVigencia,
+    version: {
+      id: rows[0].id,
+      numero: rows[0].numero,
+      estado: rows[0].estado,
+      vigencia: { desde: rows[0].vigencia_desde, hasta: rows[0].vigencia_hasta },
+    },
+    filtros: req.body?.filtros || {},
+    contexto_ban: req.body?.contexto_ban || {},
+  });
+  const invalidContract = result.validaciones.some((line) => (line.validaciones || []).some((item) => item.campo));
   if (invalidContract) return res.status(422).json({ ok: false, codigo: 'contrato_linea_invalido', ...result });
   res.json({ ok: true, ...result });
 });
@@ -88,14 +204,8 @@ function runParser(script, filePath) {
   });
 }
 export function vigenciaFromName(value) {
-  const source = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const year = source.match(/20\d{2}/)?.[0];
-  const months = { enero:1, febrero:2, marzo:3, abril:4, mayo:5, junio:6, julio:7, agosto:8, septiembre:9, octubre:10, noviembre:11, diciembre:12 };
-  const match = source.match(/(?:(?:del|desde)\s+)?(\d{1,2})\s+de\s+(\w+)\s+(?:al|hasta)\s+(\d{1,2})\s+de\s+(\w+)/);
-  if (match && year && months[match[2]] && months[match[4]]) return { desde: `${year}-${String(months[match[2]]).padStart(2, '0')}-${String(match[1]).padStart(2, '0')}`, hasta: `${year}-${String(months[match[4]]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}` };
-  const sameMonth = source.match(/(\d{1,2})\s+al\s+(\d{1,2})\s+de\s+(\w+)/);
-  if (sameMonth && year && months[sameMonth[3]]) return { desde: `${year}-${String(months[sameMonth[3]]).padStart(2, '0')}-${String(sameMonth[1]).padStart(2, '0')}`, hasta: `${year}-${String(months[sameMonth[3]]).padStart(2, '0')}-${String(sameMonth[2]).padStart(2, '0')}` };
-  return { desde: null, hasta: null };
+  const parsed = parseRangoVigencia(value);
+  return parsed ? { desde: parsed.desde, hasta: parsed.hasta } : { desde: null, hasta: null };
 }
 export function vigenciaFromSources(financingName, priceListName) {
   const financing = vigenciaFromName(financingName);
@@ -191,11 +301,15 @@ motorOfertasRouter.post('/preview', requireAdmin, async (req, res) => {
     const prior = await query(`SELECT datos FROM public.ofertas_movil_versiones WHERE estado='vigente' ORDER BY numero DESC LIMIT 1`);
     const sourceVigencia = vigenciaFromSources(loaded.financing.nombre_original, loaded.priceList.nombre_original);
     const vigencia = sourceVigencia.vigencia;
-    const advertencias = [...(parsed.contradictions || []).map(item => ({ ...item, tipo: 'contradiccion' })), ...sourceVigencia.advertencias];
-    const resumen = { ...parsed.summary, diferencias: diffOffers(prior.rows[0]?.datos || [], parsed.offers), vigencia_detectada: vigencia };
+    const advertencias = [
+      ...(parsed.contradictions || []).map(item => ({ ...item, tipo: 'contradiccion' })),
+      ...(parsed.revisiones || []).map(item => ({ ...item, tipo: 'revision' })),
+      ...sourceVigencia.advertencias,
+    ];
+    const resumen = { ...parsed.summary, diferencias: diffOffers(prior.rows[0]?.datos || [], parsed.offers), vigencia_detectada: vigencia, reglas: parsed.resumen_reglas };
     const versionId = crypto.randomUUID();
     previews.set(versionId, { created: Date.now(), loaded, parsed: { ...parsed, offers: portalOffers }, resumen, advertencias, vigencia, usuario: uname(req) });
-    res.json({ ok: true, version_id: versionId, resumen, advertencias, vigencia, fuentes: loaded.rows.map(sourceInfo), datos: portalOffers, publicable: portalOffers.length > 0 });
+    res.json({ ok: true, version_id: versionId, resumen, resumen_reglas: parsed.resumen_reglas, reglas_normalizadas: parsed.reglas_normalizadas, advertencias, vigencia, fuentes: loaded.rows.map(sourceInfo), datos: portalOffers, publicable: portalOffers.length > 0 });
   } catch (error) { res.status(error.status || 422).json({ ok: false, codigo: error.codigo || 'parser_error', error: error.message }); }
 });
 
@@ -330,11 +444,18 @@ motorOfertasRouter.post('/publicar', requireAuth, requireAdmin, async (req, res)
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const current = await client.query(`SELECT resumen FROM public.ofertas_movil_versiones WHERE estado='vigente' ORDER BY numero DESC LIMIT 1 FOR UPDATE`);
+    const currentResumen = current.rows[0]?.resumen || {};
     await client.query(`UPDATE public.ofertas_movil_versiones SET estado='reemplazada', reemplazada_en=now() WHERE estado='vigente'`);
     const manifest = crypto.createHash('sha256').update(preview.loaded.rows.map(row => row.sha256).sort().join('|')).digest('hex');
+    const resumen = { ...preview.resumen };
+    if (currentResumen.business_red_plus && !resumen.business_red_plus) {
+      resumen.business_red_plus = currentResumen.business_red_plus;
+      if (currentResumen.business_red_plus_diff) resumen.business_red_plus_diff = currentResumen.business_red_plus_diff;
+    }
     const { rows } = await client.query(`INSERT INTO public.ofertas_movil_versiones
       (estado, vigencia_desde, vigencia_hasta, archivo_nombre, archivo_sha256, fuentes, datos, resumen, advertencias, creada_por, publicada_por, publicada_en)
-      VALUES ('vigente',$1,$2,$3,$4,$5,$6,$7,$8,$9,$9,now()) RETURNING *`, [desde, hasta, preview.loaded.rows.map(row => row.nombre_original).join(' + '), manifest, JSON.stringify(preview.loaded.rows.map(sourceInfo)), JSON.stringify(preview.parsed.offers), JSON.stringify(preview.resumen), JSON.stringify(preview.advertencias), preview.usuario]);
+      VALUES ('vigente',$1,$2,$3,$4,$5,$6,$7,$8,$9,$9,now()) RETURNING *`, [desde, hasta, preview.loaded.rows.map(row => row.nombre_original).join(' + '), manifest, JSON.stringify(preview.loaded.rows.map(sourceInfo)), JSON.stringify(preview.parsed.offers), JSON.stringify(resumen), JSON.stringify(preview.advertencias), preview.usuario]);
     await client.query('COMMIT');
     previews.delete(String(req.body.version_id));
     res.json({ ok: true, version: rows[0] });

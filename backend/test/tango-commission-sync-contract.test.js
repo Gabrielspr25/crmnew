@@ -33,11 +33,31 @@ test('la sincronizacion usa las columnas reales del CRM para clientes, BANs y su
   assert.match(salesRoute, /WHERE b\.ban_number = \$1/);
   assert.match(salesRoute, /\(client_id, ban_number, status, account_type, source\)/);
   assert.match(salesRoute, /VALUES \(\$1, \$2, 'A', \$3, 'tango_v2'\)/);
-  assert.match(salesRoute, /COALESCE\(phone, ''\)/);
+  assert.match(salesRoute, /COALESCE\((?:s\.)?phone, ''\)/);
   assert.match(salesRoute, /\(ban_id, phone, phone_norm, status, tango_ventaid,/);
   assert.match(salesRoute, /LEFT JOIN public\.bans b ON b\.ban_number = s\.ban_number/);
   assert.doesNotMatch(salesRoute, /b\.number/);
   assert.doesNotMatch(salesRoute, /phone_number/);
+});
+
+test('una renovacion de Tango elige solamente el suscriptor activo del BAN correcto', () => {
+  assert.match(salesRoute, /WHERE s\.ban_id = \$2/);
+  assert.match(salesRoute, /LOWER\(COALESCE\(s\.status, ''\)\) IN \('activo','activa','active','a'\)/);
+  assert.match(salesRoute, /suscriptor_activo_asignado_a_otro_ban/);
+  assert.doesNotMatch(
+    salesRoute,
+    /WHERE phone_norm = \$1[\s\S]*?LIMIT 1[\s\S]*?const existing = bySale\.rows\[0\] \|\| byPhone\.rows\[0\]/
+  );
+});
+
+test('una renovacion actualiza datos vigentes de Tango sin borrar el equipo ausente', () => {
+  assert.match(salesRoute, /tango_ventaid = \$1/);
+  assert.match(salesRoute, /price_code = COALESCE\(\$2, NULLIF\(price_code, ''\)\)/);
+  assert.match(salesRoute, /monthly_value = COALESCE\(\$3, monthly_value\)/);
+  assert.match(salesRoute, /contract_start_date = COALESCE\(\$6, contract_start_date\)/);
+  assert.match(salesRoute, /equipment = COALESCE\(\$8, equipment\)/);
+  assert.match(salesRoute, /item_id = COALESCE\(\$9, item_id\)/);
+  assert.match(salesRoute, /contract_term = COALESCE\(\$10, contract_term\)/);
 });
 
 test('la creacion de suscriptores no reutiliza el parametro telefono para phone y phone_norm', () => {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Claro Business — Lista de Precios PYMES</title>
+<script src="portal-config.js?v=2026091001"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -295,6 +296,8 @@ tbody tr:hover{background:#202734;border-color:rgba(45,212,191,.55)}
   <a href="banda-ancha.html">Inalambrico / IoT</a>
   <a href="equipos.html" class="active">Lista de Precios</a>
   <a href="servicios.html">Servicios</a>
+  <a href="benefits.html">Beneficios</a>
+  <a href="affinity.html">Affinity</a>
     
   <a href="directorio-fijo.html">Directorio de fijo</a></nav>
 
@@ -338,7 +341,7 @@ tbody tr:hover{background:#202734;border-color:rgba(45,212,191,.55)}
 <footer>Claro Puerto Rico — Lista de Precios PYMES / Corporativo &middot; Herramienta interna para vendedores</footer>
 
 <script>
-const API = '/api/equipos-lista';
+const API = (window.PORTAL_API_BASE || '') + '/api/equipos-lista';
 
 let allEquipos = [];
 let activeCategory = 'all';

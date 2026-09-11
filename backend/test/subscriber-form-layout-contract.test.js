@@ -28,6 +28,9 @@ test('tipo producto es comun y PRODUCT_TYPE respalda el tipo visible', () => {
   assert.match(fieldsBlock, /key:'line_kind',label:'Tipo producto'/);
   assert.match(fieldsBlock, /key:'line_type',label:'Tipo de linea'/);
   assert.match(fieldsBlock, /key:'product_type',label:'PRODUCT_TYPE'/);
+  assert.match(fieldsBlock, /options:\[\['','-'\],\['NEW','Linea nueva'\],\['REN','Renovacion'\]\]/);
+  assert.doesNotMatch(fieldsBlock, /\['RENOVACION','Renovacion'\]/);
+  assert.doesNotMatch(fieldsBlock, /\['PORTABILIDAD','Portabilidad'\]/);
 });
 
 test('equipo y cuotas se ocultan para fijo sin datos, pero se conservan al guardar', () => {
