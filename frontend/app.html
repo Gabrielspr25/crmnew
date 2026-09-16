@@ -1150,7 +1150,7 @@ function tabComp(c){
   <div class="panel" style="margin-top:12px"><h3>Comparativas guardadas</h3><div style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Nombre</th><th class="r">Actual</th><th class="r">Oferta</th><th>Usuario</th><th>Fecha</th></tr></thead><tbody>${comps}</tbody></table></div></div>`;
 }
 function abrirConstructorCliente(id){
-  const url=buildPortalOfertasUrl({crm_client_id:id,return:location.href});
+  const url=buildPortalOfertasUrl({crm_client_id:id,return:location.href},'constructor');
   if(!url){alert('No hay una sesion CRM activa. Entra nuevamente antes de abrir el constructor.');return;}
   window.open(url,'_blank','noopener');
 }
@@ -2217,13 +2217,16 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 // El catálogo lo ve el cliente en el PORTAL de ofertas. Acá solo el admin que carga los datos.
 // Produccion: el portal y el Constructor viven en un solo sitio, ofertas.ss-group.cloud. Local: el propio CRM
 // sirve el portal bajo /constructor. En ambos casos la sesion viaja en el hash, nunca en la query.
-const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/oferta-const.html';
-function buildPortalOfertasUrl(extra){
+const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/';
+const CONSTRUCTOR_OFERTAS_URL='https://ofertas.ss-group.cloud/oferta-const.html';
+function buildPortalOfertasUrl(extra,mode){
   let activeToken=token||'';
   if(!activeToken){try{activeToken=localStorage.getItem('vp_token')||'';}catch(e){}}
   if(!activeToken)return null;
   const local=['localhost','127.0.0.1','::1','[::1]'].includes(String(window.location.hostname||'').toLowerCase());
-  const url=new URL(local?'/constructor/oferta-const.html':PORTAL_OFERTAS_URL,window.location.origin);
+  const isConstructor=mode==='constructor';
+  const target=local?(isConstructor?'/constructor/oferta-const.html':'/constructor/'):(isConstructor?CONSTRUCTOR_OFERTAS_URL:PORTAL_OFERTAS_URL);
+  const url=new URL(target,window.location.origin);
   if(local)url.searchParams.set('crm_origin',window.location.origin);
   Object.entries(extra||{}).forEach(function(pair){if(pair[1]!=null&&pair[1]!=='')url.searchParams.set(pair[0],String(pair[1]));});
   url.hash=new URLSearchParams({crm_token:activeToken}).toString();

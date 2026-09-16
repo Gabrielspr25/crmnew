@@ -20,7 +20,8 @@ function abrirDesdePerfil({ hostname, origin, href, token }) {
   const context = vm.createContext({
     URL,
     URLSearchParams,
-    PORTAL_OFERTAS_URL: 'https://ofertas.ss-group.cloud/oferta-const.html',
+    PORTAL_OFERTAS_URL: 'https://ofertas.ss-group.cloud/',
+    CONSTRUCTOR_OFERTAS_URL: 'https://ofertas.ss-group.cloud/oferta-const.html',
     token,
     location: { href },
     window: { location: { hostname, origin }, open: (url) => abiertas.push(url) },

@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claro Business - Oferta const.</title>
-<script src="portal-config.js?v=2026091001"></script>
+<title>Claro Business - Constructor</title>
+<script src="portal-config.js?v=2026091602"></script>
 <script src="constructor-publications.js?v=2026091001"></script>
 <script src="ofertas-logic.js?v=2026070311"></script>
 <style>
@@ -18,6 +18,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 .wrap{max-width:1260px;margin:0 auto;padding:22px 24px 48px}
 .hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.hero h1{font-size:28px;color:#e2d8c8}.hero p{margin-top:6px;color:#b5aa9c;font-size:14px}
 .summary{display:flex;flex-wrap:wrap;gap:8px}.pill{border:1px solid rgba(45,212,191,.35);background:#0f172a;color:#c9f7ec;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850}
+.ss-rule-panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.ss-rule-card{border:1px solid #242A3D;background:#101426;border-left:5px solid #6D1FAD;border-radius:10px;padding:11px 12px;min-height:78px}
+.ss-rule-card b{display:block;color:#F4F7FB;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.ss-rule-card span{display:block;color:#AAB3C5;font-size:12px;line-height:1.35}
+.ss-rule-card.ok{border-left-color:#5FAD1F}.ss-rule-card.ok b{color:#d9f99d}
+.ss-rule-card.warn{border-left-color:#A6AD1F}.ss-rule-card.warn b{color:#fef3c7}
+.ss-rule-card.block{border-left-color:#AD261F}.ss-rule-card.block b{color:#fecaca}
+.ss-rule-card.info{border-left-color:#AD1FA6}.ss-rule-card.info b{color:#f5d0fe}
 .entry-shell{border:1px solid rgba(45,212,191,.42);background:#121821;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.22)}
 .entry-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid rgba(45,212,191,.22)}
 .entry-head h2{font-size:18px;color:#e2d8c8}.entry-head p{font-size:12px;color:#b5aa9c;margin-top:3px}
@@ -66,6 +74,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
 .cp-table-wrap{overflow:auto}.cp-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line);background:#fff}.cp-table th{background:#111827;color:#fff;text-align:left;padding:11px;font-size:12px}.cp-table.proposal th{background:var(--claro)}.cp-table td{padding:9px 11px;border-top:1px solid var(--line);font-size:12px;color:#111827;vertical-align:middle}.cp-table tbody tr:nth-child(even){background:#f8fafc}.cp-table .cost{text-align:right;font-weight:900}.cp-table input{width:100%;border:1px solid #d1d5db;border-radius:9px;padding:7px;font:inherit;background:#fff;color:#111827}.cp-total-row td{font-weight:950;background:#fff7ed!important}
 .cp-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.cp-list{display:grid;gap:10px}.cp-list-item{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fff}.cp-list-item b{display:block;color:#111827;margin-bottom:4px}.cp-note{background:#fff7f7;border:1px solid #ffd0d0;border-left:6px solid var(--claro);padding:14px;border-radius:16px;color:#7f1d1d;line-height:1.55}.cp-footer{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:end;color:#374151;margin-top:18px}.cp-signature{font-weight:950;font-size:17px}.cp-role{color:var(--claro);font-weight:900}.cp-muted{color:#6b7280}
 @media(max-width:980px){.cp-hero-grid,.cp-fields,.cp-cards,.cp-grid-2,.cp-footer{grid-template-columns:1fr}.cp-hero h1{font-size:30px}.cp-logo{min-height:105px}}
+@media(max-width:980px){.ss-rule-panel{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.ss-rule-panel{grid-template-columns:1fr}}
 .warning{border:1px solid rgba(248,113,113,.35);background:#2a1115;color:#fecaca;border-radius:10px;padding:11px;font-size:12px;margin-top:12px}.ok{border-color:rgba(34,197,94,.4);background:#10251c;color:#bbf7d0}
 .service-price-line{margin-top:8px;display:grid;gap:3px;font-size:12px;color:#d6cfc4}.service-price-line strong{color:#86efac}.service-price-line em{font-style:normal;color:#b5aa9c;line-height:1.25}
 .product-builder{display:block}.product-family-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.product-family-tab{border:1px solid rgba(45,212,191,.35);background:#111a30;color:#d6cfc4;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:950;cursor:pointer}.product-family-tab.active{background:#064e3b;border-color:#2dd4bf;color:#d1fae5}.product-tech-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:-2px 0 9px}.product-tech-tab{border:1px solid rgba(56,189,248,.28);background:#0f172a;color:#b9c7d6;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900;cursor:pointer}.product-tech-tab.active{background:#12304f;border-color:#38bdf8;color:#dff6ff}.product-tabs{display:none}.product-panel{border:1px solid rgba(45,212,191,.22);background:#111a30;border-radius:12px;padding:10px;min-height:0}.product-panel-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}.product-panel-head input{width:260px;max-width:45%;background:#0f172a;border:1px solid rgba(56,189,248,.28);border-radius:9px;color:#e2d8c8;padding:8px 9px}.product-accordion{display:grid;gap:7px;max-height:390px;overflow:auto;padding-right:4px}.accordion-item{border:1px solid rgba(45,212,191,.24);background:#171b22;border-radius:9px;overflow:hidden}.accordion-head{width:100%;border:0;background:#111a30;color:#e2d8c8;padding:8px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;cursor:pointer}.accordion-head b{font-size:13px}.accordion-head span{font-size:11px;color:#b5aa9c}.accordion-head .chev{font-size:14px;color:#67e8f9}.accordion-body{display:none;padding:7px;border-top:1px solid rgba(45,212,191,.18)}.accordion-item.open .accordion-body{display:block}.accordion-item.open .accordion-head{background:#073b33}.product-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.product-list.compact{max-height:none;overflow:visible}.product-row{border:1px solid rgba(45,212,191,.20);background:#171b22;border-radius:7px;padding:7px;display:grid;grid-template-columns:1fr auto;gap:3px 6px;align-items:center;min-height:58px}.product-row b{color:#e2d8c8;font-size:11px;line-height:1.15}.product-row span{color:#b5aa9c;font-size:9.5px;line-height:1.18;grid-column:1/3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-row strong{color:#86efac;font-size:12px}.product-row button{justify-self:end;padding:5px 8px;border-radius:7px;font-size:10.5px}.selected-products{margin-top:10px}.selected-products table{width:100%;border-collapse:collapse;font-size:12px}.selected-products th,.selected-products td{border:1px solid rgba(45,212,191,.24);padding:8px;text-align:left}.selected-products th{background:#0f172a;color:#e6d8b8}.qty-input{width:70px;background:#0f172a;border:1px solid rgba(56,189,248,.25);border-radius:7px;color:#e2d8c8;padding:7px;text-align:center}
@@ -91,15 +101,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b0d12;color:#d6cfc
   <a href="servicios.html">Servicios</a>
   <a href="benefits.html">Beneficios</a>
   <a href="affinity.html">Affinity</a>
-  <a href="oferta-const.html" class="active">Oferta const.</a>
+  <a href="oferta-const.html" class="active">Constructor</a>
   <a href="ofertas.html">Ofertas</a>
 </nav>
 <main class="wrap">
   <div id="mobileVersionNotice" class="cp-note" style="display:none"></div>
   <section class="hero">
-    <div><h1>Oferta const.</h1><p>Flujo basado en planes, ofertas, Fijo y Claro TV publicados desde el Admin.</p></div>
+    <div><h1>Constructor</h1><p>Flujo basado en planes, ofertas, Fijo y Claro TV publicados desde el Admin.</p></div>
     <div class="summary" id="topSummary"></div>
   </section>
+  <section class="ss-rule-panel" id="ssRulePanel" aria-label="Reglas de lectura comercial"></section>
 
   <section class="entry-shell" id="entryModes">
     <div class="entry-head">
@@ -236,7 +247,7 @@ const EVENTOS=[
   {id:'renovacion',label:'Renovacion'},
   {id:'adicional',label:'Linea adicional'}
 ];
-const state={sourceMode:'manual',commercialScenario:null,crmClient:null,crmFullBanLines:[],selectedCrmLineKeys:[],consultationIntent:null,consultationResult:null,consultationQuery:'',consultationDecisionFingerprint:null,consultationLoadBlocked:null,consultationLoadedIntoConstructor:false,consultationTraceVisible:false,tipo:'individual',planInd:0,planMulti:'',beneficio:'todos',eventos:['nueva'],lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'',openProductGroups:[],activeLineIndex:null,activeBrand:'Todos',activeDeviceBrand:'Todos',selectedModalKey:null,motorEquipos:[],motorLoading:false,motorError:'',motorRules:[],motorRulesVersion:null,motorSimulation:null,motorShadow:null};
+const state={sourceMode:'manual',commercialScenario:null,crmClient:null,crmFullBanLines:[],selectedCrmLineKeys:[],consultationIntent:null,consultationResult:null,consultationQuery:'',consultationDecisionFingerprint:null,consultationLoadBlocked:null,consultationLoadedIntoConstructor:false,consultationTraceVisible:false,tipo:'individual',planInd:0,planMulti:'',beneficio:'todos',eventos:['nueva'],lineas:1,equipo:null,oferta:null,lineEvent:'nueva',cart:[],productosAdicionales:[],activeProductFamily:'fijo',activeProductTechnology:'todos',activeProductTab:'',openProductGroups:[],activeLineIndex:null,activeBrand:'Todos',activeDeviceBrand:'Todos',selectedModalKey:null,motorEquipos:[],motorLoading:false,motorError:'',motorRules:[],motorRulesVersion:null,motorSimulation:null,motorShadow:null,crmTaxId:''};
 function $(id){return document.getElementById(id)}
 function money(v){return '$'+Number(v||0).toFixed(2)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -351,6 +362,7 @@ function applyCrmClientToConstructor(client){
   state.sourceMode='crm';
   state.crmClientId=client.id;
   state.crmClientName=client.business_name||client.company||client.name||'';
+  state.crmTaxId=client.tax_id||client.ein||client.ssn||'';
   state.crmVendor=client.vendor_name||'';
   state.crmBan=(client.bans&&client.bans[0]&&client.bans[0].ban_number)||state.currentRows[0]?.ban||'';
   updateCommercialScenario('crm');
@@ -479,6 +491,28 @@ function blockConsultationLoad(reason){
   if(btn)btn.disabled=true;
   renderConsultationResult();
 }
+function ssRuleCard(kind,title,body){
+  return `<div class="ss-rule-card ${kind}"><b>${esc(title)}</b><span>${esc(body)}</span></div>`;
+}
+function renderSsRulePanel(){
+  const panel=$('ssRulePanel');
+  if(!panel)return;
+  const context=buildMotorCommercialContext();
+  const selected=selectedCrmLines().length;
+  const hasTax=Boolean(String(state.crmTaxId||'').trim());
+  const hasClient=Boolean(state.crmClient);
+  const hasFixed=context.productos.includes('fijo')||context.productos.includes('claro_tv');
+  const isConvergent=Boolean(context.cliente?.convergente);
+  const modeKind=state.sourceMode==='crm'?'ok':state.sourceMode==='consultation'?'info':'warn';
+  const identityKind=hasClient?(hasTax?'ok':'block'):'warn';
+  const convergenceKind=isConvergent?'ok':(hasFixed?'warn':'info');
+  panel.innerHTML=[
+    ssRuleCard(modeKind,'Modo de trabajo',state.sourceMode==='crm'?'Cliente CRM cargado; se usan BAN y lineas reales.':state.sourceMode==='consultation'?'Consulta prepara escenario; no inventa promociones.':'Manual: vendedor completa datos antes de cerrar.'),
+    ssRuleCard(identityKind,'SS / Tax ID',hasClient?(hasTax?'Presente para agrupar identidad comercial sin mostrar el numero completo.':'Falta en el cliente; no cierres convergencia como final.'):'No hay cliente CRM cargado; SS/Tax ID queda pendiente.'),
+    ssRuleCard(convergenceKind,'Convergencia',isConvergent?'Movil + Fijo/TV detectado en el escenario; aplicar solo reglas publicadas.':hasFixed?'Hay Fijo/TV seleccionado; falta confirmar identidad SS/Tax ID para cierre final.':'Sin Fijo/TV agregado; cliente no se trata como convergente.'),
+    ssRuleCard('info','Color operativo','Verde listo, amarillo requiere dato, rojo bloquea cierre, violeta informacion.')
+  ].join('');
+}
 function renderCrmLineSelector(){
   const box=$('crmLineSelector');
   if(!box)return;
@@ -497,7 +531,7 @@ function renderEntryModes(){
   if(crmSummary){
     const selected=selectedCrmLines().length;
     crmSummary.textContent=state.crmClient
-      ? `Cliente cargado: ${state.crmClientName||'sin nombre'} · BAN ${state.crmBan||'-'} · ${selected} linea(s) seleccionada(s) de ${state.crmFullBanLines.length}.`
+      ? `Cliente cargado: ${state.crmClientName||'sin nombre'} · BAN ${state.crmBan||'-'} · SS/Tax ID ${state.crmTaxId?'presente':'pendiente'} · ${selected} linea(s) seleccionada(s) de ${state.crmFullBanLines.length}.`
       : 'Abre el Constructor desde un cliente para cargar BAN y lineas sin modificar el CRM.';
   }
   const hideManual=state.sourceMode==='consultation'&&!state.consultationLoadedIntoConstructor;
@@ -2256,11 +2290,13 @@ function renderProposal(){
         const eventText=intent.evento?eventLabel(intent.evento):(state.consultationResult.scenario?.event||'evento no determinado');
         const equipment=consultationEquipmentSummary(intent)||state.consultationResult.selection?.equipment||'equipo no determinado';
             summary.innerHTML=`<span class="pill">${esc(modeLabel())}</span><span class="pill">${esc(planName)}</span><span class="pill">${count} linea(s)</span><span class="pill">${esc(eventText)}</span><span class="pill">${esc(equipment)}</span>`;
+        renderSsRulePanel();
         return;
       }
       const selected=state.cart.filter(i=>i.equipo&&i.oferta).length;
       if(state.sourceMode!=='consultation')updateCommercialScenario(state.sourceMode);
       summary.innerHTML=`<span class="pill">${esc(modeLabel())}</span><span class="pill">${esc(planLabel())}</span><span class="pill">${state.lineas} linea(s)</span><span class="pill">${esc(state.eventos.map(eventLabel).join(' + '))}</span>${selected?`<span class="pill">${selected} equipo(s)</span>`:''}${state.productosAdicionales.length?`<span class="pill">${state.productosAdicionales.length} fijo/TV</span>`:''}${state.equipo?`<span class="pill">${esc(state.equipo.modelo)}</span>`:''}`;
+      renderSsRulePanel();
     }
 async function initConstructor(){await loadCurrentPublications();ensureLineRows();renderEntryModes();renderSummary();await loadCrmClientContext();}
 initConstructor();

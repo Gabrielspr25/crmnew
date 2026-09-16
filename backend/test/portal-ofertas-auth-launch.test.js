@@ -14,7 +14,7 @@ function loadPortalUrlBuilder({ hostname, origin, token }) {
   const context = {
     URL,
     URLSearchParams,
-    PORTAL_OFERTAS_URL: 'https://ofertas.ss-group.cloud/oferta-const.html',
+    PORTAL_OFERTAS_URL: 'https://ofertas.ss-group.cloud/',
     token,
     window: { location: { hostname, origin } },
     localStorage: { getItem: () => token },
@@ -32,14 +32,14 @@ test('abre el portal local con crm_origin y el JWT en el hash', () => {
   }));
 
   assert.equal(url.origin, 'http://127.0.0.1:4012');
-  assert.equal(url.pathname, '/constructor/oferta-const.html');
+  assert.equal(url.pathname, '/constructor/');
   assert.equal(url.searchParams.get('crm_origin'), 'http://127.0.0.1:4012');
   assert.equal(new URLSearchParams(url.hash.slice(1)).get('crm_token'), 'jwt-local');
   assert.equal(url.searchParams.has('crm_token'), false);
 });
 
 // Produccion: portal y Constructor son un solo sitio, ofertas.ss-group.cloud.
-test('en produccion abre el Constructor en ofertas.ss-group.cloud con la sesion en el hash', () => {
+test('en produccion el menu abre el portal limpio en ofertas.ss-group.cloud', () => {
   const url = new URL(loadPortalUrlBuilder({
     hostname: 'crmp.ss-group.cloud',
     origin: 'https://crmp.ss-group.cloud',
@@ -47,7 +47,7 @@ test('en produccion abre el Constructor en ofertas.ss-group.cloud con la sesion 
   }));
 
   assert.equal(url.origin, 'https://ofertas.ss-group.cloud');
-  assert.equal(url.pathname, '/oferta-const.html');
+  assert.equal(url.pathname, '/');
   assert.equal(new URLSearchParams(url.hash.slice(1)).get('crm_token'), 'jwt-prod');
   assert.equal(url.searchParams.has('crm_token'), false, 'el token nunca va en la query: quedaria en logs del servidor');
   assert.equal(url.searchParams.has('crm_origin'), false, 'en produccion el portal ya sabe cual es el CRM');
@@ -61,7 +61,11 @@ test('no abre un portal sin token CRM', () => {
   }), null);
 });
 
-test('la sesion CRM abre directamente el constructor que consume el motor', () => {
-  assert.match(page, /const PORTAL_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/oferta-const\.html'/,
-    'el portal autenticado debe abrir el constructor y no una pagina intermedia');
+test('la sesion CRM abre el portal limpio y no una ruta interna del constructor', () => {
+  assert.match(page, /const PORTAL_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/'/,
+    'el menu del CRM debe abrir el portal limpio');
+  assert.match(page, /const CONSTRUCTOR_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/oferta-const\.html'/,
+    'el constructor autenticado del cliente conserva la ruta real publicada');
+  assert.doesNotMatch(page, /ofertas-constructor/,
+    'no debe quedar una ruta vieja de ofertas-constructor');
 });

@@ -1,6 +1,6 @@
 {
   "project": "Constructor Comercial",
-  "updated_at": "2026-09-09",
+  "updated_at": "2026-09-16",
   "phase": "Plan Maestro local",
   "overall_status": "en_validacion",
   "environment": "local",
@@ -48,35 +48,50 @@
       "title": "Entrada desde cliente CRM",
       "status": "en_validacion",
       "local_status": "terminado",
-      "production_status": "pendiente",
-      "summary": "El Constructor puede recibir contexto desde CRM y conservar cliente, BAN y lineas seleccionadas.",
+      "production_status": "terminado",
+      "summary": "El CRM separa el acceso publico al portal limpio del acceso operativo al Constructor real con contexto de cliente, BAN y lineas seleccionadas.",
       "done": [
         "Entrada crm_client_id documentada",
         "Seleccion parcial conserva full_ban_lines",
-        "No modifica clientes ni lineas"
+        "No modifica clientes ni lineas",
+        "Menu Constructor del CRM abre el portal limpio publicado",
+        "Perfil de cliente abre el Constructor real publicado con sesion CRM en el hash",
+        "Portal publicado muestra Constructor como entrada visible hacia oferta-const.html",
+        "Constructor muestra regla visual de colores operativos y estado SS/Tax ID sin exponer el numero completo",
+        "Portal de ofertas comparte modo oscuro y modo dia con la paleta SS Group aprobada del CRM"
       ],
       "remaining": [
         "Validacion real con cliente/BAN productivo antes de convertirlo en flujo principal"
       ],
       "blocker": null,
-      "next_action": "Probar casos CRM reales con BAN unico, varios BANs y seleccion parcial.",
+      "next_action": "Verificar en produccion que el portal muestra el selector de modo dia/oscuro y que el oscuro usa la paleta SS Group del CRM.",
       "tests": {
-        "passed": 15,
+        "passed": 33,
         "failed": 0,
-        "summary": "Cubierto dentro de validacion integral local."
+        "summary": "Contratos del portal y configuracion compartida validan modo oscuro/dia con paleta SS Group, cache busting y flujo del Constructor."
       },
       "evidence": [
-        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md",
+        "backend/test/portal-ofertas-auth-launch.test.js",
+        "backend/test/ofertas-portal-link-contract.test.js",
+        "backend/test/constructor-business-red-plus-contract.test.js",
+        "backend/test/oferta-const-portal.test.js",
+        "backend/test/portal-directorio-fijo-contract.test.js",
+        "backend/test/portal-benefits-affinity-ui.test.js",
+        "backend/test/portal-config.test.js",
+        "backend/test/constructor-motor-comercial-simulacion.test.js"
       ],
       "documents": [
         "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
       ],
       "files": [
         "frontend/app.html",
-        "Planes para web/oferta-const.html"
+        "Planes para web/index.html",
+        "Planes para web/oferta-const.html",
+        "Planes para web/portal-config.js"
       ],
-      "last_change": "Modo CRM alineado a commercialScenario.",
-      "updated_at": "2026-09-01"
+      "last_change": "El portal de ofertas agrega selector modo dia/oscuro y alinea el oscuro con la paleta SS Group usada en el CRM.",
+      "updated_at": "2026-09-16"
     },
     {
       "id": "PM-003",

@@ -8,8 +8,8 @@ const logic = await readFile(new URL('../../Planes para web/ofertas-logic.js', i
 const offersPage = await readFile(new URL('../../Planes para web/ofertas.html', import.meta.url), 'utf8');
 
 test('pagina de ofertas enlaza el constructor nuevo', () => {
-  assert.match(page, /href="oferta-const\.html" class="active"/);
-  assert.match(offersPage, /href="oferta-const\.html"/);
+  assert.match(page, /href="oferta-const\.html" class="active">Constructor<\/a>/);
+  assert.match(offersPage, /href="oferta-const\.html">Constructor<\/a>/);
 });
 
 test('constructor mantiene el flujo vendedor y el regreso al CRM', () => {
@@ -23,6 +23,16 @@ test('constructor mantiene el flujo vendedor y el regreso al CRM', () => {
   assert.match(page, /Comparativa/);
   assert.match(page, /id="returnToOffersPortal"/);
   assert.match(page, /function returnToOffersPortal\(\)/);
+});
+
+test('constructor muestra regla visual de colores y SS Tax ID', () => {
+  assert.match(page, /class="ss-rule-panel" id="ssRulePanel"/);
+  assert.match(page, /function renderSsRulePanel\(\)/);
+  assert.match(page, /SS \/ Tax ID/);
+  assert.match(page, /Verde listo, amarillo requiere dato, rojo bloquea cierre, violeta informacion/);
+  assert.match(page, /state\.crmTaxId=client\.tax_id\|\|client\.ein\|\|client\.ssn\|\|''/);
+  assert.match(page, /SS\/Tax ID \$\{state\.crmTaxId\?'presente':'pendiente'\}/);
+  assert.doesNotMatch(page, /SS\/Tax ID \$\{state\.crmTaxId\}/);
 });
 
 test('constructor normaliza tres modos hacia un mismo escenario comercial', () => {

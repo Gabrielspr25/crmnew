@@ -61,6 +61,15 @@ test('sin token en el hash no toca la sesion guardada ni la direccion', () => {
   assert.equal(historial.length, 0);
 });
 
+test('portal comparte modo oscuro y modo dia con paleta SS Group del CRM', () => {
+  assert.match(config, /portal_ofertas_theme/);
+  assert.match(config, /portal-theme-toggle/);
+  assert.match(config, /body\[data-portal-theme="dark"\]\{background:#070B18!important;color:#F4F7FB!important/);
+  assert.match(config, /body\[data-portal-theme="day"\]\{background:#F4F6FA!important;color:#172033!important/);
+  assert.match(config, /background:#6D1FAD!important/);
+  assert.match(config, /border-color:#242A3D!important/);
+});
+
 // Toda pagina del portal que pide datos carga la configuracion primero y no usa rutas /api relativas sueltas.
 test('cada pagina del portal pasa sus llamadas por la configuracion compartida', () => {
   const paginas = ['index.html', 'claro-tv.html', 'movil.html', 'banda-ancha.html', 'equipos.html', 'benefits.html', 'affinity.html', 'oferta-const.html', 'ofertas.html'];
@@ -86,6 +95,7 @@ test('los scripts compartidos del portal cargan con version para romper la cache
   }
   for (const pagina of ['index.html', 'benefits.html', 'affinity.html', 'oferta-const.html']) {
     assert.match(leer(pagina), /<script src="portal-config\.js\?v=\d{10}"><\/script>/, pagina);
+    assert.match(leer(pagina), /<script src="portal-config\.js\?v=2026091602"><\/script>/, pagina);
   }
 });
 

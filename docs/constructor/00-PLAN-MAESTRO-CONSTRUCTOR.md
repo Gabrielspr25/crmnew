@@ -6,7 +6,7 @@
 - Estado general: en_validacion
 - Fase: Plan Maestro local
 - Entorno: local
-- Ultima actualizacion: 2026-09-09
+- Ultima actualizacion: 2026-09-16
 - Avance visual: 56%
 - Produccion: PARCIAL
 
@@ -25,7 +25,7 @@ El porcentaje de avance es solo una referencia visual del progreso. No represent
 | ID | Area | Estado | Local | Produccion | Pruebas | Proximo paso |
 | --- | --- | --- | --- | --- | --- | --- |
 | PM-001 | Arquitectura Constructor | En validacion | Terminado | Pendiente | 15/15 Validacion integral tres modos con Fijo y Convergencia. | Mantener el contrato comun como base de validacion maestra. |
-| PM-002 | CRM -> Constructor | En validacion | Terminado | Pendiente | 15/15 Cubierto dentro de validacion integral local. | Probar casos CRM reales con BAN unico, varios BANs y seleccion parcial. |
+| PM-002 | CRM -> Constructor | En validacion | Terminado | Terminado | 33/33 Contratos del portal y configuracion compartida validan modo oscuro/dia con paleta SS Group, cache busting y flujo del Constructor. | Verificar en produccion que el portal muestra el selector de modo dia/oscuro y que el oscuro usa la paleta SS Group del CRM. |
 | PM-003 | Construccion Manual | En validacion | Terminado | Pendiente | 15/15 Contrato comun validado localmente. | Comparar Manual vs Motor con los mismos datos aprobados. |
 | PM-004 | Consulta Inteligente | En validacion | Terminado | Pendiente | 51/51 constructor-intelligent-consultation y oferta-const-portal cubren intencion, presupuesto, BYOP, ambiguedad, familias Business RED, mezclas de equipos con simbolo x/×, tabla unica por linea, envio a Comparativa, limpieza de escenario entre turnos y bloqueo por desincronizacion visible/runtime. | Probar consultas reales con vendedor y revisar salidas ambiguas. |
 | PM-005 | Motor Comercial | En validacion | Terminado | Pendiente | 86/86 Bateria relacionada de Motor, Consulta, Portal y simulacion local aprobada. | Cerrar matriz de equivalencia Motor vs flujo anterior. |

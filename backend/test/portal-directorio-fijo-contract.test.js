@@ -16,7 +16,7 @@ test('portal de fijo publica Directorio de fijo como pagina aparte', () => {
   assert.match(indexPage, /href="directorio-fijo\.html"/);
   assert.doesNotMatch(indexPage, /function buildDirectorioFijo\(q\)/);
   assert.doesNotMatch(indexPage, /directorio-fijo-data\.js/);
-  assert.doesNotMatch(indexPage, /href="oferta-const\.html"/);
+  assert.match(indexPage, /href="oferta-const\.html">Constructor<\/a>/);
   assert.doesNotMatch(indexPage, /href="ofertas\.html"/);
   assert.match(directoryPage, /directorio-fijo-data\.js\?v=2026081101/);
   assert.match(directoryPage, /href="directorio-fijo\.html" class="active"/);

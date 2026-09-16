@@ -15,12 +15,12 @@ test('Constructor consulta Esquema 1 por posicion para Business Red Plus', () =>
   assert.match(constructorPage, /Pago equipo en linea/);
 });
 
-// Decision de Gabriel (2026-09-10): en produccion el portal y el Constructor son un solo sitio,
-// ofertas.ss-group.cloud. En local el CRM sirve el portal bajo /constructor.
-test('El acceso Constructor abre el sitio de ofertas en produccion y el portal local en desarrollo', () => {
+// Decision actual: el menu del CRM abre el portal limpio; el perfil de cliente abre el Constructor real.
+test('El acceso separa portal limpio y Constructor real en el mismo dominio publicado', () => {
   assert.match(crmPage, />Constructor<\/a>/);
-  assert.match(crmPage, /const PORTAL_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/oferta-const\.html'/);
-  assert.match(crmPage, /new URL\(local\?'\/constructor\/oferta-const\.html':PORTAL_OFERTAS_URL,window\.location\.origin\)/);
+  assert.match(crmPage, /const PORTAL_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/'/);
+  assert.match(crmPage, /const CONSTRUCTOR_OFERTAS_URL='https:\/\/ofertas\.ss-group\.cloud\/oferta-const\.html'/);
+  assert.match(crmPage, /isConstructor\?'\/constructor\/oferta-const\.html':'\/constructor\/'/);
 });
 
 test('El evento se escoge por linea y ofrece las cuatro opciones', () => {
