@@ -17,7 +17,7 @@ function numberOrNull(value) {
 export function validateApifyPreviewCriteria(input = {}) {
   const rubro = cleanText(input.rubro);
   const zona = cleanText(input.zona);
-  const cantidad = Math.min(Math.max(Number(input.cantidad) || 20, 1), 500);
+  const cantidad = Math.min(Math.max(Number(input.cantidad) || 20, 1), 1000);
   const filtros = {
     telefono: Boolean(input.filtros?.telefono),
     website: Boolean(input.filtros?.website),
@@ -107,12 +107,15 @@ export function normalizeApifyItems(items = [], criteria = {}) {
 }
 
 export function buildApifyGoogleMapsInput(criteria) {
-  const searchString = `${criteria.rubro} en ${criteria.zona}, Puerto Rico`;
+  const zona = cleanText(criteria.zona);
+  const zonaIncluyePuertoRico = /\bpuerto\s+rico\b/i.test(zona);
+  const searchLocation = zonaIncluyePuertoRico ? zona : `${zona}, Puerto Rico`;
+  const searchString = `${criteria.rubro} en ${searchLocation}`;
   return {
     searchStringsArray: [searchString],
+    locationQuery: 'Puerto Rico',
     maxCrawledPlacesPerSearch: criteria.cantidad,
-    language: 'es',
-    countryCode: 'pr',
+    language: 'es-419',
     scrapePlaceDetailPage: true,
     skipClosedPlaces: true,
     includeWebResults: criteria.filtros.website,

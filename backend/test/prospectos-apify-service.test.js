@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  buildApifyGoogleMapsInput,
   buildProspectDedupeKey,
   getApifyPreviewStatus,
   normalizeApifyItems,
@@ -51,9 +52,17 @@ test('preview Apify valida criterios mínimos y normaliza sin secretos ni persis
   assert.equal(prospects[0].airtable_record_id, undefined);
 });
 
-test('preview Apify conserva una cantidad solicitada de 500 lugares', () => {
-  const criteria = validateApifyPreviewCriteria({ rubro: 'farmacia', zona: 'Dorado', cantidad: 500 });
-  assert.equal(criteria.cantidad, 500);
+test('preview Apify conserva una cantidad solicitada de 1000 lugares', () => {
+  const criteria = validateApifyPreviewCriteria({ rubro: 'ferreterías', zona: 'Puerto Rico', cantidad: 1000 });
+  assert.equal(criteria.cantidad, 1000);
+});
+
+test('input Apify usa locationQuery para Puerto Rico y no envia countryCode invalido', () => {
+  const criteria = validateApifyPreviewCriteria({ rubro: 'ferreterías', zona: 'Puerto Rico', cantidad: 1000 });
+  const input = buildApifyGoogleMapsInput(criteria);
+  assert.deepEqual(input.searchStringsArray, ['ferreterías en Puerto Rico']);
+  assert.equal(input.locationQuery, 'Puerto Rico');
+  assert.equal(input.countryCode, undefined);
 });
 
 test('preview Apify inicia el actor sin esperar sus resultados', async () => {
