@@ -28,6 +28,22 @@ El backend inicia en `http://localhost:4000` por defecto y sirve:
 - `docs/motor-ofertas/`: auditoria y diseno del motor de ofertas.
 - `originales/`: archivo historico de documentacion de `VentasProui`.
 
+## Vista previa local de Admin (solo lectura)
+
+Para revisar `Tareas y reglas Admin` y Admin Ofertas contra la base local sin
+publicar ni escribir, usar el servidor de solo lectura incluido (no depende de
+ninguna configuracion local ignorada):
+
+```powershell
+cd backend
+npm install
+node ../scripts/preview-admin-control.mjs
+```
+
+Abre `http://127.0.0.1:4173/#/tareas-reglas-admin`. Fuerza la base local
+(`PGHOST` debe ser local), aplica `default_transaction_read_only=on` y bloquea
+publicaciones y escrituras. El puerto se cambia con `ADMIN_PREVIEW_PORT`.
+
 ## Reglas
 
 Leer primero `AGENTS.md` y `CLAUDE.md`.

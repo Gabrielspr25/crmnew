@@ -40,6 +40,49 @@ function buildPreviews(overrides = {}) {
   });
 }
 
+// CC-02: los ocho equipos de Claro TV (STB, Dongle 4K, control remoto) se publican
+// como candidatos y NO se proponen como bajas frente al snapshot v3. Con el
+// comportamiento anterior (claro_tv_equipos en ARRAY_CATEGORIES) iban a
+// contenido_excluido y el diff reportaba ocho eliminados.
+test('CC-02 Claro TV incluye los ocho equipos y no propone bajas frente al snapshot publicado', () => {
+  const claroTvEquipos = [
+    { alfa_code: '-', descripcion: 'STB FULL PRICE CLIENTES CON CONTRATO', codigo: '40942H' },
+    { alfa_code: 'NOCONT', descripcion: 'STB FULL PRICE CLIENTES SIN CONTRATO', codigo: '40942H' },
+    { alfa_code: 'FINA24', descripcion: 'STB FINANCIADO 24 MESES CLIENTES CON CONTRATO', codigo: '40942H' },
+    { alfa_code: 'FINA12', descripcion: 'STB FINANCIADO 12 MESES CLIENTES CON CONTRATO', codigo: '40942H' },
+    { alfa_code: '-', descripcion: 'DONGLE 4K - FULL PRICE CLIENTES CON/SIN CONTRATO', codigo: '80105H' },
+    { alfa_code: 'FINA24', descripcion: 'DONGLE 4K - FINANCIADO 24M CLIENTES C/CONTRATO', codigo: '80105H' },
+    { alfa_code: 'FINA12', descripcion: 'DONGLE 4K - FINANCIADO 12M CLIENTES C/CONTRATO', codigo: '80105H' },
+    { alfa_code: '-', descripcion: '2do CONTROL REMOTO EN ADELANTE (REEMPLAZO)', codigo: '40941H' },
+  ].map((row) => ({ ...row, categoria: 'claro_tv_equipos', pagina: 2, precio: row.codigo === '40941H' ? 6 : row.codigo === '80105H' ? 30 : 40 }));
+  const mk = (categoria, n) => ({ filas: Array.from({ length: n }, (_, i) => ({ categoria, codigo: `${categoria}-${i}`, descripcion: `Ej ${i}`, precio: 10, pagina: 1 })) });
+  const modulos = {
+    claro_tv_planes: mk('claro_tv_planes', 6),
+    claro_tv_servicios_complementos: mk('claro_tv_servicios_complementos', 3),
+    claro_tv_equipos: { filas: claroTvEquipos },
+  };
+  const parsed = { modulos, registros_normalizados_total: 17, auditoria_original: { total_filas: 17, duplicados_exactos_total: 0 } };
+  const snapshotV3 = {
+    categoria: 'claro_tv', fuente_sha256: 'b'.repeat(64), fuente_nombre: 'v3.pdf',
+    modulos_generados: Object.entries(modulos).map(([seccion_key, contenido]) => ({
+      pagina: 'claro_tv', seccion_key, contenido: structuredClone(contenido),
+    })),
+  };
+  const claroTv = buildBasesInformativasPreviews({ parsed, fuente, publicacionesAnteriores: { claro_tv: snapshotV3 } })
+    .previews.find((item) => item.categoria === 'claro_tv');
+
+  const equipos = claroTv.modulos_generados.find((m) => m.seccion_key === 'claro_tv_equipos');
+  assert.ok(equipos, 'claro_tv_equipos debe ser un modulo candidato');
+  assert.equal(equipos.contenido.filas.length, 8);
+  assert.equal(claroTv.contenido_excluido.some((f) => f.categoria === 'claro_tv_equipos'), false);
+  assert.equal(claroTv.publicable, true);
+  assert.equal(claroTv.diferencias.registros.resumen.eliminados, 0);
+  assert.deepEqual(claroTv.diferencias.registros.eliminados, []);
+  assert.equal(claroTv.diferencias.modulos.eliminados.some((m) => m.seccion_key === 'claro_tv_equipos'), false);
+  // Las cuatro modalidades de 40942H no se colapsan por Item Code.
+  assert.equal(equipos.contenido.filas.filter((f) => f.codigo === '40942H').length, 4);
+});
+
 test('el PDF multiseccion genera previews independientes de fijo y Claro TV', () => {
   const { previews } = buildPreviews();
   const fijo = previews.find((item) => item.categoria === 'fijo');
@@ -47,8 +90,9 @@ test('el PDF multiseccion genera previews independientes de fijo y Claro TV', ()
 
   assert.equal(previews.length, 2);
   assert.equal(fijo.candidatos_publicos.length, 81);
-  assert.equal(claroTv.candidatos_publicos.length, 9);
-  assert.equal(fijo.candidatos_publicos.length + claroTv.candidatos_publicos.length, 90);
+  // Claro TV publica planes(6) + complementos(3) + equipos(8) = 17.
+  assert.equal(claroTv.candidatos_publicos.length, 17);
+  assert.equal(fijo.candidatos_publicos.length + claroTv.candidatos_publicos.length, 98);
   assert.equal(fijo.fuente_comercial_id, fuente.id);
   assert.equal(claroTv.fuente_comercial_id, fuente.id);
   assert.equal(fijo.fuente_sha256, fuente.sha256);
@@ -71,10 +115,16 @@ test('los candidatos publicos no mezclan fijo, Claro TV, equipos ni promociones'
   assert.deepEqual(claroTv.resumen.categorias_incluidas, [
     'claro_tv_planes',
     'claro_tv_servicios_complementos',
+    'claro_tv_equipos',
   ]);
   assert.equal(fijo.candidatos_publicos.some((fila) => fila.categoria.startsWith('claro_tv')), false);
   assert.equal(claroTv.candidatos_publicos.some((fila) => fila.categoria.startsWith('fijo_')), false);
-  assert.equal(claroTv.candidatos_publicos.some((fila) => /STB|DONGLE|CONTROL REMOTO/i.test(fila.descripcion)), false);
+  // Los equipos/decodificadores de Claro TV (STB, Dongle, control remoto) SI se publican.
+  const equipos = claroTv.candidatos_publicos.filter((fila) => fila.categoria === 'claro_tv_equipos');
+  assert.equal(equipos.length, 8);
+  assert.deepEqual([...new Set(equipos.map((fila) => fila.codigo))].sort(), ['40941H', '40942H', '80105H']);
+  assert.equal(claroTv.contenido_excluido.some((fila) => fila.categoria === 'claro_tv_equipos'), false);
+  // Contenido genuinamente excluido (promociones, Affinity, doble velocidad) sigue fuera.
   assert.equal([...fijo.candidatos_publicos, ...claroTv.candidatos_publicos].some((fila) => /GRATIS|Affinity|DOBLE VELOCIDAD/i.test(`${fila.descripcion} ${fila.motivo_exclusion || ''}`)), false);
 });
 
@@ -129,8 +179,8 @@ test('los modulos se agrupan y se generan en orden determinista', () => {
     },
     {
       categoria: 'claro_tv',
-      secciones: ['claro_tv_planes', 'claro_tv_servicios_complementos'],
-      filas: [6, 3],
+      secciones: ['claro_tv_planes', 'claro_tv_servicios_complementos', 'claro_tv_equipos'],
+      filas: [6, 3, 8],
     },
   ]);
 });
@@ -284,10 +334,10 @@ test('Fijo resume reglas normalizadas por tipo y confianza para el Admin', () =>
 test('Claro TV genera reglas normalizadas separadas de Fijo', () => {
   const claroTv = buildPreviews().previews.find((item) => item.categoria === 'claro_tv');
 
-  assert.equal(claroTv.reglas_normalizadas.length, 9);
-  assert.equal(claroTv.resumen_reglas.total, 9);
-  assert.deepEqual(claroTv.resumen_reglas.por_tipo, { estructura_base: 9 });
-  assert.deepEqual(claroTv.resumen_reglas.por_confianza, { confirmado: 9 });
+  assert.equal(claroTv.reglas_normalizadas.length, 17);
+  assert.equal(claroTv.resumen_reglas.total, 17);
+  assert.deepEqual(claroTv.resumen_reglas.por_tipo, { estructura_base: 17 });
+  assert.deepEqual(claroTv.resumen_reglas.por_confianza, { confirmado: 17 });
   assert.ok(claroTv.reglas_normalizadas.every((regla) => String(regla.familia || '').startsWith('claro_tv')));
   assert.ok(claroTv.reglas_normalizadas.every((regla) => !regla.llave_comercial.startsWith('fijo|')));
 });

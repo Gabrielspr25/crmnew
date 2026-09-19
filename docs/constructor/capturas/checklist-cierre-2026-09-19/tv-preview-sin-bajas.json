@@ -1,0 +1,82 @@
+{
+  "generado_en": "2026-09-19T19:29:03.767Z",
+  "descripcion": "Vista previa local reproducible: parser oficial vs snapshot v3 publicado (BD local). Demuestra que la correccion de la exclusion no propone bajas.",
+  "comando": "node backend/... (parser real + buildBasesInformativasPreviews)",
+  "publicable": true,
+  "estado_sugerido": "borrador",
+  "errores": [],
+  "modulos_generados": [
+    {
+      "seccion_key": "claro_tv_planes",
+      "filas": 6
+    },
+    {
+      "seccion_key": "claro_tv_servicios_complementos",
+      "filas": 3
+    },
+    {
+      "seccion_key": "claro_tv_equipos",
+      "filas": 8
+    }
+  ],
+  "claro_tv_equipos_en_contenido_excluido": false,
+  "diferencias_registros": {
+    "total_anterior": 17,
+    "nuevos": 0,
+    "modificados": 0,
+    "eliminados": 0,
+    "sin_cambios": 17,
+    "total_actual": 17
+  },
+  "diferencias_modulos_eliminados": [],
+  "equipos": [
+    {
+      "codigo": "40942H",
+      "alfa_code": "-",
+      "descripcion": "STB FULL PRICE CLIENTES CON CONTRATO",
+      "precio": 40
+    },
+    {
+      "codigo": "40942H",
+      "alfa_code": "NOCONT",
+      "descripcion": "STB FULL PRICE CLIENTES SIN CONTRATO",
+      "precio": 40
+    },
+    {
+      "codigo": "40942H",
+      "alfa_code": "FINA24",
+      "descripcion": "STB FINANCIADO 24 MESES CLIENTES CON CONTRATO",
+      "precio": 40
+    },
+    {
+      "codigo": "40942H",
+      "alfa_code": "FINA12",
+      "descripcion": "STB FINANCIADO 12 MESES CLIENTES CON CONTRATO",
+      "precio": 40
+    },
+    {
+      "codigo": "80105H",
+      "alfa_code": "-",
+      "descripcion": "DONGLE 4K - FULL PRICE CLIENTES CON/SIN CONTRATO",
+      "precio": 30
+    },
+    {
+      "codigo": "80105H",
+      "alfa_code": "FINA24",
+      "descripcion": "DONGLE 4K - FINANCIADO 24M CLIENTES C/CONTRATO",
+      "precio": 30
+    },
+    {
+      "codigo": "80105H",
+      "alfa_code": "FINA12",
+      "descripcion": "DONGLE 4K - FINANCIADO 12M CLIENTES C/CONTRATO",
+      "precio": 30
+    },
+    {
+      "codigo": "40941H",
+      "alfa_code": "-",
+      "descripcion": "2do CONTROL REMOTO EN ADELANTE (REEMPLAZO)",
+      "precio": 6
+    }
+  ]
+}

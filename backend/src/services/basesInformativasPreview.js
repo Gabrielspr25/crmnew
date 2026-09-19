@@ -15,6 +15,10 @@ const PREVIEW_DEFINITIONS = Object.freeze([
     included: [
       ['claro_tv_planes', 6, 'Claro TV planes'],
       ['claro_tv_servicios_complementos', 3, 'Claro TV servicios complementos'],
+      // Bloque de equipos/decodificadores (STB, Dongle, control remoto): conteo
+      // variable (null) porque no siempre viene en el boletin. La proteccion contra
+      // bajas silenciosas es el diff contra el snapshot publicado, no un numero fijo.
+      ['claro_tv_equipos', null, 'Claro TV equipos / decodificadores'],
     ],
   },
   {
@@ -39,7 +43,6 @@ const PREVIEW_DEFINITIONS = Object.freeze([
 ]);
 
 const ARRAY_CATEGORIES = Object.freeze([
-  'claro_tv_equipos',
   'internet_equipos_ofertas',
   'referencia_interna',
   'contenido_temporal_excluido',
@@ -431,12 +434,16 @@ function canonicalJson(value) {
 }
 
 function recordIdentity(row, sectionKey) {
+  const section = String(sectionKey || row?.seccion_key || '').trim();
   const identity = [
     String(row?.categoria || '').trim(),
-    String(sectionKey || row?.seccion_key || '').trim(),
+    section,
     String(row?.codigo || '').trim(),
   ];
   if (row?.identidad_variante) identity.push(String(row.identidad_variante).trim());
+  // Los equipos de Claro TV repiten Item Code en varias modalidades (CASH, NOCONT,
+  // FINA24, FINA12); el alfa_code las distingue y evita colapsar u ocultar bajas.
+  if (section === 'claro_tv_equipos') identity.push(String(row?.alfa_code ?? '').trim());
   return identity.join('|');
 }
 
@@ -756,10 +763,12 @@ function buildPreview(definition, parsed, fuente, publicacionesAnteriores) {
   const included = [];
   let order = 10;
 
+  let expectedTotal = 0;
   for (const [sourceKey, expectedCount, title, moduleKey = sourceKey] of definition.included) {
     const rows = transformSectionRows(moduleKey, rowsFor(parsed, sourceKey).map((row) => withSourceValidity(stableRow(row, moduleKey), fuente)));
     included.push(moduleKey);
-    if (rows.length !== expectedCount) {
+    const variable = expectedCount == null;
+    if (!variable && rows.length !== expectedCount) {
       validationErrors.push({
         codigo: 'conteo_categoria_invalido',
         categoria: moduleKey,
@@ -767,12 +776,14 @@ function buildPreview(definition, parsed, fuente, publicacionesAnteriores) {
         encontrado: rows.length,
       });
     }
+    // Seccion opcional ausente: no genera modulo vacio ni cuenta. El diff contra el
+    // snapshot publicado sigue reportando la eliminacion si antes estaba publicada.
+    if (variable && rows.length === 0) continue;
     candidates.push(...rows);
     modules.push(moduleFor({ page: definition.pagina, sectionKey: moduleKey, title, rows, order }));
     order += 10;
+    expectedTotal += variable ? rows.length : expectedCount;
   }
-
-  const expectedTotal = definition.included.reduce((total, item) => total + item[1], 0);
   const common = validateCommon({ parsed, fuente, candidates, modules, expectedTotal });
   const errors = [...validationErrors, ...common.errors];
   const previousModules = previousModulesFor(publicacionesAnteriores, definition.categoria);
