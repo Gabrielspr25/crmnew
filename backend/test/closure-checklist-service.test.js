@@ -5,7 +5,7 @@ import { validateProjectPlan, renderProjectPlanMarkdown, loadProjectPlan, VALID_
 
 const rawPlan = JSON.parse(await readFile(new URL('../../docs/constructor/plan-maestro-constructor.json', import.meta.url), 'utf8'));
 function item(overrides = {}) {
-  return { id: 'TEST-1', step: 'Revisar original', module: 'Modulo de prueba', status: 'pendiente', environment: 'local', evidence: [], blocker: null, next_action: 'Revisar', checked_at: null, ...overrides };
+  return { id: 'TEST-1', step: 'Revisar original', module: 'Modulo de prueba', status: 'pendiente', environment: 'local', evidence: [], blocker: null, next_action: 'Revisar', closure_criterion: 'Criterio verificable', checked_at: null, ...overrides };
 }
 function plan(items = [item()]) {
   return { ...structuredClone(rawPlan), closure_checklist: { updated_at: '2026-09-17', items } };
@@ -47,6 +47,7 @@ for (const [name, change] of [
   ['checklist nulo', p => { p.closure_checklist = null; }],
   ['paso vacio', p => { p.closure_checklist.items[0].step = ''; }],
   ['bloqueo ausente', p => { delete p.closure_checklist.items[0].blocker; }],
+  ['criterio de cierre ausente', p => { delete p.closure_checklist.items[0].closure_criterion; }],
   ['checked_at ausente', p => { delete p.closure_checklist.items[0].checked_at; }],
   ['ID no texto', p => { p.closure_checklist.items[0].id = 1; }],
   ['duplicado con espacios', p => { p.closure_checklist.items.push(item({ id: ' TEST-1 ' })); }],
@@ -67,7 +68,7 @@ test('Markdown proyecta datos, ambiente y evidencia del JSON sin mutarlo', () =>
   ]);
   const before = structuredClone(current);
   const md = renderProjectPlanMarkdown(current);
-  for (const value of ['Checklist de Cierre', '2026-09-17', 'TEST-1', 'TEST-2', 'Revisar original', 'Modulo de prueba', 'Prueba local', 'Prueba productiva', '2026-09-17T12:00:00Z', 'Comprobado localmente', 'Comprobado en produccion']) assert.ok(md.includes(value), value);
+  for (const value of ['Checklist de Cierre', '2026-09-17', 'TEST-1', 'TEST-2', 'Revisar original', 'Modulo de prueba', 'Prueba local', 'Prueba productiva', 'Criterio verificable', '2026-09-17T12:00:00Z', 'Comprobado localmente', 'Comprobado en produccion']) assert.ok(md.includes(value), value);
   assert.deepEqual(current, before);
   assert.throws(() => renderProjectPlanMarkdown(plan([item({ status: 'terminado' })])), /checklist/i);
 });

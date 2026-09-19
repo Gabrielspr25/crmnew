@@ -2482,7 +2482,7 @@ function tareasReglasChecklistHtml(checklist){
   if(!checklist||!date(checklist.updated_at)||!Array.isArray(checklist.items))return unavailable;
   const ids=new Set();
   for(const item of checklist.items){
-    if(!item||!['id','step','module','status','environment','status_label','environment_label','next_action'].every(field=>text(item[field]))
+    if(!item||!['id','step','module','status','environment','status_label','environment_label','next_action','closure_criterion'].every(field=>text(item[field]))
       ||ids.has(item.id.trim())||!Array.isArray(item.evidence)||!item.evidence.every(text)
       ||(item.blocker!==null&&typeof item.blocker!=='string')
       ||(item.checked_at!==null&&(!text(item.checked_at)||!date(item.checked_at.slice(0,10))||!Number.isFinite(Date.parse(item.checked_at)))))return unavailable;
@@ -2490,10 +2490,10 @@ function tareasReglasChecklistHtml(checklist){
   }
   const rows=checklist.items.map(item=>'<tr><th scope="row">'+esc(item.step)+'</th><td>'+esc(item.module)+'</td><td>'+esc(item.status_label)+'</td><td>'+esc(item.environment_label)+'</td>'
     +'<td>'+(item.evidence.length?'<ul>'+item.evidence.map(value=>'<li>'+esc(value)+'</li>').join('')+'</ul>':'<span class="s">Sin evidencia registrada</span>')
-    +(item.checked_at?'<div class="s">Comprobacion: '+esc(tareasReglasFecha(item.checked_at))+'</div>':'')+'</td><td>'+esc(item.blocker||'Sin bloqueo registrado')+'</td><td>'+esc(item.next_action)+'</td></tr>').join('');
+    +(item.checked_at?'<div class="s">Comprobacion: '+esc(tareasReglasFecha(item.checked_at))+'</div>':'')+'</td><td>'+esc(item.blocker||'Sin bloqueo registrado')+'</td><td>'+esc(item.next_action)+'</td><td>'+esc(item.closure_criterion)+'</td></tr>').join('');
   return heading+'<span class="s">Fecha al corte: '+esc(checklist.updated_at)+'</span></header>'
-    +'<div class="tra-table-wrap"><table><thead><tr><th>Paso</th><th>Modulo</th><th>Estado</th><th>Ambiente</th><th>Evidencia</th><th>Bloqueo</th><th>Siguiente accion</th></tr></thead><tbody>'
-    +(rows||'<tr><td colspan="7">Sin pasos registrados.</td></tr>')+'</tbody></table></div></section>';
+    +'<div class="tra-table-wrap"><table><thead><tr><th>Paso</th><th>Modulo</th><th>Estado</th><th>Ambiente</th><th>Evidencia</th><th>Bloqueo</th><th>Siguiente accion</th><th>Criterio de cierre</th></tr></thead><tbody>'
+    +(rows||'<tr><td colspan="8">Sin pasos registrados.</td></tr>')+'</tbody></table></div></section>';
 }
 async function viewTareasReglasAdmin(){
   const [runtime,checklist]=await Promise.allSettled([api('/api/admin-control/modules'),api('/api/admin-control/closure-checklist')]);

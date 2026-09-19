@@ -55,7 +55,7 @@ export function validateClosureChecklist(checklist) {
       errors.push(`${prefix} debe ser objeto`);
       continue;
     }
-    for (const field of ['id', 'step', 'module', 'next_action']) {
+    for (const field of ['id', 'step', 'module', 'next_action', 'closure_criterion']) {
       if (typeof item[field] !== 'string' || !item[field].trim()) errors.push(`${prefix}.${field} debe ser texto no vacio`);
     }
     if (typeof item.id === 'string') {
@@ -242,11 +242,11 @@ function closureChecklistMarkdown(plan) {
     '',
     `Fecha al corte: ${checklist.updated_at}`,
     '',
-    '| ID | Paso | Modulo | Estado | Ambiente | Evidencia | Bloqueo | Siguiente accion | Comprobacion |',
-    '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| ID | Paso | Modulo | Estado | Ambiente | Evidencia | Bloqueo | Siguiente accion | Criterio de cierre | Comprobacion |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...checklist.items.map(item => {
       const labels = closureChecklistLabels(item);
-      const cells = [item.id, item.step, item.module, labels.status_label, labels.environment_label, item.evidence.join('; '), item.blocker, item.next_action, item.checked_at];
+      const cells = [item.id, item.step, item.module, labels.status_label, labels.environment_label, item.evidence.join('; '), item.blocker, item.next_action, item.closure_criterion, item.checked_at];
       return `| ${cells.map(escapeChecklistMd).join(' | ')} |`;
     }),
     '',

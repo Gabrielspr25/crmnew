@@ -1,11 +1,11 @@
 {
   "project": "Constructor Comercial",
-  "updated_at": "2026-09-17",
-  "phase": "Admin Ofertas probado localmente hasta aprobacion TV sin publicar; panel Admin en revision visual",
+  "updated_at": "2026-09-19",
+  "phase": "Admin Ofertas probado localmente hasta aprobacion TV sin publicar; checklist de Tareas y reglas Admin comprobado localmente",
   "overall_status": "en_validacion",
   "environment": "local",
   "closure_checklist": {
-    "updated_at": "2026-09-17",
+    "updated_at": "2026-09-19",
     "items": [
       {
         "id": "CC-01",
@@ -16,6 +16,7 @@
         "evidence": ["2026-09-17: selector filechooser abierto en Chrome, setFiles rechazado con Not allowed. La carga previa por API no cierra este punto."],
         "blocker": "La extension de Chrome no tiene habilitado el acceso a URLs de archivo.",
         "next_action": "Gabriel habilita el permiso o selecciona el archivo; repetir la carga por el control visible, analizar y comprobar la publicacion anterior.",
+        "closure_criterion": "Una carga elegida desde el selector visible llega al analisis y conserva la publicacion anterior ante un error.",
         "checked_at": null
       },
       {
@@ -27,6 +28,7 @@
         "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: TV v10 propone ocho eliminaciones respecto de v3. No se publico."],
         "blocker": "Bajas expresas no acreditadas. Ausencia del candidato no autoriza eliminar.",
         "next_action": "Contrastar los ocho registros, originales y paginas; mantener v10 sin publicar hasta revision comercial.",
+        "closure_criterion": "Las ocho opciones tienen resultado documentado individual y TV v10 permanece sin publicar hasta la aprobacion comercial.",
         "checked_at": null
       },
       {
@@ -38,6 +40,7 @@
         "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: el formulario conserva solo una seleccion local; no analisis conjunto."],
         "blocker": "Flujo de Excel y PDF oficial aun no conectado al formulario.",
         "next_action": "Reutilizar archivo/hash, parser y preview existentes; comprobar ambos originales y errores sin alterar la version publicada.",
+        "closure_criterion": "Excel y PDF oficial quedan vinculados al mismo hash y preview; un error no altera la version publicada.",
         "checked_at": null
       },
       {
@@ -49,28 +52,43 @@
         "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: INSERT separados; prueba de fallo parcial pendiente."],
         "blocker": "Atomicidad e idempotencia sin comprobar.",
         "next_action": "Inyectar fallo en segunda categoria y reintento; exigir rollback completo, historial conservado y ninguna respuesta de exito parcial.",
+        "closure_criterion": "En una BD aislada, fallo, rollback, reintento e idempotencia quedan probados sin exito parcial.",
         "checked_at": null
       },
       {
         "id": "CC-05",
         "step": "Checklist unico y revision visual",
         "module": "Tareas y reglas Admin",
-        "status": "en_validacion",
+        "status": "terminado",
         "environment": "local",
-        "evidence": ["Registro unico: docs/constructor/plan-maestro-constructor.json, closure_checklist. PM-021 permanece retirado."],
+        "evidence": ["Registro unico: docs/constructor/plan-maestro-constructor.json, closure_checklist. PM-021 permanece retirado.", "2026-09-19: 48 pruebas enfocadas aprobadas y captura local de #/tareas-reglas-admin confirma estado, ambiente, evidencia, bloqueo, siguiente accion y criterio de cierre."],
         "blocker": null,
-        "next_action": "Mostrar esta tabla desde el Plan, comprobar estados por ambiente y entregar captura sin reconstruir el panel.",
-        "checked_at": null
+        "next_action": "Mantener el checklist como lectura del Plan y regenerar el Markdown al cambiar el JSON.",
+        "closure_criterion": "La tabla muestra estado, ambiente, evidencia, pendiente, siguiente accion y criterio de cierre; dos generaciones consecutivas no producen diferencias.",
+        "checked_at": "2026-09-19T12:16:58-04:00"
       },
       {
         "id": "CC-06",
-        "step": "Comprobacion productiva del cierre",
-        "module": "Admin Ofertas / Tareas y reglas Admin",
+        "step": "Clasificacion de diferencias de produccion",
+        "module": "Inventario de produccion",
         "status": "pendiente",
         "environment": "produccion",
-        "evidence": ["La auditoria productiva previa conserva su propio corte; no comprueba los cambios locales de este cierre."],
-        "blocker": "Despliegue y publicacion comercial fuera del alcance autorizado.",
-        "next_action": "Mantener pendiente. Requiere autorizacion posterior y verificacion en produccion, no extrapolar pruebas locales.",
+        "evidence": ["La reconciliacion tecnica de solo lectura 2026-09-19 dejo rutas distintas, exclusivas de HEAD y cinco exclusivas de produccion pendientes de clasificacion individual."],
+        "blocker": "No se debe inferir que una ruta exclusiva es respaldo, historica o vigente sin evidencia individual.",
+        "next_action": "Clasificar individualmente rutas distintas, exclusivas de HEAD y las cinco exclusivas de produccion que no estan identificadas como respaldo o historicas.",
+        "closure_criterion": "Cada diferencia tiene alcance, procedencia y tratamiento documentados sin desplegar ni copiar versiones entre ambientes.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-07",
+        "step": "Definicion de eliminadas, historial y retencion",
+        "module": "Asana",
+        "status": "pendiente",
+        "environment": "local",
+        "evidence": ["La reconciliacion tecnica de solo lectura 2026-09-19 detecto que el requisito vigente de Eliminadas no esta cerrado y no debe corregirse por una prueba verde artificial."],
+        "blocker": "Falta una definicion funcional separada de cancelacion, historial y retencion.",
+        "next_action": "Registrar y aprobar esa definicion por separado antes de cambiar codigo o debilitar pruebas.",
+        "closure_criterion": "La definicion vigente distingue cancelacion, historial y retencion y cuenta con una prueba alineada, sin cambiar codigo en esta entrega.",
         "checked_at": null
       }
     ]

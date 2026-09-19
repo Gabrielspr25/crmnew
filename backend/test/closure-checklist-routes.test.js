@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { createAdminControlRouter } from '../src/routes/adminControlRoutes.js';
 
 function checklist() {
-  return { updated_at: '2026-09-17', items: ['local', 'produccion'].map((environment, i) => ({ id: `TEST-${i}`, step: 'Comprobar', module: 'Prueba', status: 'terminado', environment, evidence: ['Evidencia de prueba'], blocker: null, next_action: 'Revision', checked_at: '2026-09-17T12:00:00Z' })) };
+  return { updated_at: '2026-09-17', items: ['local', 'produccion'].map((environment, i) => ({ id: `TEST-${i}`, step: 'Comprobar', module: 'Prueba', status: 'terminado', environment, evidence: ['Evidencia de prueba'], blocker: null, next_action: 'Revision', closure_criterion: 'Cierre trazable', checked_at: '2026-09-17T12:00:00Z' })) };
 }
 async function request(router, role) {
   const route = router.stack.find(layer => layer.route?.path === '/closure-checklist')?.route;
