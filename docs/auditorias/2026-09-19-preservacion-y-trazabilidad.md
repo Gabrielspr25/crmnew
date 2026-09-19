@@ -53,6 +53,19 @@ estaban dispersas; no reinterpretan ni reabren una decision comercial previa.
 3. El Markdown del Plan Maestro y la copia previa conservada no son iguales;
    falta identificar el origen correcto antes de una restauracion.
 4. TV v10 sigue sin publicar por la omision tecnica de ocho equipos.
+5. La prueba dirigida de Asana conserva como contrato el rotulo `Eliminadas`,
+   pero `frontend/app.html` consolidado no lo contiene. La prueba de notas de
+   cliente pasa desde `backend/`; la discrepancia de Asana queda pendiente de
+   una decision funcional separada, sin ajustar codigo en esta etapa.
+
+## Verificacion local
+
+- `git diff --check HEAD`: sin errores de espacio en cambios versionados.
+- Pruebas dirigidas: 62 de 63 subpruebas pasaron cuando se ejecutaron en el
+  lote de preservacion; la unica falla funcional fue el contrato de Asana
+  descrito arriba. La primera invocacion de `client-notes-contract` desde la
+  raiz no es un fallo del producto: ese archivo calcula rutas relativas para
+  ejecutarse desde `backend/`, donde paso.
 
 ## Siguiente accion de cierre
 
