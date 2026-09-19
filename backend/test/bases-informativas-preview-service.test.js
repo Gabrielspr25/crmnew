@@ -11,6 +11,7 @@ import {
 
 const parser = new URL('../../scripts/parse_planes_fijos_pdf.py', import.meta.url);
 const pdf = new URL('../../Planes para web/Estructura de planes/planes/LISTADO ESTRUCTURA PLANES PYMESNEGOCIOS TODOS @2026(15)-260330.pdf', import.meta.url);
+const claroTvV3Evidence = new URL('../../docs/constructor/capturas/cierre-admin-2026-09-17/tv-ocho-diferencias-bd-local.json', import.meta.url);
 const serviceSource = fs.readFileSync(new URL('../src/services/basesInformativasPreview.js', import.meta.url), 'utf8');
 
 const fuente = Object.freeze({
@@ -44,32 +45,14 @@ function buildPreviews(overrides = {}) {
 // como candidatos y NO se proponen como bajas frente al snapshot v3. Con el
 // comportamiento anterior (claro_tv_equipos en ARRAY_CATEGORIES) iban a
 // contenido_excluido y el diff reportaba ocho eliminados.
-test('CC-02 Claro TV incluye los ocho equipos y no propone bajas frente al snapshot publicado', () => {
-  const claroTvEquipos = [
-    { alfa_code: '-', descripcion: 'STB FULL PRICE CLIENTES CON CONTRATO', codigo: '40942H' },
-    { alfa_code: 'NOCONT', descripcion: 'STB FULL PRICE CLIENTES SIN CONTRATO', codigo: '40942H' },
-    { alfa_code: 'FINA24', descripcion: 'STB FINANCIADO 24 MESES CLIENTES CON CONTRATO', codigo: '40942H' },
-    { alfa_code: 'FINA12', descripcion: 'STB FINANCIADO 12 MESES CLIENTES CON CONTRATO', codigo: '40942H' },
-    { alfa_code: '-', descripcion: 'DONGLE 4K - FULL PRICE CLIENTES CON/SIN CONTRATO', codigo: '80105H' },
-    { alfa_code: 'FINA24', descripcion: 'DONGLE 4K - FINANCIADO 24M CLIENTES C/CONTRATO', codigo: '80105H' },
-    { alfa_code: 'FINA12', descripcion: 'DONGLE 4K - FINANCIADO 12M CLIENTES C/CONTRATO', codigo: '80105H' },
-    { alfa_code: '-', descripcion: '2do CONTROL REMOTO EN ADELANTE (REEMPLAZO)', codigo: '40941H' },
-  ].map((row) => ({ ...row, categoria: 'claro_tv_equipos', pagina: 2, precio: row.codigo === '40941H' ? 6 : row.codigo === '80105H' ? 30 : 40 }));
-  const mk = (categoria, n) => ({ filas: Array.from({ length: n }, (_, i) => ({ categoria, codigo: `${categoria}-${i}`, descripcion: `Ej ${i}`, precio: 10, pagina: 1 })) });
-  const modulos = {
-    claro_tv_planes: mk('claro_tv_planes', 6),
-    claro_tv_servicios_complementos: mk('claro_tv_servicios_complementos', 3),
-    claro_tv_equipos: { filas: claroTvEquipos },
-  };
-  const parsed = { modulos, registros_normalizados_total: 17, auditoria_original: { total_filas: 17, duplicados_exactos_total: 0 } };
-  const snapshotV3 = {
-    categoria: 'claro_tv', fuente_sha256: 'b'.repeat(64), fuente_nombre: 'v3.pdf',
-    modulos_generados: Object.entries(modulos).map(([seccion_key, contenido]) => ({
-      pagina: 'claro_tv', seccion_key, contenido: structuredClone(contenido),
-    })),
-  };
-  const claroTv = buildBasesInformativasPreviews({ parsed, fuente, publicacionesAnteriores: { claro_tv: snapshotV3 } })
-    .previews.find((item) => item.categoria === 'claro_tv');
+test('CC-02 Claro TV incluye los ocho equipos y no propone bajas frente al snapshot v3 local', () => {
+  const evidence = JSON.parse(fs.readFileSync(fileURLToPath(claroTvV3Evidence), 'utf8'));
+  const snapshotV3 = evidence.versiones.find((version) => String(version.numero) === '3');
+  assert.ok(snapshotV3, 'falta el snapshot local de TV v3');
+  const claroTv = buildPreviews({
+    fuente: { ...fuente, sha256: evidence.fuente.sha256 },
+    publicacionesAnteriores: { claro_tv: snapshotV3 },
+  }).previews.find((item) => item.categoria === 'claro_tv');
 
   const equipos = claroTv.modulos_generados.find((m) => m.seccion_key === 'claro_tv_equipos');
   assert.ok(equipos, 'claro_tv_equipos debe ser un modulo candidato');
