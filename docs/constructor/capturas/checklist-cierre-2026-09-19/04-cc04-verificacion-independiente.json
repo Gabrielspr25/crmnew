@@ -1,0 +1,58 @@
+{
+  "check": "CC-04 (verificacion independiente)",
+  "executed_at": "2026-09-19T19:56:58.480Z",
+  "environment": {
+    "kind": "PostgreSQL efimero aislado (cluster propio initdb)",
+    "host": "127.0.0.1",
+    "port": 55433,
+    "database": "cc04_isolated",
+    "role": "cc04_test",
+    "production_connection_used": false,
+    "datadir": "scratchpad/cc04-pgdata"
+  },
+  "p1_guardado_completo": {
+    "status": 201,
+    "publicaciones": 2,
+    "estado_final": {
+      "borrador": 2,
+      "publicada": 2
+    }
+  },
+  "p2_fallo_forzado": {
+    "status": 500,
+    "estado_previo": {
+      "publicada": 2
+    },
+    "estado_tras_rollback": {
+      "publicada": 2
+    },
+    "rollback_sin_parcial": true
+  },
+  "p3_reintento": {
+    "status": 201,
+    "ids": [
+      "18b41067-e08d-48cd-be10-0af03c82f7dc",
+      "717500c8-d2ce-4d4d-9061-f3a0f627e4c1"
+    ],
+    "borradores_totales": 2
+  },
+  "p4_repeticion_concurrencia": {
+    "repeticion_status": 200,
+    "concurrencia_status": [
+      200,
+      200,
+      200
+    ],
+    "ids_identicos": true,
+    "borradores_finales": 2
+  },
+  "p5_original_modificado": {
+    "status": 409,
+    "codigo": "preview_desactualizado",
+    "sin_escrituras": true
+  },
+  "p6_publicaciones_anteriores": {
+    "publicadas_final": 2,
+    "esperado": 2
+  }
+}

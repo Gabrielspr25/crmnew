@@ -11,6 +11,19 @@ import {
 } from '../src/routes/fuentesComercialesRoutes.js';
 
 const { Pool } = pg;
+
+// Guarda de seguridad: la prueba hace DROP/CREATE sobre nombres de tabla reales.
+// Debe rechazar cualquier destino que parezca produccion antes de tocar el schema.
+export function assertIsolatedDatabase(currentDatabase, { appDatabase } = {}) {
+  const name = String(currentDatabase || '').trim();
+  if (!name) throw new Error('CC-04: no se pudo determinar la base de datos destino');
+  const forbidden = new Set(['crm_pro', String(appDatabase || '').trim()].filter(Boolean));
+  if (forbidden.has(name)) {
+    throw new Error(`CC-04: destino "${name}" parece produccion; use una base aislada dedicada`);
+  }
+  return name;
+}
+
 const integrationConfig = process.env.CC04_PGHOST ? {
   host: process.env.CC04_PGHOST,
   port: Number(process.env.CC04_PGPORT || 5432),
@@ -142,6 +155,8 @@ async function resetScenario() {
 test.before(async () => {
   if (!integrationConfig) return;
   pool = new Pool(integrationConfig);
+  const { rows: [{ current_database: dbName }] } = await pool.query('SELECT current_database()');
+  assertIsolatedDatabase(dbName, { appDatabase: process.env.PGDATABASE });
   uploadDir = await mkdtemp(path.join(tmpdir(), 'newcrm-cc04-'));
   originalPath = path.join(uploadDir, 'cc04-original.pdf');
   await pool.query('CREATE EXTENSION IF NOT EXISTS pgcrypto');
@@ -241,4 +256,13 @@ integrationTest('PostgreSQL aislado: el original cambiado invalida el preview an
   assert.equal(stale.statusCode, 409);
   assert.deepEqual(stale.payload, { ok: false, codigo: 'preview_desactualizado' });
   assert.deepEqual(await publications(), previous);
+});
+
+// Corre siempre (sin BD): la guarda impide que un destino de produccion sea
+// destruido por el DROP/CREATE de la preparacion.
+test('la guarda de aislamiento rechaza destinos de produccion y acepta una base dedicada', () => {
+  assert.throws(() => assertIsolatedDatabase('crm_pro'), /parece produccion/);
+  assert.throws(() => assertIsolatedDatabase('mi_app', { appDatabase: 'mi_app' }), /parece produccion/);
+  assert.throws(() => assertIsolatedDatabase(''), /no se pudo determinar/);
+  assert.equal(assertIsolatedDatabase('cc04_isolated', { appDatabase: 'crm_pro' }), 'cc04_isolated');
 });
