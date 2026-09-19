@@ -1,9 +1,322 @@
 {
   "project": "Constructor Comercial",
-  "updated_at": "2026-09-16",
-  "phase": "Plan Maestro local",
+  "updated_at": "2026-09-17",
+  "phase": "Admin Ofertas probado localmente hasta aprobacion TV sin publicar; panel Admin en revision visual",
   "overall_status": "en_validacion",
   "environment": "local",
+  "closure_checklist": {
+    "updated_at": "2026-09-17",
+    "items": [
+      {
+        "id": "CC-01",
+        "step": "Carga desde selector real de Chrome",
+        "module": "Admin Ofertas / Claro TV",
+        "status": "bloqueado",
+        "environment": "local",
+        "evidence": ["2026-09-17: selector filechooser abierto en Chrome, setFiles rechazado con Not allowed. La carga previa por API no cierra este punto."],
+        "blocker": "La extension de Chrome no tiene habilitado el acceso a URLs de archivo.",
+        "next_action": "Gabriel habilita el permiso o selecciona el archivo; repetir la carga por el control visible, analizar y comprobar la publicacion anterior.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-02",
+        "step": "Investigar ocho diferencias de TV",
+        "module": "Claro TV",
+        "status": "en_validacion",
+        "environment": "local",
+        "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: TV v10 propone ocho eliminaciones respecto de v3. No se publico."],
+        "blocker": "Bajas expresas no acreditadas. Ausencia del candidato no autoriza eliminar.",
+        "next_action": "Contrastar los ocho registros, originales y paginas; mantener v10 sin publicar hasta revision comercial.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-03",
+        "step": "Analisis conjunto de Excel y terminos",
+        "module": "Ofertas Moviles",
+        "status": "pendiente",
+        "environment": "local",
+        "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: el formulario conserva solo una seleccion local; no analisis conjunto."],
+        "blocker": "Flujo de Excel y PDF oficial aun no conectado al formulario.",
+        "next_action": "Reutilizar archivo/hash, parser y preview existentes; comprobar ambos originales y errores sin alterar la version publicada.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-04",
+        "step": "Guardado multicategoria ante fallo parcial",
+        "module": "Bases Fijo / Claro TV",
+        "status": "pendiente",
+        "environment": "local",
+        "evidence": ["docs/constructor/revision-admin-ofertas-local-2026-09-17.md: INSERT separados; prueba de fallo parcial pendiente."],
+        "blocker": "Atomicidad e idempotencia sin comprobar.",
+        "next_action": "Inyectar fallo en segunda categoria y reintento; exigir rollback completo, historial conservado y ninguna respuesta de exito parcial.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-05",
+        "step": "Checklist unico y revision visual",
+        "module": "Tareas y reglas Admin",
+        "status": "en_validacion",
+        "environment": "local",
+        "evidence": ["Registro unico: docs/constructor/plan-maestro-constructor.json, closure_checklist. PM-021 permanece retirado."],
+        "blocker": null,
+        "next_action": "Mostrar esta tabla desde el Plan, comprobar estados por ambiente y entregar captura sin reconstruir el panel.",
+        "checked_at": null
+      },
+      {
+        "id": "CC-06",
+        "step": "Comprobacion productiva del cierre",
+        "module": "Admin Ofertas / Tareas y reglas Admin",
+        "status": "pendiente",
+        "environment": "produccion",
+        "evidence": ["La auditoria productiva previa conserva su propio corte; no comprueba los cambios locales de este cierre."],
+        "blocker": "Despliegue y publicacion comercial fuera del alcance autorizado.",
+        "next_action": "Mantener pendiente. Requiere autorizacion posterior y verificacion en produccion, no extrapolar pruebas locales.",
+        "checked_at": null
+      }
+    ]
+  },
+  "operating_control": {
+    "version": "2026-09-17",
+    "purpose": "Seguimiento documental de construccion y validacion. production_status no equivale a estado de publicacion comercial. El panel local consulta evidencia comercial independiente del Plan; la version productiva anterior sigue pendiente de una correccion autorizada. Consultar publication_audit y revision-panel-admin-local-2026-09-17.md.",
+    "release_gate": [
+      "Identificar superficie exacta: CRM PYMES/Admin Ofertas, Portal web, Motor Comercial o Constructor.",
+      "Separar evidencia local de evidencia de produccion.",
+      "Confirmar fuente oficial archivada, analisis real, estado de publicacion y consumidores impactados.",
+      "Probar en la superficie afectada despues del despliegue antes de declarar el cambio listo.",
+      "Sin evidencia completa, usar pendiente, en validacion o bloqueado; nunca Al dia ni terminado.",
+      "Ausencia de comprobacion no significa ausencia de publicacion. Separar documento, analisis, borrador, aprobacion, publicacion, vigencia y consumidor.",
+      "Decision de Gabriel 2026-09-17: PM-021 retirado por confusion. REDPLUS $60 y BREDP1 $65 son identidades separadas; no relacionar ni fusionar. Ficha original conservada en retired_items.",
+      "Avances, pruebas y done anteriores son evidencia historica en su fecha y ambiente, no certificacion del runtime actual. El Constructor retirado no se reconstruye en esta etapa.",
+      "Auditoria inicial: docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md. Posteriormente se consulto tambien la base local para revisar el panel; no confundir sus versiones con produccion.",
+      "Panel Admin: implementacion local de solo lectura de evidencia. Publicacion existente, nueva fuente, borrador y comprobacion del destino se separan. Revision visual de Gabriel y despliegue pendientes; no se reactiva el Constructor.",
+      "Revision operativa posterior: docs/constructor/revision-admin-ofertas-local-2026-09-17.md. Prueba documental acotada en BD local: fuente archivada, Fijo v9 borrador y TV v10 aprobada tecnicamente, sin publicar. TV v3/Fijo v2 locales conservadas; no confundir con TV v14/Fijo v13 productivas. No despliegue."
+    ],
+    "modules": [
+      {
+        "key": "fijo",
+        "title": "Planes Fijos",
+        "status": "en_validacion",
+        "local_status": "terminado",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: Base v13 publicada el 2026-08-20: 81 filas en cuatro modulos. Original y hash verificados; extraccion y candidatos persistidos; validada/aprobada/publicada con fechas. Versiones anteriores conservadas. Fuente pendiente_confirmacion, fechas de vigencia nulas; fecha base 2026-03-30 no es vencimiento.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Planes Fijos",
+          "Claro TV cuando el documento contiene su bloque"
+        ],
+        "next_action": "Conservar v13; revisar vigencia documental y fuente seleccionada sin republicar.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "Base v13 publicada el 2026-08-20: 81 filas en cuatro modulos. Original y hash verificados; extraccion y candidatos persistidos; validada/aprobada/publicada con fechas. Versiones anteriores conservadas.",
+          "document_validity": "Fuente pendiente_confirmacion, fechas de vigencia nulas; fecha base 2026-03-30 no es vencimiento.",
+          "destination_check": "/api/planes-modulos/fijos 200; contenido coincide con snapshot; index.html muestra v13 y 81 registros.",
+          "real_blocker": "Sin bloqueo tecnico de lectura observado; falta confirmacion de vigencia y reconciliar Al dia."
+        }
+      },
+      {
+        "key": "claro_tv",
+        "title": "Claro TV",
+        "status": "en_validacion",
+        "local_status": "en_validacion",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: v14 publicada el 2026-08-20 13:14:16-04: 6 planes y 3 complementos; fuente fija d0c88196-e9d8-48f7-aa3d-7250b4459c63 y SHA verificados. Carga, validacion, aprobacion y publicacion registradas; borradores anteriores no anulan v14. Fuente vinculada pendiente_confirmacion y fechas nulas. Base 2026-03-30 no equivale a vigencia.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Claro TV"
+        ],
+        "next_action": "Conservar v14; separar seguimiento de publicacion y confirmar vigencia. No republicar para corregir una tarjeta.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "v14 publicada el 2026-08-20 13:14:16-04: 6 planes y 3 complementos; fuente fija d0c88196-e9d8-48f7-aa3d-7250b4459c63 y SHA verificados. Carga, validacion, aprobacion y publicacion registradas; borradores anteriores no anulan v14.",
+          "document_validity": "Fuente vinculada pendiente_confirmacion y fechas nulas. Base 2026-03-30 no equivale a vigencia.",
+          "destination_check": "/api/planes-modulos/claro_tv 200; ambos modulos coinciden con snapshot; claro-tv.html muestra Version 14 y 9 registros.",
+          "real_blocker": "No hay bloqueo de publicacion constatado. Produccion: Pendiente procede del JSON y no de la consulta comercial."
+        }
+      },
+      {
+        "key": "moviles",
+        "title": "Planes Moviles",
+        "status": "en_validacion",
+        "local_status": "terminado",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: Catalogo base v17 publicado el 2026-09-09: 48 candidatos, tres modulos. Fuente/hash verificados, validacion sin errores, aprobacion/publicacion registradas; v15/v16 reemplazadas. Base 2026-06-19; fuente pendiente_confirmacion, fechas nulas. Las ofertas v2 son otro circuito con fecha fin 2026-08-26.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Planes Moviles",
+          "Constructor futuro"
+        ],
+        "next_action": "Confirmar vigencia base y revisar por separado ofertas v2; no confundir catalogo con promociones.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "Catalogo base v17 publicado el 2026-09-09: 48 candidatos, tres modulos. Fuente/hash verificados, validacion sin errores, aprobacion/publicacion registradas; v15/v16 reemplazadas.",
+          "document_validity": "Base 2026-06-19; fuente pendiente_confirmacion, fechas nulas. Las ofertas v2 son otro circuito con fecha fin 2026-08-26.",
+          "destination_check": "/api/planes-modulos/moviles 200, snapshot coincidente; movil.html carga base y ofertas desde /api/ofertas-movil/vigente.",
+          "real_blocker": "Sin bloqueo tecnico del catalogo observado; vigencia base por confirmar y ofertas vencidas rotuladas vigentes."
+        }
+      },
+      {
+        "key": "inalambrico_iot",
+        "title": "Inalambrico / IoT",
+        "status": "en_validacion",
+        "local_status": "terminado",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: Cuatro modulos productivos de agosto, actualizados 2026-08-15. Fuentes agosto/septiembre archivadas y hashes verificados. Septiembre no esta aplicado al destino; no hay borrador persistido en bases. Su publicacion previa documentada es local. Publicado agosto: 2026-08-01 a 2026-08-31, vencido al corte. Fuente agosto sigue etiquetada vigente; septiembre tiene fechas nulas.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Inalambrico / IoT"
+        ],
+        "next_action": "Revisar analisis/diff de septiembre y aprobacion para un reemplazo futuro autorizado; conservar evidencia de agosto.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "Cuatro modulos productivos de agosto, actualizados 2026-08-15. Fuentes agosto/septiembre archivadas y hashes verificados. Septiembre no esta aplicado al destino; no hay borrador persistido en bases. Su publicacion previa documentada es local.",
+          "document_validity": "Publicado agosto: 2026-08-01 a 2026-08-31, vencido al corte. Fuente agosto sigue etiquetada vigente; septiembre tiene fechas nulas.",
+          "destination_check": "/api/planes-modulos/inalambrico 200 y banda-ancha.html muestran agosto. publicacion=null significa sin cabecera en bases, no sin contenido publicado.",
+          "real_blocker": "Falta reemplazo vigente aplicado; la cola no reconoce el circuito de planes_modulos."
+        }
+      },
+      {
+        "key": "lista_precios",
+        "title": "Lista de Equipos/Precios",
+        "status": "en_validacion",
+        "local_status": "en_validacion",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: equipos_uploads id8 publicada; Excel septiembre-octubre fuente 6d032a8e-1452-4164-851c-1403ed06caaa, SHA verificado; 477 items. publicado_en null no desmiente catalogo publicado; no inferir aprobador/fecha ausentes. Fuente vigente; upload pendiente_confirmacion y fechas nulas. Se conserva excepcion unica de revision, sin generalizarla ni deducir fechas del nombre.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Lista de Equipos",
+          "Motor Comercial cuando exista fuente aprobada"
+        ],
+        "next_action": "Mantener catalogo y excepcion unica; reconciliar seguimiento/metadatos sin republicar.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "equipos_uploads id8 publicada; Excel septiembre-octubre fuente 6d032a8e-1452-4164-851c-1403ed06caaa, SHA verificado; 477 items. publicado_en null no desmiente catalogo publicado; no inferir aprobador/fecha ausentes.",
+          "document_validity": "Fuente vigente; upload pendiente_confirmacion y fechas nulas. Se conserva excepcion unica de revision, sin generalizarla ni deducir fechas del nombre.",
+          "destination_check": "/api/equipos-lista 200 total 477; equipos.html muestra 477 equipos.",
+          "real_blocker": "Ningun bloqueo de lectura observado; cola consulta bases y omite equipos_uploads; metadatos no reconciliados."
+        }
+      },
+      {
+        "key": "servicios",
+        "title": "Servicios",
+        "status": "en_validacion",
+        "local_status": "en_validacion",
+        "production_status": "pendiente",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: Sin fuentes familia servicios ni bases categoria servicios ni modulos activos de Servicios en las tablas auditadas. Valores agregados publicados de Fijo son otro alcance. No evaluable para version de Servicios en este circuito.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Servicios"
+        ],
+        "next_action": "Definir fuente y circuito real de Servicios antes de implementarlo; mantener alcance documental.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "Sin fuentes familia servicios ni bases categoria servicios ni modulos activos de Servicios en las tablas auditadas. Valores agregados publicados de Fijo son otro alcance.",
+          "document_validity": "No evaluable para version de Servicios en este circuito.",
+          "destination_check": "servicios.html muestra Pendiente de publicacion, pero es placeholder estatico sin consulta API.",
+          "real_blocker": "Falta fuente especifica y circuito conectado. No inferir inexistencia global del texto estatico."
+        }
+      },
+      {
+        "key": "beneficios",
+        "title": "Beneficios",
+        "status": "en_validacion",
+        "local_status": "en_validacion",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: fijo_benefits v1 vigente aprobada/publicada el 2026-08-30 con nueve reglas; catalogo agrega ofertas_moviles y devuelve 12 entradas. Fuente Claro Full archivada con hash verificado; Affinity historico sigue publicado en Fijo. API informa vigencia por entrada; Claro Full desde 2026-07-23 sin fin. Doce entradas no equivalen a doce aprobaciones ni a cierre documental completo.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Beneficios",
+          "Convergencia cuando corresponda"
+        ],
+        "next_action": "Reconciliar fuentes por dominio y cada beneficio; conservar Affinity historico hasta publicacion independiente autorizada.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "fijo_benefits v1 vigente aprobada/publicada el 2026-08-30 con nueve reglas; catalogo agrega ofertas_moviles y devuelve 12 entradas. Fuente Claro Full archivada con hash verificado; Affinity historico sigue publicado en Fijo.",
+          "document_validity": "API informa vigencia por entrada; Claro Full desde 2026-07-23 sin fin. Doce entradas no equivalen a doce aprobaciones ni a cierre documental completo.",
+          "destination_check": "/api/fuentes-comerciales/benefits-vigentes 200; benefits.html muestra 12 visibles/12 publicados, autoaplica=false.",
+          "real_blocker": "Mapeo benefits != beneficios y cola sin historiales de reglas; trazabilidad debe revisarse por entrada, no ausencia de publicacion."
+        }
+      },
+      {
+        "key": "affinity",
+        "title": "Affinity",
+        "status": "bloqueado",
+        "local_status": "en_validacion",
+        "production_status": "bloqueado",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: PDF archivado/hash verificado. Extraccion diagnostica pura con python3 y .venv-parser: 8 paginas, 12808 caracteres. Sin versiones affinity_benefits persistidas; no se creo preview HTTP ni borrador. Fuente pendiente_confirmacion y fechas nulas. Se conserva aclaracion historica de Gabriel del 2026-09-07 sobre GPON 100, sin aplicarla aqui.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Portal web: Affinity"
+        ],
+        "next_action": "Comprobar y registrar la aclaracion historica en el futuro borrador; revisar/aprobar antes de publicar con autorizacion. No reinstalar un lector funcional.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "PDF archivado/hash verificado. Extraccion diagnostica pura con python3 y .venv-parser: 8 paginas, 12808 caracteres. Sin versiones affinity_benefits persistidas; no se creo preview HTTP ni borrador.",
+          "document_validity": "Fuente pendiente_confirmacion y fechas nulas. Se conserva aclaracion historica de Gabriel del 2026-09-07 sobre GPON 100, sin aplicarla aqui.",
+          "destination_check": "/api/fuentes-comerciales/affinity-vigente 200 publicado=false; affinity.html muestra Sin publicacion vigente. Affinity historico permanece en Beneficios.",
+          "real_blocker": "Normalizacion sin resoluciones: dos reglas, una requiere revision por GPON 50/100, publicable=false. Lector PDF ausente no se reproduce actualmente."
+        }
+      },
+      {
+        "key": "ofertas",
+        "title": "Ofertas",
+        "status": "en_validacion",
+        "local_status": "en_validacion",
+        "production_status": "en_validacion",
+        "last_review": "2026-09-17",
+        "evidence": "Produccion auditada 2026-09-17: ofertas_movil_versiones v2 vigente publicada el 2026-08-07; v1 reemplazada. motor_ofertas_versiones v1 movil_equipos es otro circuito. Fuentes archivadas/hash verificados; retirar pantallas no borro versiones. v2 fecha 2026-08-06 a 2026-08-26: vencida al corte aunque API estado_vigencia=vigente.",
+        "impacts": [
+          "CRM PYMES/Admin Ofertas",
+          "Motor Comercial",
+          "Portal web",
+          "Constructor futuro"
+        ],
+        "next_action": "Revisar calculo de vigencia y reemplazo por dominio; conservar historial, sin promover Motor ni reconstruir Constructor.",
+        "publication_audit": {
+          "environment": "produccion",
+          "observed_at": "2026-09-17",
+          "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+          "source_analysis_workflow": "ofertas_movil_versiones v2 vigente publicada el 2026-08-07; v1 reemplazada. motor_ofertas_versiones v1 movil_equipos es otro circuito. Fuentes archivadas/hash verificados; retirar pantallas no borro versiones.",
+          "document_validity": "v2 fecha 2026-08-06 a 2026-08-26: vencida al corte aunque API estado_vigencia=vigente.",
+          "destination_check": "/api/ofertas-movil/vigente 200; movil.html muestra Version 2 y la etiqueta vigente.",
+          "real_blocker": "Vencimiento y etiqueta inconsistentes; no equivale a ausencia de publicacion. Causa interna aun no resuelta."
+        }
+      }
+    ],
+    "additional_surfaces": [
+      {
+        "key": "directorio_fijo",
+        "title": "Directorio de Fijo",
+        "environment": "produccion",
+        "evidence": "85 contactos visibles desde directorio-fijo-data.js?v=2026081101; referencia Directorio Operaciones Clientes Masivos dic. 2025.xlsx. La cola hereda familia fijos/publicacion fijo v13; no demuestra el circuito propio de Directorio.",
+        "next_action": "Auditar fuente, aprobacion y vigencia de Directorio por separado; no heredar Al dia de Fijo.",
+        "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
+      }
+    ]
+  },
   "items": [
     {
       "id": "PM-001",
@@ -11,7 +324,7 @@
       "title": "Tres modos hacia commercialScenario",
       "status": "en_validacion",
       "local_status": "terminado",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "CRM, Manual y Consulta desembocan en un mismo commercialScenario sin crear tres motores comerciales.",
       "done": [
         "Contrato comun documentado",
@@ -22,7 +335,7 @@
         "Validacion operativa completa con fuentes actualizadas antes de promocion"
       ],
       "blocker": null,
-      "next_action": "Mantener el contrato comun como base de validacion maestra.",
+      "next_action": "Conservar contrato historico; revalidarlo cuando se autorice el Constructor nuevo. Interfaz anterior retirada segun PM-027.",
       "tests": {
         "passed": 15,
         "failed": 0,
@@ -30,7 +343,8 @@
       },
       "evidence": [
         "docs/constructor/arquitectura-tres-modos-entrada-v1.md",
-        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/arquitectura-tres-modos-entrada-v1.md"
@@ -40,7 +354,7 @@
         "Planes para web/oferta-const.html"
       ],
       "last_change": "Se consolido la arquitectura de tres entradas sin promover Motor.",
-      "updated_at": "2026-09-01"
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-002",
@@ -48,8 +362,8 @@
       "title": "Entrada desde cliente CRM",
       "status": "en_validacion",
       "local_status": "terminado",
-      "production_status": "terminado",
-      "summary": "El CRM separa el acceso publico al portal limpio del acceso operativo al Constructor real con contexto de cliente, BAN y lineas seleccionadas.",
+      "production_status": "en_validacion",
+      "summary": "Avances historicos de entrada CRM y Portal conservados. La interfaz del Constructor fue retirada; los accesos descritos en done no certifican disponibilidad actual.",
       "done": [
         "Entrada crm_client_id documentada",
         "Seleccion parcial conserva full_ban_lines",
@@ -64,7 +378,7 @@
         "Validacion real con cliente/BAN productivo antes de convertirlo en flujo principal"
       ],
       "blocker": null,
-      "next_action": "Verificar en produccion que el portal muestra el selector de modo dia/oscuro y que el oscuro usa la paleta SS Group del CRM.",
+      "next_action": "Esperar definicion del Constructor nuevo; no reactivar accesos durante esta auditoria.",
       "tests": {
         "passed": 33,
         "failed": 0,
@@ -79,7 +393,8 @@
         "backend/test/portal-directorio-fijo-contract.test.js",
         "backend/test/portal-benefits-affinity-ui.test.js",
         "backend/test/portal-config.test.js",
-        "backend/test/constructor-motor-comercial-simulacion.test.js"
+        "backend/test/constructor-motor-comercial-simulacion.test.js",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
@@ -91,7 +406,7 @@
         "Planes para web/portal-config.js"
       ],
       "last_change": "El portal de ofertas agrega selector modo dia/oscuro y alinea el oscuro con la paleta SS Group usada en el CRM.",
-      "updated_at": "2026-09-16"
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-003",
@@ -342,7 +657,7 @@
       "title": "Publicacion local boletin septiembre",
       "status": "en_validacion",
       "local_status": "terminado",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "La publicacion local de Inalambrico / IoT genera modulos consumibles y expone Franklin RG2100 a precio vigente local.",
       "done": [
         "Fuente septiembre aceptada localmente",
@@ -354,7 +669,7 @@
         "Confirmar si CG890 pertenece a otra fuente vigente; la publicacion local septiembre localizada contiene RG2100 item 33638H, no CG890"
       ],
       "blocker": null,
-      "next_action": "Cerrar evidencia de comparacion anterior vs nueva cuando se tenga el archivo anterior.",
+      "next_action": "Conservar septiembre local; produccion sirve agosto vencido. Revisar diff/aprobacion de septiembre antes de reemplazo autorizado.",
       "tests": {
         "passed": 69,
         "failed": 0,
@@ -362,7 +677,8 @@
       },
       "evidence": [
         "backend/test/bases-informativas-preview-service.test.js",
-        "backend/test/inalambrico-vigencia-visible-contract.test.js"
+        "backend/test/inalambrico-vigencia-visible-contract.test.js",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/motor-ofertas/ADMIN_OFERTAS_MODULOS_BASE_2026-08-17.md"
@@ -372,8 +688,8 @@
         "backend/src/routes/fuentesComercialesRoutes.js",
         "frontend/app.html"
       ],
-      "last_change": "Auditoria 2026-09-05 confirma IoT septiembre vigente con RG2100; no se debe usar esa fila para cotizar CG890.",
-      "updated_at": "2026-09-05"
+      "last_change": "Auditoria distingue septiembre local de agosto productivo; fuente septiembre archivada pero no aplicada al destino.",
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-010",
@@ -381,7 +697,7 @@
       "title": "Fijo integrado al escenario comercial",
       "status": "en_validacion",
       "local_status": "terminado",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "Fijo se incorpora al commercialScenario sin duplicar reglas y permite evaluar convergencia/beneficios.",
       "done": [
         "Productos fijos agregables",
@@ -392,14 +708,15 @@
         "Validar nuevas fuentes de todos los modulos fijos vigentes"
       ],
       "blocker": null,
-      "next_action": "Actualizar fuentes oficiales fijas y repetir validacion maestra.",
+      "next_action": "Conservar Fijo v13 productivo y revisar vigencia pendiente_confirmacion; API y Portal verificados con 81 registros.",
       "tests": {
         "passed": 15,
         "failed": 0,
         "summary": "Validacion integral local cubre movil + fijo."
       },
       "evidence": [
-        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+        "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
@@ -408,7 +725,7 @@
         "Planes para web/constructor-publications.js"
       ],
       "last_change": "Fijo quedo como producto del escenario, no como logica separada.",
-      "updated_at": "2026-09-01"
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-011",
@@ -451,7 +768,7 @@
       "title": "Beneficios publicados para Portal, Constructor y Admin Ofertas",
       "status": "en_validacion",
       "local_status": "en_validacion",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "Beneficios/Servicios tienen consolidación local documental desde inventario, textos extraídos, Excel y reglas publicadas. Admin Ofertas consume localmente el mismo catálogo publicado del Motor Comercial, sin copia manual independiente.",
       "done": [
         "Portal de Beneficios consume reglas publicadas",
@@ -477,7 +794,7 @@
         "Archivar y enlazar el PDF oficial de descuento de $130 para Modems/Tabletas; la publicacion vigente conserva la referencia, pagina, vigencia y codigos, pero no existe un original navegable localmente"
       ],
       "blocker": null,
-      "next_action": "Validar la carga real de un boletín oficial de Beneficios contra parser, archivado de fuente y borrador persistido, sin publicar hasta completar la revisión comercial.",
+      "next_action": "Separar Servicios sin circuito conectado de Beneficios publicado (12 entradas); revisar trazabilidad por dominio.",
       "tests": {
         "passed": 15,
         "failed": 0,
@@ -488,7 +805,8 @@
         "docs/constructor/auditoria-publicaciones-plan-maestro.md",
         "docs/constructor/servicios-benefits-consolidado-local.md",
         "docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md",
-        "docs/motor-ofertas/revision-comercial-fijo-benefits-v1.md"
+        "docs/motor-ofertas/revision-comercial-fijo-benefits-v1.md",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/servicios-benefits-consolidado-local.md",
@@ -503,8 +821,8 @@
         "Planes para web/benefits.html",
         "backend/test/admin-fuentes-comerciales-only-contract.test.js"
       ],
-      "last_change": "Corrección local 2026-09-06: Preview consulta ultima publicacion y muestra solo cambios. Para formato historico Fijo/TV recupera PDF por SHA exacto y normaliza ambas fuentes con el mismo parser sin sobrescribir publicacion. Prueba real navegador: Sin cambios respecto a la version publicada, 81 Fijo y 9 TV leidos, sin publicar. 32 pruebas servicio/ruta aprobadas. Causa inicial de conexion no confirmada; Beneficios mantiene pendiente conexion real de analisis/guardado.",
-      "updated_at": "2026-09-06"
+      "last_change": "Beneficios productivo, incluido Affinity historico, comprobado; Servicios es placeholder. Pendientes locales anteriores conservan su ambiente.",
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-013",
@@ -512,7 +830,7 @@
       "title": "Lista de precios oficial",
       "status": "en_validacion",
       "local_status": "en_validacion",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "La lista de precios vigente de septiembre fue inventariada y previsualizada localmente sin publicacion.",
       "done": [
         "Preview de lista de precios existe localmente",
@@ -520,12 +838,12 @@
         "Parser reconoce 477 registros y 477 item codes unicos"
       ],
       "remaining": [
-        "Publicacion y trazabilidad completa contra fuente vigente",
-        "Cruce final con ofertas por item code antes de consumirla como vigente",
-        "iPhone 17 aparece en v_equipos_vigentes con variantes 256GB, pero la fuente local asociada tiene vigencia 2026-05-28 a 2026-07-31"
+        "Reconciliar metadatos de vigencia del upload/fuente, conservando excepcion unica.",
+        "Cruce final con ofertas por item code antes de consumo definitivo por Motor/Constructor.",
+        "Pendientes anteriores de fuente local mayo-julio conservados en reconciliation_history; no describen catalogo productivo actual."
       ],
       "blocker": null,
-      "next_action": "Guardar/publicar localmente la lista vigente solo con autorizacion especifica del flujo Fuentes Comerciales.",
+      "next_action": "Mantener upload id8 y 477 equipos publicados; revisar falso Fuente sin publicar y trazabilidad sin republicar.",
       "tests": {
         "passed": 3,
         "failed": 0,
@@ -533,7 +851,8 @@
       },
       "evidence": [
         "docs/constructor/preview-lista-precios-plan-maestro.md",
-        "backend/test/plan-maestro-lista-precios-preview.test.js"
+        "backend/test/plan-maestro-lista-precios-preview.test.js",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/preview-lista-precios-plan-maestro.md",
@@ -544,8 +863,8 @@
         "scripts/preview-lista-precios-plan-maestro.mjs",
         "backend/test/plan-maestro-lista-precios-preview.test.js"
       ],
-      "last_change": "Auditoria 2026-09-05: Lista de Precios septiembre sigue inventariada/previsualizada, no guardada/publicada como fuente vigente.",
-      "updated_at": "2026-09-05"
+      "last_change": "Lista septiembre comprobada por upload, fuente/hash, API y Portal; excepcion unica conservada.",
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-014",
@@ -553,7 +872,7 @@
       "title": "Versionado global de fuentes comerciales",
       "status": "en_validacion",
       "local_status": "en_validacion",
-      "production_status": "pendiente",
+      "production_status": "en_validacion",
       "summary": "Se preparo versionado y se corrigio la experiencia local de Admin Ofertas como Centro de Cargas para subir, analizar, revisar cambios, guardar borrador y publicar.",
       "done": [
         "Hash SHA-256 preservado",
@@ -579,7 +898,7 @@
         "Corregir trazabilidad historica de Fijo en base si se requiere que la publicacion vigente tenga fuente_comercial_id nativo; la lectura local ya resuelve el documento por SHA coincidente sin escribir datos"
       ],
       "blocker": null,
-      "next_action": "Usar el inventario para ejecutar previews por dominio, sin marcar fuentes no guardadas como publicadas.",
+      "next_action": "Conservar 29 originales y hashes verificados; reconciliar historiales por dominio y vigencias pendientes sin reemplazos automaticos.",
       "tests": {
         "passed": 25,
         "failed": 0,
@@ -592,7 +911,8 @@
         "backend/test/plan-maestro-publication-audit.test.js",
         "backend/test/admin-fuentes-comerciales-only-contract.test.js",
         "backend/test/fuentes-comerciales-versioning.test.js",
-        "backend/test/fuentes-comerciales-preview-base-route-contract.test.js"
+        "backend/test/fuentes-comerciales-preview-base-route-contract.test.js",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/inventario-fuentes-plan-maestro.md",
@@ -608,7 +928,7 @@
         "scripts/auditar-publicaciones-plan-maestro.mjs"
       ],
       "last_change": "Documentacion 2026-09-09: el boletin oficial de Planes Moviles se conserva integro; Government RED se excluye de Portal y Constructor, pero permanece trazable en auditoria como segmento_no_incluido: gobierno.",
-      "updated_at": "2026-09-09"
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-015",
@@ -817,7 +1137,7 @@
       },
       "next_action": "No promover; esperar decision posterior tras prueba controlada.",
       "tests": {
-        "passed": 0,
+        "passed": 41,
         "failed": 0,
         "summary": "Pendiente."
       },
@@ -838,7 +1158,7 @@
       "status": "terminado",
       "local_status": "terminado",
       "production_status": "terminado",
-      "summary": "Gabriel pidio preparar el deploy el 2026-09-10 y definio la topologia: ofertas.ss-group.cloud es el sitio unico del portal y el Constructor; el CRM y la API viven en crmp.ss-group.cloud. Codigo local listo, suite 704/704; falta ejecutar con backup.",
+      "summary": "Deploy historico 2026-09-10 registrado en done. La auditoria 2026-09-17 verifica publicaciones y destinos actuales, no la totalidad del deploy ni su suite.",
       "done": [
         "Limites establecidos",
         "Hallazgos de la revision re-verificados: cupo BAN, vigencia del descuento especial, catalogo en elegibilidad individual, revisiones en advertencias y parser de vigencia compartido ya estaban corregidos",
@@ -861,18 +1181,19 @@
         "Comparativas corregidas y desplegadas (61d0a25): usan ventaspro_nuevo.comparativas, responden errores en vez de colgarse; verificado en produccion con una insercion revertida"
       ],
       "remaining": [
-        "Subir y publicar el boletin Affinity en el Admin de produccion",
-        "Publicar el boletin de Inalambrico de septiembre en produccion (hoy muestra el de agosto, vencido)"
+        "Affinity ya tiene PDF archivado; falta revisar contradiccion y completar circuito independiente.",
+        "Septiembre IoT ya archivado; destino sigue agosto vencido. Revisar reemplazo autorizado posteriormente."
       ],
       "blocker": null,
-      "next_action": "Gabriel sube Affinity e Inalambrico septiembre en el Admin de produccion.",
+      "next_action": "Tratar pendientes de Affinity/IoT en sus modulos; esta etapa no autoriza despliegue.",
       "tests": {
         "passed": 704,
         "failed": 0,
         "summary": "Suite completa en verde, incluidas las pruebas de configuracion del portal y apertura del Constructor."
       },
       "evidence": [
-        "DEPLOY.md"
+        "DEPLOY.md",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "DEPLOY.md"
@@ -886,43 +1207,8 @@
         "DEPLOY.md",
         ".gitignore"
       ],
-      "last_change": "Topologia resuelta (ofertas.ss-group.cloud sitio unico) y portal adaptado. Codigo local listo; nada se subio a produccion.",
-      "updated_at": "2026-09-10"
-    },
-    {
-      "id": "PM-021",
-      "area": "Identidad Comercial",
-      "title": "REDPLUS $60 vs BREDP1 $65",
-      "status": "bloqueado_seguridad",
-      "local_status": "bloqueado_seguridad",
-      "production_status": "pendiente",
-      "summary": "La diferencia entre REDPLUS $60 detectado en Excel y BREDP1 $65 del boletin no se fusiona por nombre parecido.",
-      "done": [
-        "Ambiguedad documentada",
-        "No se promovio por inferencia"
-      ],
-      "remaining": [
-        "Decision comercial o fuente oficial que relacione ambas identidades"
-      ],
-      "blocker": {
-        "summary": "REDPLUS $60 vs BREDP1 $65: no existe evidencia oficial suficiente para fusionarlos.",
-        "severity": "seguridad_comercial"
-      },
-      "next_action": "Mantener bloqueado hasta evidencia oficial o decision comercial documentada.",
-      "tests": {
-        "passed": 0,
-        "failed": 0,
-        "summary": "Bloqueo de seguridad documentado."
-      },
-      "evidence": [
-        "docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md"
-      ],
-      "documents": [
-        "docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md"
-      ],
-      "files": [],
-      "last_change": "Bloqueo visible agregado al Plan Maestro.",
-      "updated_at": "2026-09-04"
+      "last_change": "Frases previas contradictorias reconciliadas con evidencia actual; historial conservado.",
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-022",
@@ -1018,27 +1304,33 @@
       "area": "Centro de Cargas",
       "title": "Alertas de vencimiento de documentos",
       "status": "en_validacion",
-      "local_status": "terminado",
-      "production_status": "pendiente",
-      "summary": "El admin ve por familia el documento vigente, su fecha de fin y si esta vencido o por vencer (30 dias), para buscar y subir el boletin nuevo a tiempo.",
+      "local_status": "en_validacion",
+      "production_status": "en_validacion",
+      "summary": "Admin Ofertas local separa Publicado actualmente de Actualizacion pendiente usando evidencia comercial por circuito. Las seis alertas productivas se reconciliaron sin modificar estados ni publicaciones. Prueba oficial Fijo/TV llega a TV v10 aprobada local; publicacion y revision visual pendientes.",
       "done": [
         "Servicio puro buildVigenciaAlertas por familia (vencida, por_vencer, vigente, sin_fecha_fin)",
         "Ruta GET /api/fuentes-comerciales/alertas-vencimiento solo lectura",
         "Panel de alertas en Centro de Cargas, cola Requiere atencion con Vence en N dias y badge en el menu Admin Ofertas"
       ],
       "remaining": [
-        "Decidir aviso por correo o notificacion externa y destinatarios",
-        "Validar en navegador con fuentes reales"
+        "Revision visual del calculo local de alertas y de la separacion publicacion/fuente/borrador; no desplegado.",
+        "Comprobar carga por selector nativo de Chrome: la prueba de recepcion uso la API existente por restriccion de archivos de la extension.",
+        "Revisar diferencias del documento de prueba antes de cualquier publicacion; no autoriza reemplazos comerciales.",
+        "Resolver circuitos no conectados de Ofertas, Servicios y Directorio con alcance aprobado; no simular analisis.",
+        "Verificar atomicidad/idempotencia del guardado multicategoria ante fallo parcial y flujos de los otros dominios.",
+        "Decidir avisos externos y destinatarios."
       ],
       "blocker": null,
-      "next_action": "Usar las alertas con las fuentes reales y confirmar el umbral de 30 dias.",
+      "next_action": "Revisar capturas y Admin Ofertas en http://127.0.0.1:4173/#/ofertas/claro_tv. TV v10 aprobada es prueba local, no publicacion; mantener TV v3 local y v14 productiva.",
       "tests": {
         "passed": 4,
         "failed": 0,
         "summary": "vigencia-alertas.test.js y contrato UI de Centro de Cargas."
       },
       "evidence": [
-        "docs/constructor/alertas-vencimiento-v1.md"
+        "docs/constructor/alertas-vencimiento-v1.md",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+        "docs/constructor/revision-admin-ofertas-local-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/alertas-vencimiento-v1.md"
@@ -1048,17 +1340,42 @@
         "backend/src/routes/fuentesComercialesRoutes.js",
         "frontend/app.html"
       ],
-      "last_change": "Alertas de vencimiento creadas: backend, Centro de Cargas y badge de menu.",
-      "updated_at": "2026-09-07"
+      "last_change": "Correccion local de evidencia y comparacion contra snapshot realmente publicado; documento oficial probado hasta aprobacion TV sin publicar. Las cifras y avances anteriores quedan como historia, no certificacion del flujo nuevo.",
+      "operational_review": {
+        "date": "2026-09-17",
+        "environment": "local",
+        "status": "en_validacion",
+        "report": "docs/constructor/revision-admin-ofertas-local-2026-09-17.md",
+        "deployed": false,
+        "commercial_publication": false,
+        "document_and_draft_writes": true,
+        "tests": { "passed": 198, "failed": 0, "scope": "15 archivos focalizados desde backend; no suite global ni publicacion" },
+        "preview_url": "http://127.0.0.1:4173/#/ofertas/claro_tv",
+        "preview_read_only": true,
+        "visual_approval": "pendiente",
+        "source_id": "0ffc907a-6a93-4f6b-bd7c-64ccff1f339f",
+        "source_sha256": "1253afddab051440c06a1eae160d700178182dcc5930a87dcdcd3027da59e236",
+        "local_fijo_draft": "v9 ba445ba0-ace8-47dd-a642-2e9d7e84b8f5 borrador",
+        "local_tv_draft": "v10 4966e97d-b0c4-4e6f-af3c-6460ab2f1332 aprobada por Admin Dev, no autorizacion comercial de Gabriel",
+        "unchanged_publications": "18 planes_modulos y seis bases publicadas/reemplazadas: firmas antes/despues iguales; TV v3 y Fijo v2 locales conservadas",
+        "previous_documentary_state": {
+          "local_status": "terminado",
+          "summary": "El admin ve por familia el documento vigente, su fecha de fin y si esta vencido o por vencer (30 dias), para buscar y subir el boletin nuevo a tiempo.",
+          "remaining": ["Revisar en futura tarea autorizada alertas sobre ultima fuente frente a publicacion consumida.", "Decidir avisos externos y destinatarios."],
+          "next_action": "Revisar alertas: Centro muestra cero vencidos y nueve familias sin fin; IoT y ofertas publicados tienen fechas pasadas.",
+          "last_change": "Panel comprobado en produccion, exactitud integral no confirmada."
+        }
+      },
+      "updated_at": "2026-09-17"
     },
     {
       "id": "PM-025",
       "area": "Affinity",
       "title": "Modulo Affinity en Centro de Cargas",
-      "status": "terminado",
-      "local_status": "terminado",
-      "production_status": "pendiente",
-      "summary": "Affinity sube su PDF oficial, lee el descuento 8% de Movil y Fijo con sus terminos, versiona en dominio affinity_benefits y publica al portal del vendedor. Version 52 vigente en local.",
+      "status": "bloqueado",
+      "local_status": "en_validacion",
+      "production_status": "bloqueado",
+      "summary": "Affinity independiente tiene fuente archivada y parser funcional. Sin version affinity_benefits persistida; normalizar sin resoluciones devuelve contradiccion GPON 50/100. Aclaracion historica GPON 100 preservada, no aplicada aqui.",
       "done": [
         "Familia affinity (solo PDF) y rutas preview/persistir/historial/vigente/publicar-local",
         "Normalizador calibrado contra el boletin oficial del 5 de noviembre de 2025 (fixture de 8 paginas)",
@@ -1079,12 +1396,16 @@
         "Flujo verificado end-to-end: subida, preview, borrador (version 45), rechazo de aprobacion e historial"
       ],
       "remaining": [
-        "Revision de Gabriel antes de commitear",
-        "Cargar vigencia de fin o esperar el boletin de reemplazo",
-        "Autorizacion para produccion"
+        "Comprobar trazabilidad de aclaracion historica GPON 100 en futuro borrador productivo.",
+        "Completar revision/aprobacion/publicacion independiente con autorizacion posterior.",
+        "Verificar Portal y coordinacion con Affinity historico en Beneficios despues de publicar."
       ],
-      "blocker": null,
-      "next_action": "Gabriel revisa el modulo en local; luego se commitea y se evalua produccion.",
+      "blocker": {
+        "summary": "Normalizacion sin resoluciones: dos reglas, una requiere revision por GPON 50/100, publicable=false. Lector PDF ausente no se reproduce actualmente.",
+        "owner": "Revision comercial y trazabilidad de aclaracion",
+        "since": "2026-09-17"
+      },
+      "next_action": "Comprobar y registrar la aclaracion historica en el futuro borrador; revisar/aprobar antes de publicar con autorizacion. No reinstalar un lector funcional.",
       "tests": {
         "passed": 18,
         "failed": 0,
@@ -1092,7 +1413,8 @@
       },
       "evidence": [
         "docs/constructor/affinity-modulo-v1.md",
-        "backend/test/fixtures/affinity-boletin-5nov2025.txt"
+        "backend/test/fixtures/affinity-boletin-5nov2025.txt",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       ],
       "documents": [
         "docs/constructor/affinity-modulo-v1.md"
@@ -1107,8 +1429,956 @@
         "Planes para web/affinity.html",
         "Planes para web/benefits.html"
       ],
-      "last_change": "Modulo Affinity calibrado con el boletin oficial; detecta la contradiccion GPON y bloquea la aprobacion.",
-      "updated_at": "2026-09-07"
+      "last_change": "Diagnostico puro extrae 8 paginas; bloqueo PDF no reproducido sustituido por contradiccion comprobada y falta de version independiente.",
+      "updated_at": "2026-09-17"
+    },
+    {
+      "id": "PM-026",
+      "area": "Administracion del Constructor",
+      "title": "Estado visual de tareas y reglas Admin",
+      "status": "en_validacion",
+      "local_status": "en_validacion",
+      "production_status": "en_validacion",
+      "summary": "Panel existente actualizado solo en local: diez modulos consultan publicaciones y fuentes reales, separan actualizacion pendiente y comprobacion de destino. La version productiva anterior usa el JSON; Produccion: Pendiente no invalida Claro TV v14. Revision visual pendiente.",
+      "done": [
+        "Boton Tareas y reglas Admin ubicado debajo de Constructor",
+        "Ruta #/tareas-reglas-admin con panel visual segun la referencia aprobada",
+        "Red neuronal visual con Archivo fuente: Fijo / Claro TV expandiendo hacia Fijo y Claro TV",
+        "Red neuronal visual con Archivo fuente: Planes Moviles expandiendo hacia Individual y Multilinea",
+        "Movimiento de particulas y reanimacion de conexiones al tocar cada archivo",
+        "Expansion de lineas reforzada con amarillo y rojo para mayor presencia visual",
+        "Ritmo de expansion ajustado a una animacion mas lenta y suave",
+        "Menu interno de pantallas restaurado como barra superior estilo portal junto al titulo",
+        "Flechita grande con etiqueta IMPACTA A y texto superior indican donde impacta cada archivo fuente dentro del Constructor",
+        "Tabla distingue donde impacta en el Constructor y que detalle se modifica dentro de la pantalla",
+        "Archivo fuente Inalambrico / IoT agregado como documento visible con impactos a menu, Banda Ancha Individual y Multilinea",
+        "Esferas reducidas y destinos no impactados ocultos con transicion para evitar saturacion visual",
+        "Archivo fuente Lista de Precios agregado con impactos a catalogo de equipos, ofertas de equipos moviles y precios por plan",
+        "Tabla de reglas pendientes muestra fuente, impactos, pendiente y criterio temporal para no cerrar reglas sin respaldo oficial",
+        "Convergencia Claro Full marcada como regla madre que impacta Beneficios, Fijo, Movil, INTGO, Claro Oficina y Loop Comercial",
+        "Cliente convergente confirmado con criterio documental Claro Full: fijo/TV/Internet/Claro Oficina mas movil pospago, financiamiento o INTGO bajo mismo SSN/Tax ID, BAN unido o separado y account type Negocios/PYMES activo",
+        "Doble data en Internet On-The-Go reclasificada como regla confirmada y condicionada a convergencia; Back Up queda marcado sin doble data porque ya es convergente",
+        "Doble data en Claro Oficina / FWA separada de INTGO como regla confirmada: plan regular 150GB y Claro Full 300GB",
+        "Portabilidad movil base Claro Full separada como regla confirmada hasta $150 para cliente convergente",
+        "Portabilidad movil especial hasta $500 separada como regla confirmada desde el boletin 260803: Business Red desde $65, no requiere convergencia y limita las primeras 3 lineas",
+        "CG890 documentado con criterio operativo aprobado: $249.99 como precio de trabajo, permitido en Business Red como MiFi/modem portatil y no disponible para Claro Hogar o activacion normal reservada",
+        "Inalambrico / IoT separado operativamente en INTGO movil solo datos, Claro Oficina/FWA, Back Up para cliente fijo/cloud, IoT/telemetria y equipos",
+        "Lineas visuales de Planes Moviles, Inalambrico / IoT y Lista de Precios alineadas con el centro de sus archivos fuente",
+        "Texto de Inalambrico / IoT aclara que Lista de Precios solo valida precio y codigo de equipos",
+        "Estado de Lista de Precios en Tareas y reglas Admin ahora se calcula desde fuentes comerciales y equipos_uploads: pendiente, lista cargada o fuente publicada",
+        "Beneficios ya no queda como fila sin representacion visual: se abre como nucleo propio separado del Boletin de Convergencia, conectado a Beneficios visibles y Loop Comercial",
+        "La red visual dejo de depender de esferas grandes: usa nodos compactos tipo capsula, con punto luminoso y resaltado solo en el nucleo activo",
+        "Al seleccionar un nucleo, la red oculta los otros nucleos y alinea la fuente activa con sus destinos para evitar cruces y exceso de ancho",
+        "La fila superior queda como selector permanente de fuentes para cambiar de nucleo aunque el mapa oculte los demas",
+        "Inalambrico / IoT ya no usa Multilinea como destino visual: muestra Menu Constructor, Banda Ancha Individual e IoT / Servicios como tres destinos propios",
+        "Lista de Precios agrupa sus tres destinos mas arriba para que Catalogo Equipos, Ofertas Equipos y Precios por Plan no queden al pie del mapa",
+        "Vista sin migraciones, sin cambios de datos comerciales y sin alterar precios; solo consulta endpoints existentes para estado visual"
+      ],
+      "remaining": [
+        "Revision visual de Gabriel sobre capturas y vista previa local de solo lectura.",
+        "Autorizacion de despliegue y comprobacion posterior en CRM productivo; no realizados.",
+        "Comprobacion del destino permanece Sin verificar en el panel: la lectura de BD no certifica HTTP ni navegador.",
+        "Resolver en sus flujos vigencias, fuentes pendientes y contradicciones comerciales; no se modificaron durante esta implementacion."
+      ],
+      "blocker": null,
+      "next_action": "Revisar visualmente http://127.0.0.1:4173/#/tareas-reglas-admin y el informe local. No desplegar ni republicar Claro TV para corregir seguimiento.",
+      "tests": {
+        "passed": 10,
+        "failed": 0,
+        "summary": "Contrato UI de Tareas y reglas Admin, contrato de Lista de Precios, diff --check, validacion de scripts embebidos y verificacion publica del HTML desplegado."
+      },
+      "evidence": [
+        "backend/test/tareas-reglas-admin-ui-contract.test.js",
+        "backend/test/fuentes-comerciales-equipos-contract.test.js",
+        "git diff --check",
+        "node vm.Script sobre scripts embebidos en frontend/app.html productivo",
+        "GET https://crmp.ss-group.cloud/",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
+      ],
+      "documents": [],
+      "files": [
+        "frontend/app.html",
+        "backend/test/tareas-reglas-admin-ui-contract.test.js",
+        "backend/src/routes/adminControlRoutes.js",
+        "backend/src/services/adminControlService.js",
+        "backend/test/admin-control-service.test.js",
+        "backend/test/admin-control-routes.test.js",
+        "backend/test/admin-control-navigation.test.js",
+        "backend/test/project-plan-contract.test.js",
+        "scripts/preview-admin-control.mjs",
+        "docs/constructor/revision-panel-admin-local-2026-09-17.md"
+      ],
+      "last_change": "Panel conservado y coordinado con Admin Ofertas: Publicado actualmente y Actualizacion pendiente usan la misma evidencia real. Continuar borrador abre el ID exacto. Revision operativa posterior en revision-admin-ofertas-local-2026-09-17.md; done, tests y local_review anteriores se conservan como historia.",
+      "local_review": {
+        "date": "2026-09-17",
+        "status": "en_validacion",
+        "environment": "local",
+        "report": "docs/constructor/revision-panel-admin-local-2026-09-17.md",
+        "database_writes": false,
+        "commercial_changes": false,
+        "deployed": false,
+        "visual_approval": "pendiente",
+        "tests": { "passed": 128, "failed": 0, "scope": "Once archivos focalizados; no suite completa ni escrituras comerciales" },
+        "production_sql_check_at": "2026-09-17T18:37:40.691Z",
+        "production_sql_check": "SELECT via SSH en READ ONLY; v13 Fijo, v14 TV, v17 Moviles, upload8/477 equipos, cuatro modulos IoT, 12 beneficios, ofertas v2. No despliegue ni verificacion publica nueva del panel.",
+        "previous_documentary_state": {
+          "summary": "Nueve tarjetas ya desplegadas: /api/admin-control/modules devuelve operating_control del JSON. No consulta publicaciones; Produccion: Pendiente era seguimiento, no ausencia de version.",
+          "remaining": [
+            "Reconciliacion documental solo local; publicar este seguimiento requerira otra autorizacion.",
+            "Separar en futura correccion autorizada seguimiento, publicacion y vigencia por dominio."
+          ]
+        }
+      },
+      "updated_at": "2026-09-17"
+    },
+    {
+      "id": "PM-027",
+      "area": "Retiro de interfaz heredada",
+      "title": "Constructor y Ofertas heredados retirados",
+      "status": "en_validacion",
+      "local_status": "terminado",
+      "production_status": "en_validacion",
+      "summary": "Se retiran del Portal y del CRM las pantallas heredadas de Constructor y Ofertas. Tareas y reglas Admin queda como la superficie administrativa existente mientras se define un Constructor nuevo desde cero.",
+      "done": [
+        "Eliminadas las pantallas estaticas oferta-const.html y ofertas.html",
+        "Eliminados los accesos del Portal hacia esas pantallas",
+        "Eliminados los accesos del CRM y del perfil de cliente hacia el Constructor heredado",
+        "Eliminados los cargadores visuales heredados que contenian flujo y reglas del Constructor",
+        "Retirados de Tareas y reglas Admin el mapa, fuentes, impactos y reglas comerciales heredadas; conserva solo nueve tarjetas base sin reglas reales",
+        "Prueba de contrato impide volver a enlazar las rutas retiradas"
+      ],
+      "remaining": [
+        "Definir y aprobar la experiencia del Constructor nuevo antes de crear otra pantalla",
+        "Conectar el Constructor nuevo solo a reglas y publicaciones oficiales que se aprueben para ese objetivo"
+      ],
+      "blocker": null,
+      "next_action": "Retiro comprobado en produccion (ambas rutas 404); mantener pendiente la definicion aprobada del Constructor nuevo, fuera de esta etapa.",
+      "tests": {
+        "passed": 4,
+        "failed": 0,
+        "summary": "4 pruebas dirigidas y verificacion publica confirman que el CRM no expone el acceso y que las dos rutas heredadas responden 404."
+      },
+      "evidence": [
+        "backend/test/constructor-legado-retirado-contract.test.js",
+        "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
+      ],
+      "documents": [],
+      "files": [
+        "frontend/app.html",
+        "Planes para web/index.html",
+        "Planes para web/oferta-const.html",
+        "Planes para web/ofertas.html"
+      ],
+      "last_change": "Auditoria 2026-09-17 confirma HTTP 404 en oferta-const.html y ofertas.html y navegacion sin esos accesos. No reconstruido ni desplegado; historial previo conservado.",
+      "updated_at": "2026-09-17"
+    }
+  ],
+  "retired_items": [
+    {
+      "id": "PM-021",
+      "retired_at": "2026-09-17",
+      "decision_by": "Gabriel",
+      "reason": "Confusion descartada por decision expresa: REDPLUS $60 y BREDP1 $65 son identidades separadas. No relacionar ni fusionar.",
+      "active_task": false,
+      "active_blocker": false,
+      "original_record": {
+        "id": "PM-021",
+        "area": "Identidad Comercial",
+        "title": "REDPLUS $60 vs BREDP1 $65",
+        "status": "bloqueado_seguridad",
+        "local_status": "bloqueado_seguridad",
+        "production_status": "pendiente",
+        "summary": "La diferencia entre REDPLUS $60 detectado en Excel y BREDP1 $65 del boletin no se fusiona por nombre parecido.",
+        "done": [
+          "Ambiguedad documentada",
+          "No se promovio por inferencia"
+        ],
+        "remaining": [
+          "Decision comercial o fuente oficial que relacione ambas identidades"
+        ],
+        "blocker": {
+          "summary": "REDPLUS $60 vs BREDP1 $65: no existe evidencia oficial suficiente para fusionarlos.",
+          "severity": "seguridad_comercial"
+        },
+        "next_action": "Mantener bloqueado hasta evidencia oficial o decision comercial documentada.",
+        "tests": {
+          "passed": 0,
+          "failed": 0,
+          "summary": "Bloqueo de seguridad documentado."
+        },
+        "evidence": [
+          "docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md"
+        ],
+        "documents": [
+          "docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md"
+        ],
+        "files": [],
+        "last_change": "Bloqueo visible agregado al Plan Maestro.",
+        "updated_at": "2026-09-04"
+      }
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "lista-precios-revision-unica",
+      "scope": "Lista de Precios; revision puntual previamente aprobada",
+      "decision": "Conservar excepcion unica visible en ofRenderListaPrecios. No autoriza excepciones futuras ni cambia reglas/vigencia en BD.",
+      "evidence": "frontend/app.html y upload id8 verificado por API/Portal el 2026-09-17."
+    }
+  ],
+  "reconciliation_history": [
+    {
+      "date": "2026-09-17",
+      "scope": "Solo documentacion local; auditoria de produccion sin escrituras ni deploy",
+      "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
+      "previous_updated_at": "2026-09-16",
+      "previous_operating_control": {
+        "version": "2026-09-17",
+        "purpose": "Control obligatorio de impacto, ambiente y evidencia antes de declarar un modulo listo o publicarlo.",
+        "release_gate": [
+          "Identificar superficie exacta: CRM PYMES/Admin Ofertas, Portal web, Motor Comercial o Constructor.",
+          "Separar evidencia local de evidencia de produccion.",
+          "Confirmar fuente oficial archivada, analisis real, estado de publicacion y consumidores impactados.",
+          "Probar en la superficie afectada despues del despliegue antes de declarar el cambio listo.",
+          "Sin evidencia completa, usar pendiente, en validacion o bloqueado; nunca Al dia ni terminado."
+        ],
+        "modules": [
+          {
+            "key": "fijo",
+            "title": "Planes Fijos",
+            "status": "en_validacion",
+            "local_status": "terminado",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Contrato de carga y pruebas locales; falta validacion navegada con fuente y publicacion productiva.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Planes Fijos",
+              "Claro TV cuando el documento contiene su bloque"
+            ],
+            "next_action": "Validar fuente, analisis y resultado publicado en produccion."
+          },
+          {
+            "key": "claro_tv",
+            "title": "Claro TV",
+            "status": "en_validacion",
+            "local_status": "en_validacion",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Depende del bloque especifico de TV dentro de la fuente fija; no hay prueba productiva vigente.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Claro TV"
+            ],
+            "next_action": "Comprobar extraccion separada de TV y lectura posterior en Portal."
+          },
+          {
+            "key": "moviles",
+            "title": "Planes Moviles",
+            "status": "en_validacion",
+            "local_status": "terminado",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Regla de catalogo, exclusion de Gobierno y contratos locales registrados; falta comprobacion productiva completa.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Planes Moviles",
+              "Constructor futuro"
+            ],
+            "next_action": "Validar alta, actualizacion y exclusion de Gobierno con fuente real en produccion."
+          },
+          {
+            "key": "inalambrico_iot",
+            "title": "Inalambrico / IoT",
+            "status": "en_validacion",
+            "local_status": "terminado",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Pruebas locales disponibles; falta evidencia de fuente vigente y lectura productiva.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Inalambrico / IoT"
+            ],
+            "next_action": "Completar preview, publicacion autorizada y verificacion de Portal."
+          },
+          {
+            "key": "lista_precios",
+            "title": "Lista de Equipos/Precios",
+            "status": "en_validacion",
+            "local_status": "en_validacion",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Preview local y catalogo canonico documentados; no existe evidencia de fuente publicada vigente en produccion.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Lista de Equipos",
+              "Motor Comercial cuando exista fuente aprobada"
+            ],
+            "next_action": "Verificar Excel oficial, preview y catalogo productivo antes de usar precios."
+          },
+          {
+            "key": "servicios",
+            "title": "Servicios",
+            "status": "en_validacion",
+            "local_status": "en_validacion",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Alcance comercial limitado documentado; falta fuente y ciclo productivo comprobado.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Servicios"
+            ],
+            "next_action": "Definir fuente oficial y probar el ciclo completo sin cambiar servicios publicados."
+          },
+          {
+            "key": "beneficios",
+            "title": "Beneficios",
+            "status": "en_validacion",
+            "local_status": "en_validacion",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "Contrato de origen y proyeccion documentado; falta evidencia de carga, revision y publicacion real.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Beneficios",
+              "Convergencia cuando corresponda"
+            ],
+            "next_action": "Verificar que cada beneficio conserve su fuente y no se publique sin revision."
+          },
+          {
+            "key": "affinity",
+            "title": "Affinity",
+            "status": "bloqueado",
+            "local_status": "en_validacion",
+            "production_status": "bloqueado",
+            "last_review": "2026-09-17",
+            "evidence": "La fuente oficial esta archivada en produccion, pero el analisis real esta bloqueado por la dependencia del lector PDF; no hay version publicada comprobada.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Portal web: Affinity"
+            ],
+            "next_action": "Restaurar dependencia del lector PDF, ejecutar preview real y verificar publicacion antes de cambiar el estado."
+          },
+          {
+            "key": "ofertas",
+            "title": "Ofertas",
+            "status": "en_validacion",
+            "local_status": "en_validacion",
+            "production_status": "pendiente",
+            "last_review": "2026-09-17",
+            "evidence": "El flujo heredado fue retirado; las fuentes y reglas nuevas requieren trazabilidad y validacion antes de crear el nuevo Constructor.",
+            "impacts": [
+              "CRM PYMES/Admin Ofertas",
+              "Motor Comercial",
+              "Portal web",
+              "Constructor futuro"
+            ],
+            "next_action": "Definir y aprobar el flujo nuevo solo sobre fuentes oficiales publicadas."
+          }
+        ]
+      },
+      "previous_items": [
+        {
+          "id": "PM-001",
+          "area": "Arquitectura Constructor",
+          "title": "Tres modos hacia commercialScenario",
+          "status": "terminado",
+          "local_status": "terminado",
+          "production_status": "terminado",
+          "summary": "CRM, Manual y Consulta desembocan en un mismo commercialScenario sin crear tres motores comerciales.",
+          "done": [
+            "Contrato comun documentado",
+            "buildCommercialScenario preparado",
+            "autoaplica permanece false"
+          ],
+          "remaining": [
+            "Validacion operativa completa con fuentes actualizadas antes de promocion"
+          ],
+          "blocker": null,
+          "next_action": "Mantener el contrato comun como base de validacion maestra.",
+          "tests": {
+            "passed": 15,
+            "failed": 0,
+            "summary": "Validacion integral tres modos con Fijo y Convergencia."
+          },
+          "evidence": [
+            "docs/constructor/arquitectura-tres-modos-entrada-v1.md",
+            "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+          ],
+          "documents": [
+            "docs/constructor/arquitectura-tres-modos-entrada-v1.md"
+          ],
+          "files": [
+            "Planes para web/constructor-publications.js",
+            "Planes para web/oferta-const.html"
+          ],
+          "last_change": "Se consolido la arquitectura de tres entradas sin promover Motor.",
+          "updated_at": "2026-09-01"
+        },
+        {
+          "id": "PM-002",
+          "area": "CRM -> Constructor",
+          "title": "Entrada desde cliente CRM",
+          "status": "en_validacion",
+          "local_status": "terminado",
+          "production_status": "terminado",
+          "summary": "El CRM separa el acceso publico al portal limpio del acceso operativo al Constructor real con contexto de cliente, BAN y lineas seleccionadas.",
+          "done": [
+            "Entrada crm_client_id documentada",
+            "Seleccion parcial conserva full_ban_lines",
+            "No modifica clientes ni lineas",
+            "Menu Constructor del CRM abre el portal limpio publicado",
+            "Perfil de cliente abre el Constructor real publicado con sesion CRM en el hash",
+            "Portal publicado muestra Constructor como entrada visible hacia oferta-const.html",
+            "Constructor muestra regla visual de colores operativos y estado SS/Tax ID sin exponer el numero completo",
+            "Portal de ofertas comparte modo oscuro y modo dia con la paleta SS Group aprobada del CRM"
+          ],
+          "remaining": [
+            "Validacion real con cliente/BAN productivo antes de convertirlo en flujo principal"
+          ],
+          "blocker": null,
+          "next_action": "Verificar en produccion que el portal muestra el selector de modo dia/oscuro y que el oscuro usa la paleta SS Group del CRM.",
+          "tests": {
+            "passed": 33,
+            "failed": 0,
+            "summary": "Contratos del portal y configuracion compartida validan modo oscuro/dia con paleta SS Group, cache busting y flujo del Constructor."
+          },
+          "evidence": [
+            "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md",
+            "backend/test/portal-ofertas-auth-launch.test.js",
+            "backend/test/ofertas-portal-link-contract.test.js",
+            "backend/test/constructor-business-red-plus-contract.test.js",
+            "backend/test/oferta-const-portal.test.js",
+            "backend/test/portal-directorio-fijo-contract.test.js",
+            "backend/test/portal-benefits-affinity-ui.test.js",
+            "backend/test/portal-config.test.js",
+            "backend/test/constructor-motor-comercial-simulacion.test.js"
+          ],
+          "documents": [
+            "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+          ],
+          "files": [
+            "frontend/app.html",
+            "Planes para web/index.html",
+            "Planes para web/oferta-const.html",
+            "Planes para web/portal-config.js"
+          ],
+          "last_change": "El portal de ofertas agrega selector modo dia/oscuro y alinea el oscuro con la paleta SS Group usada en el CRM.",
+          "updated_at": "2026-09-16"
+        },
+        {
+          "id": "PM-009",
+          "area": "Inalambrico / IoT",
+          "title": "Publicacion local boletin septiembre",
+          "status": "en_validacion",
+          "local_status": "terminado",
+          "production_status": "pendiente",
+          "summary": "La publicacion local de Inalambrico / IoT genera modulos consumibles y expone Franklin RG2100 a precio vigente local.",
+          "done": [
+            "Fuente septiembre aceptada localmente",
+            "Version local publicada",
+            "Franklin RG2100 $249.99 disponible por consumidor local"
+          ],
+          "remaining": [
+            "Demostrar comparacion contra revision anterior si aparece el PDF anterior oficial",
+            "Confirmar si CG890 pertenece a otra fuente vigente; la publicacion local septiembre localizada contiene RG2100 item 33638H, no CG890"
+          ],
+          "blocker": null,
+          "next_action": "Cerrar evidencia de comparacion anterior vs nueva cuando se tenga el archivo anterior.",
+          "tests": {
+            "passed": 69,
+            "failed": 0,
+            "summary": "Bateria dirigida final local reportada para Inalambrico / IoT."
+          },
+          "evidence": [
+            "backend/test/bases-informativas-preview-service.test.js",
+            "backend/test/inalambrico-vigencia-visible-contract.test.js"
+          ],
+          "documents": [
+            "docs/motor-ofertas/ADMIN_OFERTAS_MODULOS_BASE_2026-08-17.md"
+          ],
+          "files": [
+            "backend/src/services/basesInformativasPreview.js",
+            "backend/src/routes/fuentesComercialesRoutes.js",
+            "frontend/app.html"
+          ],
+          "last_change": "Auditoria 2026-09-05 confirma IoT septiembre vigente con RG2100; no se debe usar esa fila para cotizar CG890.",
+          "updated_at": "2026-09-05"
+        },
+        {
+          "id": "PM-010",
+          "area": "Fijo",
+          "title": "Fijo integrado al escenario comercial",
+          "status": "en_validacion",
+          "local_status": "terminado",
+          "production_status": "pendiente",
+          "summary": "Fijo se incorpora al commercialScenario sin duplicar reglas y permite evaluar convergencia/beneficios.",
+          "done": [
+            "Productos fijos agregables",
+            "Fuente de reglas compuestas preservada",
+            "No se conecta como regla inventada"
+          ],
+          "remaining": [
+            "Validar nuevas fuentes de todos los modulos fijos vigentes"
+          ],
+          "blocker": null,
+          "next_action": "Actualizar fuentes oficiales fijas y repetir validacion maestra.",
+          "tests": {
+            "passed": 15,
+            "failed": 0,
+            "summary": "Validacion integral local cubre movil + fijo."
+          },
+          "evidence": [
+            "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+          ],
+          "documents": [
+            "docs/constructor/validacion-integral-tres-modos-fijo-convergencia-v1.md"
+          ],
+          "files": [
+            "Planes para web/constructor-publications.js"
+          ],
+          "last_change": "Fijo quedo como producto del escenario, no como logica separada.",
+          "updated_at": "2026-09-01"
+        },
+        {
+          "id": "PM-012",
+          "area": "Servicios / Beneficios",
+          "title": "Beneficios publicados para Portal, Constructor y Admin Ofertas",
+          "status": "en_validacion",
+          "local_status": "en_validacion",
+          "production_status": "pendiente",
+          "summary": "Beneficios/Servicios tienen consolidación local documental desde inventario, textos extraídos, Excel y reglas publicadas. Admin Ofertas consume localmente el mismo catálogo publicado del Motor Comercial, sin copia manual independiente.",
+          "done": [
+            "Portal de Beneficios consume reglas publicadas",
+            "Centro de Cargas: seleccion lateral por nombre, sin boton Abrir duplicado; Abrir documentos en morado de la paleta aprobada y acciones principales en verde lima, ubicado en la cabecera del lienzo y probado localmente",
+            "Tabletas/Modems visibles con beneficio oficial  segun etapa previa",
+            "Inventario maestro detecta fuentes de beneficios/convergencia, portabilidad, accesorios y tabletas/modems",
+            "Consolidación local detecta 65 beneficios canónicos desde 141 detecciones",
+            "Reglas fijo_benefits publicadas se identifican como confirmadas/vigentes/autoaplica=false",
+            "Admin Ofertas > Ofertas Vigentes muestra Ofertas Moviles con Excel de ofertas y PDF oficial de terminos",
+            "Admin Ofertas > Ofertas Vigentes muestra Beneficios como catálogo consolidado desde Ofertas Móviles, Ofertas Fijo e Inalámbrico / IoT",
+            "Admin Ofertas incorpora una vista de Beneficios de lectura con los 12 registros confirmados, publicados y vigentes disponibles localmente",
+            "La vista de Beneficios permite buscar, filtrar, abrir detalle, revisar fuente e historial publicado sin duplicar reglas",
+            "Ofertas Vigentes abre una biblioteca local separada en Oferta Fijo, Ofertas Móviles y Beneficios; cada pestaña muestra solo documentos realmente enlazados y señala Falta documento oficial cuando no existe archivo navegable",
+            "Centro de Cargas local separa carga y consulta: Abrir Ofertas Vigentes muestra archivo, vigencia, Analizar, Guardar borrador y Ver documentos para Oferta Fijo, Ofertas Móviles y Beneficios",
+            "El botón Cargar boletín de beneficios lleva desde la biblioteca al formulario visible de Beneficios"
+          ],
+          "remaining": [
+            "Conectar el análisis y guardado de Beneficios al parser, archivado de fuente y borrador persistido; la interfaz actual solo habilita el recorrido local y mantiene publicación bloqueada",
+            "Normalizacion/publicacion durable por dominio mediante Fuentes Comerciales",
+            "Fuentes sin texto extraido requieren parser/preview especifico",
+            "No promover detecciones por palabra clave como reglas definitivas",
+            "Vincular de forma durable las reglas fijo_benefits historicas con sus documentos archivados antes de declarar la trazabilidad documental completa",
+            "Archivar y enlazar el PDF oficial de descuento de $130 para Modems/Tabletas; la publicacion vigente conserva la referencia, pagina, vigencia y codigos, pero no existe un original navegable localmente"
+          ],
+          "blocker": null,
+          "next_action": "Validar la carga real de un boletín oficial de Beneficios contra parser, archivado de fuente y borrador persistido, sin publicar hasta completar la revisión comercial.",
+          "tests": {
+            "passed": 15,
+            "failed": 0,
+            "summary": "Contrato del Centro de Cargas, navegación carga/consulta y visualización local de Beneficios."
+          },
+          "evidence": [
+            "docs/constructor/inventario-fuentes-plan-maestro.md",
+            "docs/constructor/auditoria-publicaciones-plan-maestro.md",
+            "docs/constructor/servicios-benefits-consolidado-local.md",
+            "docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md",
+            "docs/motor-ofertas/revision-comercial-fijo-benefits-v1.md"
+          ],
+          "documents": [
+            "docs/constructor/servicios-benefits-consolidado-local.md",
+            "docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md",
+            "docs/motor-ofertas/revision-comercial-fijo-benefits-v1.md"
+          ],
+          "files": [
+            "backend/src/services/benefitsPortalCatalog.js",
+            "backend/src/services/benefitsConsolidation.js",
+            "scripts/consolidar-benefits-plan-maestro.mjs",
+            "frontend/app.html",
+            "Planes para web/benefits.html",
+            "backend/test/admin-fuentes-comerciales-only-contract.test.js"
+          ],
+          "last_change": "Corrección local 2026-09-06: Preview consulta ultima publicacion y muestra solo cambios. Para formato historico Fijo/TV recupera PDF por SHA exacto y normaliza ambas fuentes con el mismo parser sin sobrescribir publicacion. Prueba real navegador: Sin cambios respecto a la version publicada, 81 Fijo y 9 TV leidos, sin publicar. 32 pruebas servicio/ruta aprobadas. Causa inicial de conexion no confirmada; Beneficios mantiene pendiente conexion real de analisis/guardado.",
+          "updated_at": "2026-09-06"
+        },
+        {
+          "id": "PM-013",
+          "area": "Lista de Precios",
+          "title": "Lista de precios oficial",
+          "status": "en_validacion",
+          "local_status": "en_validacion",
+          "production_status": "pendiente",
+          "summary": "La lista de precios vigente de septiembre fue inventariada y previsualizada localmente sin publicacion.",
+          "done": [
+            "Preview de lista de precios existe localmente",
+            "Lista 3 septiembre al 28 octubre 2026 identificada por SHA-256",
+            "Parser reconoce 477 registros y 477 item codes unicos"
+          ],
+          "remaining": [
+            "Publicacion y trazabilidad completa contra fuente vigente",
+            "Cruce final con ofertas por item code antes de consumirla como vigente",
+            "iPhone 17 aparece en v_equipos_vigentes con variantes 256GB, pero la fuente local asociada tiene vigencia 2026-05-28 a 2026-07-31"
+          ],
+          "blocker": null,
+          "next_action": "Guardar/publicar localmente la lista vigente solo con autorizacion especifica del flujo Fuentes Comerciales.",
+          "tests": {
+            "passed": 3,
+            "failed": 0,
+            "summary": "Preview de Lista de Precios septiembre validado por contrato local."
+          },
+          "evidence": [
+            "docs/constructor/preview-lista-precios-plan-maestro.md",
+            "backend/test/plan-maestro-lista-precios-preview.test.js"
+          ],
+          "documents": [
+            "docs/constructor/preview-lista-precios-plan-maestro.md",
+            "docs/motor-ofertas/actualizacion-motor-sombra-boletines-23jul-27ago-2026.md"
+          ],
+          "files": [
+            "backend/src/services/listaPreciosPreview.js",
+            "scripts/preview-lista-precios-plan-maestro.mjs",
+            "backend/test/plan-maestro-lista-precios-preview.test.js"
+          ],
+          "last_change": "Auditoria 2026-09-05: Lista de Precios septiembre sigue inventariada/previsualizada, no guardada/publicada como fuente vigente.",
+          "updated_at": "2026-09-05"
+        },
+        {
+          "id": "PM-014",
+          "area": "Versionado de Fuentes",
+          "title": "Versionado global de fuentes comerciales",
+          "status": "en_validacion",
+          "local_status": "en_validacion",
+          "production_status": "pendiente",
+          "summary": "Se preparo versionado y se corrigio la experiencia local de Admin Ofertas como Centro de Cargas para subir, analizar, revisar cambios, guardar borrador y publicar.",
+          "done": [
+            "Hash SHA-256 preservado",
+            "Nueva revision por hash diferente",
+            "Reintento de fuente fallida tratado aparte",
+            "Inventario de 35 fuentes y cruce contra tablas locales generado",
+            "UI local muestra archivo identico por SHA-256 y habilita el panel de Inalambrico / IoT para preview, borrador, validacion, aprobacion y publicacion",
+            "Admin Ofertas local muestra bandeja de requiere atencion, modulos al dia, recordatorios, historial reciente y conserva los modulos reales existentes",
+            "Admin Ofertas Centro de Cargas tiene paleta visual propia con textos claros, paneles azul profundo y botones principales verde/teal",
+            "Admin Ofertas Centro de Cargas reproduce la estructura objetivo en el area de trabajo: cabecera, stepper horizontal de 82px y grid 280px/minmax/330px sin tabs visibles ni formularios permanentes",
+            "Botones Abrir de Todo al dia e Historial reciente consultan en modo read-only la version publicada vigente, documento original, datos publicados y borrador posterior si existe",
+            "Modal read-only incorpora visor embebido del documento original cuando la publicacion tiene fuente archivada enlazada",
+            "Publicaciones base historicas sin fuente_comercial_id pueden abrir documento original si el SHA-256 guardado coincide exactamente con un documento oficial local permitido",
+            "Publicaciones moviles compuestas sin SHA de archivo unico pueden abrir un PDF oficial local relacionado por nombre de fuente compuesta, priorizando PDF sobre Excel",
+            "Admin Ofertas local muestra todos los documentos asociados a Ofertas Vigentes y Planes Moviles: dos PDFs oficiales y la Lista de Precios Excel vinculada",
+            "Lista de Precios local abre su Excel oficial vigente desde el endpoint de documentos del modulo y no se intenta renderizar como PDF",
+            "Contrato documentado para conservar completo el boletin oficial de Planes Moviles y excluir Government RED solo de Portal y Constructor, manteniendolo en auditoria como segmento_no_incluido: gobierno"
+          ],
+          "remaining": [
+            "Validacion completa con todos los modulos restantes y fuentes vigentes",
+            "Publicar solo por flujo preview/diff/aprobacion",
+            "Validacion visual de Gabriel en PYMES Admin",
+            "Corregir trazabilidad historica de Fijo en base si se requiere que la publicacion vigente tenga fuente_comercial_id nativo; la lectura local ya resuelve el documento por SHA coincidente sin escribir datos"
+          ],
+          "blocker": null,
+          "next_action": "Usar el inventario para ejecutar previews por dominio, sin marcar fuentes no guardadas como publicadas.",
+          "tests": {
+            "passed": 25,
+            "failed": 0,
+            "summary": "Contrato Admin Ofertas Centro de Cargas, lectura read-only de publicaciones vigentes, documento por publicacion/SHA y Plan Maestro."
+          },
+          "evidence": [
+            "docs/constructor/inventario-fuentes-plan-maestro.md",
+            "docs/constructor/auditoria-publicaciones-plan-maestro.md",
+            "backend/test/plan-maestro-fuentes-inventory.test.js",
+            "backend/test/plan-maestro-publication-audit.test.js",
+            "backend/test/admin-fuentes-comerciales-only-contract.test.js",
+            "backend/test/fuentes-comerciales-versioning.test.js",
+            "backend/test/fuentes-comerciales-preview-base-route-contract.test.js"
+          ],
+          "documents": [
+            "docs/constructor/inventario-fuentes-plan-maestro.md",
+            "docs/constructor/auditoria-publicaciones-plan-maestro.md",
+            "docs/motor-ofertas/03-motor-ofertas-versionado-especificacion.md",
+            "docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md"
+          ],
+          "files": [
+            "backend/src/services/fuentesComercialesVersioning.js",
+            "backend/src/routes/fuentesComercialesRoutes.js",
+            "frontend/app.html",
+            "scripts/inventariar-fuentes-plan-maestro.mjs",
+            "scripts/auditar-publicaciones-plan-maestro.mjs"
+          ],
+          "last_change": "Documentacion 2026-09-09: el boletin oficial de Planes Moviles se conserva integro; Government RED se excluye de Portal y Constructor, pero permanece trazable en auditoria como segmento_no_incluido: gobierno.",
+          "updated_at": "2026-09-09"
+        },
+        {
+          "id": "PM-020",
+          "area": "Produccion",
+          "title": "Deploy 2026-09-10",
+          "status": "terminado",
+          "local_status": "terminado",
+          "production_status": "terminado",
+          "summary": "Gabriel pidio preparar el deploy el 2026-09-10 y definio la topologia: ofertas.ss-group.cloud es el sitio unico del portal y el Constructor; el CRM y la API viven en crmp.ss-group.cloud. Codigo local listo, suite 704/704; falta ejecutar con backup.",
+          "done": [
+            "Limites establecidos",
+            "Hallazgos de la revision re-verificados: cupo BAN, vigencia del descuento especial, catalogo en elegibilidad individual, revisiones en advertencias y parser de vigencia compartido ya estaban corregidos",
+            "parse_price conserva $0.00 del documento: el boletin de Inalambrico septiembre publica equipos gratis con ciertos planes que antes se perdian",
+            "Constructor: mensualidad y plan de $0 dejan de tratarse como dato faltante",
+            "Plan Maestro y Comparativa salen del menu del CRM (el Plan Maestro queda como documentacion; Comparativa vive en el perfil del cliente)",
+            "Pruebas desactualizadas alineadas y fixtures de planes moviles movidos de Dropbox a documentos-ofertas/",
+            "backend/uploads/ excluido de git",
+            "portal-config.js: todas las paginas del portal llaman a crmp.ss-group.cloud en produccion y al propio CRM en local; crm_origin solo se acepta hacia localhost",
+            "El boton Constructor y el del perfil del cliente abren ofertas.ss-group.cloud/oferta-const.html con la sesion en el hash, que el portal guarda y borra de la direccion",
+            "La carga del Constructor ya no pide por GET la accion POST candidatos-alternativas (404 en cada apertura)",
+            "Versiones de cache actualizadas en constructor-publications.js y portal-config.js",
+            "DEPLOY.md documenta los dos sitios, el paso de subida del portal y su verificacion",
+            "Commits 7e2b468 y e3a1c93; respaldos de base y codigo en /home/gabriel/backups (20260910-210719)",
+            "Comparacion archivo por archivo con el servidor: lo desplegado era una version anterior del mismo trabajo, sin cambios exclusivos de produccion",
+            "Prueba en copia aparte contra la base real antes de tocar produccion",
+            "Migraciones aplicadas: familia affinity (como postgres) y directorio de operaciones (como crm_user), 28 fuentes intactas",
+            "44 archivos aplicados en /opt/crmp-nuevo y PM2 reiniciado; verificado por los dominios publicos, CORS y cada pestana del portal",
+            "Affinity sigue visible en Beneficios hasta que su modulo publique una version en produccion",
+            "Comparativas corregidas y desplegadas (61d0a25): usan ventaspro_nuevo.comparativas, responden errores en vez de colgarse; verificado en produccion con una insercion revertida"
+          ],
+          "remaining": [
+            "Subir y publicar el boletin Affinity en el Admin de produccion",
+            "Publicar el boletin de Inalambrico de septiembre en produccion (hoy muestra el de agosto, vencido)"
+          ],
+          "blocker": null,
+          "next_action": "Gabriel sube Affinity e Inalambrico septiembre en el Admin de produccion.",
+          "tests": {
+            "passed": 704,
+            "failed": 0,
+            "summary": "Suite completa en verde, incluidas las pruebas de configuracion del portal y apertura del Constructor."
+          },
+          "evidence": [
+            "DEPLOY.md"
+          ],
+          "documents": [
+            "DEPLOY.md"
+          ],
+          "files": [
+            "frontend/app.html",
+            "scripts/parse_equipos_pdf.py",
+            "Planes para web/oferta-const.html",
+            "Planes para web/constructor-publications.js",
+            "Planes para web/portal-config.js",
+            "DEPLOY.md",
+            ".gitignore"
+          ],
+          "last_change": "Topologia resuelta (ofertas.ss-group.cloud sitio unico) y portal adaptado. Codigo local listo; nada se subio a produccion.",
+          "updated_at": "2026-09-10"
+        },
+        {
+          "id": "PM-024",
+          "area": "Centro de Cargas",
+          "title": "Alertas de vencimiento de documentos",
+          "status": "en_validacion",
+          "local_status": "terminado",
+          "production_status": "pendiente",
+          "summary": "El admin ve por familia el documento vigente, su fecha de fin y si esta vencido o por vencer (30 dias), para buscar y subir el boletin nuevo a tiempo.",
+          "done": [
+            "Servicio puro buildVigenciaAlertas por familia (vencida, por_vencer, vigente, sin_fecha_fin)",
+            "Ruta GET /api/fuentes-comerciales/alertas-vencimiento solo lectura",
+            "Panel de alertas en Centro de Cargas, cola Requiere atencion con Vence en N dias y badge en el menu Admin Ofertas"
+          ],
+          "remaining": [
+            "Decidir aviso por correo o notificacion externa y destinatarios",
+            "Validar en navegador con fuentes reales"
+          ],
+          "blocker": null,
+          "next_action": "Usar las alertas con las fuentes reales y confirmar el umbral de 30 dias.",
+          "tests": {
+            "passed": 4,
+            "failed": 0,
+            "summary": "vigencia-alertas.test.js y contrato UI de Centro de Cargas."
+          },
+          "evidence": [
+            "docs/constructor/alertas-vencimiento-v1.md"
+          ],
+          "documents": [
+            "docs/constructor/alertas-vencimiento-v1.md"
+          ],
+          "files": [
+            "backend/src/services/vigenciaAlertas.js",
+            "backend/src/routes/fuentesComercialesRoutes.js",
+            "frontend/app.html"
+          ],
+          "last_change": "Alertas de vencimiento creadas: backend, Centro de Cargas y badge de menu.",
+          "updated_at": "2026-09-07"
+        },
+        {
+          "id": "PM-025",
+          "area": "Affinity",
+          "title": "Modulo Affinity en Centro de Cargas",
+          "status": "bloqueado",
+          "local_status": "en_validacion",
+          "production_status": "bloqueado",
+          "summary": "Affinity conserva su fuente oficial, pero no puede declararse listo: la produccion no tiene una version publicada comprobada y el analisis real esta bloqueado por la dependencia del lector PDF.",
+          "done": [
+            "Familia affinity (solo PDF) y rutas preview/persistir/historial/vigente/publicar-local",
+            "Normalizador calibrado contra el boletin oficial del 5 de noviembre de 2025 (fixture de 8 paginas)",
+            "Lee 8% Movil (AFFINITY8, plan desde $45, plazos 20/24/30/36, max 8 lineas) y 8% Fijo (COPS 7382/7382TV, plazos 0/12/24)",
+            "Descarta las paginas de procedimiento de venta y detecta la contradiccion GPON del propio boletin",
+            "Cada velocidad se asigna a su tecnologia y se registran las tres menciones con su ubicacion: GPON 100 megas (2 menciones) vs 50 megas (1), Cobre/VRAD consistente en 10",
+            "Cruce con el catalogo Fijo publicado: la contradiccion solo afecta al plan A880 GPON 50MB de $49.99",
+            "Aclaracion de contradicciones con traza de usuario y fecha, aceptando solo valores que el documento menciona",
+            "Gabriel aclaro el 2026-09-07 que GPON aplica desde 100 megas; version aprobada y publicada, Affinity visible en el portal del vendedor",
+            "Affinity dejo de duplicarse: fijo_benefits ya no publica el beneficio y la regla vieja quedo reemplazada con su historial",
+            "Reemplazo de version verificado en local: al publicar la 65 la 52 paso a reemplazada sin perder historial",
+            "Affinity tiene pestana propia en el portal del vendedor con endpoint publico de solo lectura, condiciones y terminos oficiales",
+            "Beneficios paso de tarjetas a tabla operativa con filas que se ajustan al contenido y detalle en modal, segun las reglas de diseno del proyecto",
+            "Affinity se excluye del catalogo de Beneficios para no duplicarlo: se consume desde su pagina propia",
+            "Migracion de familia affinity aplicada en local con backup previo",
+            "Borrador conserva reglas en revision; aprobar exige todo confirmado",
+            "Portal de Beneficios lee affinity_benefits publicado",
+            "Flujo verificado end-to-end: subida, preview, borrador (version 45), rechazo de aprobacion e historial"
+          ],
+          "remaining": [
+            "Restaurar el lector PDF en produccion y ejecutar el preview contra el archivo archivado",
+            "Verificar borrador, aprobacion y publicacion en CRM PYMES/Admin Ofertas",
+            "Comprobar el consumidor del Portal solo despues de la publicacion"
+          ],
+          "blocker": {
+            "summary": "La fuente esta archivada, pero falta la dependencia del lector PDF en produccion; sin preview real ni version publicada, Affinity no puede mostrarse como Al dia.",
+            "owner": "Infraestructura de despliegue",
+            "since": "2026-09-17"
+          },
+          "next_action": "Restaurar la dependencia, ejecutar el flujo real en produccion y registrar evidencia antes de cambiar el estado.",
+          "tests": {
+            "passed": 18,
+            "failed": 0,
+            "summary": "affinity-benefits-normalizer (13 casos contra el PDF real, incluida la aclaracion de contradicciones), affinity-modulo-contract, catalogo publico y persistencia de borrador."
+          },
+          "evidence": [
+            "docs/constructor/affinity-modulo-v1.md",
+            "backend/test/fixtures/affinity-boletin-5nov2025.txt"
+          ],
+          "documents": [
+            "docs/constructor/affinity-modulo-v1.md"
+          ],
+          "files": [
+            "backend/src/services/affinityBenefitsNormalizer.js",
+            "backend/src/services/motorComercialReglasCompuestasPersistence.js",
+            "backend/src/services/benefitsPortalCatalog.js",
+            "backend/src/routes/fuentesComercialesRoutes.js",
+            "backend/migrations/2026-09-07-fuentes-comerciales-familia-affinity.sql",
+            "frontend/app.html",
+            "Planes para web/affinity.html",
+            "Planes para web/benefits.html"
+          ],
+          "last_change": "Se corrige el estado documental: una fuente archivada no equivale a una version publicada ni habilita Al dia.",
+          "updated_at": "2026-09-17"
+        },
+        {
+          "id": "PM-026",
+          "area": "Administracion del Constructor",
+          "title": "Estado visual de tareas y reglas Admin",
+          "status": "en_validacion",
+          "local_status": "en_validacion",
+          "production_status": "pendiente",
+          "summary": "Tareas y reglas Admin deja de usar tarjetas con estados escritos a mano y pasa a leer el control operativo del Plan Maestro: estado, ambiente, evidencia, impactos y siguiente prueba por modulo.",
+          "done": [
+            "Boton Tareas y reglas Admin ubicado debajo de Constructor",
+            "Ruta #/tareas-reglas-admin con panel visual segun la referencia aprobada",
+            "Red neuronal visual con Archivo fuente: Fijo / Claro TV expandiendo hacia Fijo y Claro TV",
+            "Red neuronal visual con Archivo fuente: Planes Moviles expandiendo hacia Individual y Multilinea",
+            "Movimiento de particulas y reanimacion de conexiones al tocar cada archivo",
+            "Expansion de lineas reforzada con amarillo y rojo para mayor presencia visual",
+            "Ritmo de expansion ajustado a una animacion mas lenta y suave",
+            "Menu interno de pantallas restaurado como barra superior estilo portal junto al titulo",
+            "Flechita grande con etiqueta IMPACTA A y texto superior indican donde impacta cada archivo fuente dentro del Constructor",
+            "Tabla distingue donde impacta en el Constructor y que detalle se modifica dentro de la pantalla",
+            "Archivo fuente Inalambrico / IoT agregado como documento visible con impactos a menu, Banda Ancha Individual y Multilinea",
+            "Esferas reducidas y destinos no impactados ocultos con transicion para evitar saturacion visual",
+            "Archivo fuente Lista de Precios agregado con impactos a catalogo de equipos, ofertas de equipos moviles y precios por plan",
+            "Tabla de reglas pendientes muestra fuente, impactos, pendiente y criterio temporal para no cerrar reglas sin respaldo oficial",
+            "Convergencia Claro Full marcada como regla madre que impacta Beneficios, Fijo, Movil, INTGO, Claro Oficina y Loop Comercial",
+            "Cliente convergente confirmado con criterio documental Claro Full: fijo/TV/Internet/Claro Oficina mas movil pospago, financiamiento o INTGO bajo mismo SSN/Tax ID, BAN unido o separado y account type Negocios/PYMES activo",
+            "Doble data en Internet On-The-Go reclasificada como regla confirmada y condicionada a convergencia; Back Up queda marcado sin doble data porque ya es convergente",
+            "Doble data en Claro Oficina / FWA separada de INTGO como regla confirmada: plan regular 150GB y Claro Full 300GB",
+            "Portabilidad movil base Claro Full separada como regla confirmada hasta $150 para cliente convergente",
+            "Portabilidad movil especial hasta $500 separada como regla confirmada desde el boletin 260803: Business Red desde $65, no requiere convergencia y limita las primeras 3 lineas",
+            "CG890 documentado con criterio operativo aprobado: $249.99 como precio de trabajo, permitido en Business Red como MiFi/modem portatil y no disponible para Claro Hogar o activacion normal reservada",
+            "Inalambrico / IoT separado operativamente en INTGO movil solo datos, Claro Oficina/FWA, Back Up para cliente fijo/cloud, IoT/telemetria y equipos",
+            "Lineas visuales de Planes Moviles, Inalambrico / IoT y Lista de Precios alineadas con el centro de sus archivos fuente",
+            "Texto de Inalambrico / IoT aclara que Lista de Precios solo valida precio y codigo de equipos",
+            "Estado de Lista de Precios en Tareas y reglas Admin ahora se calcula desde fuentes comerciales y equipos_uploads: pendiente, lista cargada o fuente publicada",
+            "Beneficios ya no queda como fila sin representacion visual: se abre como nucleo propio separado del Boletin de Convergencia, conectado a Beneficios visibles y Loop Comercial",
+            "La red visual dejo de depender de esferas grandes: usa nodos compactos tipo capsula, con punto luminoso y resaltado solo en el nucleo activo",
+            "Al seleccionar un nucleo, la red oculta los otros nucleos y alinea la fuente activa con sus destinos para evitar cruces y exceso de ancho",
+            "La fila superior queda como selector permanente de fuentes para cambiar de nucleo aunque el mapa oculte los demas",
+            "Inalambrico / IoT ya no usa Multilinea como destino visual: muestra Menu Constructor, Banda Ancha Individual e IoT / Servicios como tres destinos propios",
+            "Lista de Precios agrupa sus tres destinos mas arriba para que Catalogo Equipos, Ofertas Equipos y Precios por Plan no queden al pie del mapa",
+            "Vista sin migraciones, sin cambios de datos comerciales y sin alterar precios; solo consulta endpoints existentes para estado visual"
+          ],
+          "remaining": [
+            "Desplegar y validar que las nueve tarjetas reflejen el control operativo en CRM PYMES",
+            "Registrar evidencia real de cada modulo antes de marcarlo listo"
+          ],
+          "blocker": null,
+          "next_action": "Validar en CRM PYMES que cada tarjeta muestra ambiente, evidencia e impacto correctos; ningun estado se declara manualmente.",
+          "tests": {
+            "passed": 10,
+            "failed": 0,
+            "summary": "Contrato UI de Tareas y reglas Admin, contrato de Lista de Precios, diff --check, validacion de scripts embebidos y verificacion publica del HTML desplegado."
+          },
+          "evidence": [
+            "backend/test/tareas-reglas-admin-ui-contract.test.js",
+            "backend/test/fuentes-comerciales-equipos-contract.test.js",
+            "git diff --check",
+            "node vm.Script sobre scripts embebidos en frontend/app.html productivo",
+            "GET https://crmp.ss-group.cloud/"
+          ],
+          "documents": [],
+          "files": [
+            "frontend/app.html",
+            "backend/test/tareas-reglas-admin-ui-contract.test.js"
+          ],
+          "last_change": "La administracion se conecta a la matriz unica de control operativo del Plan Maestro; los estados genericos quedan retirados.",
+          "updated_at": "2026-09-17"
+        },
+        {
+          "id": "PM-027",
+          "area": "Retiro de interfaz heredada",
+          "title": "Constructor y Ofertas heredados retirados",
+          "status": "en_validacion",
+          "local_status": "terminado",
+          "production_status": "pendiente",
+          "summary": "Se retiran del Portal y del CRM las pantallas heredadas de Constructor y Ofertas. Tareas y reglas Admin queda como la superficie administrativa existente mientras se define un Constructor nuevo desde cero.",
+          "done": [
+            "Eliminadas las pantallas estaticas oferta-const.html y ofertas.html",
+            "Eliminados los accesos del Portal hacia esas pantallas",
+            "Eliminados los accesos del CRM y del perfil de cliente hacia el Constructor heredado",
+            "Eliminados los cargadores visuales heredados que contenian flujo y reglas del Constructor",
+            "Retirados de Tareas y reglas Admin el mapa, fuentes, impactos y reglas comerciales heredadas; conserva solo nueve tarjetas base sin reglas reales",
+            "Prueba de contrato impide volver a enlazar las rutas retiradas"
+          ],
+          "remaining": [
+            "Definir y aprobar la experiencia del Constructor nuevo antes de crear otra pantalla",
+            "Conectar el Constructor nuevo solo a reglas y publicaciones oficiales que se aprueben para ese objetivo"
+          ],
+          "blocker": null,
+          "next_action": "Definir y aprobar desde cero la experiencia futura del Constructor antes de volver a exponer un flujo comercial.",
+          "tests": {
+            "passed": 4,
+            "failed": 0,
+            "summary": "4 pruebas dirigidas y verificacion publica confirman que el CRM no expone el acceso y que las dos rutas heredadas responden 404."
+          },
+          "evidence": [
+            "backend/test/constructor-legado-retirado-contract.test.js"
+          ],
+          "documents": [],
+          "files": [
+            "frontend/app.html",
+            "Planes para web/index.html",
+            "Planes para web/oferta-const.html",
+            "Planes para web/ofertas.html"
+          ],
+          "last_change": "Retiro publicado de la interfaz heredada y del contenido comercial heredado en Tareas y reglas Admin; las rutas publicas heredadas responden 404. Sin cambios de Motor, precios, publicaciones ni base de datos.",
+          "updated_at": "2026-09-16"
+        }
+      ],
+      "limits": [
+        "Base local no auditada en vivo; pruebas anteriores mantienen fecha/ambiente.",
+        "Sin POST de carga/preview/borrador/aprobacion/publicacion; Affinity diagnosticado en memoria.",
+        "HTML, fecha base o etiqueta vigente no certifican vigencia comercial.",
+        "No se certifica equivalencia Motor ni Constructor nuevo."
+      ]
     }
   ]
 }

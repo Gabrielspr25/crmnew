@@ -456,6 +456,7 @@ function commercialRecord(row, sectionKey) {
       'fila_auditoria',
       'llave_normalizada',
       'descripcion_original',
+      'consolidado_desde_ocurrencias',
     ].includes(key)) continue;
     comparable[key] = row[key];
   }
@@ -546,8 +547,13 @@ function flattenModuleRows(modules = []) {
   ));
 }
 
-function mapRowsByIdentity(items) {
-  return new Map(items.map((item) => [item.identity, item]));
+function groupRowsByIdentity(items) {
+  const groups = new Map();
+  for (const item of items) {
+    if (!groups.has(item.identity)) groups.set(item.identity, []);
+    groups.get(item.identity).push(item);
+  }
+  return groups;
 }
 
 function changedFields(before, after) {
@@ -563,29 +569,39 @@ function changedFields(before, after) {
 export function diffRegistrosGenerados(previousModules = [], currentModules = []) {
   const previousRows = flattenModuleRows(previousModules).sort((a, b) => a.identity.localeCompare(b.identity));
   const currentRows = flattenModuleRows(currentModules).sort((a, b) => a.identity.localeCompare(b.identity));
-  const previous = mapRowsByIdentity(previousRows);
-  const current = mapRowsByIdentity(currentRows);
+  const previous = groupRowsByIdentity(previousRows);
+  const current = groupRowsByIdentity(currentRows);
   const nuevos = [];
   const modificados = [];
   const eliminados = [];
   const sinCambios = [];
 
-  for (const item of currentRows) {
-    const prior = previous.get(item.identity);
-    if (!prior) {
-      nuevos.push({ identidad: item.identity, registro: item.row });
-      continue;
-    }
+  const comparePair = (prior, item) => {
     const cambios = changedFields(prior, item);
     if (cambios.length) {
       modificados.push({ identidad: item.identity, codigo: item.row.codigo, categoria: item.row.categoria, seccion_key: item.sectionKey, cambios });
     } else {
       sinCambios.push({ identidad: item.identity, codigo: item.row.codigo, categoria: item.row.categoria, seccion_key: item.sectionKey });
     }
-  }
+  };
 
-  for (const item of previousRows) {
-    if (!current.has(item.identity)) eliminados.push({ identidad: item.identity, registro: item.row });
+  for (const identity of [...new Set([...previous.keys(), ...current.keys()])].sort()) {
+    const before = [...(previous.get(identity) || [])];
+    const after = [...(current.get(identity) || [])];
+    // Match occurrences, never overwrite a published row sharing the same code.
+    for (let index = 0; index < after.length;) {
+      const match = before.findIndex((prior) => changedFields(prior, after[index]).length === 0);
+      if (match === -1) { index += 1; continue; }
+      comparePair(before.splice(match, 1)[0], after.splice(index, 1)[0]);
+    }
+    if (before.length && after.length) {
+      if (before.length !== 1 || after.length !== 1) {
+        throw snapshotComparisonError('identidad_duplicada_ambigua');
+      }
+      comparePair(before.pop(), after.pop());
+    }
+    for (const item of after) nuevos.push({ identidad: item.identity, registro: item.row });
+    for (const item of before) eliminados.push({ identidad: item.identity, registro: item.row });
   }
 
   return {
@@ -604,8 +620,52 @@ export function diffRegistrosGenerados(previousModules = [], currentModules = []
   };
 }
 
+function snapshotComparisonError(reason) {
+  return Object.assign(new Error(reason), { code: 'snapshot_publicado_no_comparable' });
+}
+
+function normalizePublishedModules(modules, category) {
+  if (!Array.isArray(modules)) throw snapshotComparisonError('modulos_publicados_invalidos');
+  const sections = new Set();
+  const knownSections = new Set([
+    ...PREVIEW_DEFINITIONS.flatMap((definition) => definition.included.map(([key]) => key)),
+    ...ARRAY_CATEGORIES,
+  ]);
+  return modules.map((module) => {
+    const section = module?.seccion_key;
+    if (typeof section !== 'string' || !section.trim() || sections.has(section)
+        || !Array.isArray(module?.contenido?.filas)
+        || (module.pagina && module.pagina !== (category === 'fijo' ? 'fijos' : 'claro_tv'))) {
+      throw snapshotComparisonError('modulo_publicado_no_normalizable');
+    }
+    sections.add(section);
+    const filas = module.contenido.filas.map((row) => {
+      if (!row || typeof row !== 'object' || Array.isArray(row)
+          || !['string', 'number'].includes(typeof row.codigo) || !String(row.codigo).trim()
+          || (row.seccion_key && row.seccion_key !== section)) {
+        throw snapshotComparisonError('identidad_publicada_invalida');
+      }
+      const categoria = row.categoria ?? (knownSections.has(section) ? section : null);
+      if (typeof categoria !== 'string' || !categoria.trim()) throw snapshotComparisonError('categoria_publicada_desconocida');
+      const normalized = { ...row, categoria: categoria.trim(), seccion_key: section, codigo: String(row.codigo).trim() };
+      if (normalized.categoria === 'fijo_internet_2play' && normalized.codigo === 'A878' && !normalized.identidad_variante) {
+        if (!/^BUS PRUS ILIM\s*\+\s*100M\/15M(?:\s*\(2L\)\s+BUNDLE)?$/i.test(String(row.descripcion || '').trim())) {
+          throw snapshotComparisonError('variante_publicada_desconocida');
+        }
+        return applyApprovedVariant(normalized);
+      }
+      return normalized;
+    });
+    return { ...module, contenido: { ...module.contenido, filas } };
+  });
+}
+
 function previousModulesFor(publicacionesAnteriores, category) {
   const previous = publicacionesAnteriores?.[category];
+  if (previous === undefined) return [];
+  if (['fijo', 'claro_tv'].includes(category)) {
+    return normalizePublishedModules(Array.isArray(previous) ? previous : previous?.modulos_generados, category);
+  }
   if (Array.isArray(previous)) return previous;
   if (Array.isArray(previous?.modulos_generados)) return previous.modulos_generados;
   return [];

@@ -34,6 +34,13 @@ test('Admin informa cuándo la fuente de equipos ya actualizó la lista publicad
   assert.doesNotMatch(app, /Lista de Precios actualizada/);
 });
 
+test('Lista de Precios muestra la excepcion unica de revision sin rotularla como vencida', () => {
+  const view = app.match(/function ofRenderListaPrecios\(\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(view, /Excepcion unica de revision/);
+  assert.match(view, /se acepta como valida para cerrar esta revision puntual/);
+  assert.doesNotMatch(view, /vencida o pendiente de reemplazo/);
+});
+
 test('Lista de Precios separa archivar, previsualizar y publicar en backend', () => {
   assert.match(fuentes, /publicacion_modo/);
   assert.match(fuentes, /modoPublicacion !== 'borrador'/);

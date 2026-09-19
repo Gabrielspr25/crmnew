@@ -8,6 +8,55 @@ familias técnicas ni pantallas ocultas.
 
 Una pantalla que muestra documentos publicados no sustituye el flujo de carga.
 
+## Estado verificable y alcance de un cambio
+
+El estado de un módulo no se deduce por ausencia de error ni por tener un
+archivo guardado. Antes de marcar un módulo como `Al día`, `Listo` o
+`Terminado`, debe quedar registrada evidencia de cinco datos:
+
+1. superficie exacta afectada: `CRM PYMES/Admin Ofertas`, `Portal web`,
+   `Motor Comercial` o `Constructor`;
+2. ambiente exacto: local o producción;
+3. fuente oficial archivada y archivo original navegable;
+4. análisis real, estado de versión y aprobación/publicación correspondiente;
+5. prueba posterior en cada consumidor impactado.
+
+Los estados de operación deben distinguir evidencia y alcance:
+
+| Estado | Significado obligatorio |
+| --- | --- |
+| `Sin verificar` | Falta evidencia o la consulta no pudo completarse; no acredita inexistencia de publicación. |
+| `Falta fuente` | Solo cuando se comprueba ausencia en el circuito consultado; no es una afirmación global. |
+| `Fuente sin analizar` | Existe archivo, pero todavía no hay preview real exitoso. |
+| `Actualización pendiente` | Hay una fuente o borrador sin completar; puede coexistir con una publicación anterior. |
+| `Publicado actualmente` | Evidencia de la versión o contenido consumido, independiente del documento seleccionado y de su vigencia. |
+| `Requiere revisión` | Hay borrador, contradicción, vencimiento, comparación pendiente o aprobación pendiente. |
+| `Bloqueado` | Una dependencia, formato o evidencia impide continuar; se muestra la causa y el siguiente paso. |
+| `Al día` | Hay fuente oficial navegable, análisis exitoso, versión publicada vigente y prueba real en los consumidores afectados. |
+
+`Al día` no puede ser un valor predeterminado. Si falta alguna evidencia, se
+debe mostrar uno de los estados anteriores. Una prueba local nunca confirma
+producción, y una publicación no confirma automáticamente los consumidores.
+
+`Sin borrador seleccionado` describe únicamente la selección actual. No
+significa que el módulo nunca se publicó. Un fallo de análisis conserva la
+publicación anterior y no debe recuperar otro borrador desde el historial para
+habilitar aprobación o publicación. Subir un archivo solo completa recepción.
+
+## Matriz de impacto obligatoria
+
+Todo cambio debe registrarse en el Plan Maestro operativo con su fuente,
+módulo origen, superficies y consumidores afectados. Como mínimo se revisan:
+
+- Centro de Cargas en CRM PYMES;
+- publicación y documento original;
+- Portal web correspondiente;
+- Motor Comercial si consume reglas o precios del dominio;
+- Constructor cuando vuelva a existir una integración aprobada.
+
+No se publica ni se declara terminado un cambio mientras esa matriz no tenga
+ambiente, evidencia y prueba posterior para cada destino aplicable.
+
 ## Ciclo obligatorio por categoría
 
 Toda categoría administrable debe exponer, en una entrada alcanzable desde el
@@ -15,10 +64,12 @@ Centro de Cargas, estos estados y acciones:
 
 1. `Cargar documento oficial`.
 2. `Analizar` el archivo y detectar formato, vigencia y cambios.
-3. `Guardar borrador` con los originales, hash y resultado de análisis.
-4. `Revisar cambios`, contradicciones y faltantes.
-5. `Publicar versión` solo después de la revisión explícita.
-6. `Ver documentos` e `Historial` como acciones de consulta separadas.
+3. `Comparar` con el snapshot publicado y `Revisar cambios`, contradicciones y faltantes.
+4. `Guardar borrador` con los originales, hash, comparación y resultado de análisis.
+5. `Validar revisión` y `Aprobar` la versión explícita, según el circuito existente.
+6. `Publicar versión` solo después de aprobación y autorización explícitas.
+7. `Comprobar` la versión en el destino y ambiente correspondientes.
+8. `Ver documentos` e `Historial` como acciones de consulta separadas.
 
 Si una etapa no está disponible para una familia, la interfaz debe declararla
 como bloqueada, indicar la causa y conservar publicada la versión anterior. No

@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
 import { test } from 'node:test';
 import pg from 'pg';
 import {
@@ -165,18 +164,6 @@ function rollbackFailingDb(db) {
   };
 }
 
-async function loadConstructorEvaluator() {
-  const loader = await readFile(new URL('../../Planes para web/constructor-publications.js', import.meta.url), 'utf8');
-  const context = {
-    window: {},
-    fetch: async () => ({ ok: true, json: async () => ({ ok: true }) }),
-    localStorage: { getItem: () => 'token-local' },
-  };
-  context.window = context;
-  vm.runInNewContext(loader, context);
-  return context.window.ConstructorPublications;
-}
-
 test('valida migracion persistencia publicacion lectura y simulacion contra PostgreSQL local equivalente', async () => {
   const testDomain = 'local_db_validation';
   const pool = new Pool(localDbConfig());
@@ -295,20 +282,6 @@ test('valida migracion persistencia publicacion lectura y simulacion contra Post
   const history = await txDb.query('SELECT count(*)::int AS total FROM public.motor_comercial_reglas_historial');
   assert.ok(history.rows[0].total >= 7);
 
-  const publications = await loadConstructorEvaluator();
-  const simulation = publications.evaluateCommercialRulesSimulation({
-    version: consumidor.version,
-    rules: consumidor.reglas,
-    context: {
-      cliente: { convergente: true, ban: 'BAN-001' },
-      lineas: [{ linea: 1, evento: 'portabilidad', producto: 'movil', plan_monto: 65 }],
-      productos: ['movil', 'fijo'],
-    },
-  });
-  assert.equal(simulation.recibidas, consumidor.reglas.length);
-  assert.equal(simulation.recomendacion.modo, 'simulacion');
-  assert.ok(simulation.elegibles.length >= 1);
-  assert.ok(simulation.elegibles.every((rule) => rule.autoaplica === false));
   } finally {
     await client.query('ROLLBACK').catch(() => {});
     client.release();

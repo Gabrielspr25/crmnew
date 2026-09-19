@@ -52,7 +52,7 @@ test('Admin Ofertas renderiza por modulo y conserva fuente interna', async () =>
   assert.match(html, /class="btn of-document-btn"[^>]*>Abrir documentos<\/button>/);
   assert.match(html, /class="of-center-page"/);
   assert.match(html, /Requiere atención/);
-  assert.match(html, /Todo al día/);
+  assert.match(html, /Sin pendientes identificados/);
   assert.doesNotMatch(html, /<aside id="ofCenterRight"/);
   assert.match(html, /No se encontraron fuentes que requieran atención/);
   assert.doesNotMatch(html, /var tabs=OF_TABS\.map/);
@@ -132,7 +132,7 @@ test('Admin Ofertas conecta Analizar de Fijo con fuente y preview base reales', 
   assert.match(html, /fd\.append\('familia',ofModuleSourceFamily\(key\)\)/);
   assert.match(html, /apiForm\('\/api\/fuentes-comerciales',fd\)/);
   assert.match(html, /fcBaseFuente=r\.fuente/);
-  assert.match(html, /api\('\/api\/fuentes-comerciales\/'\+fcBaseFuente\.id\+'\/preview-base',\{method:'POST',body:fcBasePreviewRequestBody\(fechaDetectada\)\}\)/);
+  assert.match(html, /api\('\/api\/fuentes-comerciales\/'\+sourceId\+'\/preview-base',\{method:'POST',body:fcBasePreviewRequestBody\(\)\}\)/);
   assert.doesNotMatch(html, /if\(!fecha\)\{alert\('Ingres/);
 });
 
@@ -199,13 +199,14 @@ test('Backend bloquea formatos equivocados antes de guardar fuentes base', async
   assert.match(route, /if \(baseUploadError\) return res\.status\(422\)\.json\(\{ ok: false, \.\.\.baseUploadError \}\)/);
 });
 
-test('Planes Moviles detecta fecha del boletin antes de pedir fecha manual', async () => {
+test('Planes Moviles separa vigencia documental de fecha base detectada por backend', async () => {
   const html = await readFile(frontendPath, 'utf8');
 
   assert.match(html, /function ofCatalogoBaseFechaDetectada\(key,fileInput\)/);
   assert.match(html, /var fechaDetectada=ofCatalogoBaseFechaDetectada\(key,fileInput\)/);
   assert.match(html, /if\(fechaDetectada&&\$\('ofBaseHasta_'\+key\)\)\$\('ofBaseHasta_'\+key\)\.value=fechaDetectada/);
-  assert.match(html, /body:fcBasePreviewRequestBody\(fechaDetectada\)/);
+  assert.match(html, /body:fcBasePreviewRequestBody\(\)/);
+  assert.doesNotMatch(html, /body:fcBasePreviewRequestBody\(fechaDetectada\)/);
   assert.match(html, /function fcBaseFechaDetectada\(\)/);
   assert.match(html, /var fecha=String\(\$\('fcBaseFecha'\)&&\$\('fcBaseFecha'\)\.value\|\|fcBaseFechaDetectada\(\)\|\|''\)\.trim\(\)/);
 });
@@ -214,11 +215,11 @@ test('Admin Ofertas conecta Analizar de Inalambrico al archivo oficial sin vista
   const html = await readFile(frontendPath, 'utf8');
 
   assert.match(html, /\['inalambrico_iot','Inalambrico \/ IoT'\]/);
-  assert.match(html, /if\(key==='lista_precios'\|\|key==='inalambrico_iot'\)fd\.append\('publicacion_modo','borrador'\)/);
+  assert.match(html, /fd\.append\('publicacion_modo','borrador'\)/);
   assert.match(html, /fcBaseModuleKey==='inalambrico_iot'\?\[\['inalambrico','Inalambrico \/ IoT'\]\]/);
   assert.match(html, /key==='inalambrico_iot'\?'inalambrico'/);
   assert.match(html, /Revisa Inalambrico \/ IoT antes de guardar borrador/);
-  assert.match(html, /fcBaseModuleKey==='inalambrico_iot'\?\['inalambrico'\]/);
+  assert.match(html, /key==='inalambrico_iot'\?\['inalambrico'\]/);
   assert.doesNotMatch(html, /Inalambrico actualizado/);
   assert.doesNotMatch(html, /publicacion\.modulos/);
   assert.match(html, /if\(!\['fijo','claro_tv','moviles','inalambrico_iot','lista_precios'\]\.includes\(key\)\)/);
@@ -253,7 +254,7 @@ test('Admin Ofertas separa ofertas vigentes de catalogos base', async () => {
   assert.match(html, /function ovLeerBorrador/);
   assert.match(html, /function ovMergeDocumentos/);
   assert.match(html, /ovRenderBorradorResumen/);
-  assert.match(html, /Documentos en borrador/);
+  assert.match(html, /Selección local \(archivos no archivados\)/);
   assert.match(html, /onclick="ovAnalizar/);
   assert.match(html, /onclick="ovGuardarBorrador/);
   assert.match(html, /function ovDetectarVigenciaHasta/);
@@ -262,9 +263,8 @@ test('Admin Ofertas separa ofertas vigentes de catalogos base', async () => {
   assert.match(html, /compact/);
   assert.match(html, /function ovGuardarBorrador/);
   assert.match(html, /Borrador guardado/);
-  assert.match(html, /Falta PDF de terminos y condiciones/);
-  assert.match(html, /Vigencia pendiente de detectar desde el PDF/);
-  assert.match(html, /Excel y PDF recibidos/);
+  assert.match(html, /no archivados en el servidor/);
+  assert.match(html, /no tiene conectado el análisis conjunto ni el borrador comercial/);
   assert.match(html, /La versión anterior sigue publicada hasta confirmar la nueva/i);
   assert.match(html, /No publica automaticamente/i);
 });
@@ -311,7 +311,7 @@ test('Fuentes comerciales restaura listado y flujo de bases informativas', async
   assert.match(html, /let fcBaseFuente=.*fcBaseMessage=''/);
   assert.match(html, /Primero gener[aá] la vista previa/i);
   assert.match(html, /Borrador guardado/i);
-  assert.match(html, /fcHydrateBaseDraftsFromHistorial/);
+  assert.doesNotMatch(html, /fcHydrateBaseDraftsFromHistorial/);
   assert.match(html, /Transici[oó]n aplicada/i);
   assert.match(html, /No hay borrador activo/i);
   assert.match(html, /function fcFuenteVersionadoMensaje\(/);

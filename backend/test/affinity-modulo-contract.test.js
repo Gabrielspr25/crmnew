@@ -34,6 +34,13 @@ test('Affinity expone preview, borrador/aprobacion, historial, vigente y publica
   assert.match(persistence, /export async function listCompositeRulesVersions/);
 });
 
+test('Affinity informa una dependencia faltante antes de crear una vista previa vacia', () => {
+  const handler = route.match(/post\('\/affinity\/preview', requireAdmin[\s\S]*?\n\}\);/)[0];
+  assert.match(handler, /extracted\?\.error/);
+  assert.match(handler, /parser_dependency_missing/);
+  assert.match(handler, /No se puede analizar Affinity porque falta el lector PDF en el servidor/);
+});
+
 test('la aclaracion de una contradiccion queda a nombre del usuario que la registra', () => {
   const handler = route.match(/post\('\/affinity\/preview'[\s\S]*?\n\}\);/)[0];
   // El actor sale de la sesion, nunca del cuerpo del request.
@@ -64,4 +71,19 @@ test('Admin Ofertas muestra Affinity como modulo propio del Centro de Cargas', (
   assert.match(appHtml, /\/api\/fuentes-comerciales\/affinity\/reglas-compuestas\/persistir/);
   assert.match(appHtml, /\/publicar-local/);
   assert.match(appHtml, /Affinity solo acepta el PDF oficial del programa/);
+});
+
+test('Affinity sin version vigente requiere atencion y no se muestra como Al dia', () => {
+  assert.match(appHtml, /api\('\/api\/fuentes-comerciales\/affinity\/historial'\)/);
+  const cola = appHtml.match(/function ofBuildCenterRows\(evidence\)\{[\s\S]*?\n\}/)[0];
+  assert.match(cola, /publication:m\.publication\|\|null/);
+  assert.match(cola, /pending:m\.pending\|\|null/);
+  assert.match(cola, /'Sin verificar'/);
+  assert.doesNotMatch(cola, /Al d[ií]a|Fuente sin publicar|Falta fuente/);
+});
+
+test('el mensaje de Affinity conserva el bloqueo del lector PDF y no lo atribuye a Fijo', () => {
+  const mensaje = appHtml.match(/function fcMensajeApi\(e,key\)\{[\s\S]*?\n\}/)[0];
+  assert.match(mensaje, /parser_dependency_missing\|falta el lector PDF/);
+  assert.match(mensaje, /No se puede analizar Affinity porque falta el lector PDF en el servidor/);
 });

@@ -28,6 +28,9 @@ test('Plan Maestro carga una fuente JSON valida con IDs unicos y estados oficial
   const ids = plan.items.map((item) => item.id);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(plan.items.every((item) => VALID_PLAN_STATES.includes(item.status)), true);
+  assert.equal(Array.isArray(plan.operating_control?.modules), true);
+  assert.equal(plan.operating_control.modules.length, 9);
+  assert.equal(plan.operating_control.modules.every((module) => module.key && module.title && module.status && module.last_review && module.evidence && module.next_action), true);
 });
 
 test('Plan Maestro calcula avance y conteos sin guardar porcentaje manual', async () => {
@@ -54,13 +57,57 @@ test('Plan Maestro separa local y produccion y no termina items con bloqueo prop
   assert.equal(localOnly.length > 0, true);
 });
 
-test('Plan Maestro mantiene visible el bloqueo REDPLUS vs BREDP1', async () => {
+test('Plan Maestro retira PM-021 de tareas y bloqueos y conserva la decision y ficha original', async () => {
   const plan = await loadProjectPlan(planPath);
-  const blocker = plan.items.find((item) => /REDPLUS \$60 vs BREDP1 \$65/i.test(`${item.title} ${item.blocker?.summary || ''}`));
+  const retiredItems = plan.retired_items?.filter((item) => item.id === 'PM-021');
 
-  assert.ok(blocker);
-  assert.equal(blocker.status, 'bloqueado_seguridad');
-  assert.match(blocker.blocker.summary, /evidencia oficial suficiente/i);
+  assert.equal(retiredItems?.length, 1, 'PM-021 debe conservar una unica ficha retirada');
+  const [retired] = retiredItems;
+  assert.equal(retired.active_task, false);
+  assert.equal(retired.active_blocker, false);
+  assert.equal(retired.decision_by, 'Gabriel');
+  assert.equal(retired.retired_at, '2026-09-17');
+  assert.match(retired.reason, /confusion/i);
+  assert.match(retired.reason, /REDPLUS\s+\$60\b/);
+  assert.match(retired.reason, /BREDP1\s+\$65\b/);
+  assert.match(retired.reason, /identidades\s+separadas/i);
+  assert.match(retired.reason, /no\s+relacionar\s+ni\s+fusionar/i);
+
+  for (const item of plan.items) {
+    assert.notEqual(item.id, retired.id, 'PM-021 no debe contarse como tarea activa ni terminada');
+    const activeWork = JSON.stringify({
+      title: item.title,
+      summary: item.summary,
+      blocker: item.blocker,
+      remaining: item.remaining,
+      next_action: item.next_action,
+    });
+    assert.doesNotMatch(activeWork, /\bPM-021\b|REDPLUS\s+\$60\s+vs\s+BREDP1\s+\$65/i, item.id);
+  }
+
+  // La ficha historica es inmutable: retirarla no equivale a completar su trabajo.
+  assert.deepEqual(retired.original_record, {
+    id: 'PM-021',
+    area: 'Identidad Comercial',
+    title: 'REDPLUS $60 vs BREDP1 $65',
+    status: 'bloqueado_seguridad',
+    local_status: 'bloqueado_seguridad',
+    production_status: 'pendiente',
+    summary: 'La diferencia entre REDPLUS $60 detectado en Excel y BREDP1 $65 del boletin no se fusiona por nombre parecido.',
+    done: ['Ambiguedad documentada', 'No se promovio por inferencia'],
+    remaining: ['Decision comercial o fuente oficial que relacione ambas identidades'],
+    blocker: {
+      summary: 'REDPLUS $60 vs BREDP1 $65: no existe evidencia oficial suficiente para fusionarlos.',
+      severity: 'seguridad_comercial',
+    },
+    next_action: 'Mantener bloqueado hasta evidencia oficial o decision comercial documentada.',
+    tests: { passed: 0, failed: 0, summary: 'Bloqueo de seguridad documentado.' },
+    evidence: ['docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md'],
+    documents: ['docs/motor-ofertas/auditoria-identidad-redplus-y-precedencia-fuentes-2026-08-31.md'],
+    files: [],
+    last_change: 'Bloqueo visible agregado al Plan Maestro.',
+    updated_at: '2026-09-04',
+  });
 });
 
 test('Markdown del Plan Maestro se genera desde la misma fuente JSON', async () => {
@@ -70,17 +117,35 @@ test('Markdown del Plan Maestro se genera desde la misma fuente JSON', async () 
 
   assert.equal(current, generated);
   assert.match(generated, /Fuente unica estructurada/);
-  assert.match(generated, /REDPLUS \$60 vs BREDP1 \$65/);
+  const decision = plan.operating_control.release_gate.find((rule) => /\bPM-021\b/.test(rule));
+  assert.ok(decision, 'El retiro debe seguir visible en las reglas operativas');
+  assert.match(decision, /Gabriel/);
+  assert.match(decision, /PM-021\s+retirado/i);
+  assert.match(decision, /REDPLUS\s+\$60\b/);
+  assert.match(decision, /BREDP1\s+\$65\b/);
+  assert.match(decision, /identidades\s+separadas/i);
+  assert.match(decision, /no\s+relacionar\s+ni\s+fusionar/i);
+  assert.ok(generated.includes(decision), 'El Markdown debe conservar la decision documentada');
+
+  for (const heading of ['Items', 'Bloqueos Visibles']) {
+    const section = generated.split(/^## /m).find((content) => content.startsWith(`${heading}\n`));
+    assert.ok(section, `Falta la seccion ${heading}`);
+    assert.doesNotMatch(section, /\bPM-021\b|REDPLUS\s+\$60\s+vs\s+BREDP1\s+\$65/i, heading);
+  }
   assert.match(generated, /Produccion/);
 });
 
 // El Plan Maestro es documentacion para el programador (JSON + Markdown), no una pantalla del CRM:
 // Gabriel pidio sacarlo del menu. El backend no lo expone por API.
-test('El Plan Maestro no se expone por API en el CRM', async () => {
+test('El control operativo consulta el servicio operativo solo para administradores', async () => {
   const server = await readFile(path.join(rootDir, 'backend/src/server.js'), 'utf8');
 
-  assert.doesNotMatch(server, /projectPlanRouter/);
-  assert.doesNotMatch(server, /project-plan/);
+  assert.match(server, /adminControlRouter/);
+  assert.match(server, /\/api\/admin-control/);
+  const route = await readFile(path.join(rootDir, 'backend/src/routes/adminControlRoutes.js'), 'utf8');
+  assert.match(route, /get\(\s*['"]\/modules['"]\s*,\s*requireAuth\s*,\s*requireAdmin\b/);
+  assert.match(route, /from\s+['"]\.\.\/services\/adminControlService\.js['"]/);
+  assert.match(route, /await\s+loadAdminControlModules\s*\(/);
 });
 
 test('Ninguna regla comercial depende del Plan Maestro', async () => {
@@ -90,7 +155,6 @@ test('Ninguna regla comercial depende del Plan Maestro', async () => {
     'backend/src/services/motorOfertasContract.js',
     'backend/src/services/motorOfertasNormalizer.js',
     'backend/src/services/businessRedPlusEligibility.js',
-    'Planes para web/constructor-publications.js',
   ];
 
   for (const relativePath of commercialFiles) {

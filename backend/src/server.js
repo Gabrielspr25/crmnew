@@ -27,6 +27,7 @@ import { correosRouter } from './routes/correosRoutes.js';
 import { placesRouter } from './routes/places.js';
 import { reportsAiRouter } from './routes/reportsAiRoutes.js';
 import { subscriberHistoryRouter } from './routes/subscriberHistoryRoutes.js';
+import { adminControlRouter } from './routes/adminControlRoutes.js';
 
 
 // Una consulta que falla dentro de una ruta async no debe tumbar el CRM entero:
@@ -94,6 +95,7 @@ app.use('/api/sales', salesRouter);       // ventas / comisiones
 app.use('/api/places', placesRouter);     // búsqueda de Google Places
 app.use('/api', reportsAiRouter);             // Reportes inteligentes de solo lectura
 app.use('/api', subscriberHistoryRouter);      // Historial/bitacora por suscriptor
+app.use('/api/admin-control', adminControlRouter); // Control operativo derivado del Plan Maestro
 
 
 const PORT = process.env.PORT || 4000;

@@ -784,6 +784,13 @@ fuentesComercialesRouter.post('/affinity/preview', requireAdmin, async (req, res
     const filePath = sourcePath(row);
     if (!fs.existsSync(filePath)) return res.status(422).json({ ok: false, codigo: 'original_no_encontrado', error: 'No se encontro el PDF archivado.' });
     const extracted = await runParser('extract_pdf_text.py', filePath);
+    if (extracted?.error) {
+      return res.status(422).json({
+        ok: false,
+        codigo: 'parser_dependency_missing',
+        error: 'No se puede analizar Affinity porque falta el lector PDF en el servidor.',
+      });
+    }
     // Las aclaraciones sobre contradicciones del documento las decide una persona y quedan con su traza.
     const resoluciones = {};
     for (const [tecnologia, valor] of Object.entries(req.body?.resoluciones || {})) {
@@ -901,6 +908,15 @@ const PARSER_ERROR_CODES = new Set([
   'parser_json_invalido',
 ]);
 
+function basePreviewFingerprint(value) {
+  const canonical = JSON.stringify(value, (_key, item) => (
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map((key) => [key, item[key]]))
+      : item
+  ));
+  return crypto.createHash('sha256').update(canonical).digest('hex');
+}
+
 export function createPreviewBaseHandler(options = {}) {
   const dbPool = options.pool || pool;
   const parserRunner = options.runParser || runParser;
@@ -955,8 +971,13 @@ export function createPreviewBaseHandler(options = {}) {
     }
 
     let filePath;
+    let originales;
     try {
       filePath = resolveFuentePath(fuente, { uploadDir });
+      originales = fuentes.map((item) => {
+        const ruta = resolveFuentePath(item, { uploadDir });
+        return { ruta, sha256: hashFileSha256(ruta) };
+      });
     } catch (error) {
       if (error.code === 'archivo_fuera_directorio') return res.status(404).json({ ok: false, codigo: 'archivo_fuera_directorio' });
       if (error.code === 'archivo_no_encontrado') return res.status(404).json({ ok: false, codigo: 'archivo_no_encontrado' });
@@ -985,32 +1006,12 @@ export function createPreviewBaseHandler(options = {}) {
 
     const vigenciaDetectada = fuente.familia === 'inalambrico_iot' ? inalambricoVigenciaDesdeNombre(fuente.nombre_original) : null;
     const anteriores = await dbPool.query(
-      `SELECT DISTINCT ON (categoria) categoria, modulos_generados, fuente_sha256, fuente_nombre, fuente_comercial_id, fecha_actualizacion_base
+      `SELECT DISTINCT ON (categoria) categoria, id, numero, modulos_generados, fuente_sha256, fuente_nombre, fuente_comercial_id, fecha_actualizacion_base
        FROM public.bases_informativas_publicaciones
        WHERE estado = 'publicada'
        ORDER BY categoria, numero DESC`
     );
     const publicacionesAnteriores = Object.fromEntries(anteriores.rows.map((row) => [row.categoria, row]));
-    const historicalParses = new Map();
-    for (const previous of anteriores.rows) {
-      if (!['fijo', 'claro_tv'].includes(previous.categoria)) continue;
-      const legacy = (previous.modulos_generados || []).some((module) =>
-        (module.contenido?.filas || []).some((row) => row.llave_normalizada));
-      if (!legacy) continue;
-      const original = findLegacyDocumentBySha(previous.fuente_sha256);
-      if (!original) return res.status(422).json({ ok: false, codigo: 'fuente_anterior_requerida_para_comparar' });
-      if (!historicalParses.has(previous.fuente_sha256)) {
-        historicalParses.set(previous.fuente_sha256, await parserRunner('parse_planes_fijos_pdf.py', original.filePath));
-      }
-      const normalized = previewBuilder({
-        parsed: historicalParses.get(previous.fuente_sha256),
-        fuente: { id: previous.fuente_comercial_id, sha256: previous.fuente_sha256,
-          nombre_original: previous.fuente_nombre, fecha_actualizacion_base: previous.fecha_actualizacion_base },
-      });
-      const category = normalized.previews.find((item) => item.categoria === previous.categoria);
-      if (!category) return res.status(422).json({ ok: false, codigo: 'fuente_anterior_no_comparable' });
-      publicacionesAnteriores[previous.categoria] = category;
-    }
     const preview = previewBuilder({
       parsed,
       publicacionesAnteriores,
@@ -1045,8 +1046,20 @@ export function createPreviewBaseHandler(options = {}) {
       resumen: item.resumen,
     }]));
 
+    if (originales.some((original) => hashFileSha256(original.ruta) !== original.sha256)) {
+      return res.status(409).json({ ok: false, codigo: 'preview_desactualizado' });
+    }
+    const previewFingerprint = basePreviewFingerprint({
+      version: 1,
+      fuentes,
+      originales_sha256: originales.map((original) => original.sha256),
+      fecha_actualizacion_base: fechaBase.value,
+      publicados: Object.fromEntries(Object.keys(previews).map((category) => [category, publicacionesAnteriores[category] || null])),
+      previews,
+    });
     res.status(200).json({
       ok: true,
+      preview_fingerprint: previewFingerprint,
       fuente: publicFuentePreview(fuente),
       hash: fuente.sha256,
       fecha_actualizacion_base: fechaBase.value,
@@ -1056,7 +1069,10 @@ export function createPreviewBaseHandler(options = {}) {
         ...Object.fromEntries(Object.entries(previews).map(([categoria, item]) => [categoria, item.candidatos_publicos?.length || 0])),
       },
     });
-  } catch {
+  } catch (error) {
+    if (error.code === 'snapshot_publicado_no_comparable') {
+      return res.status(422).json({ ok: false, codigo: error.code, requiere_revision: true, motivo: error.message });
+    }
     res.status(500).json({ ok: false, codigo: 'error_interno' });
   }
   };
@@ -1080,6 +1096,11 @@ export function createGuardarBaseBorradoresHandler(options = {}) {
   });
 
   return async function guardarBaseBorradoresHandler(req, res) {
+    const expectedFingerprint = req.body?.preview_fingerprint;
+    if (expectedFingerprint !== undefined
+        && (typeof expectedFingerprint !== 'string' || !/^[0-9a-f]{64}$/.test(expectedFingerprint))) {
+      return res.status(400).json({ ok: false, codigo: 'preview_fingerprint_invalido' });
+    }
     let previewPayload = null;
     const previewRes = {
       statusCode: 200,
@@ -1090,20 +1111,52 @@ export function createGuardarBaseBorradoresHandler(options = {}) {
     if (previewRes.statusCode !== 200 || !previewPayload?.ok) {
       return res.status(previewRes.statusCode).json(previewPayload || { ok: false, codigo: 'preview_error' });
     }
+    if (expectedFingerprint !== undefined && expectedFingerprint !== previewPayload.preview_fingerprint) {
+      return res.status(409).json({ ok: false, codigo: 'preview_desactualizado' });
+    }
 
     const usuario = uname(req);
     const previewsToSave = Object.values(previewPayload.previews || {});
     if (!previewsToSave.length) return res.status(422).json({ ok: false, codigo: 'preview_incompleto' });
 
+    const fingerprint = previewPayload.preview_fingerprint;
+    let client;
+    let releaseError;
     try {
+      client = await dbPool.connect();
+      await client.query('BEGIN ISOLATION LEVEL READ COMMITTED');
+      // La consulta de reuso debe ocurrir despues del lock, con visibilidad READ COMMITTED.
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+        JSON.stringify(['bases-informativas-borradores', previewPayload.fuente.id, usuario, fingerprint]),
+      ]);
+      const { rows: existentes } = await client.query(
+        `SELECT * FROM public.bases_informativas_publicaciones
+         WHERE fuente_comercial_id=$1 AND cargada_por=$2
+           AND auditoria->>'preview_fingerprint'=$3
+         ORDER BY numero`,
+        [previewPayload.fuente.id, usuario, fingerprint]
+      );
+      if (existentes.length) {
+        const categorias = new Set(previewsToSave.map((item) => item.categoria));
+        const guardadasPorCategoria = new Map(existentes.map((row) => [row.categoria, row]));
+        if (existentes.length !== previewsToSave.length
+            || guardadasPorCategoria.size !== categorias.size
+            || existentes.some((row) => !categorias.has(row.categoria))) {
+          throw Object.assign(new Error('Juego de borradores incompleto o duplicado'), { code: 'borradores_inconsistentes' });
+        }
+        const publicaciones = previewsToSave.map((item) => sanitizeBasePublicacion(guardadasPorCategoria.get(item.categoria)));
+        await client.query('COMMIT');
+        return res.status(200).json({ ok: true, publicaciones });
+      }
       const guardadas = [];
       for (const item of previewsToSave) {
         const auditoria = {
           ...(item.auditoria || {}),
           reglas_normalizadas: item.reglas_normalizadas || item.auditoria?.reglas_normalizadas || [],
           resumen_reglas: item.resumen_reglas || item.auditoria?.resumen_reglas || { total: 0, por_tipo: {}, por_confianza: {} },
+          preview_fingerprint: fingerprint,
         };
-        const { rows } = await dbPool.query(
+        const { rows } = await client.query(
           `INSERT INTO public.bases_informativas_publicaciones
             (categoria, estado, version_etiqueta, fuente_comercial_id, fuente_nombre, fuente_sha256,
              fecha_actualizacion_base, extraccion_original, registros_normalizados, candidatos_publicos,
@@ -1133,10 +1186,20 @@ export function createGuardarBaseBorradoresHandler(options = {}) {
         );
         guardadas.push(sanitizeBasePublicacion(rows[0]));
       }
+      await client.query('COMMIT');
       return res.status(201).json({ ok: true, publicaciones: guardadas });
     } catch (error) {
+      if (client) {
+        try { await client.query('ROLLBACK'); }
+        catch (rollbackError) { releaseError = rollbackError; }
+      }
       logger.error?.('[fuentes-comerciales/bases-informativas/borradores]', error.code || 'error');
+      if (error.code === 'borradores_inconsistentes') {
+        return res.status(409).json({ ok: false, codigo: error.code });
+      }
       return res.status(500).json({ ok: false, codigo: 'error_interno' });
+    } finally {
+      client?.release(releaseError);
     }
   };
 }

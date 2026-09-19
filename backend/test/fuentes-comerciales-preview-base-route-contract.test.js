@@ -504,11 +504,21 @@ test('guardar borrador ejecuta la ruta real y crea dos borradores Fijo y Claro T
         if (/FROM public\.fuentes_comerciales WHERE id=\$1 LIMIT 1/.test(sql)) {
           return { rows: [source({ nombre_original: 'LISTADO_ESTRUCTURA_PLANES_PYMESNEGOCIOS_TODOS_2026_15_260330.pdf' })] };
         }
-        if (/INSERT INTO public\.bases_informativas_publicaciones/.test(sql)) {
-          return { rows: [publicacionRow(params[0], 'borrador')] };
-        }
         if (/SELECT DISTINCT ON \(categoria\)/.test(sql)) return { rows: [] };
         throw new Error(`consulta inesperada: ${sql}`);
+      },
+      async connect() {
+        return {
+          async query(sql, params) {
+            queries.push({ sql, params });
+            assert.doesNotMatch(sql, /planes_modulos/i);
+            if (/^(BEGIN|COMMIT|ROLLBACK)\b/.test(sql) || /pg_advisory_xact_lock/.test(sql)) return { rows: [] };
+            if (/^SELECT/.test(sql) && /auditoria->>'preview_fingerprint'/.test(sql)) return { rows: [] };
+            if (/INSERT INTO public\.bases_informativas_publicaciones/.test(sql)) return { rows: [publicacionRow(params[0], 'borrador')] };
+            throw new Error(`consulta transaccional inesperada: ${sql}`);
+          },
+          release() {},
+        };
       },
     };
     const res = await request(makeDraftApp({ pool, uploadDir: ws.uploads }), 'POST', `/api/fuentes-comerciales/${UUID}/preview-base/borradores`, {

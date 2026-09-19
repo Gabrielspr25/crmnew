@@ -28,16 +28,16 @@ test('Lista de fuentes muestra metadatos operativos y etiqueta Ofertas móviles'
   assert.match(appHtml, /f\.sha256/);
 });
 
-test('Centro de Cargas avisa documentos vencidos o por vencer y lleva el conteo al menu', () => {
+test('Centro de Cargas avisa segun publicaciones reales y lleva pendientes al menu', () => {
   assert.match(appHtml, /const OF_ALERTA_DIAS=30;/);
   assert.match(appHtml, /\/api\/fuentes-comerciales\/alertas-vencimiento\?dias='\+OF_ALERTA_DIAS/);
   assert.match(appHtml, /function ofRenderVigenciaAlertas\(alertas\)/);
-  assert.match(appHtml, /\$\{ofRenderVigenciaAlertas\(data\.alertas\)\}/);
+  assert.match(appHtml, /\$\{ofRenderVigenciaAlertas\(ofCenterEvidence\)\}/);
   assert.match(appHtml, /id="navOfertasAlertas"/);
   assert.match(appHtml, /async function ofRefreshNavAlertas\(\)/);
-  assert.match(appHtml, /var porVencer=dias!=null&&dias>=0&&dias<=OF_ALERTA_DIAS;/);
-  assert.match(appHtml, /'Buscar documento nuevo'/);
-  assert.match(appHtml, /Subir documento nuevo/);
+  assert.match(appHtml, /ofBuildCenterRows\(r\)\.filter/);
+  assert.match(appHtml, /publication\?\.validity==='Vencida'/);
+  assert.doesNotMatch(appHtml, /la alerta se limpia sola/);
 });
 
 test('Fuentes comerciales no reutiliza el nombre de la función preview como estado', () => {
