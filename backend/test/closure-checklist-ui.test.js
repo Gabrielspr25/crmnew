@@ -34,6 +34,15 @@ test('checklist compacto muestra criterio de cierre y fecha al corte sin cambiar
   assert.doesNotMatch(block, /Comprobado localmente|Comprobado en produccion|CC-0[1-6]/);
 });
 
+test('cada columna del checklist tiene ancho propio y los anchos suman 100%', async () => {
+  const result = await runtime().ctx.viewTareasReglasAdmin();
+  const header = result.slice(result.indexOf('<thead>'), result.indexOf('</thead>'));
+  const columns = (header.match(/<th>/g) || []).length;
+  const widths = [...html.matchAll(/\.tra-closure th:nth-child\((\d+)\)\{width:(\d+)%;\}/g)].map(([, n, w]) => [Number(n), Number(w)]);
+  assert.deepEqual(widths.map(([n]) => n), Array.from({ length: columns }, (_, i) => i + 1));
+  assert.equal(widths.reduce((sum, [, w]) => sum + w, 0), 100);
+});
+
 test('etiquetas por ambiente provienen del endpoint y todos los textos se escapan', async () => {
   const current = data();
   current.items[0] = { ...current.items[0], environment: 'produccion', environment_label: 'Produccion', status_label: 'Comprobado en produccion' };

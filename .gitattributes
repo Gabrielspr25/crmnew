@@ -1,0 +1,4 @@
+# El Markdown del Plan Maestro se genera byte a byte desde el JSON (LF).
+# Sin esto, core.autocrlf=true lo extrae con CRLF y la prueba JSON/MD falla.
+docs/constructor/plan-maestro-constructor.json text eol=lf
+docs/constructor/00-PLAN-MAESTRO-CONSTRUCTOR.md text eol=lf
