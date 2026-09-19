@@ -1,0 +1,31 @@
+{
+  "check": "CC-04",
+  "executed_at": "2026-09-19T15:42:49-04:00",
+  "environment": {
+    "kind": "PostgreSQL efimero aislado",
+    "database": "postgres",
+    "host": "127.0.0.1",
+    "port": 55432,
+    "role": "cc04_test",
+    "production_connection_used": false
+  },
+  "fixture": {
+    "source": "PDF sintetico temporal",
+    "categories": ["fijo", "claro_tv"],
+    "previous_publications": 2
+  },
+  "results": {
+    "complete_save": "201; dos borradores, uno por categoria",
+    "forced_failure": "500; trigger PostgreSQL en claro_tv y cero borradores luego de ROLLBACK",
+    "retry": "201; dos borradores sin duplicados",
+    "repetition": "200; reutiliza los mismos IDs",
+    "concurrency": "tres solicitudes; mismos dos IDs y dos borradores finales",
+    "stale_original": "409 preview_desactualizado; cero escrituras",
+    "previous_publications": "sin cambios"
+  },
+  "tests": {
+    "integration": "4/4",
+    "focused_suite": "78/78"
+  },
+  "scope": "Solo el cluster efimero local. Sin despliegue, migracion productiva, publicacion comercial, push ni merge."
+}
