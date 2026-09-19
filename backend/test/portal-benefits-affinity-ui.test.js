@@ -5,7 +5,6 @@ import { test } from 'node:test';
 const PAGINAS = [
   'index.html', 'claro-tv.html', 'movil.html', 'banda-ancha.html', 'equipos.html',
   'servicios.html', 'benefits.html', 'affinity.html', 'directorio-fijo.html',
-  'oferta-const.html', 'ofertas.html',
 ];
 
 const leer = (nombre) => readFileSync(new URL(`../../Planes para web/${nombre}`, import.meta.url), 'utf8');

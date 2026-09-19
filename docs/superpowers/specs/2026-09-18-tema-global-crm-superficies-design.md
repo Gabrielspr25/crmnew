@@ -15,6 +15,7 @@ La modal del perfil de cliente adopta el fondo claro del CRM, pero las filas de 
 3. Las filas de suscriptores conservan su estructura compacta: telefono, servicio, plan/equipo, renta, contrato, vencimiento, notas y acciones. Solo cambian los colores para asegurar contraste.
 4. La auditoria cubre superficies globales y locales: contenedor de modal, pestañas, BAN, filtros, filas de suscriptor, celdas, controles de workflow, formularios, badges, tablas, enlaces y estados.
 5. Se agregan contratos visuales que prueban que los selectores de las filas de suscriptor no mantienen colores oscuros en modo dia y que conservan los tokens globales en modo oscuro.
+6. El modo oscuro no cambia: las reglas nuevas quedan acotadas a `body[data-theme="day"]`.
 
 ## Limites
 
