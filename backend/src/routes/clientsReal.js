@@ -13,8 +13,91 @@ import { buildClientSearchFilter } from '../services/clientSearchQuery.js';
 
 export const clientsRealRouter = Router();
 
+clientsRealRouter.get('/salespeople', requireAuth, async (_req, res) => {
+  const conn = await pool.connect();
+  try {
+    await conn.query('BEGIN');
+    await conn.query('SET LOCAL search_path TO public');
+    const r = await conn.query(
+      `SELECT id, name
+         FROM salespeople
+        WHERE NULLIF(TRIM(COALESCE(name,'')),'') IS NOT NULL
+        ORDER BY name`
+    );
+    await conn.query('COMMIT');
+    res.json(r.rows);
+  } catch (e) {
+    try { await conn.query('ROLLBACK'); } catch {}
+    console.error('[salespeople]', e.message);
+    res.status(500).json({ error: e.message });
+  } finally {
+    conn.release();
+  }
+});
+
 // ---- Definiciones de cada "tarjeta" (copiadas del sistema viejo, ya validadas) ----
 const VALID_CLIENT_NAME_SQL = `(c.name IS NOT NULL AND c.name <> '' AND c.name <> 'NULL')`;
+const MEANINGFUL_OPPORTUNITY_LINE_SQL = (alias) => `(
+  ${alias}.subscriber_id IS NOT NULL
+  OR NULLIF(TRIM(COALESCE(${alias}.phone,'')), '') IS NOT NULL
+  OR COALESCE(${alias}.quantity_value,0) > 0
+  OR COALESCE(${alias}.money_value,0) > 0
+  OR COALESCE(${alias}.target_monthly_value,0) > 0
+)`;
+const SALES_PRODUCT_SQL = (alias) => `CASE
+  WHEN ${alias}.product_key IN ('fijo_ren','fijo_new','movil_ren','movil_new','claro_tv','cloud','mpls') THEN ${alias}.product_key
+  ELSE NULL
+END`;
+const RECENT_SOLD_PRODUCTS_SQL = () => `(
+  SELECT ${SALES_PRODUCT_SQL('vs')} AS product_key, vs.sale_date::date AS sale_at
+    FROM ventaspro_nuevo.sales vs
+    LEFT JOIN bans sale_ban ON sale_ban.ban_number::text = vs.ban_number::text
+   WHERE (vs.client_id = c.id OR sale_ban.client_id = c.id)
+     AND vs.sale_date::date >= CURRENT_DATE - INTERVAL '6 months'
+  UNION ALL
+  SELECT CASE
+           WHEN s_report.line_kind='fijo' AND s_report.line_type='REN' THEN 'fijo_ren'
+           WHEN s_report.line_kind='fijo' THEN 'fijo_new'
+           WHEN s_report.line_kind='movil' AND s_report.line_type='REN' THEN 'movil_ren'
+           WHEN s_report.line_kind='movil' THEN 'movil_new'
+           WHEN s_report.line_kind='tv' THEN 'claro_tv'
+           WHEN s_report.line_kind='cloud' THEN 'cloud'
+           WHEN s_report.line_kind='mpls' THEN 'mpls'
+           ELSE NULL
+         END AS product_key,
+         sr.report_month::date AS sale_at
+    FROM subscriber_reports sr
+    JOIN subscribers s_report ON s_report.id = sr.subscriber_id
+    JOIN bans b_report ON b_report.id = s_report.ban_id
+   WHERE b_report.client_id = c.id
+     AND sr.report_month::date >= CURRENT_DATE - INTERVAL '6 months'
+)`;
+const RECENT_COMPLETE_SALE_FILTER_SQL = (opportunityAlias) => `(
+  EXISTS (
+    SELECT 1 FROM ${RECENT_SOLD_PRODUCTS_SQL()} sold_any
+     WHERE sold_any.product_key IS NOT NULL
+  )
+  AND EXISTS (
+    SELECT 1
+      FROM opportunity_lines ol_wanted
+     WHERE ol_wanted.opportunity_id = ${opportunityAlias}.id
+       AND ol_wanted.product_key IS NOT NULL
+       AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol_wanted')}
+  )
+  AND NOT EXISTS (
+    SELECT 1
+      FROM opportunity_lines ol_wanted
+     WHERE ol_wanted.opportunity_id = ${opportunityAlias}.id
+       AND ol_wanted.product_key IS NOT NULL
+       AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol_wanted')}
+       AND NOT EXISTS (
+         SELECT 1
+           FROM ${RECENT_SOLD_PRODUCTS_SQL()} sold
+          WHERE sold.product_key IS NOT NULL
+            AND sold.product_key = ol_wanted.product_key
+       )
+  )
+)`;
 // "En seguimiento" visual = oportunidad activa en Asana/SOV2.
 const ACTIVE_FOLLOW_UP_EXISTS_SQL = `
   EXISTS (
@@ -23,6 +106,7 @@ const ACTIVE_FOLLOW_UP_EXISTS_SQL = `
     WHERE so.client_id = c.id
       AND so.archived_at IS NULL
       AND COALESCE(LOWER(so.status),'activa') = 'activa'
+      AND NOT ${RECENT_COMPLETE_SALE_FILTER_SQL('so')}
   )`;
 const ACTIVE_SUB_STATUS = (a) => `COALESCE(LOWER(${a}.status::text),'activo') NOT IN ('cancelado','cancelled','c','inactivo','inactive','no_renueva_ahora')`;
 const ACTIVE_CLIENT_RELATION_SQL = `
@@ -53,6 +137,7 @@ const CANCELLED_CLIENT_SQL = `(
   EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
   AND NOT (${ACTIVE_CLIENT_RELATION_SQL}))`;
 const ALL_CLIENT_SQL = `((${ACTIVE_CLIENT_SQL}) OR (${CANCELLED_CLIENT_SQL}) OR (${FOLLOWING_CLIENT_SQL}) OR (${INCOMPLETE_CLIENT_SQL}))`;
+const CLIENT_GROUP_KEY_SQL = `LOWER(REGEXP_REPLACE(TRIM(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), c.id::text)), '\\s+', ' ', 'g'))`;
 const EMPTY_DUPLICATE_CLIENT_SQL = `(
   NOT EXISTS (SELECT 1 FROM bans b_empty WHERE b_empty.client_id = c.id)
   AND EXISTS (
@@ -64,6 +149,7 @@ const EMPTY_DUPLICATE_CLIENT_SQL = `(
       AND EXISTS (SELECT 1 FROM bans b_keep WHERE b_keep.client_id = c2.id)
   )
 )`;
+const ALL_LIST_CLIENT_SQL = `NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`;
 
 // Convergente exige líneas móvil y fijo dentro de los BAN del cliente.
 // SOC, precio y account_type no participan en esta clasificación.
@@ -162,13 +248,12 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   const params = [];
   const hasSearch = Boolean(q && q.trim());
   if (hasSearch) {
-    conds.push(ALL_CLIENT_SQL);
+    conds.push(ALL_LIST_CLIENT_SQL);
     const busqueda = buildClientSearchFilter(q, params.length);
     params.push(...busqueda.params);
     conds.push(`(${busqueda.sql})`);
-    conds.push(`NOT (${EMPTY_DUPLICATE_CLIENT_SQL})`);
   } else if (tab === 'all') {
-    conds.push(ALL_CLIENT_SQL);
+    conds.push(ALL_LIST_CLIENT_SQL);
   } else if (tab === 'cancelled') {
     conds.push(CANCELLED_CLIENT_SQL);
   } else if (tab === 'following') {
@@ -181,6 +266,15 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   if (!hasSearch && SERVICE_CLIENT_SQL[service]) conds.push(SERVICE_CLIENT_SQL[service]);
   if (!hasSearch && tab !== 'cancelled' && RENEWAL_CLIENT_SQL[renewal]) conds.push(RENEWAL_CLIENT_SQL[renewal]);
   const whereClause = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
+  const useFastGlobalList = (hasSearch || tab === 'all')
+    && !SERVICE_CLIENT_SQL[service]
+    && !RENEWAL_CLIENT_SQL[renewal];
+  const clientScopeClause = useFastGlobalList
+    ? `JOIN selected_groups sg ON sg.client_group_key = ${CLIENT_GROUP_KEY_SQL}`
+    : whereClause;
+  const filteredClientsSql = `SELECT ${CLIENT_GROUP_KEY_SQL} AS client_group_key, c.created_at
+        FROM clients c
+        ${whereClause}`;
   const clientOrderSql = hasSearch || tab === 'all'
     ? 'created_at DESC'
     : tab === 'cancelled'
@@ -200,7 +294,7 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
               c.email, c.owner_name, c.contact_person,
               c.phone, c.cellular AS mobile, c.cellular,
               c.city, c.source AS base, c.created_at, c.salesperson_id,
-        LOWER(REGEXP_REPLACE(TRIM(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), c.id::text)), '\\s+', ' ', 'g')) AS client_group_key,
+        ${CLIENT_GROUP_KEY_SQL} AS client_group_key,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id) AS ban_count,
         (SELECT COUNT(*) FROM bans b WHERE b.client_id=c.id AND COALESCE(LOWER(b.status::text),'') IN ('a','activo','active')) AS active_ban_count,
         (SELECT COUNT(*) FROM subscribers s JOIN bans b ON s.ban_id=b.id WHERE b.client_id=c.id AND ${ACTIVE_SUB_STATUS('s')}) AS active_subscriber_count,
@@ -237,7 +331,7 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
            FROM subscribers s2 JOIN bans b2 ON s2.ban_id=b2.id WHERE b2.client_id=c.id) AS last_activity
         FROM clients c
         LEFT JOIN salespeople sp ON sp.id = c.salesperson_id
-        ${whereClause}`;
+        ${clientScopeClause}`;
 
   const conn = await pool.connect();
   try {
@@ -246,13 +340,26 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
     await conn.query('BEGIN');
     await conn.query('SET LOCAL search_path TO public'); // leer tablas REALES
 
-    const total = await conn.query(
-      `WITH client_rows AS (${clientRowsSql})
-       SELECT COUNT(*)::int AS total FROM (SELECT client_group_key FROM client_rows GROUP BY client_group_key) grouped_total`,
-      params);
+    const total = useFastGlobalList
+      ? await conn.query(
+        `WITH filtered_clients AS (${filteredClientsSql})
+         SELECT COUNT(*)::int AS total FROM (SELECT client_group_key FROM filtered_clients GROUP BY client_group_key) grouped_total`,
+        params)
+      : await conn.query(
+        `WITH client_rows AS (${clientRowsSql})
+         SELECT COUNT(*)::int AS total FROM (SELECT client_group_key FROM client_rows GROUP BY client_group_key) grouped_total`,
+        params);
 
     const clients = await conn.query(
-      `WITH client_rows AS (${clientRowsSql})
+      `WITH ${useFastGlobalList ? `filtered_clients AS (${filteredClientsSql}),
+       selected_groups AS (
+         SELECT client_group_key, MAX(created_at) AS created_at
+           FROM filtered_clients
+          GROUP BY client_group_key
+          ORDER BY created_at DESC
+          LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+       ), ` : ''}client_rows AS (${clientRowsSql}),
+       grouped_clients AS (
        SELECT
         (array_agg(id ORDER BY created_at DESC))[1] AS id,
         (array_agg(name ORDER BY created_at DESC))[1] AS name,
@@ -297,8 +404,11 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
         MAX(last_activity) AS last_activity
        FROM client_rows
        GROUP BY client_group_key
-        ORDER BY ${clientOrderSql}
-        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+       )
+       SELECT *
+       FROM grouped_clients
+       ORDER BY ${clientOrderSql}
+       ${useFastGlobalList ? '' : `LIMIT $${params.length + 1} OFFSET $${params.length + 2}`}`,
       [...params, per, offset]);
 
     const stats = includeStats ? await conn.query(
@@ -406,9 +516,22 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
               s.cancel_reason, s.tango_ventaid, s.equipment, s.product_type, s.price_code, s.item_id, s.payments_made,
               gr.gpon_applies, gr.gpon_note, gr.reviewed_at AS gpon_reviewed_at,
               sh_last.last_history_comment_at, sh_last.comment AS last_history_comment,
+              sh_update.last_update_at, sh_update.last_update_source, sh_update.last_update_origin,
+              sh_update.last_update_user, sh_update.last_update_import,
               b.ban_number, b.id AS ban_id
          FROM subscribers s JOIN bans b ON b.id = s.ban_id
          LEFT JOIN subscriber_gpon_reviews gr ON gr.subscriber_id = s.id
+         LEFT JOIN LATERAL (
+           SELECT sh_update.created_at AS last_update_at, sh_update.source AS last_update_source,
+                  sh_update.metadata->>'origin' AS last_update_origin,
+                  sh_update.user_name_snapshot AS last_update_user,
+                  COALESCE(sh_update.import_filename, sh_update.import_name) AS last_update_import
+             FROM subscriber_history sh_update
+            WHERE sh_update.subscriber_id = s.id
+              AND COALESCE(sh_update.metadata->>'type','') <> 'manual_note'
+            ORDER BY sh_update.created_at DESC, sh_update.id DESC
+            LIMIT 1
+         ) sh_update ON true
          LEFT JOIN LATERAL (
            SELECT COALESCE(comment_updated_at, created_at) AS last_history_comment_at, comment
              FROM subscriber_history sh_last
@@ -452,6 +575,7 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
                 created_at
            FROM client_notes
           WHERE client_id = $1
+            AND deleted_at IS NULL
           ORDER BY created_at DESC
           LIMIT 100`, [req.params.id]);
     }
@@ -460,10 +584,11 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
     const hasNotes = await conn.query(`SELECT to_regclass('public.opportunity_notes') AS t`);
     if (hasNotes.rows[0].t) {
       const h = await conn.query(
-        `SELECT n.note, n.product_key, n.step_name, n.created_by_username, n.created_at
+        `SELECT n.id, n.opportunity_id, n.note, n.product_key, n.step_name, n.created_by_username, n.created_at
            FROM opportunity_notes n
            JOIN sales_opportunities o ON o.id = n.opportunity_id
           WHERE o.client_id = $1
+            AND n.deleted_at IS NULL
           ORDER BY n.created_at DESC`, [req.params.id]);
       historial = h.rows;
     }

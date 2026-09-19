@@ -43,3 +43,14 @@ test('modal del cliente muestra formulario y lista de notas internas separadas',
   assert.match(appHtml, /Notas internas del cliente/);
   assert.match(appHtml, /Historial de Asana/);
 });
+
+test('edicion de cliente permite asignar vendedor con lista real y sincroniza seguimiento', () => {
+  assert.match(clientsRealSource, /get\('\/salespeople'/);
+  assert.match(clientsRealSource, /SELECT id, name\s+FROM salespeople/);
+  assert.match(appHtml, /async function cliSalespeopleOptions\(/);
+  assert.match(appHtml, /label:'Asignar vendedor'/);
+  assert.match(appHtml, /key:'salesperson_id'/);
+  assert.match(writeRoutesSource, /'salesperson_id'/);
+  assert.match(writeRoutesSource, /SELECT id FROM salespeople WHERE id = \$1/);
+  assert.match(writeRoutesSource, /UPDATE sales_opportunities\s+SET salesperson_id = \$1, updated_at = now\(\)\s+WHERE client_id = \$2 AND archived_at IS NULL/);
+});

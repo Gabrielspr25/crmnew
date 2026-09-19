@@ -4,9 +4,10 @@ import { test } from 'node:test';
 
 const clientsRealSource = readFileSync(new URL('../src/routes/clientsReal.js', import.meta.url), 'utf8');
 const searchServiceSource = readFileSync(new URL('../src/services/clientSearchQuery.js', import.meta.url), 'utf8');
+const clientsListRouteStart = clientsRealSource.indexOf("clientsRealRouter.get('/clients-real'");
 const clientRowsDefinition = clientsRealSource.slice(
   clientsRealSource.indexOf('const clientRowsSql ='),
-  clientsRealSource.indexOf('const conn = await pool.connect();')
+  clientsRealSource.indexOf('const conn = await pool.connect();', clientsListRouteStart)
 );
 const listQueryBlock = clientsRealSource.slice(
   clientsRealSource.indexOf('const clients = await conn.query'),
@@ -19,9 +20,10 @@ test('busqueda de clientes incluye nombre, empresa, BAN, telefono y email', () =
   assert.match(clientsRealSource, /const per = Math\.min\(100, Math\.max\(1, parseInt\(String\(req\.query\.per \|\| '50'\), 10\) \|\| 50\)\)/);
   assert.match(clientsRealSource, /const offset = \(page - 1\) \* per/);
   assert.match(clientsRealSource, /const ALL_CLIENT_SQL = `\(\(\$\{ACTIVE_CLIENT_SQL\}\) OR \(\$\{CANCELLED_CLIENT_SQL\}\) OR \(\$\{FOLLOWING_CLIENT_SQL\}\) OR \(\$\{INCOMPLETE_CLIENT_SQL\}\)\)`;/);
+  assert.match(clientsRealSource, /const ALL_LIST_CLIENT_SQL = `NOT \(\$\{EMPTY_DUPLICATE_CLIENT_SQL\}\)`;/);
   assert.match(clientsRealSource, /if \(hasSearch\) \{/);
-  assert.match(clientsRealSource, /conds\.push\(ALL_CLIENT_SQL\)/);
-  assert.match(clientsRealSource, /else if \(tab === 'all'\) \{\s*conds\.push\(ALL_CLIENT_SQL\);/);
+  assert.match(clientsRealSource, /conds\.push\(ALL_LIST_CLIENT_SQL\)/);
+  assert.match(clientsRealSource, /else if \(tab === 'all'\) \{\s*conds\.push\(ALL_LIST_CLIENT_SQL\);/);
   assert.match(clientsRealSource, /else if \(tab === 'cancelled'\) \{\s*conds\.push\(CANCELLED_CLIENT_SQL\);/);
   assert.match(clientsRealSource, /if \(!hasSearch && SERVICE_CLIENT_SQL\[service\]\) conds\.push\(SERVICE_CLIENT_SQL\[service\]\)/);
   assert.match(clientsRealSource, /if \(!hasSearch && tab !== 'cancelled' && RENEWAL_CLIENT_SQL\[renewal\]\)/);
@@ -34,8 +36,12 @@ test('busqueda de clientes incluye nombre, empresa, BAN, telefono y email', () =
   assert.match(searchServiceSource, /c\.business_name ILIKE/);
   assert.match(searchServiceSource, /c\.email ILIKE/);
   assert.match(clientRowsDefinition, /SELECT c\.id, c\.name, c\.business_name, c\.business_name AS company,\s*c\.email,/);
-  assert.match(listQueryBlock, /ORDER BY \$\{clientOrderSql\}\s+LIMIT \$\$\{params\.length \+ 1\} OFFSET \$\$\{params\.length \+ 2\}/);
-  assert.match(clientsRealSource, /const total = await conn\.query\(\s*`WITH client_rows AS \(\$\{clientRowsSql\}\)/);
+  assert.match(listQueryBlock, /selected_groups AS \(/);
+  assert.match(listQueryBlock, /LIMIT \$\$\{params\.length \+ 1\} OFFSET \$\$\{params\.length \+ 2\}/);
+  assert.match(listQueryBlock, /ORDER BY \$\{clientOrderSql\}/);
+  assert.match(clientsRealSource, /const total = useFastGlobalList/);
+  assert.match(clientsRealSource, /WITH filtered_clients AS \(\$\{filteredClientsSql\}\)/);
+  assert.match(clientsRealSource, /WITH client_rows AS \(\$\{clientRowsSql\}\)/);
   assert.match(clientsRealSource, /res\.json\(\{ clients: clients\.rows, total: total\.rows\[0\]\?\.total \|\| 0, page, per, stats:/);
 }
 );

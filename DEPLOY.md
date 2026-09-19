@@ -24,12 +24,12 @@ Actualizado: 2026-09-10.
 | Sitio | Qué sirve | Carpeta del repo |
 |---|---|---|
 | `crmp.ss-group.cloud` | CRM y **toda la API** (`/api/...`) | `backend/` + `frontend/app.html` |
-| `ofertas.ss-group.cloud` | **Sitio único** del portal de ofertas **y** del Constructor (`oferta-const.html`) | `Planes para web/` (estático) |
+| `ofertas.ss-group.cloud` | Sitio único del Portal de Ofertas | `Planes para web/` (estático) |
 
 - El portal no tiene backend propio: todas sus páginas llaman a `https://crmp.ss-group.cloud/api/...`. Lo resuelve `Planes para web/portal-config.js`, que se carga primero en cada página. En local, el mismo archivo usa el propio CRM (que sirve el portal bajo `/constructor`).
-- El CRM abre el Constructor en `https://ofertas.ss-group.cloud/oferta-const.html` con la sesión en el hash (`#crm_token=...`). El portal la guarda en su dominio y la borra de la dirección.
+- El Constructor heredado fue retirado del Portal y del CRM. Su reemplazo se definirá desde cero; mientras tanto, la administración vive en `Tareas y reglas Admin` dentro del CRM.
 - La API acepta llamadas desde el portal porque el backend usa `cors()` abierto.
-- Cada vez que cambie `portal-config.js` o `constructor-publications.js`, subir el `?v=` en las páginas que los cargan: si no, los navegadores siguen usando la copia vieja en caché.
+- Cada vez que cambie `portal-config.js`, subir su `?v=` en las páginas que lo cargan: si no, los navegadores siguen usando la copia vieja en caché.
 
 ---
 
@@ -115,13 +115,25 @@ sudo -u postgres psql -d crm_pro -f backend/migrations/2026-06-29-prospectos.sql
 
 ## 6. Verificación post-deploy
 
+### Regla obligatoria de evidencia
+
+No declarar una corrección lista con una prueba local ni por ausencia de error.
+Para cada módulo afectado registrar: superficie (`CRM PYMES/Admin Ofertas`,
+Portal, Motor o Constructor), ambiente, fuente, resultado real del análisis y
+prueba posterior del consumidor. Un estado `Al día` exige fuente navegable,
+análisis exitoso, versión vigente publicada y prueba real de cada destino
+afectado.
+
 - `GET /api/health` → `{ ok: true }`.
 - **Login con Tango** (usuario real) entra; el botón de demo NO debe aparecer (`DEV_LOGIN=0`).
 - Cada módulo carga data real: Clientes, Asana Seg., Comisiones, Vendedores, Metas, Configuración (tabs), Importador, OCR, Admin Ofertas (Equipos + Planes), Correos, Prospección.
 - Admin Planes: subir un PDF de boletín → Analizar muestra diff → Aplicar publica (verificar `GET /api/planes-modulos/:pagina`).
+- Admin Ofertas: comprobar la cola `Todo al día` contra la evidencia real. Si
+  falta fuente, preview, publicación, vigencia o una dependencia del parser,
+  debe mostrar el bloqueo o siguiente paso; nunca `Al día` por defecto.
 - Correos: lista clientes con email; "Abrir en Outlook" arma el correo.
 - **Portal** (`ofertas.ss-group.cloud`): cada pestaña carga datos (Planes Fijos, Claro TV, Planes Móviles, Inalámbrico/IoT, Lista de Equipos, Beneficios, Affinity). En la consola del navegador, `window.PORTAL_API_BASE` debe ser `https://crmp.ss-group.cloud` y no debe haber llamadas a `ofertas.ss-group.cloud/api`.
-- **Constructor**: botón "Constructor" del CRM y "Abrir constructor de ofertas" del perfil de un cliente abren `ofertas.ss-group.cloud/oferta-const.html`, cargan el cliente y la dirección queda sin `crm_token`.
+- **Constructor heredado**: verificar que ya no aparece en el menú del CRM, en el perfil del cliente ni en la navegación del Portal. La nueva construcción no forma parte de este despliegue.
 
 ---
 

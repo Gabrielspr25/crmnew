@@ -20,6 +20,13 @@ test('el modal usa contraste limpio sin fondos blancos en las celdas', () => {
   assert.match(appSource, /\.subscriber-cell\{min-width:0;background:rgba\(12,17,31,\.55\);border:1px solid rgba\(75,130,255,\.20\);/);
 });
 
+test('el modo dia reemplaza la paleta oscura local de las filas de suscriptor', () => {
+  assert.match(appSource, /body\[data-theme="day"\] \.subscriber-row\{background:var\(--card\);border-color:var\(--line\);/);
+  assert.match(appSource, /body\[data-theme="day"\] \.subscriber-cell\{background:var\(--card2\);border-color:var\(--line\);/);
+  assert.match(appSource, /body\[data-theme="day"\] \.subscriber-workflow\{background:var\(--card2\);border-color:var\(--line\);/);
+  assert.doesNotMatch(appSource, /body\[data-theme="dark"\] \.subscriber-row\{/);
+});
+
 test('la fila muestra fecha fin en una sola linea y no repite inicio', () => {
   assert.match(appSource, /<span class="subscriber-label">Fecha fin<\/span><span class="subscriber-expiry">\$\{s\.contract_end_date\?fmtDate\(s\.contract_end_date\):'Sin fecha'\}<\/span>/);
   assert.doesNotMatch(appSource, /<span>Inicio<br><b>\$\{s\.contract_start_date\?fmtDate\(s\.contract_start_date\):'\u2014'\}<\/b><\/span>/);
@@ -30,7 +37,7 @@ test('el modal del cliente usa una sola banda horizontal por suscriptor', () => 
   assert.match(appSource, /id="cliModal" style="max-width:1540px;width:99vw"/);
   assert.match(appSource, /\.subscriber-row\{display:grid;grid-template-columns:120px 78px 122px 92px 88px 88px 60px 50px minmax\(450px,1fr\);/);
   assert.match(appSource, /<div class="subscriber-row \$\{isCanceled\?'line-canceled':'line-active'\}">/);
-  assert.match(appSource, /<div class="subscriber-workflow"><div class="subscriber-note">\$\{lastNote\}<\/div>\$\{workflow\}<div class="subscriber-actions">/);
+  assert.match(appSource, /<div class="subscriber-workflow"><div class="subscriber-note subscriber-note-stack">\$\{cliSubLastUpdateButton\(s\)\}\$\{lastNote\}<\/div>\$\{workflow\}<div class="subscriber-actions">/);
 });
 
 test('las acciones quedan dentro del scroll interno y no fuera del modal', () => {

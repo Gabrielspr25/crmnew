@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const appPath = resolve(process.cwd(), '..', 'frontend', 'app.html');
+const appPath = resolve(process.cwd(), 'frontend', 'app.html');
 
 test('el perfil del cliente ofrece filtros de lineas por movil, fijo y convergente', async () => {
   const html = await readFile(appPath, 'utf8');
@@ -61,18 +61,17 @@ test('la ficha del cliente separa lineas activas y canceladas en tabs por BAN', 
   assert.doesNotMatch(html, /subscriber-section canceled/);
 });
 
-test('la pestaña Comparativas del cliente ofrece HTML/PDF además del constructor', async () => {
+test('la pestaña Comparativas del cliente ofrece únicamente su salida HTML/PDF', async () => {
   const html = await readFile(appPath, 'utf8');
   const start = html.indexOf('function tabComp(c)');
-  const end = html.indexOf('function abrirConstructorCliente', start);
+  const end = html.indexOf('let reportAiRec', start);
   assert.notEqual(start, -1);
   assert.notEqual(end, -1);
   const block = html.slice(start, end);
 
   assert.match(block, /onclick="abrirComparativa\('\$\{c\.id\}'\)"/);
   assert.match(block, /Comparativa HTML\/PDF/);
-  assert.match(block, /onclick="abrirConstructorCliente\('\$\{c\.id\}'\)"/);
-  assert.match(block, /Abrir constructor de ofertas/);
+  assert.doesNotMatch(block, /Abrir constructor de ofertas/);
 });
 
 test('la comparativa exporta un formulario Excel en una sola hoja visual', async () => {

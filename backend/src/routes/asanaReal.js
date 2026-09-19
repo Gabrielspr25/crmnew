@@ -126,6 +126,11 @@ const CLIENT_PORTFOLIO_PRODUCT_SQL = (alias) => `CASE
   ELSE NULL
 END`;
 
+const SALES_PRODUCT_SQL = (alias) => `CASE
+  WHEN ${alias}.product_key IN ('fijo_ren','fijo_new','movil_ren','movil_new','claro_tv','cloud','mpls') THEN ${alias}.product_key
+  ELSE NULL
+END`;
+
 async function seedClientActiveLines(c, opportunityId, clientId) {
   await c.query(
     `INSERT INTO opportunity_lines (
@@ -218,6 +223,8 @@ async function ensureOpportunityNotes(c) {
       created_at TIMESTAMP NOT NULL DEFAULT now()
     )`);
   await c.query(`CREATE INDEX IF NOT EXISTS idx_opportunity_notes_opportunity_created ON opportunity_notes(opportunity_id, created_at DESC)`);
+  await c.query(`ALTER TABLE opportunity_notes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL`);
+  await c.query(`ALTER TABLE opportunity_notes ADD COLUMN IF NOT EXISTS deleted_by_username TEXT NULL`);
 }
 
 // Caminito = los PASOS CONFIGURADOS del sistema nuevo (product_step_templates),
@@ -355,7 +362,28 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
               AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
             GROUP BY ol.product_key) t), '{}') AS products,
         (SELECT COALESCE(SUM(COALESCE(ol.quantity_value,0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${QTY_KEYS} AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}) AS total_lines,
-        (SELECT COALESCE(SUM(COALESCE(ol.money_value, ol.target_monthly_value, 0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${MONEY_KEYS} AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}) AS total_money
+        (SELECT COALESCE(SUM(COALESCE(ol.money_value, ol.target_monthly_value, 0)),0)::numeric FROM opportunity_lines ol WHERE ol.opportunity_id = o.id AND ol.product_key IN ${MONEY_KEYS} AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}) AS total_money,
+        CASE
+          WHEN COALESCE(recent_sales.sold_count,0) = 0 THEN NULL
+          ELSE json_build_object(
+            'status',
+              CASE
+                WHEN COALESCE(array_length(opportunity_coverage.product_keys,1),0) > 0
+                 AND NOT EXISTS (
+                   SELECT 1
+                     FROM unnest(opportunity_coverage.product_keys) wanted(product_key)
+                    WHERE NOT wanted.product_key = ANY(recent_sales.product_keys)
+                 ) THEN 'venta_reciente_completa'
+                ELSE 'venta_reciente_parcial'
+              END,
+            'action',
+              recent_sale_filter.action,
+            'last_sale_at', recent_sales.last_sale_at,
+            'sold_products', recent_sales.product_keys,
+            'opportunity_products', opportunity_coverage.product_keys,
+            'sold_count', recent_sales.sold_count
+          )
+        END AS recent_sale_review
       FROM (
         SELECT DISTINCT ON (so.client_id) so.*
         FROM sales_opportunities so
@@ -365,7 +393,58 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
       ) o
       JOIN clients c ON c.id = o.client_id
       LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
+      LEFT JOIN LATERAL (
+        SELECT array_remove(array_agg(DISTINCT ol.product_key), NULL) AS product_keys
+          FROM opportunity_lines ol
+         WHERE ol.opportunity_id = o.id
+           AND ol.product_key IS NOT NULL
+           AND ${MEANINGFUL_OPPORTUNITY_LINE_SQL('ol')}
+      ) opportunity_coverage ON true
+      LEFT JOIN LATERAL (
+        SELECT array_remove(array_agg(DISTINCT sold.product_key), NULL) AS product_keys,
+               MAX(sold.sale_at)::date AS last_sale_at,
+               COUNT(*)::int AS sold_count
+          FROM (
+            SELECT ${SALES_PRODUCT_SQL('vs')} AS product_key, vs.sale_date::date AS sale_at
+              FROM ventaspro_nuevo.sales vs
+              LEFT JOIN bans sale_ban ON sale_ban.ban_number::text = vs.ban_number::text
+             WHERE (vs.client_id = o.client_id OR sale_ban.client_id = o.client_id)
+               AND vs.sale_date::date >= CURRENT_DATE - INTERVAL '6 months'
+            UNION ALL
+            SELECT CASE
+                     WHEN s_report.line_kind='fijo' AND s_report.line_type='REN' THEN 'fijo_ren'
+                     WHEN s_report.line_kind='fijo' THEN 'fijo_new'
+                     WHEN s_report.line_kind='movil' AND s_report.line_type='REN' THEN 'movil_ren'
+                     WHEN s_report.line_kind='movil' THEN 'movil_new'
+                     WHEN s_report.line_kind='tv' THEN 'claro_tv'
+                     WHEN s_report.line_kind='cloud' THEN 'cloud'
+                     WHEN s_report.line_kind='mpls' THEN 'mpls'
+                     ELSE NULL
+                   END AS product_key,
+                   sr.report_month::date AS sale_at
+              FROM subscriber_reports sr
+              JOIN subscribers s_report ON s_report.id = sr.subscriber_id
+              JOIN bans b_report ON b_report.id = s_report.ban_id
+             WHERE b_report.client_id = o.client_id
+               AND sr.report_month::date >= CURRENT_DATE - INTERVAL '6 months'
+          ) sold
+         WHERE sold.product_key IS NOT NULL
+      ) recent_sales ON true
+      LEFT JOIN LATERAL (
+        SELECT CASE
+          WHEN COALESCE(recent_sales.sold_count,0) > 0
+           AND COALESCE(array_length(opportunity_coverage.product_keys,1),0) > 0
+           AND NOT EXISTS (
+             SELECT 1
+               FROM unnest(opportunity_coverage.product_keys) wanted(product_key)
+              WHERE NOT wanted.product_key = ANY(recent_sales.product_keys)
+           ) THEN 'sacar_de_nueva_oportunidad'
+          WHEN COALESCE(recent_sales.sold_count,0) > 0 THEN 'crecimiento_pendiente'
+          ELSE NULL
+        END AS action
+      ) recent_sale_filter ON true
       WHERE ${VALID_ASANA_CLIENT_SQL}
+        AND COALESCE(recent_sale_filter.action,'') <> 'sacar_de_nueva_oportunidad'
         AND ($1::text IS NULL OR LOWER(TRIM(sp.name))=LOWER(TRIM($1)))
       ORDER BY client_name`, [seller || null]));
     asanaListCache = seller ? asanaListCache : { at: Date.now(), rows: r.rows };
@@ -438,6 +517,7 @@ asanaRealRouter.get('/asana-real/alerts/calls', requireAuth, async (_req, res) =
            JOIN clients c ON c.id = o.client_id
            LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
           WHERE o.archived_at IS NULL
+            AND n.deleted_at IS NULL
             AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')
             AND COALESCE(n.scheduled_status,'pendiente') = 'pendiente'
           ORDER BY n.created_at DESC, n.id DESC
@@ -473,8 +553,11 @@ asanaRealRouter.get('/asana-real/agenda', requireAuth, async (req, res) => {
            LEFT JOIN clients c ON c.id = t.client_id
            LEFT JOIN sales_opportunities o ON o.id = t.opportunity_id
            LEFT JOIN opportunity_steps os ON os.id = t.step_id
-          WHERE t.status = 'pendiente' AND ${taskScopeSql}
-          ORDER BY t.due_at, CASE t.priority WHEN 'alta' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END
+          WHERE t.status IN ('pendiente','completada') AND ${taskScopeSql}
+          ORDER BY CASE t.status WHEN 'pendiente' THEN 1 ELSE 2 END,
+                   COALESCE(t.completed_at, t.due_at) DESC,
+                   t.due_at,
+                   CASE t.priority WHEN 'alta' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END
           LIMIT 200`,
         teamScope ? [] : [username]
       );
@@ -495,6 +578,7 @@ asanaRealRouter.get('/asana-real/agenda', requireAuth, async (req, res) => {
            JOIN clients c ON c.id = o.client_id
            LEFT JOIN salespeople sp ON sp.id = o.salesperson_id
           WHERE o.archived_at IS NULL
+            AND n.deleted_at IS NULL
             AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')
             AND COALESCE(n.scheduled_status,'pendiente') = 'pendiente'
             AND ${callScopeSql}
@@ -578,10 +662,17 @@ asanaRealRouter.post('/asana-real/tasks', requireAuth, async (req, res) => {
 });
 
 asanaRealRouter.patch('/asana-real/tasks/:taskId', requireAuth, async (req, res) => {
-  const status = cleanText(req.body?.status).toLowerCase();
-  if (!['pendiente', 'completada', 'cancelada'].includes(status)) {
+  const status = cleanText(req.body?.status).toLowerCase() || null;
+  const title = Object.hasOwn(req.body || {}, 'title') ? cleanText(req.body?.title) : null;
+  const notes = Object.hasOwn(req.body || {}, 'notes') ? cleanText(req.body?.notes) : null;
+  const priority = Object.hasOwn(req.body || {}, 'priority') ? cleanText(req.body?.priority).toLowerCase() : null;
+  const dueDate = Object.hasOwn(req.body || {}, 'due_at') ? new Date(req.body?.due_at) : null;
+  if (status && !['pendiente', 'completada', 'cancelada'].includes(status)) {
     return res.status(400).json({ error: 'Estado de tarea invalido' });
   }
+  if (title !== null && !title) return res.status(400).json({ error: 'Escribe el titulo de la tarea' });
+  if (priority !== null && !['baja', 'normal', 'alta'].includes(priority)) return res.status(400).json({ error: 'Prioridad invalida' });
+  if (dueDate !== null && Number.isNaN(dueDate.getTime())) return res.status(400).json({ error: 'Selecciona una fecha valida' });
   try {
     const result = await withPublic(async c => {
       const username = usernameForUser(req.user);
@@ -593,11 +684,19 @@ asanaRealRouter.patch('/asana-real/tasks/:taskId', requireAuth, async (req, res)
       }
       const updated = await c.query(
         `UPDATE asana_tasks
-            SET status=$2,
-                completed_at=CASE WHEN $2='completada' THEN now() ELSE NULL END,
+            SET title=COALESCE($2,title),
+                notes=COALESCE($3,notes),
+                due_at=COALESCE($4,due_at),
+                priority=COALESCE($5,priority),
+                status=COALESCE($6,status),
+                completed_at=CASE
+                  WHEN COALESCE($6,status)='completada' AND status <> 'completada' THEN now()
+                  WHEN COALESCE($6,status)='completada' THEN completed_at
+                  ELSE NULL
+                END,
                 updated_at=now()
           WHERE id=$1 RETURNING *`,
-        [req.params.taskId, status]
+        [req.params.taskId, title, notes, dueDate ? dueDate.toISOString() : null, priority, status]
       );
       let suggestedNextStep = null;
       if (status === 'completada' && task.rows[0].step_id && task.rows[0].opportunity_id) {
@@ -641,7 +740,9 @@ asanaRealRouter.patch('/asana-real/agenda/calls/:noteId', requireAuth, async (re
       const note = await c.query(
         `SELECT n.id, n.opportunity_id
            FROM opportunity_notes n
-          WHERE n.id=$1 AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')`,
+          WHERE n.id=$1
+            AND n.deleted_at IS NULL
+            AND (n.scheduled_call_at IS NOT NULL OR n.note ILIKE '[LLAMADA_AGENDADA:%')`,
         [req.params.noteId]
       );
       if (!note.rows[0]) return null;
@@ -706,6 +807,7 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
                 created_at
            FROM opportunity_notes
           WHERE opportunity_id = $1
+            AND deleted_at IS NULL
           ORDER BY created_at DESC, id DESC`, [req.params.id]);
       return { ...o.rows[0], steps: steps.rows, lines: lines.rows, log: log.rows.map(normalizeLogRow) };
     });
@@ -782,6 +884,30 @@ asanaRealRouter.post('/asana-real/:id/log', requireAuth, async (req, res) => {
     if (row.forbidden) return res.status(403).json({ error: 'No puedes abrir un seguimiento asignado a otro vendedor.' });
     res.status(201).json(row);
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+asanaRealRouter.delete('/asana-real/:id/log/:noteId', requireAuth, async (req, res) => {
+  try {
+    const row = await withPublic(async c => {
+      if (!await sellerCanOpenOpportunity(c, req.params.id, req.user)) return { forbidden: true };
+      await ensureOpportunityNotes(c);
+      const r = await c.query(
+        `UPDATE opportunity_notes
+            SET deleted_at = now(), deleted_by_username = $3
+          WHERE id = $1
+            AND opportunity_id = $2
+            AND deleted_at IS NULL
+          RETURNING id`,
+        [req.params.noteId, req.params.id, usernameForUser(req.user)]
+      );
+      return r.rows[0] || null;
+    });
+    if (row?.forbidden) return res.status(403).json({ error: 'No puedes modificar una nota de otro vendedor.' });
+    if (!row) return res.status(404).json({ error: 'Nota no encontrada' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // CERRAR → al pool (regla SOV2: archiva oportunidad + cliente sin vendedor)

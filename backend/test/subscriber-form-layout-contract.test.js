@@ -20,7 +20,7 @@ test('modal de suscriptor ordena datos sin clasificar cuotas como fijo', () => {
 });
 
 test('tipo producto es comun y PRODUCT_TYPE respalda el tipo visible', () => {
-  const fieldsStart = html.indexOf('function cliSubscriberFields(s)');
+  const fieldsStart = html.indexOf('function cliSubscriberFields(s');
   const fieldsEnd = html.indexOf('function cliNormalizeSubscriberPayload', fieldsStart);
   const fieldsBlock = html.slice(fieldsStart, fieldsEnd);
 

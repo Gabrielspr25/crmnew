@@ -24,6 +24,22 @@ function contractEndFromRemainingPayments(v) {
   d.setMonth(d.getMonth() + n);
   return d.toISOString().slice(0, 10);
 }
+function contractEndFromStartAndTerm(start, term) {
+  const n = Number.parseInt(String(term || ''), 10);
+  if (!start || !Number.isFinite(n) || n <= 0) return null;
+  const d = new Date(`${String(start).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
+function productTypeFromLineKind(lineKind) {
+  const kind = String(lineKind || '').trim().toLowerCase();
+  if (kind === 'movil') return 'G';
+  if (kind === 'fijo') return 'O';
+  if (kind === 'cloud') return 'K';
+  if (kind === 'claro_tv') return 'T';
+  return null;
+}
 async function wp(fn) {
   const c = await pool.connect();
   try { await c.query('BEGIN'); await c.query('SET LOCAL search_path TO public'); const r = await fn(c); await c.query('COMMIT'); return r; }
@@ -31,19 +47,89 @@ async function wp(fn) {
   finally { c.release(); }
 }
 
+// CREAR cliente desde el modulo Clientes real.
+writeRouter.post('/clients-real', requireAuth, async (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name || body.business_name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Falta la empresa' });
+  try {
+    const r = await wp(async c => {
+      const salespersonValue = body.salesperson_id ? body.salesperson_id : null;
+      if (salespersonValue) {
+        const seller = await c.query(`SELECT id FROM salespeople WHERE id = $1`, [salespersonValue]);
+        if (!seller.rows[0]) {
+          const err = new Error('Vendedor no existe');
+          err.status = 400;
+          throw err;
+        }
+      }
+      const existing = await c.query(
+        `SELECT id, name, business_name
+           FROM clients
+          WHERE LOWER(TRIM(COALESCE(name,''))) = LOWER(TRIM($1))
+             OR LOWER(TRIM(COALESCE(business_name,''))) = LOWER(TRIM($1))
+          ORDER BY created_at DESC NULLS LAST, id
+          LIMIT 1`,
+        [name]
+      );
+      if (existing.rows[0]) {
+        const err = new Error(`Cliente ya existe en CRM: ${existing.rows[0].name || existing.rows[0].business_name || name}`);
+        err.status = 409;
+        err.client_id = existing.rows[0].id;
+        throw err;
+      }
+      return c.query(
+        `INSERT INTO clients (
+           name, business_name, owner_name, contact_person, email, phone, additional_phone, cellular,
+           address, city, zip_code, tax_id, salesperson_id, source
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         RETURNING id`,
+        [
+          name,
+          body.business_name || name,
+          body.owner_name || null,
+          body.contact_person || null,
+          body.email || null,
+          body.phone || null,
+          body.additional_phone || null,
+          body.cellular || null,
+          body.address || null,
+          body.city || null,
+          body.zip_code || null,
+          body.tax_id || null,
+          salespersonValue,
+          body.source || 'manual',
+        ]
+      );
+    });
+    res.status(201).json({ ok: true, id: r.rows[0]?.id });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: e.message, client_id: e.client_id || null });
+  }
+});
+
 // EDITAR cliente
 writeRouter.put('/clients-real/:id', requireAuth, async (req, res) => {
   const body = req.body || {};
   const allowed = [
     'name', 'owner_name', 'contact_person', 'email',
     'phone', 'additional_phone', 'cellular',
-    'address', 'city', 'zip_code', 'tax_id', 'business_name'
+    'address', 'city', 'zip_code', 'tax_id', 'business_name', 'salesperson_id'
   ];
   const sets = [], vals = [];
   for (const k of allowed) if (k in body) { vals.push(body[k] === '' ? null : body[k]); sets.push(`${k} = $${vals.length}`); }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
   try {
     const r = await wp(async c => {
+      const salespersonValue = 'salesperson_id' in body && body.salesperson_id !== '' ? body.salesperson_id : null;
+      if (salespersonValue) {
+        const seller = await c.query(`SELECT id FROM salespeople WHERE id = $1`, [salespersonValue]);
+        if (!seller.rows[0]) {
+          const err = new Error('Vendedor no existe');
+          err.status = 400;
+          throw err;
+        }
+      }
       if (body.name && !('business_name' in body)) {
         const current = await c.query(`SELECT business_name FROM clients WHERE id = $1 FOR UPDATE`, [req.params.id]);
         if (isMissingClientIdentityValue(current.rows[0]?.business_name)) {
@@ -52,12 +138,21 @@ writeRouter.put('/clients-real/:id', requireAuth, async (req, res) => {
         }
       }
       vals.push(req.params.id);
-      return c.query(`UPDATE clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals);
+      const updated = await c.query(`UPDATE clients SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING id`, vals);
+      if (updated.rows[0] && 'salesperson_id' in body) {
+        await c.query(
+          `UPDATE sales_opportunities
+              SET salesperson_id = $1, updated_at = now()
+            WHERE client_id = $2 AND archived_at IS NULL`,
+          [salespersonValue, req.params.id]
+        );
+      }
+      return updated;
     });
     if (!r.rows[0]) return res.status(404).json({ error: 'Cliente no existe' });
     res.json({ ok: true });
   }
-  catch (e) { res.status(500).json({ error: e.message }); }
+  catch (e) { res.status(e.status || 500).json({ error: e.message }); }
 });
 
 // NOTA interna del cliente: no crea oportunidad, no modifica Asana ni estados.
@@ -84,6 +179,40 @@ writeRouter.post('/clients-real/:id/notes', requireAuth, async (req, res) => {
   } catch (e) {
     if (e.code === '42P01') return res.status(500).json({ error: 'Falta aplicar la migracion de notas del cliente' });
     res.status(500).json({ error: e.message });
+  }
+});
+
+writeRouter.delete('/clients-real/:id/notes/:noteId', requireAuth, async (req, res) => {
+  const deletedBy = req.user?.nombre || req.user?.nick || req.user?.email || req.user?.username || 'Usuario';
+  try {
+    const r = await wp(async c => {
+      const hasDeletedColumns = await c.query(`
+        SELECT EXISTS (
+          SELECT 1
+            FROM information_schema.columns
+           WHERE table_schema='public'
+             AND table_name='client_notes'
+             AND column_name='deleted_at'
+        ) AS ok`);
+      if (!hasDeletedColumns.rows[0]?.ok) {
+        const err = new Error('Falta aplicar la migracion de eliminacion de notas');
+        err.status = 500;
+        throw err;
+      }
+      return c.query(
+        `UPDATE client_notes
+            SET deleted_at = now(), deleted_by_name = $3
+          WHERE id = $1
+            AND client_id = $2
+            AND deleted_at IS NULL
+          RETURNING id`,
+        [req.params.noteId, req.params.id, deletedBy]
+      );
+    });
+    if (!r.rows[0]) return res.status(404).json({ error: 'Nota no encontrada' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: e.message });
   }
 });
 
@@ -258,6 +387,8 @@ writeRouter.post('/bans-real/:banId/subscribers', requireAuth, async (req, res) 
           metadata: {
             endpoint: '/api/bans-real/:banId/subscribers',
             plan_rate_source: resolvedPlanRate.source,
+            // Subir/Pegar imagen conserva source 'manual' (CHECK de la tabla) y se distingue por origin.
+            ...(b.origin === 'imagen' ? { origin: 'imagen' } : {}),
           },
         });
       }
@@ -273,6 +404,11 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
     req.body.contract_end_date = contractEndFromRemainingPayments(req.body.remaining_payments);
   }
   const body = req.body || {};
+  if (!body.product_type && body.line_kind) body.product_type = productTypeFromLineKind(body.line_kind);
+  if (!body.contract_start_date && body.activation_date) body.contract_start_date = body.activation_date;
+  if (body.contract_start_date && body.contract_term && !body.contract_end_date) {
+    body.contract_end_date = contractEndFromStartAndTerm(body.contract_start_date, body.contract_term);
+  }
   if ('status' in body) body.status = normalizeOperationalStatus(body.status);
   if ('line_type' in body) {
     body.line_type = normalizeLineType(body.line_type);
@@ -297,21 +433,44 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
   }
   const allowed = ['plan', 'monthly_value', 'status', 'activation_date', 'contract_start_date', 'contract_end_date', 'contract_term', 'remaining_payments', 'cancel_reason', 'line_kind', 'line_type', 'equipment', 'product_type', 'price_code', 'payments_made'];
   for (const k of allowed) if (k in body) { vals.push(body[k] === '' ? null : body[k]); sets.push(`${k} = $${vals.length}`); }
+  // Mover la linea a otro BAN: solo entre BANs del mismo cliente.
+  const targetBanId = body.ban_id == null ? '' : String(body.ban_id).trim();
+  if (targetBanId) { vals.push(targetBanId); sets.push(`ban_id = $${vals.length}`); }
   if (!sets.length) return res.status(400).json({ error: 'Nada para actualizar' });
   vals.push(req.params.id);
   try {
     const r = await wp(async c => {
       const before = await c.query(`SELECT * FROM subscribers WHERE id = $1 FOR UPDATE`, [req.params.id]);
       if (!before.rows[0]) return { rows: [] };
+      let banMove = null;
+      if (targetBanId && String(before.rows[0].ban_id) !== targetBanId) {
+        const bansFound = await c.query(`SELECT id, client_id, ban_number FROM bans WHERE id::text = ANY($1)`, [[String(before.rows[0].ban_id), targetBanId]]);
+        const fromBan = bansFound.rows.find(b => String(b.id) === String(before.rows[0].ban_id));
+        const toBan = bansFound.rows.find(b => String(b.id) === targetBanId);
+        if (!toBan) throw Object.assign(new Error('El BAN destino no existe'), { statusCode: 404 });
+        if (!fromBan || String(fromBan.client_id) !== String(toBan.client_id)) {
+          throw Object.assign(new Error('Solo se puede mover la linea a otro BAN del mismo cliente'), { statusCode: 422 });
+        }
+        banMove = { from: fromBan, to: toBan };
+      }
       const updated = await c.query(`UPDATE subscribers SET ${sets.join(', ')}, updated_at = now() WHERE id = $${vals.length} RETURNING *`, vals);
+      if (banMove) {
+        // Estado del BAN automatico, igual que el importador: activo si le queda alguna linea activa.
+        await c.query(`UPDATE bans b SET status = CASE
+            WHEN EXISTS (SELECT 1 FROM subscribers s WHERE s.ban_id = b.id AND s.status = 'activo') THEN 'A'
+            ELSE 'C' END, updated_at = now()
+          WHERE b.id = ANY($1)`, [[banMove.from.id, banMove.to.id]]);
+      }
       await recordSubscriberChange({
         db: c,
         subscriberId: req.params.id,
-        before: before.rows[0],
-        after: updated.rows[0],
+        before: banMove ? { ...before.rows[0], ban_number: banMove.from.ban_number } : before.rows[0],
+        after: banMove ? { ...updated.rows[0], ban_number: banMove.to.ban_number } : updated.rows[0],
         user: req.user,
         source: 'manual',
-        metadata: { endpoint: '/api/subscribers-real/:id' },
+        metadata: banMove
+          ? { endpoint: '/api/subscribers-real/:id', ban_move: { from_ban_id: banMove.from.id, to_ban_id: banMove.to.id } }
+          : { endpoint: '/api/subscribers-real/:id' },
       });
       return updated;
     });
@@ -319,7 +478,7 @@ writeRouter.put('/subscribers-real/:id', requireAuth, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Ese telefono ya existe en otro suscriptor' });
-    res.status(500).json({ error: e.message });
+    res.status(e.statusCode || 500).json({ error: e.message });
   }
 });
 

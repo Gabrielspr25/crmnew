@@ -123,8 +123,136 @@
   .agenda-client{font-size:12px;color:#ffe58f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .agenda-note{font-size:11px;color:#b9a06d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .agenda-actions{display:flex;gap:5px;align-items:center}.agenda-actions .btn{padding:5px 7px;font-size:10px}
-  .my-day{padding:14px;margin-bottom:12px}.my-day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}.my-day-head h2{font-size:17px}.my-day-form{display:grid;grid-template-columns:minmax(190px,1.4fr) 150px 110px 120px auto;gap:8px;align-items:end;margin-bottom:12px}.my-day-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.my-day-group{border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:10px;min-height:96px}.my-day-title{font-size:11px;text-transform:uppercase;color:var(--txt3);font-weight:800;margin-bottom:6px}.my-day-item{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}.my-day-item:first-of-type{border-top:0}.my-day-check{width:22px;height:22px;border-radius:6px;border:1px solid var(--green-border);background:var(--card);color:var(--green);cursor:pointer}.my-day-item-title{font-size:12px;font-weight:800;color:var(--txt)}.my-day-item-meta{font-size:10.5px;color:var(--txt3);margin-top:2px}.my-day-item.alta .my-day-item-title{color:var(--red)}.week-calendar-title{font-size:12px;font-weight:800;margin:14px 0 7px}.week-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.week-day{border:1px solid var(--line);background:var(--card2);border-radius:8px;padding:7px;min-height:88px}.week-day.today{border-color:var(--green-border);background:var(--green-soft)}.week-day-head{font-size:10px;text-transform:uppercase;color:var(--txt3);font-weight:800;margin-bottom:5px}.week-event{font-size:10px;line-height:1.25;padding:4px 0;border-top:1px solid var(--line);overflow:hidden;text-overflow:ellipsis}.week-event:first-of-type{border-top:0}.opportunity-task-form{display:none;margin-top:10px;padding:10px;border:1px solid var(--green-border);background:var(--green-soft);border-radius:10px}.opportunity-task-form.open{display:grid;grid-template-columns:minmax(180px,1fr) 150px 110px 120px auto;gap:8px;align-items:end}
-  @media(max-width:900px){.my-day-form,.opportunity-task-form.open{grid-template-columns:1fr 1fr}.my-day-groups{grid-template-columns:1fr}.week-calendar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .sc-scope{--sc-bg:var(--bg);--sc-surface:var(--card);--sc-surface2:var(--card2);--sc-border:var(--line);--sc-line:var(--line);--sc-txt:var(--txt);--sc-txt2:var(--txt2);--sc-txt3:var(--txt3);--sc-green:var(--green);--sc-green-deep:var(--green);--sc-green-soft:var(--green-soft);--sc-green-border:var(--green-border);--sc-on-green:var(--on-accent);--sc-amber:var(--amber);--sc-amber-dot:var(--amber);--sc-shadow:0 1px 2px rgba(16,24,20,.05);}
+  .sc-shell{background:var(--sc-bg);color:var(--sc-txt);font-weight:400;margin:-22px;padding:22px 22px 30px;min-height:calc(100vh - 46px);}
+  .sc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .sc-shell .sc-head h1{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--sc-txt);}
+  .sc-sub{font-size:14px;color:var(--sc-txt3);margin-top:4px;}
+  .sc-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:5px;}
+  .sc-hbtn{display:inline-flex;align-items:center;gap:8px;background:var(--sc-surface);color:var(--sc-txt);border:1px solid var(--sc-border);border-radius:10px;padding:9px 14px;font-size:13.5px;font-weight:500;font-family:inherit;cursor:pointer;box-shadow:var(--sc-shadow);}
+  .sc-hbtn:hover{border-color:var(--sc-green-border);color:var(--sc-green);}
+  .sc-ico{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .sc-tabs{display:flex;gap:24px;border-bottom:1px solid var(--sc-border);margin-bottom:16px;overflow-x:auto;}
+  .sc-tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px 10px;font-size:14px;font-weight:500;color:var(--sc-txt3);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .sc-tab.on{color:var(--sc-green);border-bottom-color:var(--sc-green);font-weight:600;}
+  .sc-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:14px;box-shadow:var(--sc-shadow);}
+  .sc-kpi{padding:18px 14px;text-align:center;border-left:1px solid var(--sc-line);min-width:0;}
+  .sc-kpi:first-child{border-left:0;}
+  .sc-kpi-v{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--sc-txt);}
+  .sc-kpi-l{font-size:12.5px;color:var(--sc-txt3);margin-top:5px;}
+  .sc-kpi-note{font-size:12px;color:var(--sc-txt3);margin:9px 2px 16px;}
+  .sc-main{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:16px;align-items:stretch;margin-bottom:16px;}
+  .sc-card{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:14px;box-shadow:var(--sc-shadow);padding:18px;min-width:0;}
+  .sc-day-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  .sc-shell .sc-day-head h2{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--sc-txt);}
+  .sc-day-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .sc-newtask{display:inline-flex;align-items:center;gap:7px;background:var(--sc-green);color:var(--sc-on-green);border:0;border-radius:10px;padding:11px 17px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
+  .sc-seg{display:inline-flex;background:var(--sc-surface2);border:1px solid var(--sc-border);border-radius:10px;padding:3px;gap:3px;}
+  .sc-seg button{background:none;border:0;border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:500;color:var(--sc-txt3);font-family:inherit;cursor:pointer;white-space:nowrap;}
+  .sc-seg button.on{background:var(--sc-green-soft);color:var(--sc-green);font-weight:600;box-shadow:inset 0 0 0 1px var(--sc-green-border);}
+  .sc-group{border:1px solid var(--sc-border);border-radius:12px;overflow:hidden;margin-bottom:12px;}
+  .sc-group:last-child{margin-bottom:0;}
+  .sc-group-head{display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--sc-surface2);border-bottom:1px solid var(--sc-line);font-size:13px;font-weight:600;}
+  .sc-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .sc-group.attention .sc-group-head{color:var(--sc-amber);}
+  .sc-group.attention .sc-dot{background:var(--sc-amber-dot);}
+  .sc-group.upcoming .sc-group-head{color:var(--sc-txt2);}
+  .sc-group.upcoming .sc-dot{background:var(--sc-txt3);}
+  .sc-task{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:start;padding:13px 14px;border-top:1px solid var(--sc-line);}
+  .sc-task:first-of-type{border-top:0;}
+  .sc-task.link{cursor:pointer;}
+  .sc-task.link:hover{background:var(--sc-surface2);}
+  .sc-task.done{opacity:.78;}
+  .sc-task-actions{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .sc-task-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--sc-border);background:var(--sc-surface2);color:var(--sc-txt2);border-radius:8px;padding:6px 9px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;}
+  .sc-task-btn:hover{border-color:var(--sc-green-border);color:var(--sc-green);}
+  .sc-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--sc-border);background:transparent;color:transparent;font-size:11px;line-height:1;padding:0;cursor:pointer;font-family:inherit;}
+  .sc-check:hover{border-color:var(--sc-green);background:var(--sc-green-soft);color:var(--sc-green);}
+  .sc-check.done{border-color:var(--sc-green-border);background:var(--sc-green-soft);color:var(--sc-green);}
+  .sc-task-title{font-size:14.5px;font-weight:600;color:var(--sc-txt);line-height:1.3;}
+  .sc-task-meta{font-size:12.5px;color:var(--sc-txt3);margin-top:3px;}
+  .sc-empty{padding:14px;font-size:13px;color:var(--sc-txt3);}
+  .sc-cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .sc-shell .sc-cal-head h3{font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--sc-txt);}
+  .sc-cal-nav{display:flex;gap:4px;}
+  .sc-cal-nav button{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:8px;color:var(--sc-txt3);cursor:pointer;font-family:inherit;}
+  .sc-cal-nav button:hover{background:var(--sc-surface2);color:var(--sc-txt);}
+  .sc-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+  .sc-cal-wd{text-align:center;font-size:11.5px;color:var(--sc-txt3);padding:5px 0 7px;}
+  .sc-cal-day{position:relative;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;color:var(--sc-txt);font-size:13.5px;font-family:inherit;cursor:pointer;}
+  .sc-cal-day .n{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .sc-cal-day:hover .n{background:var(--sc-surface2);}
+  .sc-cal-day.out{color:var(--sc-txt3);opacity:.5;}
+  .sc-cal-day.sel .n{box-shadow:inset 0 0 0 1.5px var(--sc-green-border);color:var(--sc-green);font-weight:600;}
+  .sc-cal-day.today .n,.sc-cal-day.today:hover .n{background:var(--sc-green-deep);color:#FFFFFF;font-weight:700;box-shadow:none;}
+  .sc-cal-mark{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--sc-green);}
+  .sc-cal-day.today .sc-cal-mark{background:#FFFFFF;opacity:.85;}
+  .sc-cal-foot{margin-top:12px;padding-top:14px;border-top:1px solid var(--sc-line);}
+  .sc-shell .sc-cal-foot h4{font-size:16px;font-weight:700;color:var(--sc-txt);margin-bottom:10px;}
+  .sc-cal-empty{text-align:center;font-size:13.5px;color:var(--sc-txt3);padding:30px 0;}
+  .sc-cal-item{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid var(--sc-line);}
+  .sc-cal-item:first-of-type{border-top:0;}
+  .sc-cal-time{font-size:12.5px;font-weight:600;color:var(--sc-green);}
+  .sc-week{display:flex;align-items:center;gap:20px;}
+  .sc-shell .sc-week h3{font-size:22px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;color:var(--sc-txt);}
+  .sc-week-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;flex:1;min-width:0;}
+  .sc-week-day{border:1px solid var(--sc-border);border-radius:11px;padding:12px 8px;text-align:center;min-width:0;}
+  .sc-week-day.today{background:var(--sc-green-soft);border-color:var(--sc-green-border);}
+  .sc-week-head{font-size:13px;color:var(--sc-txt2);}
+  .sc-shell .sc-week-head b{font-weight:700;color:var(--sc-txt);}
+  .sc-week-day.today .sc-week-head,.sc-shell .sc-week-day.today .sc-week-head b{color:var(--sc-green);}
+  .sc-week-empty{font-size:13px;color:var(--sc-txt3);margin-top:6px;}
+  .sc-week-event{font-size:11.5px;color:var(--sc-txt2);margin-top:5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sc-modal{max-width:460px;}
+  .sc-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+  .sc-scope .sc-modal-head h2{font-size:19px;font-weight:700;color:var(--sc-txt);}
+  .sc-modal-x{background:none;border:0;color:var(--sc-txt3);font-size:17px;line-height:1;padding:5px 7px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .sc-modal-x:hover{background:var(--sc-surface2);color:var(--sc-txt);}
+  .sc-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .sc-field-full{grid-column:1/-1;}
+  .sc-lbl{font-size:12px;color:var(--sc-txt3);margin-bottom:5px;}
+  .sc-inp{width:100%;background:var(--sc-surface2);border:1px solid var(--sc-border);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--sc-txt);font-family:inherit;}
+  .sc-inp:focus{outline:none;border-color:var(--sc-green-border);}
+  .sc-clients{--sc-bg:var(--bg);--sc-surface:var(--card);--sc-surface2:var(--card2);--sc-border:var(--line);--sc-line:var(--line);--sc-txt:var(--txt);--sc-txt2:var(--txt2);--sc-txt3:var(--txt3);--scc-head:var(--teal);--scc-card:var(--teal-soft);--scc-card-bd:var(--line);--scc-accent:var(--green);--scc-vendor-bg:#2C6FE0;--scc-vendor-tx:#FFFFFF;--scc-neutral-bg:var(--card2);--scc-neutral-tx:var(--txt2);--scc-money-bg:var(--green-soft);--scc-money-tx:var(--green);--scc-qty-bg:var(--primary-soft);--scc-qty-tx:var(--primary);--scc-zero:var(--txt3);--scc-btn:var(--green);--scc-agenda:#2563EB;}
+  .sc-clients .panel{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:12px;box-shadow:var(--sc-shadow);}
+  .sc-clients .flbl{font-size:11px;font-weight:600;color:var(--sc-txt2);letter-spacing:.05em;margin-bottom:6px;}
+  .sc-clients .inp{background:var(--sc-surface);border:1px solid var(--sc-border);color:var(--sc-txt);border-radius:9px;padding:11px 13px;font-size:13.5px;}
+  .sc-clients .inp::placeholder{color:var(--sc-txt3);}
+  .sc-clients .inp:focus{outline:none;border-color:var(--scc-agenda);}
+  .sc-clients .card{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:12px;}
+  .sc-clients .asana-table{border-collapse:separate;border-spacing:0;width:100%;}
+  .sc-clients .asana-table th{background:var(--scc-head);color:#FFFFFF!important;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 8px;border:0;white-space:nowrap;}
+  .sc-clients .asana-table td{background:transparent;border:0;border-bottom:1px solid var(--sc-line);border-radius:0;padding:10px 8px;vertical-align:middle;}
+  .sc-clients .asana-table tbody tr:nth-child(odd) td{background:var(--sc-surface);}
+  .sc-clients .asana-table tbody tr:nth-child(even) td{background:var(--sc-surface2);}
+  .sc-clients .asana-table tbody tr:last-child td{border-bottom:0;}
+  .sc-clients .asana-table td.empty{text-align:center;color:var(--sc-txt2);padding:22px 8px;}
+  .sc-clients .asana-client-cell{background:var(--scc-card);border:1px solid var(--scc-card-bd);border-left:4px solid var(--scc-accent);border-radius:10px;padding:9px 12px;}
+  .sc-clients .asana-client-line{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name meta" "ban meta";align-items:center;gap:3px 10px;white-space:normal;}
+  .sc-clients .asana-client-line .linkbtn{grid-area:name;font-size:13px!important;font-weight:700!important;color:var(--sc-txt)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sc-clients .asana-ban-inline{grid-area:ban;font-size:12px;color:var(--sc-txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sc-clients .asana-meta-inline{grid-area:meta;font-size:11.5px;font-weight:600;color:var(--sc-txt2);background:var(--sc-surface);border:1px solid var(--scc-card-bd);border-radius:999px;padding:5px 11px;white-space:nowrap;}
+  .sc-clients .asana-vendor{background:var(--scc-vendor-bg);border:0;color:var(--scc-vendor-tx);font-size:12px;font-weight:600;border-radius:999px;padding:7px 13px;}
+  .sc-clients .asana-vendor.unassigned{background:var(--scc-neutral-bg);color:var(--scc-neutral-tx);}
+  .sc-clients .acell{gap:5px;}
+  .sc-clients .asana-value{font-size:12.5px;font-weight:700;line-height:1;border-radius:7px;padding:5px 9px;}
+  .sc-clients .asana-value.av-money{background:var(--scc-money-bg);color:var(--scc-money-tx);}
+  .sc-clients .asana-value.av-qty{background:var(--scc-qty-bg);color:var(--scc-qty-tx);}
+  .sc-clients .asana-value.empty{background:none;color:var(--scc-zero);font-weight:600;padding:5px 0;}
+  .sc-clients .asubs{font-size:11.5px;color:var(--sc-txt2);}
+  .sc-clients .asana-money{display:inline-block;background:var(--scc-money-bg);color:var(--scc-money-tx);font-size:12.5px;font-weight:700;border-radius:8px;padding:6px 11px;}
+  .sc-clients .callbtn{width:36px;height:32px;border:0;border-radius:9px;background:var(--scc-agenda);color:#FFFFFF;font-size:15px;}
+  .sc-clients .callbtn.today{background:#D97706;}
+  .sc-clients .callbtn.overdue{background:#DC2626;}
+  .sc-clients .callbtn.upcoming{background:#16A34A;}
+  .sc-clients .asana-actions .btn{background:var(--scc-btn);color:#FFFFFF;border:0;border-radius:9px;font-size:12.5px!important;font-weight:600!important;padding:8px 14px!important;}
+  .sc-clients #asanaClientSearchResults .card{border-radius:10px;}
+  .sc-clients #asanaClientSearchResults .btn.ghost{background:var(--sc-surface2);color:var(--sc-txt);border:1px solid var(--sc-border);border-radius:9px;font-weight:600!important;}
+  .sc-clients #asanaClientSearchResults .btn.green{background:var(--scc-btn);color:#FFFFFF;border:0;border-radius:9px;font-weight:600!important;}
+  @media(max-width:1100px){.sc-main{grid-template-columns:minmax(0,1fr);}}
+  @media(max-width:820px){.sc-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}.sc-kpi:nth-child(3){border-left:0;}.sc-kpi:nth-child(n+3){border-top:1px solid var(--sc-line);}.sc-week{flex-direction:column;align-items:stretch;gap:12px;}.sc-week-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.sc-form{grid-template-columns:1fr;}}
+  .opportunity-task-form{display:none;margin-top:10px;padding:10px;border:1px solid var(--green-border);background:var(--green-soft);border-radius:10px}.opportunity-task-form.open{display:grid;grid-template-columns:minmax(180px,1fr) 150px 110px 120px auto;gap:8px;align-items:end}
+  @media(max-width:900px){.opportunity-task-form.open{grid-template-columns:1fr 1fr}}
   .callbtn{width:34px;height:28px;border-radius:8px;border:1px solid rgba(75,130,255,.16);background:rgba(12,17,31,.38);color:#68718d;font-size:14px;cursor:pointer;}
   .callbtn.today{background:rgba(251,191,90,.16);border-color:rgba(251,191,90,.42);color:#fbbf5a;}
   .callbtn.overdue{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.46);color:#ff7f93;}
@@ -164,6 +292,32 @@
   .subscriber-note-btn:hover{background:rgba(109,31,173,.14);color:var(--txt);}
   .subscriber-note-btn b{display:block;color:#7dd3fc;font-size:9px;text-transform:uppercase;margin-bottom:3px;}
   .subscriber-note-btn span{display:block;color:#f6c86f;font-weight:800;}
+  /* La banda de suscriptores tiene detalle propio; en modo dia usa los mismos tokens que el resto del CRM. */
+  body[data-theme="day"] .subscriber-row{background:var(--card);border-color:var(--line);box-shadow:0 4px 12px rgba(23,32,51,.07);}
+  body[data-theme="day"] .subscriber-cell{background:var(--card2);border-color:var(--line);}
+  body[data-theme="day"] .subscriber-workflow{background:var(--card2);border-color:var(--line);}
+  body[data-theme="day"] .subscriber-label,body[data-theme="day"] .subscriber-note-btn b{color:var(--teal);}
+  body[data-theme="day"] .subscriber-phone,body[data-theme="day"] .subscriber-plan{color:var(--txt);}
+  body[data-theme="day"] .subscriber-price{color:var(--green);}
+  body[data-theme="day"] .subscriber-expiry,body[data-theme="day"] .subscriber-note-btn span,body[data-theme="day"] .gpon-check{color:var(--amber);}
+  body[data-theme="day"] .subscriber-equipment,body[data-theme="day"] .subscriber-muted{color:var(--txt3);}
+  body[data-theme="day"] .subscriber-note-btn:hover{background:var(--primary-soft);color:var(--txt);}
+  body[data-theme="day"] .subhist-item{background:var(--card2);}
+  body[data-theme="day"] .subhist-change span,body[data-theme="day"] .gpon-review .cinp{background:var(--card);border-color:var(--line);}
+  body[data-theme="day"] .subhist-change b{color:var(--teal);}
+  /* En noche, la fila deja de ser un bloque azul aislado y sigue la profundidad del CRM. */
+  body[data-theme="soft-dark"] .subscriber-row{background:linear-gradient(180deg,#1C263A,#151E31);border-color:#3E4C68;box-shadow:0 8px 20px rgba(0,0,0,.22);}
+  body[data-theme="soft-dark"] .subscriber-cell{background:#111827;border-color:#2C3955;}
+  body[data-theme="soft-dark"] .subscriber-workflow{background:#19243A;border-color:#2C3955;}
+  body[data-theme="soft-dark"] .subscriber-label,body[data-theme="soft-dark"] .subscriber-note-btn b{color:#45BAC0;}
+  body[data-theme="soft-dark"] .subscriber-phone,body[data-theme="soft-dark"] .subscriber-plan{color:#F1F3F7;}
+  body[data-theme="soft-dark"] .subscriber-price{color:#78C84F;}
+  body[data-theme="soft-dark"] .subscriber-expiry,body[data-theme="soft-dark"] .subscriber-note-btn span,body[data-theme="soft-dark"] .gpon-check{color:#D4D96A;}
+  body[data-theme="soft-dark"] .subscriber-equipment,body[data-theme="soft-dark"] .subscriber-muted{color:#9DAAC0;}
+  body[data-theme="soft-dark"] .subscriber-note-btn:hover{background:#26334C;color:#F1F3F7;}
+  body[data-theme="soft-dark"] .subhist-item{background:#19243A;}
+  body[data-theme="soft-dark"] .subhist-change span,body[data-theme="soft-dark"] .gpon-review .cinp{background:#111827;border-color:#2C3955;}
+  body[data-theme="soft-dark"] .subhist-change b{color:#45BAC0;}
   .subedit-tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:0 0 12px;padding-bottom:8px;}
   .subedit-tab{border:0;background:transparent;color:var(--txt2);font-size:12px;font-weight:800;padding:8px 10px;border-radius:8px;cursor:pointer;}
   .subedit-tab.on{background:var(--primary);color:var(--on-accent);}
@@ -178,6 +332,10 @@
   .subhist-source.manual{background:var(--primary-soft);color:var(--primary);border-color:rgba(139,92,246,.34);}
   .subhist-source.importador{background:rgba(47,240,184,.12);color:var(--green);border-color:rgba(47,240,184,.30);}
   .subhist-source.sistema{background:rgba(246,200,111,.14);color:#ffd06f;border-color:rgba(246,200,111,.30);}
+  .subhist-source.imagen{background:rgba(125,211,252,.14);color:#7dd3fc;border-color:rgba(125,211,252,.30);}
+  .subscriber-note-stack{flex-direction:column;align-items:stretch;gap:2px;}
+  .subscriber-note-stack .subscriber-note-btn{padding:3px 6px;}
+  .subscriber-update-btn span .subhist-source{display:inline-block;margin-left:4px;padding:1px 6px;font-size:9px;}
   .subhist-change{display:grid;grid-template-columns:160px minmax(0,1fr) minmax(0,1fr);gap:7px;align-items:stretch;font-size:12px;margin-top:6px;}
   .subhist-change span{border:1px solid rgba(75,130,255,.16);border-radius:7px;background:rgba(12,17,31,.58);padding:7px;min-width:0;word-break:break-word;}
   .subhist-change b{color:#7dd3fc;font-size:10px;text-transform:uppercase;display:block;margin-bottom:2px;}
@@ -389,10 +547,6 @@
   .paso-num{width:26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--txt3);flex-shrink:0;}
   .paso-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);white-space:nowrap;}
   @media(max-width:760px){.paso-wrap{flex-direction:column;}.paso-side{width:100%;flex-direction:row;flex-wrap:wrap;}}
-  .asana-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px;}
-  .asana-kpis .kpi{min-height:78px;}
-  .asana-kpis .main{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);}
-  .asana-main-tabs{margin-bottom:12px;}
   .asana-tab-panel{min-width:0;}
   .kpi .hint{font-size:11.5px;color:var(--txt2);margin-top:6px;line-height:1.45;}
   .logbox{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:start;margin-bottom:12px;}
@@ -406,8 +560,35 @@
   .gestion-submit{min-width:150px;white-space:nowrap;}
   .logbody{min-height:76px;resize:vertical;text-align:left;}
   .logmeta{font-size:11px;color:var(--txt3);margin-top:3px;}
-  @media(max-width:900px){.asana-kpis{grid-template-columns:1fr 1fr;}.asana-kpis .main{grid-column:1/-1;}}
   @media(max-width:720px){.logbox,.gestion-box{grid-template-columns:1fr;}.logbox .btn,.gestion-submit{width:100%;}.gestion-meta .inp{max-width:100%;}}
+  .tra-page{min-width:0;letter-spacing:0;}
+  .tra-page .head,.tra-context,.tra-detail-head,.tra-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .tra-context{justify-content:flex-start;border-bottom:1px solid var(--line);padding:0 0 12px;margin-bottom:12px;font-size:12px;color:var(--txt2);}
+  .tra-table-wrap{overflow-x:auto;}
+  .tra-closure{margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  .tra-closure header{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .tra-closure h2{font-size:16px;margin:0;letter-spacing:0;}
+  .tra-closure table{width:100%;min-width:960px;table-layout:fixed;}
+  .tra-closure th,.tra-closure td{padding:8px 10px;font-size:12px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;text-align:left;vertical-align:top;}
+  .tra-closure th:nth-child(1){width:16%;}.tra-closure th:nth-child(2){width:10%;}.tra-closure th:nth-child(3){width:12%;}.tra-closure th:nth-child(4){width:8%;}.tra-closure th:nth-child(5){width:22%;}.tra-closure th:nth-child(6){width:14%;}.tra-closure th:nth-child(7){width:18%;}
+  .tra-closure ul{padding-left:14px;margin:0;}.tra-closure li+li{margin-top:4px;}.tra-closure .s{font-size:11px;overflow-wrap:anywhere;}
+  .tra-page .tra-table{width:100%;table-layout:fixed;min-width:680px;}
+  .tra-page .tra-table th,.tra-page .tra-table td{white-space:normal;overflow-wrap:anywhere;padding:10px 12px;text-align:left;}
+  .tra-table th:first-child{width:18%;}.tra-table th:nth-child(2){width:28%;}.tra-table th:nth-child(3){width:26%;}.tra-table th:nth-child(4){width:15%;}.tra-table th:last-child{width:110px;}
+  .tra-module{font:inherit;font-weight:650;color:var(--txt);background:none;border:0;text-align:left;cursor:pointer;padding:0;}
+  .tra-selected{background:var(--card2);}.tra-page .btn{font-size:12px;padding:8px 11px;border-radius:8px;white-space:normal;}
+  .tra-detail{scroll-margin-top:16px;border-top:2px solid var(--line);margin-top:24px;padding:20px 0;outline-offset:4px;}
+  .tra-detail h2{font-size:20px;margin:0 0 4px;}.tra-detail h3{font-size:13px;margin:18px 0 10px;color:var(--txt2);letter-spacing:0;}
+  .tra-detail p,.tra-detail li,.tra-detail dl{font-size:13px;line-height:1.5;overflow-wrap:anywhere;}.tra-detail p{margin:8px 0;}
+  .tra-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  .tra-columns section{min-width:0;}.tra-detail dl{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px;margin:12px 0 0;}.tra-detail dt{color:var(--txt3);}.tra-detail dd{margin:0;}
+  .tra-stages{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:0;list-style:none;gap:12px;margin:0 0 16px;}
+  .tra-stages li{display:flex;flex-direction:column;gap:7px;padding-top:10px;border-top:2px solid var(--line);}.tra-stages .pill{align-self:flex-start;white-space:normal;}
+  .tra-docs,.tra-consumers{padding:0;list-style:none;margin:0;}.tra-docs li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}.tra-docs li>div{min-width:0;}.tra-docs .btn{flex-shrink:0;}
+  .tra-consumers li{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}.tra-consumers code{font-size:11px;overflow-wrap:anywhere;}.tra-list{padding-left:18px;}
+  .tra-alerts section{border-left:3px solid var(--amber);padding:8px 12px;margin:10px 0;background:var(--card2);}
+  @media(max-width:900px){.tra-stages{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media(max-width:600px){.tra-columns{grid-template-columns:minmax(0,1fr);gap:0;}.tra-stages{grid-template-columns:repeat(2,minmax(0,1fr));}.tra-detail dl{grid-template-columns:1fr;}.tra-page .head h1{font-size:24px;}.tra-docs li{align-items:flex-start;flex-direction:column;}.tra-actions{justify-content:flex-start;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -429,21 +610,22 @@
     <a class="nav" href="#/historial"><span class="d"></span>Historial</a>
     <a class="nav" href="#/correos"><span class="d"></span>Correos</a>
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
-    <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas<span class="nav-badge" id="navOfertasAlertas" hidden title="Documentos vencidos o por vencer"></span></a>
+    <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas<span class="nav-badge" id="navOfertasAlertas" hidden title="Módulos pendientes de revisión o comprobación"></span></a>
     <a class="nav" href="#/prospeccion"><span class="d"></span>Prospección</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
-    <a class="nav" href="#/ofertas" onclick="abrirPortalOfertas();return false;"><span class="d"></span>Constructor</a>
+    <a class="nav" href="#/tareas-reglas-admin"><span class="d"></span>Tareas y reglas Admin</a>
   </aside>
   <div class="main">
-    <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo día</span></button></div>
+    <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo suave</span></button></div>
     <div class="content" id="view"><div class="empty">Cargando…</div></div>
   </div>
 
 <script>
 const API=''; // mismo origen: funciona en localhost:4000 y en el servidor (sin hardcodear host)
 let token=null, currentUser=null;
+const THEME_KEY='vp_theme';
 const $=(id)=>document.getElementById(id);
 function isSellerProfile(){return String(currentUser&&currentUser.rol||'').trim().toLowerCase()==='vendedor';}
 function applySellerProfile(){
@@ -454,19 +636,32 @@ function applySellerProfile(){
   });
   if(isSellerProfile())coMode='one';
 }
-function tog(){
-  const b=document.body,current=b.getAttribute('data-theme')||'soft-dark';
-  const next=current==='soft-dark'?'day':current==='day'?'dark':'soft-dark';
-  b.setAttribute('data-theme',next);
-  $('tgt').textContent=next==='day'?'Modo noche':next==='dark'?'Noche suave':'Modo día';
+function applyTheme(theme){
+  const next=theme==='soft-dark'?'soft-dark':'day';
+  document.body.setAttribute('data-theme',next);
+  const target=$('tgt');
+  if(target)target.textContent=next==='day'?'Modo oscuro':'Modo suave';
 }
+function initTheme(){
+  let saved='day';
+  try{saved=localStorage.getItem(THEME_KEY)||document.body.getAttribute('data-theme')||'day';}catch(e){saved=document.body.getAttribute('data-theme')||'day';}
+  if(saved==='dark')saved='soft-dark';
+  applyTheme(saved);
+}
+function tog(){
+  const current=document.body.getAttribute('data-theme')||'day';
+  const next=current==='soft-dark'?'day':'soft-dark';
+  applyTheme(next);
+  try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+}
+initTheme();
 function money(n){return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function ini(n){return (n||'--').trim().slice(0,2).toUpperCase();}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function normalizePhone(value){const digits=String(value??'').replace(/\D/g,'');return digits.length===10?digits:String(value??'').trim();}
 function fmtPhone(value){const digits=String(value??'').replace(/\D/g,'');return digits.length===10?digits.slice(0,3)+'-'+digits.slice(3,6)+'-'+digits.slice(6):String(value??'').trim();}
 const formatContactValue=(label,value)=>/Tel\.|Celular/.test(label)?fmtPhone(value):value;
-async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409){let msg='';try{const d=await r.json();msg=d&&d.error?': '+d.error:'';}catch(e){}throw new Error(p+' -> '+r.status+msg);}return r.json();}
+async function api(p,opts={}){opts.headers={...(opts.headers||{}),Authorization:'Bearer '+token};if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}const r=await fetch(API+p,opts);if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}if(!r.ok&&r.status!==409){let msg='';try{const d=await r.json();msg=d&&(d.error||d.codigo)?': '+(d.error||d.codigo):'';}catch(e){}throw new Error(p+' -> '+r.status+msg);}return r.json();}
 async function apiForm(p,formData){const r=await fetch(API+p,{method:'POST',headers:{Authorization:'Bearer '+token},body:formData});if(r.status===401){clearSession();showLogin('Tu sesión venció, entrá de nuevo');throw new Error('401');}return r.json();}
 function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-01';}
 
@@ -475,10 +670,53 @@ function monthStart(){const m=new Date();return m.getFullYear()+'-'+String(m.get
 let cliTab='all', cliQ='', cliPage=1, cliServiceFilter='todas', cliRenewalFilter='', cliSearchTimer=null, cliStatsCache=null, cliStatsLoading=false, cliSearchCursor=0, cliSearchVersion=0;
 const CLI_TABS=[['all','Todos'],['active','Activos'],['cancelled','Cancelados'],['following','Seguimiento'],['incomplete','Incompletos']];
 const CLI_PILL={all:'violet',active:'green',cancelled:'red',following:'violet',incomplete:'amber'};
+function cliStatsSummaryHtml(st){
+  st=st||{}; const lm=st.line_metrics||{};
+  const counts={active:st.active_count,cancelled:st.cancelled_count,following:st.following_count,incomplete:st.incomplete_count};
+  const totalClients=Number(counts.active||0)+Number(counts.cancelled||0)+Number(counts.following||0)+Number(counts.incomplete||0);
+  const amount=v=>Number(v)>0?money(v):'';
+  const metric=(label,value,monthly)=>`<div style="display:flex;justify-content:space-between;gap:10px"><span>${label} <b>${value||0}</b></span>${monthly?`<span style="color:var(--green)">${monthly}</span>`:''}</div>`;
+  const active=lm.active||{}, cancelled=lm.cancelled||{}, following=lm.following||{}, incomplete=lm.incomplete||{};
+  const cards=[
+    ['all','Todos',totalClients,'Todo el CRM',[
+      metric('Activos',counts.active),
+      metric('Cancelados',counts.cancelled),
+      metric('Seguimiento',counts.following),
+      metric('Incompletos',counts.incomplete)
+    ]],
+    ['active','Activas',active.active_lines_count||0,'Líneas activas',[
+      metric('Móvil',active.mobile_lines,amount(active.mobile_monthly_value)),
+      metric('Fijo',active.fixed_lines,amount(active.fixed_monthly_value)),
+      metric('Sin clasificar',active.incomplete_lines),
+      active.suspended_lines?`Suspendidas: <b>${active.suspended_lines}</b> incluidas arriba`:''
+    ]],
+    ['cancelled','Canceladas',st.cancelled_lines_count||0,'Líneas canceladas',[
+      `Clientes con cartera cancelada: <b>${counts.cancelled??0}</b>`,
+      'Sin precios ni clasificación comercial en este resumen.'
+    ]],
+    ['following','Seguimiento',counts.following??0,'Clientes en seguimiento',[
+      metric('Líneas activas',following.active_lines_count),
+      metric('Móvil',following.mobile_lines,amount(following.mobile_monthly_value)),
+      metric('Fijo',following.fixed_lines,amount(following.fixed_monthly_value))
+    ]],
+    ['incomplete','Incompletas',counts.incomplete??0,'Clientes para completar',[
+      metric('Líneas activas',incomplete.active_lines_count),
+      metric('Móvil',incomplete.mobile_lines),
+      metric('Fijo',incomplete.fixed_lines),
+      metric('Sin clasificar',incomplete.incomplete_lines)
+    ]]
+  ];
+  const card=([t,label,total,totalLabel,details])=>`<div class="kpi click cli-kpi-${t}${cliTab===t?' on':''}" onclick="setCliTab('${t}')">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="l">${label}</span><span class="pill ${CLI_PILL[t]}">${totalLabel}</span></div>
+    <div class="v">${Number(total||0).toLocaleString('en-US')}</div>
+    <div class="bk">${details.filter(Boolean).join('')}</div></div>`;
+  return cards.map(card).join('');
+}
+function cliRenderStatsSummary(){ const k=document.querySelector('.kpis'); if(k&&cliStatsCache)k.innerHTML=cliStatsSummaryHtml(cliStatsCache); }
 async function reClientes(){ const version=cliSearchVersion; const html=await viewClientes(); if(version!==cliSearchVersion)return; $('view').innerHTML=html; cliRestoreSearchFocus(); }
 async function cliLoadStats(){
   if(cliStatsLoading)return; cliStatsLoading=true;
-  try{ var r=await api('/api/clients-real/stats'); if(r&&r.stats)cliStatsCache=r.stats; if(location.hash==='#/clientes'||!location.hash)reClientes(); }
+  try{ var r=await api('/api/clients-real/stats'); if(r&&r.stats)cliStatsCache=r.stats; if(location.hash==='#/clientes'||!location.hash)cliRenderStatsSummary(); }
   catch(e){} finally{ cliStatsLoading=false; }
 }
 function setCliTab(t){ clearTimeout(cliSearchTimer); cliTab=t; cliQ=''; cliRenewalFilter=''; if(t!=='active')cliServiceFilter='todas'; cliPage=1; reClientes(); }
@@ -581,7 +819,7 @@ async function viewClientes(){
       <button class="btn ghost" onclick="exportarBaseCompleta()">⬇ Exportar BD</button>
       <button class="btn" onclick="nuevoCliente()">+ Nuevo cliente</button>
     </div></div>
-  <div class="kpis">${cards.map(card).join('')}</div>
+  <div class="kpis">${cliStatsSummaryHtml(st)}</div>
   <div class="card" style="padding:9px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b style="font-size:12px">Busqueda global</b><span class="s" style="margin-left:8px;font-size:11px">Busca en activos, cancelados, seguimiento e incompletos por empresa, BAN, suscriptor, telefono o email.</span></div><button class="btn green" style="padding:8px 13px;font-size:12px" onclick="mostrarInfoReportes()">Abrir reporte inteligente</button></div>
   ${cliTab==='active'&&!cliQ?`<div class="card" style="padding:9px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b style="font-size:12px">Alerta de renovaciones</b><span class="s" style="margin-left:8px;font-size:11px">Vencidas primero; dentro de cada grupo, oportunidad mayor.</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">${renewalTabs}</div></div>
   `:''}
@@ -624,7 +862,17 @@ function cliProfileLabel(profile){
 function cliLineMonthly(value){return value===null||value===undefined||String(value).trim()===''?'—':money(value);}
 function cliNoren(s){var x=String(s||'').toLowerCase();return x.includes('no_renueva')||x==='suspendido';}
 function cliVenc(d){if(!d)return 'Sin fecha';const days=Math.floor((new Date(d)-new Date())/86400000);if(isNaN(days))return 'Sin fecha';return days<0?('Vencido hace '+(-days)+'d'):('Vence en '+days+'d');}
+function cliContractStartDisplay(s){return (s&&s.contract_start_date)?fmtDate(s.contract_start_date):((s&&s.activation_date)?fmtDate(s.activation_date):'—');}
+function cliActivationHistoryDisplay(s){return (s&&s.activation_date&&s.contract_start_date&&String(s.activation_date).slice(0,10)!==String(s.contract_start_date).slice(0,10))?'Act: '+fmtDate(s.activation_date):'';}
 function cliContractEndFromPayments(v){var n=parseInt(String(v||'').replace(/\D/g,''),10);if(!isFinite(n)||n<=0)return '';var d=new Date();d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10);}
+function cliContractEndFromStartAndTerm(start,term){
+  var n=parseInt(String(term||'').replace(/\D/g,''),10);
+  if(!start||!isFinite(n)||n<=0)return '';
+  var d=new Date(String(start).slice(0,10)+'T00:00:00');
+  if(isNaN(d.getTime()))return '';
+  d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
 function cliLineKindFromProductType(productType){
   var p=String(productType||'').trim().toUpperCase();
   if(p==='G')return 'movil';
@@ -632,15 +880,29 @@ function cliLineKindFromProductType(productType){
   if(p==='K')return 'cloud';
   return '';
 }
+function cliProductTypeFromLineKind(lineKind){
+  var k=String(lineKind||'').trim().toLowerCase();
+  if(k==='movil')return 'G';
+  if(k==='fijo')return 'O';
+  if(k==='cloud')return 'K';
+  if(k==='claro_tv')return 'T';
+  return '';
+}
 function cliSubscriberFinanceVisible(values){
   values=values||{};
   var kind=String(values.line_kind||cliLineKindFromProductType(values.product_type)||'').toLowerCase();
   return kind==='movil'||!!(values.equipment||values.contract_term||values.payments_made||values.remaining_payments);
 }
-function cliSubscriberFields(s){
-  s=s||{};
+function cliSubscriberBanField(s){
+  var bans=(cliM&&cliM.bans)||[];
+  if(!s||!s.ban_id||bans.length<2)return [];
+  return [{key:'ban_id',label:'BAN (mover linea)',type:'select',value:String(s.ban_id),options:bans.map(function(b){return [String(b.id),'BAN '+(b.ban_number||'')+(b.account_type?' · '+b.account_type:'')];})}];
+}
+function cliSubscriberFields(s,opts){
+  s=s||{}; opts=opts||{};
   return [
     {type:'section',label:'Datos de la linea',tone:'line'},
+    ...(opts.withBan?cliSubscriberBanField(s):[]),
     {key:'phone',label:'Telefono / suscriptor (10 digitos)',ph:'787-555-1234',value:fmtPhone(s.phone||'')},
     {key:'plan',label:'Plan',value:s.plan||''},
     {key:'price_code',label:'SOC / codigo plan',value:s.price_code||''},
@@ -651,10 +913,10 @@ function cliSubscriberFields(s){
     {key:'line_kind',label:'Tipo producto',type:'select',options:[['','-'],['movil','Movil'],['fijo','Fijo'],['claro_tv','Claro TV'],['cloud','Cloud'],['mpls','MPLS']],value:s.line_kind||cliLineKindFromProductType(s.product_type)},
     {key:'line_type',label:'Tipo de linea',type:'select',options:[['','-'],['NEW','Linea nueva'],['REN','Renovacion']],value:s.line_type||''},
     {key:'product_type',label:'PRODUCT_TYPE',value:s.product_type||''},
-    {type:'section',label:'Fechas de contrato',tone:'dates'},
-    {key:'activation_date',label:'Fecha activacion',value:s.activation_date?String(s.activation_date).slice(0,10):''},
-    {key:'contract_start_date',label:'Inicio contrato',value:s.contract_start_date?String(s.contract_start_date).slice(0,10):''},
-    {key:'contract_end_date',label:'Vencimiento calculado',value:s.contract_end_date?String(s.contract_end_date).slice(0,10):''},
+    {type:'section',label:'Contrato y renovacion',tone:'dates'},
+    {key:'contract_start_date',label:'Inicio contrato (uso CRM)',value:s.contract_start_date?String(s.contract_start_date).slice(0,10):''},
+    {key:'contract_end_date',label:'Vencimiento / proxima renovacion',value:s.contract_end_date?String(s.contract_end_date).slice(0,10):''},
+    {key:'activation_date',label:'Fecha activacion (historial)',value:s.activation_date?String(s.activation_date).slice(0,10):''},
     {type:'section',label:'Equipo / financiamiento',tone:'finance',detail:'Solo aplica cuando la linea trae equipo o cuotas.'},
     {key:'equipment',label:'Modelo equipo',value:s.equipment||'',finance:true},
     {key:'contract_term',label:'Total cuotas',value:s.contract_term??'',finance:true},
@@ -665,6 +927,9 @@ function cliSubscriberFields(s){
 function cliNormalizeSubscriberPayload(v){
   v=Object.assign({},v||{});
   v.phone=normalizePhone(v.phone);
+  if(!v.product_type&&v.line_kind) v.product_type=cliProductTypeFromLineKind(v.line_kind);
+  if(!v.contract_start_date&&v.activation_date) v.contract_start_date=v.activation_date;
+  if(v.contract_start_date&&v.contract_term&&!v.contract_end_date) v.contract_end_date=cliContractEndFromStartAndTerm(v.contract_start_date,v.contract_term);
   if(!v.remaining_payments && v.contract_term && v.payments_made){
     var total=parseInt(String(v.contract_term).replace(/\D/g,''),10), paid=parseInt(String(v.payments_made).replace(/\D/g,''),10);
     if(isFinite(total)&&isFinite(paid)&&total>=paid) v.remaining_payments=String(total-paid);
@@ -705,13 +970,24 @@ function openForm(title, fields, onSubmit){
   updateSubscriberFormVisibility();
   $('ff_save').onclick=async function(){ var vals=formVals(); try{ await onSubmit(vals); closeForm(); }catch(e){ $('ff_err').textContent=(e&&e.message)||'Error'; } };
 }
+async function cliSalespeopleOptions(selected){
+  try{
+    const sellers=await api('/api/salespeople');
+    const opts=[['','Sin asignar']].concat((sellers||[]).map(function(s){return [String(s.id),s.name];}));
+    if(selected&&!opts.some(function(o){return o[0]===String(selected);}))opts.push([String(selected),'Vendedor actual']);
+    return opts;
+  }catch(e){
+    return [['','Sin asignar'],[String(selected||''),'Vendedor actual']].filter(function(o,i){return i===0||o[0];});
+  }
+}
 async function cliEditar(){ var c=cliM; openForm('Editar cliente',[
   {key:'name',label:'Empresa',value:c.name},{key:'owner_name',label:'Dueño',value:c.owner_name},
   {key:'contact_person',label:'Contacto',value:c.contact_person},{key:'email',label:'Email',value:c.email},
   {key:'phone',label:'Tel. principal',value:fmtPhone(c.phone)},{key:'additional_phone',label:'Tel. secundario',value:fmtPhone(c.additional_phone)},
   {key:'cellular',label:'Celular contacto',value:fmtPhone(c.cellular)},{key:'address',label:'Dirección',value:c.address},
   {key:'city',label:'Ciudad',value:c.city},{key:'zip_code',label:'Código postal',value:c.zip_code},
-  {key:'tax_id',label:'TAX/SSN',value:c.tax_id}
+  {key:'tax_id',label:'TAX/SSN',value:c.tax_id},
+  {key:'salesperson_id',label:'Asignar vendedor',type:'select',options:await cliSalespeopleOptions(c.salesperson_id),value:c.salesperson_id||''}
 ], async function(v){ await api('/api/clients-real/'+c.id,{method:'PUT',body:cliNormalizeClientPayload(v)}); refreshCli(); }); }
 async function cliEliminar(){ var c=cliM; if(!confirm('¿Eliminar el cliente "'+(c.name||'')+'" con todos sus BANs/líneas? No se puede deshacer.'))return; try{ await api('/api/clients-real/'+c.id,{method:'DELETE'}); cerrarModal(); reClientes(); }catch(e){ alert('No se pudo eliminar: '+e.message); } }
 async function cliNuevoBan(){ openForm('Nuevo BAN',[
@@ -723,8 +999,8 @@ let cliSubEditState=null;
 const CLI_SUB_HIST_LABELS={
   phone:'Teléfono / suscriptor',phone_norm:'Teléfono normalizado',plan:'Plan',plan_code:'Código plan',price_code:'SOC / Código plan',
   monthly_value:'Mensualidad',status:'Estado',cancel_reason:'Razón cancelación',line_kind:'Tipo producto',line_type:'Tipo de línea',
-  product_type:'Product type',activation_date:'Fecha activación',contract_start_date:'Inicio contrato',contract_end_date:'Vencimiento calculado',
-  equipment:'Modelo equipo',item_id:'Item equipo',contract_term:'Total cuotas',payments_made:'Cuotas pagadas',remaining_payments:'Pagos restantes',tango_ventaid:'Venta Tango'
+  product_type:'Product type',activation_date:'Fecha activacion (historial)',contract_start_date:'Inicio contrato (uso CRM)',contract_end_date:'Vencimiento / proxima renovacion',
+  equipment:'Modelo equipo',item_id:'Item equipo',contract_term:'Total cuotas',payments_made:'Cuotas pagadas',remaining_payments:'Pagos restantes',tango_ventaid:'Venta Tango',ban_number:'BAN'
 };
 function closeSubscriberForm(){ var m=$('subFormBg'); if(m)m.remove(); cliSubEditState=null; }
 function cliSubHistoryCountLabel(){ return cliSubEditState&&Number.isFinite(cliSubEditState.total)?String(cliSubEditState.total):'...'; }
@@ -736,7 +1012,14 @@ function cliSubHistValue(k,v){
   if(String(k).includes('date'))return fmtDate(v);
   return esc(v);
 }
-function cliSubHistSourceLabel(s){ return s==='manual'?'Manual':(s==='importador'?'Importador':(s==='sistema'?'Sistema':esc(s||'Sistema'))); }
+function cliSubHistSourceLabel(s){ return s==='manual'?'Manual':(s==='importador'?'Importador':(s==='sistema'?'Sistema':(s==='imagen'?'Imagen':esc(s||'Sistema')))); }
+function cliSubHistSourceKey(source,origin){ return origin==='imagen'?'imagen':(source||'sistema'); }
+function cliSubLastUpdateButton(s){
+  if(!s.last_update_at)return `<button class="subscriber-note-btn subscriber-update-btn" onclick="cliOpenSubHistory('${s.id}')" title="Sin cambios registrados"><b>Actualizado</b><span class="subscriber-muted">Sin registro</span></button>`;
+  const key=cliSubHistSourceKey(s.last_update_source,s.last_update_origin);
+  const detail=[cliSubHistSourceLabel(key),s.last_update_user,s.last_update_import].filter(Boolean).join(' · ');
+  return `<button class="subscriber-note-btn subscriber-update-btn" onclick="cliOpenSubHistory('${s.id}')" title="${esc(detail)}"><b>Actualizado</b><span>${fmtDate(s.last_update_at)} <span class="subhist-source ${esc(key)}">${cliSubHistSourceLabel(key)}</span></span></button>`;
+}
 function cliSubscriberEditRows(fields,prefix){
   var rows='',open=false,currentTone='line';
   fields.forEach(function(f,i){
@@ -772,7 +1055,12 @@ function bindSubscriberEditForm(fields,prefix){
   if(save)save.onclick=async function(){
     var err=$('sub_err'); if(err)err.textContent='';
     try{
-      await api('/api/subscribers-real/'+cliSubEditState.id,{method:'PUT',body:cliNormalizeSubscriberPayload(cliSubscriberEditVals(fields,prefix))});
+      var payload=cliNormalizeSubscriberPayload(cliSubscriberEditVals(fields,prefix)), currentSub=cliSubEditState.subscriber||{};
+      if(payload.ban_id&&String(payload.ban_id)!==String(currentSub.ban_id||'')){
+        var destBan=((cliM&&cliM.bans)||[]).find(function(b){return String(b.id)===String(payload.ban_id);});
+        if(!confirm('¿Mover el suscriptor '+(fmtPhone(currentSub.phone)||'')+' del BAN '+(currentSub.ban_number||'')+' al BAN '+(destBan?destBan.ban_number:'')+'?'))return;
+      }
+      await api('/api/subscribers-real/'+cliSubEditState.id,{method:'PUT',body:payload});
       if(cliM&&cliM.id){ cliM=await api('/api/clients-real/'+cliM.id); }
       var fresh=(cliM&&cliM.subscribers||[]).find(function(x){return String(x.id)===String(cliSubEditState.id);});
       if(fresh)cliSubEditState.subscriber=fresh;
@@ -799,7 +1087,8 @@ function cliSubHistoryMarkup(){
     var actionText=x.comment?'Editar comentario':'Agregar comentario';
     var isManualNote=x.metadata&&x.metadata.type==='manual_note';
     var date=isManualNote&&x.metadata.note_date?fmtDate(x.metadata.note_date):(x.created_at?new Date(x.created_at).toLocaleString('es'):'Sin fecha');
-    return '<div class="subhist-item"><div class="subhist-meta"><span class="subhist-source '+esc(x.source||'sistema')+'">'+cliSubHistSourceLabel(x.source)+'</span><b>'+esc(isManualNote?'Nota manual':(x.action==='created'?'Creado':'Actualizado'))+'</b><span>'+esc(date)+'</span><span>'+esc(x.user_name_snapshot||'Sistema')+'</span>'+(x.import_name?'<span>'+esc(x.import_name)+'</span>':'')+'</div>'+changeRows+comment+'<div class="subhist-actions"><button class="btn ghost" style="padding:5px 9px;font-size:11px" onclick="cliEditHistoryComment(\''+x.id+'\')">'+actionText+'</button></div></div>';
+    var sourceKey=cliSubHistSourceKey(x.source,x.metadata&&x.metadata.origin);
+    return '<div class="subhist-item"><div class="subhist-meta"><span class="subhist-source '+esc(sourceKey)+'">'+cliSubHistSourceLabel(sourceKey)+'</span><b>'+esc(isManualNote?'Nota manual':(x.action==='created'?'Creado':'Actualizado'))+'</b><span>'+esc(date)+'</span><span>'+esc(x.user_name_snapshot||'Sistema')+'</span>'+(x.import_name?'<span>'+esc(x.import_name)+'</span>':'')+'</div>'+changeRows+comment+'<div class="subhist-actions"><button class="btn ghost" style="padding:5px 9px;font-size:11px" onclick="cliEditHistoryComment(\''+x.id+'\')">'+actionText+'</button></div></div>';
   }).join('');
   var canMore=Number.isFinite(st.total)&&st.items.length<st.total;
   var localToday=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -808,7 +1097,7 @@ function cliSubHistoryMarkup(){
 }
 function renderSubscriberEditModal(){
   if(!cliSubEditState)return;
-  var st=cliSubEditState, fields=cliSubscriberFields(st.subscriber||{}), prefix='sff_';
+  var st=cliSubEditState, fields=cliSubscriberFields(st.subscriber||{},{withBan:true}), prefix='sff_';
   var tabs=`<div class="subedit-tabs"><button class="subedit-tab ${st.tab==='data'?'on':''}" onclick="cliSetSubEditTab('data')">Datos del suscriptor</button><button class="subedit-tab ${st.tab==='history'?'on':''}" id="subhist_tab" onclick="cliSetSubEditTab('history')">Historial (${cliSubHistoryCountLabel()})</button></div>`;
   var content=st.tab==='history'?cliSubHistoryMarkup():cliSubscriberEditRows(fields,prefix)+'<div id="sub_err" style="color:var(--red);font-size:12px;min-height:14px"></div><button class="btn" style="width:100%;margin-top:6px" id="sub_save">Guardar</button>';
   var html='<div class="modal" style="max-width:980px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Editar suscriptor</h3><button class="btn ghost" style="padding:6px 10px" onclick="closeSubscriberForm()">✕</button></div>'+tabs+content+'</div>';
@@ -1007,7 +1296,7 @@ async function ocrAgregar(){
   for(var i=0;i<ocrRows.length;i++){ var r=ocrRows[i]; var ph=normalizePhone(r.phone); if(ph.length!==10){fail++;continue;} if(/^100/.test(ph)){fail++;continue;} if(!/^(787|939|989)\d{7}$/.test(ph)){fail++;errs.push(fmtPhone(ph)+': el suscriptor debe comenzar con 787, 939 o 989');continue;}
     var lk=r.line_kind||((r.type||'').toLowerCase().indexOf('fij')>=0?'fijo':((r.type||'').toLowerCase().indexOf('m')>=0?'movil':null));
     try{
-      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,product_type:r.type||null,status:'activo',expected_ban_number:expectedBan})});
+      var resp=await fetch(API+'/api/bans-real/'+ocrBanId+'/subscribers',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({phone:ph,plan:r.plan||null,line_kind:lk,product_type:r.type||null,status:'activo',expected_ban_number:expectedBan,origin:'imagen'})});
       var out=await resp.json().catch(function(){return {};});
       if(resp.status===409){ fail++; errs.push(ph+': '+(out.error||'ya existe en otro BAN')); continue; }
       if(!resp.ok) throw new Error(out.error||('HTTP '+resp.status));
@@ -1034,6 +1323,14 @@ async function guardarNotaCliente(){
     const box=$('cliNoteBody'); if(box)box.value='';
     refreshCli();
   }catch(e){ alert('No se pudo guardar la nota: '+e.message); }
+}
+async function eliminarNotaCliente(noteId){
+  if(!cliM||!cliM.id||!noteId)return;
+  if(!confirm('Eliminar esta nota del cliente? Quedara conservada como historial eliminado.'))return;
+  try{
+    await api('/api/clients-real/'+cliM.id+'/notes/'+noteId,{method:'DELETE'});
+    refreshCli();
+  }catch(e){ alert('No se pudo eliminar la nota: '+e.message); }
 }
 async function enviarSeguimientoCli(id){ try{ const r=await api('/api/asana-real/from-client',{method:'POST',body:{client_id:id}}); cerrarModal(); location.hash='#/opp/'+r.opportunity_id; }catch(e){ alert('No se pudo enviar a seguimiento: '+e.message); } }
 async function abrirCliente(id){
@@ -1079,7 +1376,7 @@ function tabBansLegacy(c){
   const cards=(c.bans||[]).map(b=>{
     const list=byBan[b.ban_number]||[]; const a=list.filter(s=>cliAct(s.status)),nr=list.filter(s=>cliNoren(s.status)),ca=list.filter(s=>cliCanc(s.status));
     const sel=cliMSub==='canceladas'?ca:a;
-    const rows=sel.map(s=>`<div class="cline"><span style="flex:1;min-width:260px">📞 <b>${fmtPhone(s.phone)||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Activación: ${s.activation_date?fmtDate(s.activation_date):'—'} · Inicio contrato: ${s.contract_start_date?fmtDate(s.contract_start_date):'—'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`).join('')||'<div class="empty">Sin líneas en este filtro</div>';
+    const rows=sel.map(s=>{const act=cliActivationHistoryDisplay(s);return `<div class="cline"><span style="flex:1;min-width:260px">📞 <b>${fmtPhone(s.phone)||'—'}</b> <span style="color:var(--txt3)">${s.plan||''}</span> ${s.equipment?'<span class="pill" style="background:var(--card2);color:var(--txt2);font-size:10px">Equipo: '+s.equipment+'</span>':''} <span style="color:var(--green)">${money(s.monthly_value)}/mes</span> <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${cliVenc(s.contract_end_date)}</span><span style="display:block;color:var(--txt3);font-size:11px;margin-top:3px">Inicio contrato: ${cliContractStartDisplay(s)} · Vence / renueva: ${s.contract_end_date?fmtDate(s.contract_end_date):'Sin fecha'} · Término: ${s.contract_term||'—'} · Pagos restantes: ${s.remaining_payments??'—'}${act?' · '+act:''}${s.cancel_reason?' · Razón: '+s.cancel_reason:''}</span></span><button class="btn" style="padding:4px 9px;font-size:11px" onclick="cliEditSub('${s.id}')">✎ Editar</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--amber-soft);color:var(--amber)" onclick="cliSubStatus('${s.id}','suspendido','Marcar No renueva')">No renueva</button><button class="btn" style="padding:4px 9px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliSubStatus('${s.id}','cancelado','Cancelar')">✕ Cancelar</button></div>`;}).join('')||'<div class="empty">Sin líneas en este filtro</div>';
     return `<div class="ccard open" style="margin-bottom:12px"><div class="chead" style="cursor:default"><b># BAN: ${b.ban_number}</b><span class="pill violet">${b.account_type||'—'}</span><span class="pill ${cliAct(b.status)?'green':'red'}">${cliAct(b.status)?'Activo':'Cancelado'}</span><span class="pill" style="background:var(--card2);color:var(--txt3)">Crédito: ${b.credit_class||'No registrado'}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn" style="padding:5px 10px;font-size:11px;background:var(--violet)" onclick="abrirOCR('${b.id}')">⇪ Subir/Pegar</button>${cliAct(b.status)?`<button class="btn" style="padding:5px 10px;font-size:11px;background:var(--red-soft);color:var(--red)" onclick="cliCancelBan('${b.id}','${b.ban_number||''}')">Cancelar BAN</button>`:''}</span></div>
       <div style="padding:0 14px 12px"><div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"><button class="btn ${cliMSub==='activas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('activas')">Activas (${a.length})</button><button class="btn ${cliMSub==='canceladas'?'green':'ghost'}" style="padding:5px 10px;font-size:11px" onclick="setCliMSub('canceladas')">Canceladas (${ca.length})</button></div>${rows}<button class="btn green" style="width:100%;margin-top:10px" onclick="cliAddSub('${b.id}')">+ Agregar Suscriptor</button></div></div>`;
   }).join('')||'<div class="empty">Sin BANs</div>';
@@ -1114,7 +1411,8 @@ function tabBans(c){
       const lastNote=s.last_history_comment_at
         ? `<button class="subscriber-note-btn" onclick="cliOpenSubNotes('${s.id}')" title="${esc(s.last_history_comment||'Ver todas las notas')}"><b>Última nota</b><span>${fmtDate(s.last_history_comment_at)} · Ver todas</span></button>`
         : `<button class="subscriber-note-btn" onclick="cliOpenSubNotes('${s.id}')" title="Ver todas las notas"><b>Notas</b><span>Ver todas las notas</span></button>`;
-      return `<div class="subscriber-row ${isCanceled?'line-canceled':'line-active'}"><div class="subscriber-cell"><span class="subscriber-label">Telefono</span><span class="subscriber-phone">${fmtPhone(s.phone)||'—'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Servicio</span><span class="subscriber-service subscriber-badges"><span class="pill ${kindTone[kind]}" style="font-size:10px">${kindLabel[kind]}</span><span class="pill ${isCanceled?'red':'green'}" style="font-size:10px">${isCanceled?'Cancelada':'Activa'}</span></span></div><div class="subscriber-cell"><span class="subscriber-label">Plan / equipo</span><span class="subscriber-plan">${esc(plan)}</span><span class="subscriber-equipment">${s.equipment?esc(s.equipment):'Sin equipo'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Renta</span>${monthly==='—'?'<span class="subscriber-muted">—</span>':'<span class="subscriber-price">'+monthly+'/mes</span>'}</div><div class="subscriber-cell"><span class="subscriber-label">Activacion</span><span class="subscriber-expiry">${s.activation_date?fmtDate(s.activation_date):'—'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Fecha fin</span><span class="subscriber-expiry">${s.contract_end_date?fmtDate(s.contract_end_date):'Sin fecha'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Termino</span><span class="subscriber-expiry">${s.contract_term||'—'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Pagos</span><span class="subscriber-expiry">${s.remaining_payments??'—'}</span></div><div class="subscriber-workflow"><div class="subscriber-note">${lastNote}</div>${workflow}<div class="subscriber-actions"><button class="btn" onclick="cliEditSub('${s.id}')">Editar</button>${activeActions}</div></div></div>`;
+      const activationHistory=cliActivationHistoryDisplay(s);
+      return `<div class="subscriber-row ${isCanceled?'line-canceled':'line-active'}"><div class="subscriber-cell"><span class="subscriber-label">Telefono</span><span class="subscriber-phone">${fmtPhone(s.phone)||'—'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Servicio</span><span class="subscriber-service subscriber-badges"><span class="pill ${kindTone[kind]}" style="font-size:10px">${kindLabel[kind]}</span><span class="pill ${isCanceled?'red':'green'}" style="font-size:10px">${isCanceled?'Cancelada':'Activa'}</span></span></div><div class="subscriber-cell"><span class="subscriber-label">Plan / equipo</span><span class="subscriber-plan">${esc(plan)}</span><span class="subscriber-equipment">${s.equipment?esc(s.equipment):'Sin equipo'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Renta</span>${monthly==='—'?'<span class="subscriber-muted">—</span>':'<span class="subscriber-price">'+monthly+'/mes</span>'}</div><div class="subscriber-cell"><span class="subscriber-label">Inicio contrato</span><span class="subscriber-expiry">${cliContractStartDisplay(s)}</span>${activationHistory?'<span class="subscriber-equipment">'+esc(activationHistory)+'</span>':''}</div><div class="subscriber-cell"><span class="subscriber-label">Vence / renueva</span><span class="subscriber-expiry">${s.contract_end_date?fmtDate(s.contract_end_date):'Sin fecha'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Termino</span><span class="subscriber-expiry">${s.contract_term||'—'}</span></div><div class="subscriber-cell"><span class="subscriber-label">Pagos</span><span class="subscriber-expiry">${s.remaining_payments??'—'}</span></div><div class="subscriber-workflow"><div class="subscriber-note subscriber-note-stack">${cliSubLastUpdateButton(s)}${lastNote}</div>${workflow}<div class="subscriber-actions"><button class="btn" onclick="cliEditSub('${s.id}')">Editar</button>${activeActions}</div></div></div>`;
     }).join('');
   };
   const cards=(c.bans||[]).map(b=>{
@@ -1131,8 +1429,8 @@ function tabBans(c){
   return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:6px;flex-wrap:wrap">${lineTabs}</div><button class="btn" onclick="cliNuevoBan()">+ Nuevo BAN</button></div>${cards}`;
 }
 function tabHist(c){
-  const notes=(c.client_notes||[]).map(x=>`<div class="logitem"><span class="lic nota">✎</span><div><div style="font-size:13.5px;color:var(--txt)">${esc(x.note||'')}</div><div style="font-size:11.5px;color:var(--txt3)">${esc(cliNoteTypeLabel(x.type))} · ${esc(x.created_by||'—')} · ${new Date(x.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin notas internas del cliente todavía.</div>';
-  const h=(c.historial||[]).map(x=>`<div class="logitem"><span class="lic paso">✓</span><div><div style="font-size:13.5px">${esc(x.note||'')}</div><div style="font-size:11.5px;color:var(--txt3)">${esc(x.created_by_username||'—')} · ${esc(x.product_key||'')} · ${new Date(x.created_at).toLocaleString('es')}</div></div></div>`).join('')||'<div class="empty">Sin gestiones registradas en Asana todavía.</div>';
+  const notes=(c.client_notes||[]).map(x=>`<div class="logitem"><span class="lic nota">✎</span><div style="min-width:0;flex:1"><div style="font-size:13.5px;color:var(--txt)">${esc(x.note||'')}</div><div style="font-size:11.5px;color:var(--txt3)">${esc(cliNoteTypeLabel(x.type))} · ${esc(x.created_by||'—')} · ${new Date(x.created_at).toLocaleString('es')}</div></div><button class="btn ghost" title="Eliminar nota" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="eliminarNotaCliente('${x.id||''}')">Eliminar</button></div>`).join('')||'<div class="empty">Sin notas internas del cliente todavía.</div>';
+  const h=(c.historial||[]).map(x=>`<div class="logitem"><span class="lic paso">✓</span><div style="min-width:0;flex:1"><div style="font-size:13.5px">${esc(x.note||'')}</div><div style="font-size:11.5px;color:var(--txt3)">${esc(x.created_by_username||'—')} · ${esc(x.product_key||'')} · ${new Date(x.created_at).toLocaleString('es')}</div></div>${x.id&&x.opportunity_id?`<button class="btn ghost" title="Eliminar nota" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="eliminarNotaAsana('${x.opportunity_id}','${x.id}',true)">Eliminar</button>`:''}</div>`).join('')||'<div class="empty">Sin gestiones registradas en Asana todavía.</div>';
   return `<div class="panel"><h3>Notas internas del cliente</h3><div class="gestion-choice"><select class="inp" id="cliNoteType" style="max-width:180px"><option value="nota">Nota</option><option value="no_renueva">No renueva</option><option value="pendiente">Pendiente</option><option value="riesgo">Riesgo</option><option value="otro">Otro</option></select></div><div class="gestion-box"><div class="gestion-fields"><textarea class="inp logbody" id="cliNoteBody" placeholder="Ej. No renovar por presupuesto, cliente pidio esperar, contrato con otro proveedor..."></textarea></div><button class="btn gestion-submit" onclick="guardarNotaCliente()">Guardar nota</button></div>${notes}</div><div class="panel"><h3>Historial de Asana</h3>${h}</div>`;
 }
 function tabVentas(c){
@@ -1145,14 +1443,9 @@ function tabComp(c){
   const a=(c.subscribers||[]).filter(s=>cliAct(s.status)); const total=a.reduce((x,s)=>x+Number(s.monthly_value||0),0);
   const rows=a.map(s=>`<tr><td>${s.ban_number||'—'}</td><td>${fmtPhone(s.phone)||'—'}</td><td>${s.plan||'—'}</td><td class="r" style="color:var(--green)">${money(s.monthly_value)}</td><td>${cliVenc(s.contract_end_date)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin líneas activas</td></tr>';
   const comps=(c.comparativas||[]).map(x=>`<tr><td>${esc(x.name||'Comparativa')}</td><td class="r">${money(x.current_total)}</td><td class="r" style="color:var(--green)">${money(x.offer_total)}</td><td>${x.created_by||'—'}</td><td>${x.created_at?new Date(x.created_at).toLocaleString('es'):'—'}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin comparativas guardadas.</td></tr>';
-  return `<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn ghost" onclick="abrirComparativa('${c.id}')">🌐 Comparativa HTML/PDF</button><button class="btn green" onclick="abrirConstructorCliente('${c.id}')">⇄ Abrir constructor de ofertas</button></div>
+  return `<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn ghost" onclick="abrirComparativa('${c.id}')">🌐 Comparativa HTML/PDF</button></div>
   <div class="card" style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Plan actual</th><th class="r">Costo</th><th>Vencimiento</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="r"><b>Total actual</b></td><td class="r" style="color:var(--green);font-weight:700">${money(total)}</td><td></td></tr></tfoot></table></div>
   <div class="panel" style="margin-top:12px"><h3>Comparativas guardadas</h3><div style="overflow-x:auto"><table style="min-width:720px"><thead><tr><th>Nombre</th><th class="r">Actual</th><th class="r">Oferta</th><th>Usuario</th><th>Fecha</th></tr></thead><tbody>${comps}</tbody></table></div></div>`;
-}
-function abrirConstructorCliente(id){
-  const url=buildPortalOfertasUrl({crm_client_id:id,return:location.href},'constructor');
-  if(!url){alert('No hay una sesion CRM activa. Entra nuevamente antes de abrir el constructor.');return;}
-  window.open(url,'_blank','noopener');
 }
 let reportAiRec=null, reportAiRecording=false;
 function reportAiToggleVoice(){
@@ -1492,6 +1785,12 @@ function isAsanaClientVisible(name){
   const normalized=String(name||'').trim().toLowerCase();
   return Boolean(normalized)&&!['\u2014','-','null','sin nombre'].includes(normalized);
 }
+function asanaRecentSaleBadge(review){
+  if(!review||!review.status)return '';
+  if(review.status==='venta_reciente_completa')return '<span class="pill green" style="font-size:9px;margin:3px 0;display:inline-block">Venta reciente completa</span>';
+  if(review.status==='venta_reciente_parcial')return '<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">Venta reciente parcial · Crecimiento pendiente</span>';
+  return '';
+}
 let asanaClientSearchTimer=null;
 function filterAsanaRows(raw){
   const q=String(raw||'').trim().toLowerCase();
@@ -1555,11 +1854,18 @@ function asanaCallMap(alerts){
 function asanaUniqueCallAlerts(alerts){
   return Array.from(asanaCallMap(alerts).values()).sort((a,b)=>new Date(a.scheduled_call_at)-new Date(b.scheduled_call_at));
 }
+function abrirLlamadaAsana(opportunityId,noteId){
+  if(!opportunityId){ alert('Esta llamada no tiene oportunidad vinculada.'); return; }
+  try{ if(noteId)localStorage.setItem('asana_call_focus',String(noteId)); }catch(e){}
+  location.hash='#/opp/'+opportunityId;
+}
 function asanaCallButton(alert){
+  if(!alert||!alert.opportunity_id){
+    return `<td class="c"><button class="callbtn off" title="Sin llamada agendada" disabled>☎</button></td>`;
+  }
   const state=asanaCallState(alert);
-  const title=alert?`${new Date(alert.scheduled_call_at).toLocaleString('es')} · ${alert.body||'Llamar'}`:'Sin llamada hoy';
-  const action=alert?`location.hash='#/opp/${alert.opportunity_id}'`:'void(0)';
-  return `<td class="c"><button class="callbtn ${state}" title="${esc(title)}" onclick="${action}">☎</button></td>`;
+  const title=`${new Date(alert.scheduled_call_at).toLocaleString('es')} · ${alert.body||'Llamar'}`;
+  return `<td class="c"><button class="callbtn ${state}" title="${esc(title)}" onclick="event.stopPropagation();abrirLlamadaAsana('${alert.opportunity_id}','${alert.id||''}')">☎</button></td>`;
 }
 function asanaDailyCallAgenda(alerts){
   const now=new Date(), today=asanaStartOfDay(now).getTime(), tomorrow=today+86400000;
@@ -1571,6 +1877,7 @@ function asanaDailyCallAgenda(alerts){
 }
 let asanaAgendaScope='mine';
 let asanaMainTab='resumen';
+let asanaAgendaItems=[];
 function setAsanaMainTab(tab){ asanaMainTab=tab==='clientes'?'clientes':'resumen'; router(); }
 function asanaAgendaState(item){
   const due=new Date(item&&item.due_at), now=new Date();
@@ -1578,30 +1885,159 @@ function asanaAgendaState(item){
   if(due<now)return 'overdue';
   return asanaStartOfDay(due).getTime()===asanaStartOfDay(now).getTime()?'today':'upcoming';
 }
+const SC_ICONS={
+  gear:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.5"/><path d="M8 1.4v1.7M8 12.9v1.7M2.9 2.9l1.2 1.2M11.9 11.9l1.2 1.2M1.4 8h1.7M12.9 8h1.7M2.9 13.1l1.2-1.2M11.9 4.1l1.2-1.2"/></svg>',
+  doc:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V5.1z"/><path d="M9.3 1.8v3.3h3.4M5.7 8.6h4.6M5.7 11h3.2"/></svg>',
+  phone:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M14.2 11.4v2a1.3 1.3 0 0 1-1.4 1.3 12.6 12.6 0 0 1-5.5-2 12.4 12.4 0 0 1-3.8-3.8 12.6 12.6 0 0 1-2-5.5A1.3 1.3 0 0 1 2.8 2h2a1.3 1.3 0 0 1 1.3 1.1c.1.7.2 1.3.4 1.9a1.3 1.3 0 0 1-.3 1.4l-.8.8a10.2 10.2 0 0 0 3.8 3.8l.8-.8a1.3 1.3 0 0 1 1.4-.3c.6.2 1.2.3 1.9.4a1.3 1.3 0 0 1 1.1 1.3z"/></svg>',
+  edit:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.8 2.4 13.6 6.2 6.4 13.4H2.6V9.6z"/><path d="m8.8 3.4 3.8 3.8"/></svg>',
+  plus:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg>',
+  prev:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.2 5.2 8 10 12.8"/></svg>',
+  next:'<svg class="sc-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.2 10.8 8 6 12.8"/></svg>'
+};
+const SC_WEEKDAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const SC_MONTHS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const SC_MONTHS_SHORT=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function scCap(text){const s=String(text||'');return s.charAt(0).toUpperCase()+s.slice(1);}
+function scDateKey(value){const d=value instanceof Date?value:new Date(value);if(isNaN(d.getTime()))return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function scTime(value){const d=new Date(value);return isNaN(d.getTime())?'':d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});}
+function scDateInput(value){const d=new Date(value);return isNaN(d.getTime())?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function scTimeInput(value){const d=new Date(value);return isNaN(d.getTime())?'':String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function scShortDate(value){const d=new Date(value);return isNaN(d.getTime())?'':d.getDate()+' '+SC_MONTHS_SHORT[d.getMonth()]+', '+scTime(d);}
 function asanaWeekCalendar(items){
   const today=asanaStartOfDay(new Date());
   const days=Array.from({length:7},(_,index)=>{
     const date=new Date(today);date.setDate(today.getDate()+index);return date;
   });
   const sameDay=(left,right)=>asanaStartOfDay(left).getTime()===asanaStartOfDay(right).getTime();
-  return `<div class="week-calendar-title">Calendario semanal</div><div class="week-calendar">${days.map((date,index)=>{
+  return `<div class="sc-card sc-week"><h3>Tu semana</h3><div class="sc-week-grid">${days.map((date,index)=>{
     const dayItems=(items||[]).filter(item=>{const due=new Date(item.due_at);return !isNaN(due.getTime())&&sameDay(due,date)});
-    return `<div class="week-day ${index===0?'today':''}"><div class="week-day-head">${date.toLocaleDateString('es',{weekday:'short',day:'numeric'})}</div>${dayItems.map(item=>`<div class="week-event" title="${esc(item.title||'Pendiente')}">${new Date(item.due_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})} · ${esc(item.title||'Pendiente')}</div>`).join('')||'<div class="s">Sin tareas</div>'}</div>`;
-  }).join('')}</div>`;
+    return `<div class="sc-week-day ${index===0?'today':''}"><div class="sc-week-head">${SC_WEEKDAYS[date.getDay()]} <b>${date.getDate()}</b></div>${dayItems.map(item=>`<div class="sc-week-event" title="${esc(item.title||'Pendiente')}">${scTime(item.due_at)} · ${esc(item.title||'Pendiente')}</div>`).join('')||'<div class="sc-week-empty">-</div>'}</div>`;
+  }).join('')}</div></div>`;
+}
+let asanaCalCursor=null;
+let asanaCalSelected=null;
+function asanaCalCursorDate(){
+  if(asanaCalCursor){
+    const parts=String(asanaCalCursor).split('-');
+    const parsed=new Date(Number(parts[0]),Number(parts[1])-1,1);
+    if(!isNaN(parsed.getTime()))return parsed;
+  }
+  const now=new Date();
+  return new Date(now.getFullYear(),now.getMonth(),1);
+}
+function asanaCalShift(delta){
+  const base=asanaCalCursorDate();
+  const next=new Date(base.getFullYear(),base.getMonth()+Number(delta||0),1);
+  asanaCalCursor=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0');
+  router();
+}
+function asanaCalSelect(key){
+  asanaCalSelected=key||null;
+  const parts=String(key||'').split('-');
+  if(parts.length===3)asanaCalCursor=parts[0]+'-'+parts[1];
+  router();
+}
+function asanaMonthCalendar(items){
+  const now=new Date();
+  const todayKey=scDateKey(now);
+  const cursor=asanaCalCursorDate();
+  const selectedKey=asanaCalSelected||todayKey;
+  const byDay=new Map();
+  (items||[]).forEach(item=>{
+    const key=scDateKey(item&&item.due_at);
+    if(!key)return;
+    if(!byDay.has(key))byDay.set(key,[]);
+    byDay.get(key).push(item);
+  });
+  const firstWeekday=new Date(cursor.getFullYear(),cursor.getMonth(),1).getDay();
+  const monthDays=new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate();
+  const weeks=Math.ceil((firstWeekday+monthDays)/7);
+  const start=new Date(cursor.getFullYear(),cursor.getMonth(),1-firstWeekday);
+  const cells=Array.from({length:weeks*7},(_,index)=>{
+    const date=new Date(start.getFullYear(),start.getMonth(),start.getDate()+index);
+    const key=scDateKey(date);
+    const count=(byDay.get(key)||[]).length;
+    const classes=['sc-cal-day'];
+    if(date.getMonth()!==cursor.getMonth())classes.push('out');
+    if(key===todayKey)classes.push('today');
+    if(key===selectedKey)classes.push('sel');
+    const label=date.getDate()+' de '+SC_MONTHS[date.getMonth()]+(count?' · '+count+(count===1?' tarea':' tareas'):' · sin tareas');
+    return `<button type="button" class="${classes.join(' ')}" title="${esc(label)}" onclick="asanaCalSelect('${key}')"><span class="n">${date.getDate()}</span>${count?'<span class="sc-cal-mark"></span>':''}</button>`;
+  }).join('');
+  const selectedParts=String(selectedKey).split('-');
+  const selectedDate=new Date(Number(selectedParts[0]),Number(selectedParts[1])-1,Number(selectedParts[2]));
+  const dayLabel=selectedDate.getDate()+' de '+SC_MONTHS[selectedDate.getMonth()];
+  const heading=selectedKey===todayKey?'Hoy, '+dayLabel:scCap(selectedDate.toLocaleDateString('es',{weekday:'long'}))+', '+dayLabel;
+  const selectedItems=(byDay.get(selectedKey)||[]).slice().sort((a,b)=>new Date(a.due_at)-new Date(b.due_at));
+  const list=selectedItems.map(item=>{
+    const kind=item.item_type==='llamada'?'Llamada':'Tarea';
+    const action=item.opportunity_id?`onclick="location.hash='#/opp/${item.opportunity_id}'" class="sc-cal-item link"`:'class="sc-cal-item"';
+    return `<div ${action}><div class="sc-cal-time">${scTime(item.due_at)}</div><div style="min-width:0"><div class="sc-task-title" style="font-size:13.5px">${esc(item.title||kind)}</div><div class="sc-task-meta">${esc(item.client_name||'Sin cliente')}</div></div></div>`;
+  }).join('')||`<div class="sc-cal-empty">${selectedKey===todayKey?'No tienes tareas para hoy':'No tienes tareas ese día'}</div>`;
+  return `<div class="sc-card"><div class="sc-cal-head"><h3>${scCap(SC_MONTHS[cursor.getMonth()])} ${cursor.getFullYear()}</h3><div class="sc-cal-nav"><button type="button" title="Mes anterior" onclick="asanaCalShift(-1)">${SC_ICONS.prev}</button><button type="button" title="Mes siguiente" onclick="asanaCalShift(1)">${SC_ICONS.next}</button></div></div><div class="sc-cal-grid">${SC_WEEKDAYS.map(day=>`<div class="sc-cal-wd">${day}</div>`).join('')}${cells}</div><div class="sc-cal-foot"><h4>${esc(heading)}</h4>${list}</div></div>`;
 }
 function asanaDailyAgenda(items,canViewTeam){
   const prepared=(items||[]).map(item=>Object.assign({},item,{agenda_state:asanaAgendaState(item),due_date:new Date(item.due_at)}));
-  const group=(title,state)=>{
-    const rows=prepared.filter(item=>item.agenda_state===state);
-    return `<div class="my-day-group"><div class="my-day-title">${title} (${rows.length})</div>${rows.map(item=>{
-      const client=item.client_name||'Sin cliente';
-      const kind=item.item_type==='llamada'?'Llamada':'Tarea';
-      const action=item.opportunity_id?`onclick="location.hash='#/opp/${item.opportunity_id}'"`:'';
-      return `<div class="my-day-item ${esc(item.priority||'normal')}" ${action}><button class="my-day-check" type="button" title="Completar" onclick="event.stopPropagation();completarTareaAsana('${item.item_type}','${item.id}')">✓</button><div><div class="my-day-item-title">${esc(item.title||kind)}</div><div class="my-day-item-meta">${item.due_date.toLocaleString('es')} · ${esc(client)} · ${esc(item.assigned_to_username||'Sin asignar')}</div></div></div>`;
-    }).join('')||'<div class="s">Sin pendientes.</div>'}</div>`;
+  const taskRow=item=>{
+    const client=item.client_name||'Sin cliente';
+    const kind=item.item_type==='llamada'?'Llamada':'Tarea';
+    const title=item.title||kind;
+    const secondary=item.step_name||(client===title?'':client);
+    const parts=[secondary,scShortDate(item.due_at)];
+    if(item.priority==='alta')parts.push('Prioridad alta');
+    else if(item.priority==='baja')parts.push('Prioridad baja');
+    if(asanaAgendaScope==='team')parts.push(item.assigned_to_username||'Sin asignar');
+    if(item.status==='completada')parts.push('Completada');
+    const meta=parts.filter(Boolean).join(' · ');
+    const editable=item.item_type==='tarea';
+    const action=editable?`onclick="abrirModalEditarTareaAsana('${item.id}')"`:(item.opportunity_id?`onclick="location.hash='#/opp/${item.opportunity_id}'"`:'');
+    const isDone=item.status==='completada';
+    const checkTitle=isDone?'Reabrir tarea':'Completar';
+    const nextStatus=isDone?'pendiente':'completada';
+    const buttons=editable?`<div class="sc-task-actions"><button class="sc-task-btn" type="button" title="Editar tarea" onclick="event.stopPropagation();abrirModalEditarTareaAsana('${item.id}')">${SC_ICONS.edit}Editar</button>${item.opportunity_id?`<button class="sc-task-btn" type="button" onclick="event.stopPropagation();location.hash='#/opp/${item.opportunity_id}'">Abrir Asana</button>`:''}</div>`:'';
+    return `<div class="sc-task ${editable||item.opportunity_id?'link':''} ${esc(item.priority||'normal')} ${isDone?'done':''}" ${action}><button class="sc-check ${isDone?'done':''}" type="button" title="${checkTitle}" onclick="event.stopPropagation();actualizarEstadoTareaAsana('${item.item_type}','${item.id}','${nextStatus}')">✓</button><div style="min-width:0"><div class="sc-task-title">${esc(title)}</div><div class="sc-task-meta">${esc(meta)}</div>${buttons}</div></div>`;
   };
-  const scope=canViewTeam?`<div class="ctabs"><button class="ctab ${asanaAgendaScope==='mine'?'on':''}" onclick="setAsanaAgendaScope('mine')">Mis tareas</button><button class="ctab ${asanaAgendaScope==='team'?'on':''}" onclick="setAsanaAgendaScope('team')">Equipo</button></div>`:'';
-  return `<div class="panel my-day"><div class="my-day-head"><div><h2>Mi día</h2><div class="s">Llamadas, próximos pasos y tareas generales.</div></div>${scope}</div><div class="my-day-form"><div><div class="flbl">Tarea</div><input class="inp" id="asanaTaskTitle" placeholder="Tarea general"></div><div><div class="flbl">Fecha</div><input class="inp" id="asanaTaskDate" type="date"></div><div><div class="flbl">Hora</div><input class="inp" id="asanaTaskTime" type="time"></div><div><div class="flbl">Prioridad</div><select class="inp" id="asanaTaskPriority"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baja">Baja</option></select></div><button class="btn green" onclick="crearTareaAsana()">Agregar tarea</button></div><div class="my-day-groups">${group('Vencidas','overdue')}${group('Hoy','today')}${group('Próximas','upcoming')}</div>${asanaWeekCalendar(prepared)}</div>`;
+  const group=(cls,label,rows,empty)=>`<div class="sc-group ${cls}"><div class="sc-group-head"><span class="sc-dot"></span>${label} · ${rows.length}</div>${rows.map(taskRow).join('')||`<div class="sc-empty">${empty}</div>`}</div>`;
+  const active=prepared.filter(item=>item.status!=='completada');
+  const completed=prepared.filter(item=>item.status==='completada');
+  const attention=active.filter(item=>item.agenda_state==='overdue'||item.agenda_state==='today');
+  const upcoming=active.filter(item=>item.agenda_state==='upcoming');
+  const scope=canViewTeam?`<div class="sc-seg"><button type="button" class="${asanaAgendaScope==='mine'?'on':''}" onclick="setAsanaAgendaScope('mine')">Mis tareas</button><button type="button" class="${asanaAgendaScope==='team'?'on':''}" onclick="setAsanaAgendaScope('team')">Equipo</button></div>`:'';
+  return `<div class="sc-card"><div class="sc-day-head"><div><h2>Mi día</h2><div class="sc-sub">Organiza tu siguiente paso</div></div><div class="sc-day-tools"><button class="sc-newtask" type="button" onclick="abrirModalTareaAsana()">${SC_ICONS.plus}Nueva tarea</button>${scope}</div></div>${group('attention','Requieren atención',attention,'Sin tareas urgentes.')}${group('upcoming','En gestion',upcoming,'Sin tareas en gestion.')}${group('completed','Completadas',completed,'Sin tareas completadas.')}</div>`;
+}
+function abrirModalTareaAsana(){
+  cerrarModal();
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal sc-scope sc-modal">
+    <div class="sc-modal-head"><h2>Nueva tarea</h2><button class="sc-modal-x" type="button" title="Cerrar" onclick="cerrarModal()">✕</button></div>
+    <div class="sc-form">
+      <div class="sc-field-full"><div class="sc-lbl">Tarea</div><input class="sc-inp" id="asanaTaskTitle" placeholder="Tarea general"></div>
+      <div><div class="sc-lbl">Fecha</div><input class="sc-inp" id="asanaTaskDate" type="date"></div>
+      <div><div class="sc-lbl">Hora</div><input class="sc-inp" id="asanaTaskTime" type="time"></div>
+      <div class="sc-field-full"><div class="sc-lbl">Prioridad</div><select class="sc-inp" id="asanaTaskPriority"><option value="normal">Normal</option><option value="alta">Alta</option><option value="baja">Baja</option></select></div>
+    </div>
+    <button class="sc-newtask" type="button" style="width:100%;justify-content:center" onclick="crearTareaAsana()">Agregar tarea</button>
+  </div></div>`);
+  const field=$('asanaTaskTitle');
+  if(field)field.focus();
+}
+function abrirModalEditarTareaAsana(id){
+  const item=(asanaAgendaItems||[]).find(x=>x.item_type==='tarea'&&String(x.id)===String(id));
+  if(!item){alert('No se encontro la tarea para editar.');return;}
+  cerrarModal();
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal sc-scope sc-modal">
+    <div class="sc-modal-head"><h2>Editar tarea</h2><button class="sc-modal-x" type="button" title="Cerrar" onclick="cerrarModal()">✕</button></div>
+    <div class="sc-form">
+      <div class="sc-field-full"><div class="sc-lbl">Tarea</div><input class="sc-inp" id="asanaEditTitle" value="${esc(item.title||'')}"></div>
+      <div><div class="sc-lbl">Fecha</div><input class="sc-inp" id="asanaEditDate" type="date" value="${scDateInput(item.due_at)}"></div>
+      <div><div class="sc-lbl">Hora</div><input class="sc-inp" id="asanaEditTime" type="time" value="${scTimeInput(item.due_at)}"></div>
+      <div><div class="sc-lbl">Prioridad</div><select class="sc-inp" id="asanaEditPriority"><option value="normal"${item.priority==='normal'?' selected':''}>Normal</option><option value="alta"${item.priority==='alta'?' selected':''}>Alta</option><option value="baja"${item.priority==='baja'?' selected':''}>Baja</option></select></div>
+      <div><div class="sc-lbl">Estado</div><select class="sc-inp" id="asanaEditStatus"><option value="pendiente"${item.status!=='completada'?' selected':''}>En gestion</option><option value="completada"${item.status==='completada'?' selected':''}>Completada</option></select></div>
+      <div class="sc-field-full"><div class="sc-lbl">Notas</div><textarea class="sc-inp" id="asanaEditNotes" rows="3" style="resize:vertical">${esc(item.notes||'')}</textarea></div>
+    </div>
+    <button class="sc-newtask" type="button" style="width:100%;justify-content:center" onclick="editarTareaAsana('${item.id}')">Guardar cambios</button>
+  </div></div>`);
+  const field=$('asanaEditTitle');
+  if(field)field.focus();
 }
 function setAsanaAgendaScope(scope){asanaAgendaScope=scope==='team'?'team':'mine';router();}
 async function crearTareaAsana(){
@@ -1616,18 +2052,33 @@ async function crearTareaAsana(){
   if(!dateValue){alert('Selecciona la fecha de la tarea.');return;}
   if(!timeValue){alert('Selecciona la hora de la tarea.');return;}
   const due_at=new Date(dateValue+'T'+timeValue).toISOString();
-  try{await api('/api/asana-real/tasks',{method:'POST',body:{title,due_at,priority,opportunity_id,client_id,step_id}});router();}
+  try{await api('/api/asana-real/tasks',{method:'POST',body:{title,due_at,priority,opportunity_id,client_id,step_id}});cerrarModal();router();}
   catch(e){alert('No se pudo guardar la tarea: '+e.message);}
 }
-async function completarTareaAsana(type,id){
+async function editarTareaAsana(id){
+  const title=($('asanaEditTitle')&&$('asanaEditTitle').value||'').trim();
+  const notes=($('asanaEditNotes')&&$('asanaEditNotes').value||'').trim();
+  const dateValue=$('asanaEditDate')&&$('asanaEditDate').value;
+  const timeValue=$('asanaEditTime')&&$('asanaEditTime').value;
+  const priority=$('asanaEditPriority')&&$('asanaEditPriority').value||'normal';
+  const status=$('asanaEditStatus')&&$('asanaEditStatus').value||'pendiente';
+  if(!title){alert('Escribe la tarea.');return;}
+  if(!dateValue){alert('Selecciona la fecha de la tarea.');return;}
+  if(!timeValue){alert('Selecciona la hora de la tarea.');return;}
+  const due_at=new Date(dateValue+'T'+timeValue).toISOString();
+  try{await api('/api/asana-real/tasks/'+id,{method:'PATCH',body:{title,notes,due_at,priority,status}});cerrarModal();router();}
+  catch(e){alert('No se pudo editar la tarea: '+e.message);}
+}
+async function actualizarEstadoTareaAsana(type,id,status){
+  if(type==='llamada'){await resolverLlamadaAsana(id,status==='cancelada'?'cancelada':'completada');return;}
   try{
-    if(type==='llamada'){await resolverLlamadaAsana(id,'completada');return;}
-    else{
-      const result=await api('/api/asana-real/tasks/'+id,{method:'PATCH',body:{status:'completada'}});
-      if(result.suggested_next_step)alert('Tarea completada. Próximo paso: '+result.suggested_next_step.name);
-    }
+    const result=await api('/api/asana-real/tasks/'+id,{method:'PATCH',body:{status}});
+    if(status==='completada'&&result.suggested_next_step)alert('Tarea completada. Próximo paso: '+result.suggested_next_step.name);
     router();
-  }catch(e){alert('No se pudo completar: '+e.message);}
+  }catch(e){alert('No se pudo actualizar: '+e.message);}
+}
+async function completarTareaAsana(type,id){
+  await actualizarEstadoTareaAsana(type,id,'completada');
 }
 async function resolverLlamadaAsana(id,status){
   if(status==='cancelada'&&!confirm('¿Cancelar esta llamada agendada?'))return;
@@ -1648,6 +2099,7 @@ function abrirTareaPaso(opportunityId,clientId,stepId,stepName){
 }
 async function viewAsana(){
   const [rawData,callAlerts,agenda]=await Promise.all([api('/api/asana-real'),loadCallAlerts(),api('/api/asana-real/agenda?scope='+asanaAgendaScope)]);
+  asanaAgendaItems=agenda.items||[];
   const data=rawData.filter(o=>isAsanaClientVisible(o.client_name));
   const callByOpp=asanaCallMap(callAlerts);
   const callAgenda=asanaDailyCallAgenda(asanaUniqueCallAlerts(callAlerts));
@@ -1671,18 +2123,19 @@ async function viewAsana(){
     <div class="kpi"><div class="l">Líneas en seguimiento</div><div class="v" style="color:var(--teal)">${totLin}</div></div>
     <div class="kpi"><div class="l">$ en seguimiento</div><div class="v" style="color:var(--green)">${money(totMon)}</div></div>
     <div class="kpi"><div class="l">Clientes</div><div class="v">${data.length}</div></div></div>`;
-  const asanaSummary=`<div class="asana-kpis">
-    <div class="kpi main"><div class="l">Clientes en seguimiento</div><div class="v" style="color:var(--primary);font-size:28px">${data.length}<span class="tot">clientes</span></div><div class="hint">${trackedLines} líneas/productos negociados · ${totalSubs} líneas actuales en esos clientes</div></div>
-    <div class="kpi"><div class="l">Líneas móviles</div><div class="v" style="color:var(--green)">${mobileLines}</div><div class="hint">Movil Ren + Movil New</div></div>
-    <div class="kpi"><div class="l">Líneas fijas</div><div class="v" style="color:var(--teal)">${fixedLines}</div><div class="hint">Fijo Ren + Fijo New</div></div>
-    <div class="kpi"><div class="l">Plata fijo</div><div class="v" style="color:var(--amber)">${money(fixedMoney)}</div><div class="hint">Mensualidad fija en seguimiento</div></div>
-  </div>`;
+  const asanaSummary=`<div class="sc-kpis">
+    <div class="sc-kpi"><div class="sc-kpi-v">${data.length}</div><div class="sc-kpi-l">Clientes en seguimiento</div></div>
+    <div class="sc-kpi"><div class="sc-kpi-v">${mobileLines}</div><div class="sc-kpi-l">Líneas móviles</div></div>
+    <div class="sc-kpi"><div class="sc-kpi-v">${fixedLines}</div><div class="sc-kpi-l">Líneas fijas</div></div>
+    <div class="sc-kpi"><div class="sc-kpi-v">${money(fixedMoney)}</div><div class="sc-kpi-l">Mensualidad fija</div></div>
+  </div>
+  <div class="sc-kpi-note">${trackedLines} líneas/productos negociados · ${totalSubs} líneas actuales</div>`;
   const cell=(o,pk,type)=>{
     const p=o.products&&o.products[pk];
     const val=p?(type==='money'?Number(p.money_value||0):productUnits(o,pk,type)):0;
     const subs=p?Number(p.subscriber_count||0):0;
     const display=p?(type==='money'?money(val):String(val)):'0';
-    return `<td class="c"><div class="acell"><div class="asana-value ${p?'':'empty'}">${display}</div><div class="asubs">${subs} subs</div></div></td>`;
+    return `<td class="c"><div class="acell"><div class="asana-value ${type==='money'?'av-money':'av-qty'} ${p?'':'empty'}">${display}</div><div class="asubs">${subs} subs</div></div></td>`;
   };
   const row=o=>{
     const bans=String(o.ban_numbers||'').split(',').map(x=>x.trim()).filter(Boolean);
@@ -1690,22 +2143,24 @@ async function viewAsana(){
     const clientLineTitle=`${o.client_name||'—'} · ${banText} · ${o.ban_count||0} BAN · ${o.subscriber_count||0} subs`;
     const searchText=[o.client_name,o.ban_numbers,o.vendor_name].join(' ').toLowerCase();
     return `<tr class="asana-row" data-search="${esc(searchText)}">
-    <td><div class="asana-client-cell" title="${esc(clientLineTitle)}"><div class="asana-client-line"><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button><span class="asana-ban-inline">${esc(banText)}</span><span class="asana-meta-inline">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</span></div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}</div></td>
-    <td><span class="asana-vendor">${esc(o.vendor_name||'Sin asignar')}</span></td>
+    <td><div class="asana-client-cell" title="${esc(clientLineTitle)}"><div class="asana-client-line"><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button><span class="asana-ban-inline">${esc(banText)}</span><span class="asana-meta-inline">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</span></div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}${asanaRecentSaleBadge(o.recent_sale_review)}</div></td>
+    <td><span class="asana-vendor ${(o.vendor_name||'Sin asignar')==='Sin asignar'?'unassigned':''}">${esc(o.vendor_name||'Sin asignar')}</span></td>
     ${ASANA_PRODS.map(p=>cell(o,p[0],p[2])).join('')}
     <td class="r"><span class="asana-money">${money(o.total_money)}</span></td>
     ${asanaCallButton(callByOpp.get(o.id))}
     <td><div class="asana-actions"><button class="btn ghost" onclick="location.hash='#/opp/${o.id}'">Abrir Asana</button></div></td></tr>`;
   };
   const head=`<tr><th>Cliente</th><th>Vendedor</th>${ASANA_PRODS.map(p=>`<th class="c" style="color:var(--${p[3]})">${p[1]}</th>`).join('')}<th class="r">Total $</th><th class="c">Agenda</th><th>Acciones</th></tr>`;
-  const asanaTabs=`<div class="ctabs asana-main-tabs"><button class="ctab ${asanaMainTab==='resumen'?'on':''}" onclick="setAsanaMainTab('resumen')">Tarjetas y mi día</button><button class="ctab ${asanaMainTab==='clientes'?'on':''}" onclick="setAsanaMainTab('clientes')">Clientes</button></div>`;
+  const asanaTabs=`<div class="sc-tabs"><button type="button" class="sc-tab ${asanaMainTab==='resumen'?'on':''}" onclick="setAsanaMainTab('resumen')">Mi día</button><button type="button" class="sc-tab ${asanaMainTab==='clientes'?'on':''}" onclick="setAsanaMainTab('clientes')">Clientes</button></div>`;
   const asanaClientsTools=`<div class="panel" style="padding:10px 12px;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:220px"><div class="flbl">Buscar en seguimiento</div><input class="inp" placeholder="Cliente, BAN o vendedor" oninput="filterAsanaRows(this.value)"></div><div style="flex:1;min-width:260px"><div class="flbl">Buscar cliente para seguimiento</div><input class="inp" id="asanaClientSearch" placeholder="Empresa, BAN o suscriptor" oninput="buscarClienteAsana(this.value)"><div id="asanaClientSearchResults"></div></div></div></div>`;
   const asanaClientsTable=`<div class="card" style="overflow-x:auto"><table class="asana-table"><thead>${head}</thead><tbody id="asanaRows">${data.map(row).join('')||'<tr><td colspan="12" class="empty">Sin oportunidades en seguimiento.</td></tr>'}<tr id="asanaNoMatches" style="display:none"><td colspan="12" class="empty">No hay oportunidades que coincidan.</td></tr></tbody></table></div>`;
-  return `<div class="head"><div><h1>Asana · Seguimiento</h1><div class="s">${data.length} oportunidades · estructura SOV2 real · cantidad (líneas) y dinero (fijo)</div></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" onclick="location.hash='#/pasos'">⚙ Configurar pasos</button><button class="btn green" onclick="mostrarInfoReportes()">📊 Reporte inteligente</button><button class="btn" style="background:var(--violet)" onclick="abrirVoz()">🎤 Cliente Voz</button></div></div>
+  return `<div class="sc-scope sc-shell${asanaMainTab==='clientes'?' sc-clients':''}">
+  <div class="sc-head"><div><h1>Seguimiento comercial</h1><div class="sc-sub">Tus clientes, tus próximos pasos.</div></div><div class="sc-head-actions"><button class="sc-hbtn" type="button" onclick="location.hash='#/pasos'">${SC_ICONS.gear}Configurar pasos</button><button class="sc-hbtn" type="button" onclick="mostrarInfoReportes()">${SC_ICONS.doc}Reporte inteligente</button><button class="sc-hbtn" type="button" onclick="abrirVoz()">${SC_ICONS.phone}Cliente Voz</button></div></div>
   ${asanaTabs}
   <div class="asana-tab-panel">${asanaMainTab==='resumen'?`${asanaSummary}
-  ${asanaDailyAgenda(agenda.items,agenda.can_view_team)}`:''}${asanaMainTab==='clientes'?`${asanaClientsTools}
-  ${asanaClientsTable}`:''}</div>`;
+  <div class="sc-main">${asanaDailyAgenda(agenda.items,agenda.can_view_team)}${asanaMonthCalendar(agenda.items)}</div>
+  ${asanaWeekCalendar(agenda.items)}`:''}${asanaMainTab==='clientes'?`${asanaClientsTools}
+  ${asanaClientsTable}`:''}</div></div>`;
 }
 let asanaLogTab='llamada';
 const ASANA_LOG_TABS=[['llamada','Llamadas'],['nota','Notas'],['paso','Pasos']];
@@ -1736,7 +2191,7 @@ async function viewOpp(id){
   const activeLogs=logs.filter(l=>(l.type||'nota')===asanaLogTab);
   const logItems=activeLogs.map(l=>{
     const scheduled=l.scheduled_call_at?`<span class="pill amber" style="margin-left:6px">Agendada: ${new Date(l.scheduled_call_at).toLocaleString('es')}</span>`:'';
-    return `<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}${scheduled}</div><div class="logmeta">${esc(l.user_name||'Sistema')} · ${new Date(l.created_at).toLocaleString('es')}</div></div></div>`;
+    return `<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0;flex:1"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}${scheduled}</div><div class="logmeta">${esc(l.user_name||'Sistema')} · ${new Date(l.created_at).toLocaleString('es')}</div></div><button class="btn ghost" title="Eliminar nota" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="eliminarNotaAsana('${o.id}','${l.id||''}')">Eliminar</button></div>`;
   }).join('')||`<div class="empty">Sin ${ASANA_LOG_TABS.find(t=>t[0]===asanaLogTab)[1].toLowerCase()} todavía.</div>`;
   return `<div class="crumb"><a href="#/asana">Asana</a> / Seguimiento</div>
   <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button></h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Eliminar de seguimiento</button></div></div>
@@ -1965,6 +2420,99 @@ async function viewCategorias(){
   const cats=await api('/api/categories'); const prods=await api('/api/products');
   return `<div class="head"><div><h1>Categorías</h1><div class="s">Familias de producto</div></div></div>
   <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
+}
+let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada';
+function tareasReglasClase(status){
+  return /^(publicada|publicado|confirmado|comprobado|recibido|registrada|registrado)$/i.test(status||'')?'green':/fall|bloque|vencid|error/i.test(status||'')?'red':'amber';
+}
+function tareasReglasTexto(value){
+  if(value==null||value==='')return 'Sin verificar';
+  return typeof value==='object'?Object.entries(value).map(([key,val])=>key+': '+tareasReglasTexto(val)).join(' · '):String(value);
+}
+function tareasReglasFecha(value){return value?new Date(value).toLocaleString('es'):'Sin verificar';}
+function tareasReglasDestinoSeguro(url){return /^\/constructor\/[a-z0-9-]+\.html$/i.test(url||'')&&!/oferta-const|ofertas\.html/i.test(url);}
+function tareasReglasDocumento(index,docIndex){
+  const doc=tareasReglasModules[index]?.documents?.[docIndex];
+  if(doc?.id)ofAbrirDocumentoFuente(doc.id);
+}
+async function tareasReglasAccion(index,actionIndex){
+  const module=tareasReglasModules[index], action=module?.actions?.[actionIndex];
+  if(!action)return;
+  if(action.kind==='destination'){
+    if(tareasReglasDestinoSeguro(action.url))window.open(action.url,'_blank','noopener');
+    return;
+  }
+  if(action.kind==='document'){if(action.id)ofAbrirDocumentoFuente(action.id);return;}
+  if(action.kind==='published'&&action.id){await ofAbrirDetallePublicacion(action.id,{modulo:action.tab||module.key});return;}
+  if(!['flow','draft'].includes(action.kind)||!OF_TABS.some(tab=>tab[0]===action.tab))return;
+  tareasReglasFlowTarget={tab:action.tab,source_id:action.source_id||module.pending?.source_id||null,draft_id:action.kind==='draft'?action.id:null};
+  ofTab=action.tab;
+  const hash='#/ofertas/'+encodeURIComponent(action.tab);
+  if(location.hash===hash)await router();else location.hash=hash;
+}
+function tareasReglasAcciones(module,index){
+  return (module.actions||[]).map((action,i)=>action.kind==='document'?'':'<button class="btn '+(i?'ghost':'')+'" type="button" onclick="tareasReglasAccion('+index+','+i+')">'+esc(action.label)+'</button>').join('');
+}
+function tareasReglasDetalleHtml(index){
+  const module=tareasReglasModules[index];if(!module)return '';
+  const pub=module.publication, pending=module.pending, verification=module.verification||{};
+  const docs=(module.documents||[]).map((doc,i)=>'<li><div><b>'+esc(doc.name)+'</b><div class="s">'+esc(doc.role||'Archivada')+'</div></div>'+(doc.id?'<button class="btn ghost" type="button" onclick="tareasReglasDocumento('+index+','+i+')">Abrir original</button>':'<span class="s">Acceso sin verificar</span>')+'</li>').join('');
+  const consumers=(module.consumers||[]).map(c=>'<li><b>'+esc(c.label)+'</b><span class="s">'+esc(c.kind==='previsto'?'Previsto / sin verificar':c.kind==='estatico'?'Contenido estatico':'Consumidor conectado')+'</span>'+(c.path?'<code>'+esc(c.path)+'</code>':'')+'</li>').join('');
+  return '<header class="tra-detail-head"><div><h2>'+esc(module.title)+'</h2><div class="s">'+esc(tareasReglasEnvironment)+'</div></div><div class="tra-actions">'+tareasReglasAcciones(module,index)+'</div></header>'
+    +'<div class="tra-columns"><section><h3>Publicado actualmente</h3><b>'+esc(pub?.label||'Sin verificar')+'</b><p>'+esc(pub?.detail||'No hay evidencia suficiente en las consultas realizadas.')+'</p><dl><dt>Vigencia</dt><dd>'+esc(tareasReglasTexto(pub?.validity))+(pub?.validity_period?'<div class="s">'+esc(pub.validity_period)+'</div>':'')+'</dd><dt>Fecha de publicacion</dt><dd>'+esc(tareasReglasFecha(pub?.published_at))+'</dd></dl></section>'
+    +'<section><h3>Actualización pendiente</h3><b>'+esc(pending?.label||'Sin actualizacion identificada')+'</b><p>'+esc(pending?.detail||'La ausencia de un borrador no confirma que todos los pasos esten resueltos.')+'</p></section></div>'
+    +'<h3>Seguimiento'+(pending?' de la actualizacion':' de la evidencia disponible')+'</h3><ol class="tra-stages">'+(module.stages||[]).map(s=>'<li><b>'+esc(s.label)+'</b><span class="pill '+tareasReglasClase(s.status)+'">'+esc(s.status||'Sin verificar')+'</span><span class="s">'+esc(s.detail||'Sin evidencia persistida')+'</span></li>').join('')+'</ol>'
+    +'<div class="tra-columns"><section><h3>Documentos oficiales</h3><ul class="tra-docs">'+(docs||'<li>Sin original vinculado verificable en este circuito.</li>')+'</ul><h3>Datos y reglas que aporta</h3><ul class="tra-list">'+(module.provides||[]).map(item=>'<li>'+esc(item)+'</li>').join('')+'</ul></section>'
+    +'<section><h3>Destinos</h3><ul class="tra-consumers">'+(consumers||'<li>Sin consumidor conectado verificado.</li>')+'</ul><h3>Constructor futuro</h3><p>'+esc(module.constructor_step||'Previsto; paso y consumidor sin verificar.')+'</p><h3>Ultima comprobacion</h3><b>'+esc(verification.status||'Sin verificar')+'</b><p>'+esc(verification.detail||'Sin comprobacion del destino.')+'</p><div class="s">'+esc(tareasReglasFecha(verification.checked_at))+'</div></section></div>'
+    +'<h3>Pendientes y alertas</h3><div class="tra-alerts">'+((module.alerts||[]).map(a=>'<section><b>'+esc(a.what)+'</b><p><strong>Por que:</strong> '+esc(a.why)+'</p><p><strong>Como resolver:</strong> '+esc(a.how)+'</p></section>').join('')||'<p>Sin alertas adicionales en la evidencia consultada. Comprobacion del destino: '+esc(verification.status||'Sin verificar')+'.</p>')+'</div>';
+}
+function tareasReglasDetalle(index){
+  const module=tareasReglasModules[index];if(!module)return;
+  tareasReglasSelected=module.key;
+  const detail=$('tareasReglasDetalle');if(!detail)return;
+  detail.innerHTML=tareasReglasDetalleHtml(index);
+  document.querySelectorAll('[data-tra-module]').forEach(row=>row.classList.toggle('tra-selected',row.dataset.traModule===module.key));
+  detail.focus({preventScroll:true});detail.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function tareasReglasChecklistHtml(checklist){
+  const heading='<section class="tra-closure" aria-label="Checklist de cierre"><header><h2>Checklist de cierre</h2>';
+  const unavailable=heading+'</header><p role="status">Sin verificar. No hay un checklist valido disponible.</p></section>';
+  const text=value=>typeof value==='string'&&value.trim().length>0;
+  const date=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;
+  if(!checklist||!date(checklist.updated_at)||!Array.isArray(checklist.items))return unavailable;
+  const ids=new Set();
+  for(const item of checklist.items){
+    if(!item||!['id','step','module','status','environment','status_label','environment_label','next_action'].every(field=>text(item[field]))
+      ||ids.has(item.id.trim())||!Array.isArray(item.evidence)||!item.evidence.every(text)
+      ||(item.blocker!==null&&typeof item.blocker!=='string')
+      ||(item.checked_at!==null&&(!text(item.checked_at)||!date(item.checked_at.slice(0,10))||!Number.isFinite(Date.parse(item.checked_at)))))return unavailable;
+    ids.add(item.id.trim());
+  }
+  const rows=checklist.items.map(item=>'<tr><th scope="row">'+esc(item.step)+'</th><td>'+esc(item.module)+'</td><td>'+esc(item.status_label)+'</td><td>'+esc(item.environment_label)+'</td>'
+    +'<td>'+(item.evidence.length?'<ul>'+item.evidence.map(value=>'<li>'+esc(value)+'</li>').join('')+'</ul>':'<span class="s">Sin evidencia registrada</span>')
+    +(item.checked_at?'<div class="s">Comprobacion: '+esc(tareasReglasFecha(item.checked_at))+'</div>':'')+'</td><td>'+esc(item.blocker||'Sin bloqueo registrado')+'</td><td>'+esc(item.next_action)+'</td></tr>').join('');
+  return heading+'<span class="s">Fecha al corte: '+esc(checklist.updated_at)+'</span></header>'
+    +'<div class="tra-table-wrap"><table><thead><tr><th>Paso</th><th>Modulo</th><th>Estado</th><th>Ambiente</th><th>Evidencia</th><th>Bloqueo</th><th>Siguiente accion</th></tr></thead><tbody>'
+    +(rows||'<tr><td colspan="7">Sin pasos registrados.</td></tr>')+'</tbody></table></div></section>';
+}
+async function viewTareasReglasAdmin(){
+  const [runtime,checklist]=await Promise.allSettled([api('/api/admin-control/modules'),api('/api/admin-control/closure-checklist')]);
+  const checklistHtml=tareasReglasChecklistHtml(checklist.status==='fulfilled'?checklist.value:null);
+  const control=runtime.status==='fulfilled'?runtime.value:null;
+  if(!control){
+    tareasReglasModules=[];
+    tareasReglasEnvironment='Instancia consultada; entorno sin verificar';
+    return '<div class="tra-page"><div class="head"><h1>Tareas y reglas Admin</h1></div>'+checklistHtml+'<div role="alert" class="empty">Sin verificar. No se pudo consultar la evidencia operativa. Esto no invalida las publicaciones existentes. <button class="btn ghost" onclick="router()">Reintentar consulta</button></div></div>';
+  }
+  tareasReglasModules=Array.isArray(control.modules)?control.modules:[];
+  tareasReglasEnvironment=control.environment||'Instancia consultada; entorno sin verificar';
+  const selected=Math.max(0,tareasReglasModules.findIndex(m=>m.key===tareasReglasSelected));
+  const rows=tareasReglasModules.map((module,index)=>'<tr data-tra-module="'+esc(module.key)+'" class="'+(index===selected?'tra-selected':'')+'"><th scope="row"><button class="tra-module" type="button" onclick="tareasReglasDetalle('+index+')">'+esc(module.title)+'</button></th><td><b>'+esc(module.publication?.label||'Sin verificar')+'</b><div class="s">'+esc(tareasReglasTexto(module.publication?.validity))+'</div></td><td>'+esc(module.pending?.label||'Sin actualizacion identificada')+'</td><td>'+esc(module.verification?.status||'Sin verificar')+'</td><td><button class="btn ghost" type="button" aria-label="Ver detalle de '+esc(module.title)+'" onclick="tareasReglasDetalle('+index+')">Ver detalle</button></td></tr>').join('');
+  return '<div class="tra-page"><div class="head"><div><h1>Tareas y reglas Admin</h1><div class="s">Portal, Motor Comercial y Constructor</div></div><button class="btn ghost" onclick="router()">Actualizar evidencia</button></div>'
+    +checklistHtml
+    +'<div class="tra-context"><b>'+esc(control.environment||'Instancia consultada; entorno sin verificar')+'</b><span>Consulta: '+esc(tareasReglasFecha(control.checked_at))+'</span></div>'
+    +'<div class="tra-table-wrap"><table class="tra-table"><thead><tr><th>Modulo</th><th>Publicado actualmente / vigencia</th><th>Actualización pendiente</th><th>Destino</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +(rows?'<section id="tareasReglasDetalle" class="tra-detail" tabindex="-1">'+tareasReglasDetalleHtml(selected)+'</section>':'<p>Sin verificar: no se recibieron modulos de control.</p>')+'</div>';
 }
 async function viewHistorial(){
   const log=await api('/api/audit');
@@ -2218,25 +2766,6 @@ async function viewCampanas(){return vistaSimple('Campañas','Envíos masivos','
 // Produccion: el portal y el Constructor viven en un solo sitio, ofertas.ss-group.cloud. Local: el propio CRM
 // sirve el portal bajo /constructor. En ambos casos la sesion viaja en el hash, nunca en la query.
 const PORTAL_OFERTAS_URL='https://ofertas.ss-group.cloud/';
-const CONSTRUCTOR_OFERTAS_URL='https://ofertas.ss-group.cloud/oferta-const.html';
-function buildPortalOfertasUrl(extra,mode){
-  let activeToken=token||'';
-  if(!activeToken){try{activeToken=localStorage.getItem('vp_token')||'';}catch(e){}}
-  if(!activeToken)return null;
-  const local=['localhost','127.0.0.1','::1','[::1]'].includes(String(window.location.hostname||'').toLowerCase());
-  const isConstructor=mode==='constructor';
-  const target=local?(isConstructor?'/constructor/oferta-const.html':'/constructor/'):(isConstructor?CONSTRUCTOR_OFERTAS_URL:PORTAL_OFERTAS_URL);
-  const url=new URL(target,window.location.origin);
-  if(local)url.searchParams.set('crm_origin',window.location.origin);
-  Object.entries(extra||{}).forEach(function(pair){if(pair[1]!=null&&pair[1]!=='')url.searchParams.set(pair[0],String(pair[1]));});
-  url.hash=new URLSearchParams({crm_token:activeToken}).toString();
-  return url.toString();
-}
-function abrirPortalOfertas(){
-  const url=buildPortalOfertasUrl();
-  if(!url){alert('No hay una sesion CRM activa. Entra nuevamente antes de abrir el portal de ofertas.');return;}
-  window.open(url,'_blank','noopener');
-}
 const OF_TABS=[
   ['fijo','Fijo'],
   ['claro_tv','Claro TV'],
@@ -2253,7 +2782,7 @@ const OF_ALERTA_DIAS=30;
 let ofTab='fijo', ofEquiposPreview=null, ofEquiposItems=null, ofDocumentoSeleccionadoUrl='', ofBibliotecaOfertasTab='ofertas_moviles', ofCargaFamilia='';
 let ofBenefitsCatalog=null, ofBenefitsSearch='', ofBenefitsCategory='all', ofBenefitsState='all', ofBenefitsProduct='all';
 let fcSeleccionadas=[], fcPreviewPlanesFijosData=null, fcSeleccionInicializada=false;
-let fcBaseFuente=null, fcBasePreview=null, fcBaseTab='fijo', fcBaseSearch='', fcBaseDrafts={}, fcBaseBusy=false, fcBaseMessage='', fcBaseModuleKey='fijo', fcBaseCompanionIds=[];
+let fcBaseFuente=null, fcBasePreview=null, fcBaseTab='fijo', fcBaseSearch='', fcBaseDrafts={}, fcBaseBusy=false, fcBaseMessage='', fcBaseModuleKey='fijo', fcBaseCompanionIds=[], fcBaseGeneration=0;
 let ofListaPreciosFuente=null, ofListaPreciosPreview=null, ofListaPreciosDraft=false, ofListaPreciosBusy=false;
 const FC_FAMILIAS=[
   ['equipos','Equipos'],['fijos','Fijos'],['moviles','Móviles'],['inalambrico_iot','Inalámbrico / IoT'],
@@ -2287,21 +2816,16 @@ function fcFechaFuente(value){
   return isNaN(d.getTime())?String(value):d.toLocaleString('es');
 }
 function ofRenderProcessSteps(){
-  var steps=[
-    ['1','Subir','Carga tus archivos'],
-    ['2','Analizar','Comparamos la información'],
-    ['3','Revisar cambios','Valida lo importante'],
-    ['4','Guardar borrador','Deja todo listo'],
-    ['5','Publicar versión','Comparte con tus canales']
-  ];
-  return '<div class="of-stepper">'
-    +steps.map(function(s,i){return '<div class="of-step '+(i<2?'done':(i===2?'current':''))+'"><span class="of-step-num">'+(i<2?'✓':esc(s[0]))+'</span><div><div class="of-step-title">'+esc(s[0])+'. '+esc(s[1])+'</div><div class="of-step-sub">'+esc(s[2])+'</div></div></div>';}).join('')
-    +'</div>';
+  var steps=['Documento','Análisis y comparación','Revisión y borrador','Aprobación','Publicación y comprobación'];
+  return '<div class="of-stepper">'+steps.map(function(s,i){return '<div class="of-step"><span class="of-step-num">'+(i+1)+'</span><div class="of-step-title">'+esc(s)+'</div></div>';}).join('')+'</div>';
 }
+let ofCenterEvidence={modules:[],environment:'Sin verificar'};
 async function ofLoadCenterData(){
-  var data={fuentes:[],publicaciones:[],benefitsCatalog:null,alertas:null,error:null};
+  var data={fuentes:[],publicaciones:[],affinityVersiones:[],benefitsCatalog:null,alertas:null,error:null};
+  try{ofCenterEvidence=await api('/api/admin-control/modules');}catch(e){ofCenterEvidence={modules:[],environment:'Sin verificar',error:e.message};data.error=e;}
   try{var f=await api('/api/fuentes-comerciales');data.fuentes=f.fuentes||f.items||[];}catch(e){data.error=e;}
   try{var h=await api('/api/fuentes-comerciales/bases-informativas/historial');data.publicaciones=h.publicaciones||[];}catch(e){if(!data.error)data.error=e;}
+  try{var affinity=await api('/api/fuentes-comerciales/affinity/historial');data.affinityVersiones=affinity.versiones||[];}catch(e){if(!data.error)data.error=e;}
   try{data.benefitsCatalog=await api('/api/fuentes-comerciales/benefits-vigentes');}catch(e){if(!data.error)data.error=e;}
   try{data.alertas=await api('/api/fuentes-comerciales/alertas-vencimiento?dias='+OF_ALERTA_DIAS);}catch(e){data.alertas=null;}
   return data;
@@ -2329,24 +2853,17 @@ function ofModuleKeyFromFamilia(familia){
 async function ofRefreshNavAlertas(){
   var badge=$('navOfertasAlertas'); if(!badge)return;
   try{
-    var r=await api('/api/fuentes-comerciales/alertas-vencimiento?dias='+OF_ALERTA_DIAS);
-    var total=Number((r.resumen&&r.resumen.vencidas)||0)+Number((r.resumen&&r.resumen.por_vencer)||0);
+    var r=await api('/api/admin-control/modules');
+    var total=ofBuildCenterRows(r).filter(function(row){return row.attention;}).length;
     badge.textContent=String(total); badge.hidden=!total;
   }catch(e){badge.hidden=true;}
 }
 function ofRenderVigenciaAlertas(alertas){
-  if(!alertas||!alertas.ok)return '';
-  var res=alertas.resumen||{};
-  var rows=(alertas.alertas||[]).map(function(a){
-    var key=ofModuleKeyFromFamilia(a.familia);
-    var cls=a.estado==='vencida'?'red':'amber';
-    return '<tr><td><b>'+esc(fcFamiliaLabel(a.familia))+'</b></td><td class="s">'+esc(a.archivo||'—')+'</td><td>'+esc(a.fecha_fin||'—')+'</td><td><span class="pill '+cls+'">'+esc(a.mensaje||'')+'</span></td><td class="r"><button class="btn'+(a.estado==='vencida'?'':' ghost')+'" onclick="ofSetTab(\''+esc(key)+'\')">'+(a.estado==='vencida'?'Subir documento nuevo':'Buscar documento nuevo')+'</button></td></tr>';
-  }).join('');
-  var sinFecha=(alertas.sin_fecha_fin||[]).map(function(a){return esc(fcFamiliaLabel(a.familia));}).join(', ');
-  return '<div class="panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">Alertas de vencimiento</h3><div class="s">Documento vigente por familia. Cuando llegue el boletín nuevo, subilo y la alerta se limpia sola.</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill '+(res.vencidas?'red':'green')+'">'+esc(res.vencidas||0)+' vencidos</span><span class="pill '+(res.por_vencer?'amber':'green')+'">'+esc(res.por_vencer||0)+' por vencer (≤'+OF_ALERTA_DIAS+' días)</span><span class="pill green">'+esc(res.vigentes||0)+' vigentes</span></div></div>'
-    +(rows?'<div style="overflow-x:auto;margin-top:10px"><table class="of-alertas-table" style="min-width:640px"><thead><tr><th>Familia</th><th>Documento actual</th><th>Fecha fin</th><th>Estado</th><th class="r">Acción</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="s" style="margin-top:10px">Ningún documento vencido ni por vencer en los próximos '+OF_ALERTA_DIAS+' días.</div>')
-    +(sinFecha?'<div class="s" style="margin-top:8px">Sin fecha de fin registrada: '+sinFecha+'. Cargá la vigencia al subir el documento para poder avisarte.</div>':'')
-    +'</div>';
+  var modules=alertas&&alertas.modules||[];
+  var expired=modules.filter(function(m){return m.publication?.validity==='Vencida';});
+  var unknown=modules.filter(function(m){return !m.publication||/Sin verificar/.test(m.publication.validity);});
+  return '<div class="panel" style="margin-bottom:12px"><h3>Vigencia de lo publicado</h3><div class="s">'+esc(expired.length)+' módulos con vigencia vencida · '+esc(unknown.length)+' sin vigencia global verificada. Recibir un documento no completa su análisis, aprobación ni publicación.</div>'
+    +(expired.length?'<div class="s">Vencidos: '+expired.map(function(m){return esc(m.title);}).join(', ')+'. La publicación anterior se conserva hasta el reemplazo explícito.</div>':'')+'</div>';
 }
 function ofCenterFamilyForModule(key){
   if(key==='lista_precios')return 'equipos';
@@ -2381,45 +2898,58 @@ function ofLatestByDate(items,dateFields){
     return String(bv).localeCompare(String(av));
   })[0]||null;
 }
-function ofBuildCenterRows(fuentes,publicaciones){
-  var today=new Date(); today.setHours(0,0,0,0);
+function ofBuildCenterRows(evidence){
   return OF_TABS.map(function(t){
-    var key=t[0], label=t[1], family=ofCenterFamilyForModule(key);
-    var sourceList=(fuentes||[]).filter(function(f){return String(f.familia||'')===family||String(f.tipo||'')===family;});
-    var pubList=(publicaciones||[]).filter(function(p){
-      var cat=String(p.categoria||p.familia||'');
-      if(key==='moviles')return cat==='movil'||cat==='moviles';
-      if(key==='inalambrico_iot')return cat==='inalambrico'||cat==='inalambrico_iot';
-      if(key==='claro_tv')return cat==='claro_tv';
-      if(key==='fijo'||key==='directorio_fijo')return cat==='fijo'||cat==='fijos';
-      return cat===family||cat===key;
-    });
-    var fuente=ofLatestByDate(sourceList,['created_at','fecha_carga','fecha_subida','updated_at']);
-    var vigente=ofLatestByDate(pubList.filter(function(p){return p.estado==='publicada';}),['numero','publicada_en','updated_at','fecha_actualizacion_base','created_at']);
-    var borradorPosterior=ofLatestByDate(pubList.filter(function(p){return p.estado&&p.estado!=='publicada'&&(!vigente||Number(p.numero||0)>Number(vigente.numero||0));}),['numero','updated_at','fecha_actualizacion_base','created_at']);
-    var publicacion=vigente||ofLatestByDate(pubList,['updated_at','fecha_actualizacion_base','created_at']);
-    var estado=String((publicacion&&publicacion.estado)||(fuente&&fuente.estado)||'').toLowerCase();
-    var vigencia=(publicacion&&publicacion.vigencia_hasta)||(fuente&&fuente.vigencia_hasta)||(fuente&&fuente.vigencia_documental_hasta)||null;
-    var dias=ofDiasRestantes(vigencia);
-    var vencida=dias!=null&&dias<0;
-    var porVencer=dias!=null&&dias>=0&&dias<=OF_ALERTA_DIAS;
-    var attention=vencida||porVencer||['borrador','validada','aprobada','requiere_revision','pendiente_revision','pendiente'].includes(estado);
-    var badge=attention?(vencida||porVencer?ofVencimientoTexto(dias):(estado==='borrador'?'Borrador listo':(estado==='aprobada'||estado==='validada'?'Listo para publicar':'Revisar cambios'))):'Al dia';
-    var action=vencida?'Subir actualizacion':(porVencer?'Buscar documento nuevo':(estado==='borrador'||estado==='aprobada'||estado==='validada'?'Publicar':'Revisar cambios'));
-    if(!attention)action='Abrir';
-    return {key:key,label:label,family:family,fuente:fuente,publicacion:publicacion,publicacionVigente:vigente,borradorPosterior:borradorPosterior,attention:attention,badge:badge,action:action,vigencia:vigencia,dias:dias,vencida:vencida,porVencer:porVencer,estado:estado};
+    var key=t[0], domain=({benefits:'beneficios',ofertas_vigentes:'ofertas'})[key]||key;
+    var m=(evidence&&evidence.modules||[]).find(function(m){return m.key===domain;})||{};
+    var alerts=(m.alerts||[]).filter(function(a){return !['Seguimiento del Plan y publicacion','Circuito Affinity independiente'].includes(a.what);});
+    var badge=m.pending?m.pending.label:(alerts[0]&&alerts[0].what)||'Sin verificar';
+    return {key:key,label:t[1],publication:m.publication||null,pending:m.pending||null,documents:m.documents||[],alerts:alerts,actions:m.actions||[],attention:!!m.pending||alerts.length>0||m.verification?.status!=='Verificado',badge:badge,vencida:m.publication?.validity==='Vencida'};
   });
 }
 function ofRenderCenterQueue(rows){
   var pending=(rows||[]).filter(function(r){return r.attention;});
   var ok=(rows||[]).filter(function(r){return !r.attention;});
-  var pendingHtml=pending.map(function(r){return '<div class="of-module-row '+(r.key===ofTab?'active':'')+'" onclick="ofSetTab(\''+esc(r.key)+'\')"><div class="of-module-head"><div><b>'+esc(r.label)+'</b><div class="s">'+esc((r.fuente&&r.fuente.nombre_original)||(r.publicacion&&r.publicacion.fuente_nombre)||'Fuente comercial')+(r.vigencia&&(r.vencida||r.porVencer)?' · fin '+esc(String(r.vigencia).slice(0,10)):'')+'</div></div><span class="pill '+(r.vencida?'red':'amber')+'">'+esc(r.badge)+'</span></div><button class="btn" onclick="event.stopPropagation();ofSetTab(\''+esc(r.key)+'\')">'+esc(r.action)+'</button></div>';}).join('');
-  var okHtml=ok.map(function(r){return '<div class="of-ok-row"><button class="btn ghost" style="text-align:left;flex:1" onclick="'+ofCenterOpenAction(r)+'">'+esc(r.label)+'</button><span class="pill green">Al día</span></div>';}).join('');
+  function render(r){return '<div class="of-module-row '+(r.key===ofTab?'active':'')+'"><div class="of-module-head"><b>'+esc(r.label)+'</b><span class="pill '+(r.vencida?'red':'amber')+'">'+esc(r.badge)+'</span></div><div class="s">Publicado actualmente: '+esc(r.publication?.label||'Sin verificar')+'</div><button class="btn ghost" onclick="ofOpenCenterModule(\''+esc(r.key)+'\')">Revisar módulo</button></div>';}
+  var pendingHtml=pending.map(render).join('');
+  var okHtml=ok.map(render).join('');
   return '<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Requiere atención</h3><span class="pill '+(pending.length?'amber':'green')+'">'+pending.length+'</span></div>'
     +(pendingHtml||'<div class="s" style="margin-top:12px">No se encontraron fuentes que requieran atención.</div>')
-    +'<div class="of-queue-section" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Todo al día</h3><span class="pill green">'+ok.length+'</span></div>'
-    +(okHtml||'<div class="s" style="margin-top:12px">Sin módulos al día para mostrar.</div>')
+    +(okHtml?'<div class="of-queue-section"><h3>Sin pendientes identificados</h3>'+okHtml+'</div>':'')
     +'</div>';
+}
+function ofModuleEvidence(key){
+  var domain=({benefits:'beneficios',ofertas_vigentes:'ofertas'})[key]||key;
+  return (ofCenterEvidence.modules||[]).find(function(m){return m.key===domain;})||{};
+}
+function ofOpenCenterModule(key){
+  var m=ofModuleEvidence(key), actions=m.actions||[];
+  var a=actions.find(function(a){return a.kind==='draft';})||actions.find(function(a){return a.kind==='flow';});
+  tareasReglasFlowTarget=a?{tab:key,source_id:a.source_id||null,draft_id:a.kind==='draft'?a.id:null}:null;
+  ofSetTab(key);
+}
+function ofRenderOperationalState(key,selected){
+  var m=ofModuleEvidence(key), p=m.publication, u=m.pending;
+  var docs=(m.documents||[]).filter(function(d){return d.role==='Publicada';});
+  var pendingDocs=(m.documents||[]).filter(function(d){return d.role==='Pendiente';});
+  var next=(m.actions||[]).find(function(a){return a.kind==='draft';});
+  return '<div class="tra-detail" style="margin-bottom:12px"><div class="tra-columns"><section><h3>Publicado actualmente</h3><b>'+esc(p?.label||'Sin verificar')+'</b><p>'+esc(p?.detail||'La consulta no acredita una publicacion; tampoco demuestra su inexistencia.')+'</p>'
+    +docs.map(function(d){return '<button class="btn ghost" onclick="ofAbrirDocumentoFuente(\''+esc(d.id)+'\')">'+esc(d.name)+'</button>';}).join('')
+    +(!docs.length&&p?.source_name?'<p>Documento de origen: '+esc(p.source_name)+' · vínculo al original sin verificar.</p>':'')
+    +'<p>Vigencia: '+esc(p?.validity||'Sin verificar')+(p?.validity_period?' · '+esc(p.validity_period):'')+'</p></section>'
+    +'<section><h3>Actualización pendiente</h3><b>'+esc(u?.label||'Sin actualizacion identificada')+'</b><p>'+esc(u?.detail||'Sin borrador de la seleccion no significa que el modulo nunca fue publicado.')+'</p>'
+    +pendingDocs.map(function(d){return '<div class="s">'+esc(d.name)+'</div>';}).join('')
+    +(selected?'<p>Documento seleccionado: <b>'+esc(selected.nombre_original||selected.name)+'</b></p>':'')
+    +(next?'<button class="btn ghost" onclick="ofOpenCenterModule(\''+esc(key)+'\')">Continuar borrador</button>':'')+'</section></div>'
+    +(m.alerts||[]).filter(function(a){return !['Seguimiento del Plan y publicacion','Circuito Affinity independiente'].includes(a.what);}).map(function(a){return '<p class="s"><b>'+esc(a.what)+':</b> '+esc(a.why)+' '+esc(a.how)+'</p>';}).join('')
+    +'<p class="s">Comprobación del destino: '+esc(m.verification?.status||'Sin verificar')+'. '+esc(m.verification?.detail||'Sin evidencia de lectura del destino.')+'</p></div>';
+}
+function ofRefreshOperationalState(selected){
+  var el=$('ofOperationalState');if(el)el.innerHTML=ofRenderOperationalState(ofTab,selected);
+}
+async function ofReloadOperationalEvidence(){
+  try{ofCenterEvidence=await api('/api/admin-control/modules');}catch(e){ofCenterEvidence={modules:[],environment:'Sin verificar',error:e.message};}
+  ofRefreshOperationalState();
 }
 function ofCenterOpenAction(r){
   return 'ofSetTab(\''+esc(r.key)+'\')';
@@ -2783,16 +3313,16 @@ function ofRenderRightPanel(rows,publicaciones){
     +'</div></div>';
 }
 async function viewOfertas(){
-  var portalBtn = `<button class="btn" onclick="abrirPortalOfertas()">Abrir Constructor</button>`;
   var data=await ofLoadCenterData();
-  var rows=ofBuildCenterRows(data.fuentes,data.publicaciones);
+  var rows=ofBuildCenterRows(ofCenterEvidence);
   return `<div class="of-center-page"><div class="head"><div><h1>Admin Ofertas — Centro de Cargas</h1><div class="s">Sube, revisa cambios y publica. Solo ves lo que requiere tu atención.</div></div>
-    <div style="display:flex;gap:8px">${portalBtn}</div></div>
-  ${ofRenderVigenciaAlertas(data.alertas)}
+    </div>
+  <p class="s">Ambiente: ${esc(ofCenterEvidence.environment||'Sin verificar')} · Lectura: ${esc(ofCenterEvidence.checked_at||'Sin verificar')}${ofCenterEvidence.error?' · No se pudo consultar la evidencia: '+esc(ofCenterEvidence.error):''}</p>
+  ${ofRenderVigenciaAlertas(ofCenterEvidence)}
   ${ofRenderProcessSteps()}
   <div class="of-center-layout${ofTab==='benefits'?' of-benefits-layout':''}">
     ${ofRenderCenterQueue(rows)}
-    <div><div id="ofCenterMain">${ofRenderCenterMain(rows,data.benefitsCatalog)}</div><div id="ofBody" style="display:none"></div></div>
+    <div style="min-width:0"><div id="ofOperationalState">${ofRenderOperationalState(ofTab)}</div><div id="ofCenterMain">${ofTab==='benefits'?ofRenderBenefitsMain(data.benefitsCatalog):''}</div><div id="ofBody" style="display:none"></div></div>
   </div></div>`;
 }
 function ofSetTab(t){ ofTab=t||'fijo'; reOfertas(); }
@@ -2848,13 +3378,13 @@ function ofRenderCatalogoBase(key){
   return ofRenderModuleShell({key:key,title:title, note:note||undefined});
 }
 function ofRenderListaPrecios(){
-  return ofRenderModuleShell({key:'lista_precios',title:'Lista de Precios',accept:'.xlsx,.xls',details:'Antes Lista de Equipos. Subes el Excel oficial de precios; se guarda la fuente internamente, se analiza como borrador y solo se reemplaza la lista publicada al tocar Publicar.',note:'Tiene vigencia propia. Si vence y no subes una nueva, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.',extra:'<div id="ofListaPreciosPanel" style="margin-top:12px"></div>'});
+  return ofRenderModuleShell({key:'lista_precios',title:'Lista de Precios',accept:'.xlsx,.xls',details:'Antes Lista de Equipos. Subes el Excel oficial de precios; se guarda la fuente internamente, se analiza como borrador y solo se reemplaza la lista publicada al tocar Publicar.',note:'Excepcion unica de revision: esta Lista de Precios se acepta como valida para cerrar esta revision puntual. No autoriza otras excepciones ni cambia reglas de otras fuentes.',extra:'<div id="ofListaPreciosPanel" style="margin-top:12px"></div>'});
 }
 function ofRenderServiciosBase(){
-  return ofRenderModuleShell({title:'Servicios',accept:'.pdf,.xlsx,.xls',details:'Carga la fuente oficial de Servicios para preparar una publicación nueva.',note:'Pendiente de publicación oficial. No se usan servicios, precios ni condiciones heredadas.',extra:''});
+  return ofRenderModuleShell({title:'Servicios',accept:'.pdf,.xlsx,.xls',details:'Carga la fuente oficial de Servicios para preparar una publicación nueva.',note:'Análisis y publicación no conectados en este formulario. La publicación actual se consulta por separado arriba.',extra:''});
 }
 function ofRenderDirectorioFijo(){
-  return ofRenderModuleShell({title:'Directorio de Fijo',accept:'.xlsx,.xls,.pdf',details:'Directorio de Fijo usa la misma regla de catalogo base: fuente publicada, vigencia, comparacion e historial.',note:'Si vence sin reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
+  return ofRenderModuleShell({title:'Directorio de Fijo',accept:'.xlsx,.xls,.pdf',details:'El Directorio publicado es un archivo estático independiente de Fijo. Este formulario no tiene análisis ni publicación conectados.',note:'Si vence sin reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
 }
 let ofAffinityFuente=null, ofAffinityPreview=null, ofAffinityVersion=null, ofAffinityBusy=false, ofAffinityHistorial=[], ofAffinityResoluciones={};
 function ofRenderAffinity(){
@@ -2863,10 +3393,16 @@ function ofRenderAffinity(){
 }
 async function ofLoadAffinityState(){
   var estado=$('ofBaseEstado_affinity');
+  var target=tareasReglasFlowTarget&&tareasReglasFlowTarget.tab==='affinity'?tareasReglasFlowTarget:null;
+  if(target)tareasReglasFlowTarget=null;
   try{
     var r=await api('/api/fuentes-comerciales?familia=affinity');
     var fuentes=r.fuentes||[];
-    if(!ofAffinityFuente&&fuentes.length)ofAffinityFuente=fuentes[0];
+    if(target&&target.source_id){
+      ofAffinityFuente=fuentes.find(f=>String(f.id)===String(target.source_id))||null;
+      ofAffinityPreview=null;ofAffinityVersion=null;ofAffinityResoluciones={};
+      if(!ofAffinityFuente)throw new Error('La fuente seleccionada no esta disponible. Actualiza la evidencia.');
+    }else if(!ofAffinityFuente&&fuentes.length)ofAffinityFuente=fuentes[0];
     var h=await api('/api/fuentes-comerciales/affinity/historial');
     ofAffinityHistorial=h.versiones||[];
     if(estado)estado.innerHTML=fuentes.length?'<span class="pill green">'+fuentes.length+' documento'+(fuentes.length===1?'':'s')+' archivado'+(fuentes.length===1?'':'s')+'</span> Ultimo: '+esc(fuentes[0].nombre_original||'')+(fuentes[0].vigencia_hasta?' · vigencia hasta '+esc(String(fuentes[0].vigencia_hasta).slice(0,10)):' · sin fecha de fin'):'<span class="pill amber">Sin documento</span> Todavia no se subio el PDF oficial de Affinity.';
@@ -2970,10 +3506,7 @@ async function ofPublicarAffinity(versionId){
 }
 function ofCatalogoBaseFechaDetectada(key,fileInput){
   var input=$('ofBaseHasta_'+key);
-  var manual=input&&input.value;
-  if(manual)return manual;
-  var files=fileInput&&fileInput.files?Array.from(fileInput.files):[];
-  return ovDetectarVigenciaHasta(files);
+  return input&&input.value||'';
 }
 async function ofAnalizarCatalogoBase(key){
   var fileInput=$('ofBaseDocumento_'+key), estado=$('ofBaseEstado_'+key), btn=$('ofBaseAnalizar_'+key);
@@ -2985,38 +3518,61 @@ async function ofAnalizarCatalogoBase(key){
   if(fechaDetectada&&$('ofBaseHasta_'+key))$('ofBaseHasta_'+key).value=fechaDetectada;
   var fd=new FormData(); fd.append('documento',fileInput.files[0]); fd.append('familia',ofModuleSourceFamily(key));
   if(fechaDetectada)fd.append('vigencia_hasta',fechaDetectada);
-  if(key==='lista_precios'||key==='inalambrico_iot')fd.append('publicacion_modo','borrador');
+  fd.append('publicacion_modo','borrador');
+  var generation=++fcBaseGeneration, viewTab=ofTab, tab=fcBaseTabForModule(key), sourceId=null;
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&(fcBaseFuente?.id||null)===sourceId;}
+  fcBaseModuleKey=key;fcBaseTab=tab;fcBaseCompanionIds=[];fcBaseSearch='';
+  fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcBaseMessage='';fcBaseBusy=true;
+  ofListaPreciosPreview=null;ofListaPreciosDraft=false;ofAffinityPreview=null;ofAffinityVersion=null;
+  fcRenderBasePanel();
   if(estado)estado.textContent='Guardando fuente y analizando...';
   if(btn){btn.disabled=true;btn.textContent='Analizando';}
   try{
     var r=await apiForm('/api/fuentes-comerciales',fd);
+    if(!current())return;
     if(!r.ok&&r.codigo!=='fuente_duplicada')throw new Error(r.error||r.codigo||'No se pudo guardar la fuente');
     if(!r.fuente)throw new Error('No se recibio la fuente guardada');
+    var evidence=null;
+    try{evidence=await api('/api/admin-control/modules');}catch(e){}
+    if(!current())return;
+    if(evidence)ofCenterEvidence=evidence;
+    ofRefreshOperationalState(r.fuente);
     if(key==='affinity'){
       ofAffinityFuente=r.fuente; ofAffinityPreview=null; ofAffinityVersion=null; ofAffinityBusy=false;
-      try{var ha=await api('/api/fuentes-comerciales/affinity/historial'); ofAffinityHistorial=ha.versiones||[];}catch(e2){}
+      try{var ha=await api('/api/fuentes-comerciales/affinity/historial');if(!current())return;ofAffinityHistorial=ha.versiones||[];}catch(e2){}
+      if(!current())return;
       await ofGenerarAffinityPreview();
       return;
     }
     if(key==='lista_precios'){
       ofListaPreciosFuente=r.fuente; ofListaPreciosPreview=null; ofListaPreciosDraft=false; ofListaPreciosBusy=false; ofRenderListaPreciosPanel();
       await ofGenerarListaPreciosPreview();
+      if(!current())return;
       fcLoadBaseHistorial();
       return;
     }
-    fcBaseFuente=r.fuente; fcBasePreview=null; fcBaseDrafts={}; fcBaseModuleKey=key; fcBaseCompanionIds=key==='moviles'?await ofMovilCompanionIds(fcBaseFuente.id):[]; fcBaseTab=fcBaseTabForModule(key); fcBaseSearch='';
-    fcBaseBusy=true;fcRenderBasePanel();
-    fcBasePreview=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody(fechaDetectada)});
+    var companionIds=key==='moviles'?await ofMovilCompanionIds(r.fuente.id):[];
+    if(!current())return;
+    sourceId=r.fuente.id;fcBaseFuente=r.fuente;fcBaseCompanionIds=companionIds;fcRenderBasePanel();
+    var preview=await api('/api/fuentes-comerciales/'+sourceId+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody()});
+    if(!current())return;
+    if(!preview.ok)throw new Error(preview.error||preview.codigo||'Analisis no disponible');
+    fcBasePreview=preview;
     fcBaseDrafts={};
     var revMsg=r.versionado&&r.versionado.tipo==='nueva_revision_misma_fuente'?'<span class="pill violet">Nueva revision detectada</span> ':'<span class="pill green">Vista previa lista</span> ';
     if(estado)estado.innerHTML=fcBaseModuleKey==='moviles'?revMsg+'Fuente guardada. Revisa Planes Moviles antes de guardar borrador.':(fcBaseModuleKey==='inalambrico_iot'?revMsg+'Fuente guardada. Revisa Inalambrico / IoT antes de guardar borrador.':revMsg+'Fuente guardada. Revisa Fijo y Claro TV antes de guardar borrador.');
     fcLoadBaseHistorial();
   }catch(e){
-    if(estado)estado.innerHTML='<span class="pill red">No se pudo analizar</span> '+esc(fcMensajeApi(e,key));
+    if(!current())return;
+    fcBasePreview=null;fcBaseDrafts={};
+    fcBaseMessage='<span class="pill red">No se pudo analizar</span> '+esc(fcMensajeApi(e,key));
+    if(estado)estado.innerHTML=fcBaseMessage;
     else alert(fcMensajeApi(e,key));
   }finally{
-    fcBaseBusy=false;fcRenderBasePanel();
-    if(btn){btn.disabled=false;btn.textContent='Analizar';}
+    if(generation===fcBaseGeneration){
+      fcBaseBusy=false;if(!current())fcBaseMessage='';if(ofTab===viewTab)fcRenderBasePanel();
+      if(btn){btn.disabled=false;btn.textContent='Analizar';}
+    }
   }
 }
 function ofRenderListaPreciosPanel(){
@@ -3071,14 +3627,23 @@ async function ofPublicarListaPrecios(){
 async function ofLoadCatalogoBaseState(key){
   if(!['fijo','claro_tv','moviles','inalambrico_iot','lista_precios'].includes(key))return;
   var estado=$('ofBaseEstado_'+key);
+  var target=tareasReglasFlowTarget&&tareasReglasFlowTarget.tab===key?tareasReglasFlowTarget:null;
+  if(target)tareasReglasFlowTarget=null;
+  var generation=++fcBaseGeneration, viewTab=ofTab, tab=fcBaseTabForModule(key), sourceId=null;
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&(fcBaseFuente?.id||null)===sourceId;}
+  fcBaseModuleKey=key;fcBaseTab=tab;fcBaseCompanionIds=[];fcBaseSearch='';
+  fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcBaseMessage='';fcBaseBusy=true;fcRenderBasePanel();
+  if(key==='lista_precios'){ofListaPreciosFuente=null;ofListaPreciosPreview=null;ofListaPreciosDraft=false;ofListaPreciosBusy=false;ofRenderListaPreciosPanel();}
   try{
-    fcBaseModuleKey=key;fcBaseCompanionIds=[];
     var family=ofModuleSourceFamily(key);
-    var r=await api('/api/fuentes-comerciales?familia='+encodeURIComponent(family));
+    var r=target&&target.source_id?await api('/api/fuentes-comerciales'):await api('/api/fuentes-comerciales?familia='+encodeURIComponent(family));
+    if(!current())return;
     var rows=(r&&r.fuentes||[]).filter(function(f){return f.estado!=='archivada';});
-    var fuente=ofPrimaryFuenteForCatalogo(rows,key);
+    var fuente=target&&target.source_id?rows.find(f=>String(f.id)===String(target.source_id)):ofPrimaryFuenteForCatalogo(rows,key);
+    if(target&&target.source_id&&!fuente)throw new Error('La fuente seleccionada ya no esta disponible. Actualiza la evidencia antes de continuar.');
     if(!fuente&&key==='claro_tv'){
       r=await api('/api/fuentes-comerciales?familia='+encodeURIComponent('fijos'));
+      if(!current())return;
       rows=(r&&r.fuentes||[]).filter(function(f){return f.estado!=='archivada';});
       fuente=ofPrimaryFuenteForCatalogo(rows,key);
     }
@@ -3087,8 +3652,21 @@ async function ofLoadCatalogoBaseState(key){
       fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcRenderBasePanel();fcLoadBaseHistorial();
       return;
     }
-    fcBaseFuente=fuente;fcBasePreview=null;fcBaseDrafts={};fcBaseTab=fcBaseTabForModule(key);fcBaseSearch='';fcBaseMessage='';
-    if(key==='moviles')fcBaseCompanionIds=await ofMovilCompanionIds(fuente.id);
+    var draft=null;
+    if(target&&target.draft_id){
+      var detail=await api('/api/fuentes-comerciales/bases-informativas/'+encodeURIComponent(target.draft_id));
+      if(!current())return;
+      draft=detail.publicacion;
+      if(!draft||String(draft.id)!==String(target.draft_id)||draft.categoria!==tab||String(draft.fuente_comercial_id)!==String(fuente.id))throw new Error('El borrador no coincide con el modulo y la fuente seleccionados.');
+    }
+    var companionIds=key==='moviles'?await ofMovilCompanionIds(fuente.id):[];
+    if(!current())return;
+    sourceId=fuente.id;fcBaseFuente=fuente;fcBaseCompanionIds=companionIds;
+    if(draft){
+      fcBaseDrafts[tab]=draft;
+      fcBasePreview={fecha_actualizacion_base:draft.fecha_actualizacion_base,previews:{[tab]:{...draft,comparacion_guardada:true}}};
+      fcBaseMessage='Borrador guardado y comparacion registrada. No se ha ejecutado un nuevo analisis ni publicado cambios.';
+    }
     if(key==='lista_precios'){
       if(estado)estado.innerHTML='<span class="pill green">Fuente guardada</span> '+esc(fuente.nombre_original||'Excel oficial')+'. Sube una lista nueva para reemplazar la Lista de Precios publicada.';
       ofListaPreciosFuente=fuente;ofListaPreciosPreview=null;ofListaPreciosDraft=false;ofListaPreciosBusy=false;ofRenderListaPreciosPanel();
@@ -3099,7 +3677,11 @@ async function ofLoadCatalogoBaseState(key){
     fcRenderBasePanel();
     fcLoadBaseHistorial();
   }catch(e){
+    if(!current())return;
+    fcBaseFuente=null;fcBasePreview=null;fcBaseDrafts={};fcRenderBasePanel();
     if(estado)estado.innerHTML='<span class="pill red">No se pudo cargar la fuente guardada</span> '+esc(fcMensajeApi(e,key));
+  }finally{
+    if(generation===fcBaseGeneration){fcBaseBusy=false;if(!current())fcBaseMessage='';if(ofTab===viewTab)fcRenderBasePanel();}
   }
 }
 function ofVerHistorialCatalogoBase(key){
@@ -3124,9 +3706,9 @@ function ofRenderOfertasVigentes(){
       upload='<div><div class="flbl">Boletines de Beneficios / Claro Full</div><input class="inp" id="ovFile_'+f.key+'" type="file" accept="'+esc(f.accept)+'" multiple><div class="s" style="margin-top:4px">Opcional: solo si existe un boletín oficial específico de beneficios. Los beneficios de móvil, fijo e Inalámbrico / IoT se consolidan desde sus fuentes.</div></div><div><div class="flbl">Vigencia desde</div><input class="inp" id="ovDesde_'+f.key+'" type="date"></div>';
       hasta='<div style="margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end"><div><div class="flbl">Vigencia hasta</div><input class="inp" id="ovHasta_'+f.key+'" type="date"></div><label class="s" style="display:flex;gap:6px;align-items:center;padding-bottom:10px"><input id="ovSinHasta_'+f.key+'" type="checkbox"> Hasta nuevo boletin</label></div>';
     }
-    return '<div class="card" id="ofCargaCard_'+esc(f.key)+'" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(f.title)+'</b><div style="margin-top:5px"><span class="pill violet">'+esc(f.agent)+'</span></div><div class="s" style="margin-top:7px">'+esc(f.scope)+'</div><div class="s" style="margin-top:5px">'+esc(f.body)+'</div></div><span class="pill amber">Borrador</span></div><div class="impgrid" style="margin-top:12px">'+upload+'</div>'+hasta+'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" onclick="ovAnalizar(\''+f.key+'\')">Analizar</button><button class="btn ghost" onclick="ovGuardarBorrador(\''+f.key+'\')">Guardar borrador</button><button class="btn green" disabled>Publicar versión</button><button class="btn ghost" onclick="ofBibliotecaOfertasTab=\''+f.key+'\';ofAbrirBibliotecaOfertas()">Ver documentos</button></div><div class="s" id="ovResumen_'+f.key+'" style="margin-top:8px">'+ovRenderBorradorResumen(f.key)+'</div><div class="s" id="ovEstado_'+f.key+'" style="margin-top:8px"></div></div>';
+    return '<div class="card" id="ofCargaCard_'+esc(f.key)+'" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>'+esc(f.title)+'</b><div style="margin-top:5px"><span class="pill violet">'+esc(f.agent)+'</span></div><div class="s" style="margin-top:7px">'+esc(f.scope)+'</div><div class="s" style="margin-top:5px">'+esc(f.body)+'</div></div><span class="pill amber">Sin analizar</span></div><div class="impgrid" style="margin-top:12px">'+upload+'</div>'+hasta+'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" onclick="ovAnalizar(\''+f.key+'\')">Analizar</button><button class="btn ghost" onclick="ovGuardarBorrador(\''+f.key+'\')">Guardar selección local</button><button class="btn green" disabled>Publicar versión</button><button class="btn ghost" onclick="ofBibliotecaOfertasTab=\''+f.key+'\';ofAbrirBibliotecaOfertas()">Ver documentos</button></div><div class="s" id="ovResumen_'+f.key+'" style="margin-top:8px">'+ovRenderBorradorResumen(f.key)+'</div><div class="s" id="ovEstado_'+f.key+'" style="margin-top:8px"></div></div>';
   }).join('');
-  b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">Ofertas Vigentes</h3><div class="s" style="margin-top:4px">Carga, analiza, guarda borrador y revisa antes de publicar. La versión anterior sigue publicada hasta confirmar la nueva.</div></div><span class="pill violet">Revisión obligatoria</span></div><div class="kpis" style="margin-top:12px"><div class="kpi"><div class="l">Correctas</div><div class="v">0</div></div><div class="kpi"><div class="l">Revisar</div><div class="v">0</div></div><div class="kpi"><div class="l">Excluidas</div><div class="v">0</div></div><div class="kpi"><div class="l">Contradicciones</div><div class="v">0</div></div></div><div class="grid2">'+cards+'</div></div>';
+  b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><h3 style="margin:0">Ofertas Vigentes</h3><div class="s" style="margin-top:4px">Carga, analiza, guarda borrador y revisa antes de publicar. La versión anterior sigue publicada hasta confirmar la nueva.</div></div><span class="pill violet">Revisión obligatoria</span></div><p class="s" style="margin-top:12px">Análisis conjunto y borrador comercial sin conectar en este formulario. Las selecciones locales no acreditan recepción del archivo ni revisión.</p><div class="grid2">'+cards+'</div></div>';
   if(ofCargaFamilia){var target=$('ofCargaCard_'+ofCargaFamilia);if(target){target.scrollIntoView({behavior:'smooth',block:'start'});var input=target.querySelector('input[type="file"]');if(input)input.focus();}ofCargaFamilia='';}
 }
 function ovLeerBorrador(key){
@@ -3140,7 +3722,7 @@ function ovMergeDocumentos(prev,names){
 function ovRenderBorradorResumen(key){
   var b=ovLeerBorrador(key);
   if(!b||!b.documentos||!b.documentos.length)return '';
-  return '<div class="card" style="padding:9px 10px;background:var(--card2)"><b>Documentos en borrador</b><div style="margin-top:4px">'+b.documentos.map(function(n){return '<div>- '+esc(n)+'</div>';}).join('')+'</div></div>';
+  return '<div class="card" style="padding:9px 10px;background:var(--card2)"><b>Selección local (archivos no archivados)</b><div style="margin-top:4px">'+b.documentos.map(function(n){return '<div>- '+esc(n)+'</div>';}).join('')+'</div></div>';
 }
 function ovFiles(key){
   if(key==='ofertas_moviles'){
@@ -3153,31 +3735,10 @@ function ovFiles(key){
   return fileInput&&fileInput.files?Array.from(fileInput.files):[];
 }
 function ovAnalizar(key){
-  var hasta=$('ovHasta_'+key), desde=$('ovDesde_'+key), sinHasta=$('ovSinHasta_'+key), estado=$('ovEstado_'+key);
-  if(!estado)return;
+  var estado=$('ovEstado_'+key);if(!estado)return;
   var files=ovFiles(key);
-  if(!files.length){estado.innerHTML='<span class="pill red">Falta documento oficial</span> Selecciona el Excel o PDF antes de analizar.';return;}
-  if(key==='beneficios'&&sinHasta&&sinHasta.checked){
-    estado.innerHTML='<span class="pill amber">Pendiente de parser</span> '+files.length+' documento(s) leidos. Vigencia desde '+esc((desde&&desde.value)||'pendiente')+' hasta nuevo boletin. La publicacion sigue bloqueada hasta conectar el analisis completo.';
-    return;
-  }
-  var vigencia=hasta&&hasta.value;
-  var name=String(files[0].name||'');
-  var detectada=ovDetectarVigenciaHasta(files);
-  if(!vigencia&&detectada&&hasta)hasta.value=detectada;
-  vigencia=(hasta&&hasta.value)||detectada||'';
-  var hasPdf=files.some(function(f){return /\.pdf$/i.test(String(f.name||''));});
-  var hasExcel=files.some(function(f){return /\.xlsx?$/i.test(String(f.name||''));});
-  if(key==='ofertas_moviles'&&hasExcel&&!hasPdf){
-    estado.innerHTML='<span class="pill amber">Analisis parcial</span> Excel recibido. '+(vigencia?'Vigencia hasta '+esc(vigencia)+'. ':'Vigencia pendiente de detectar desde el PDF. ')+'Falta PDF de terminos y condiciones para habilitar publicacion.';
-    return;
-  }
-  if(key==='ofertas_moviles'&&hasExcel&&hasPdf&&vigencia){
-    estado.innerHTML='<span class="pill amber">Pendiente de parser</span> Excel y PDF recibidos. 2 documento(s) y vigencia hasta '+esc(vigencia)+' leidos. La publicacion sigue bloqueada hasta conectar el analisis completo.';
-    return;
-  }
-  if(!vigencia){estado.innerHTML='<span class="pill amber">Vigencia pendiente</span> Documento(s) recibido(s). No pude detectar la fecha hasta en el nombre; la publicacion queda bloqueada hasta completar vigencia o conectar lectura interna del PDF.';return;}
-  estado.innerHTML='<span class="pill amber">Pendiente de parser</span> '+files.length+' documento(s) y vigencia hasta '+esc(vigencia)+' leidos. La publicacion sigue bloqueada hasta conectar el analisis completo.';
+  if(!files.length){estado.innerHTML='<span class="pill red">Falta documento oficial</span> Selecciona el Excel o PDF.';return;}
+  estado.innerHTML='<span class="pill amber">Sin analizar</span> '+files.length+' archivo(s) seleccionados en este navegador, no archivados en el servidor. Este formulario no tiene conectado el análisis conjunto ni el borrador comercial. La selección local no sustituye a la publicación actual.';
 }
 function ovDetectarVigenciaHasta(files){
   var months={enero:'01',febrero:'02',marzo:'03',abril:'04',mayo:'05',junio:'06',julio:'07',agosto:'08',septiembre:'09',setiembre:'09',octubre:'10',noviembre:'11',diciembre:'12'};
@@ -3211,7 +3772,7 @@ function ovGuardarBorrador(key){
   var borrador={familia:key,documentos:documentos,vigencia_desde:(desde&&desde.value)||(previo&&previo.vigencia_desde)||'',vigencia_hasta:(sinHasta&&sinHasta.checked)?'hasta_nuevo_boletin':vigencia,guardado_en:new Date().toISOString()};
   try{localStorage.setItem('ov_borrador_'+key,JSON.stringify(borrador));}catch(e){}
   var resumen=$('ovResumen_'+key); if(resumen)resumen.innerHTML=ovRenderBorradorResumen(key);
-  estado.innerHTML='<span class="pill green">Borrador guardado</span> '+documentos.length+' documento(s) registrados. Vigencia '+((desde&&desde.value)?'desde '+esc(desde.value)+' ':'')+'hasta: '+esc(vigencia)+'. La publicacion sigue bloqueada.';
+  estado.innerHTML='<span class="pill green">Selección local guardada</span> '+documentos.length+' nombre(s) conservados solo en este navegador, no archivos recibidos. Vigencia '+((desde&&desde.value)?'desde '+esc(desde.value)+' ':'')+'hasta: '+esc(vigencia)+'. La publicacion sigue bloqueada.';
 }
 async function ofRenderFuentesComerciales(){
   var b=$('ofBody'); if(!b)return;
@@ -3313,6 +3874,9 @@ function fcModuleKeyForFuente(fuente){
 function fcMensajeApi(e,key){
   var m=String(e&&e.message||e||'');
   var modulo=key||(typeof fcBaseModuleKey!=='undefined'?fcBaseModuleKey:'');
+  if(/snapshot_publicado_no_comparable/.test(m))return 'La version publicada tiene filas que no se pueden comparar con seguridad. Revisa su snapshot; no se ha cambiado la publicacion ni guardado otro borrador.';
+  if(/preview_desactualizado|preview_fingerprint_invalido/.test(m))return 'La comparacion cambio o no pudo verificarse. Genera una vista previa nueva y revisa las diferencias antes de guardar.';
+  if(/transicion_invalida/.test(m))return 'La transicion no se aplico. Recarga el borrador y comprueba su estado antes de continuar.';
   if(/fuente_byop_requerida/.test(m))return 'Falta la fuente BYOP-BAN guardada para generar Planes Moviles.';
   if(/fuente_moviles_base_incompatible/.test(m))return 'Ese PDF corresponde a ofertas o accesorios. Cargalo en Ofertas Vigentes > Ofertas Moviles; Planes Moviles base usa el PDF de planes vigentes.';
   if(/formato_base_pdf_invalido/.test(m))return 'Este catalogo base requiere el PDF oficial. Las tablas Excel van en Lista de Precios u Ofertas Vigentes segun corresponda.';
@@ -3320,6 +3884,7 @@ function fcMensajeApi(e,key){
   if(/401/.test(m))return 'Tu sesión expiró. Volvé a entrar.';
   if(/^(?:HTTP\s+)?403\b|->\s*403\b/.test(m))return 'No tenés permiso administrativo para esta acción.';
   if(/404/.test(m))return 'La fuente o el archivo archivado no está disponible.';
+  if(/parser_dependency_missing|falta el lector PDF/.test(m))return 'No se puede analizar Affinity porque falta el lector PDF en el servidor.';
   if(/422/.test(m)&&modulo==='moviles')return 'El documento no pudo procesarse como base de Planes Moviles. Usa el PDF oficial de planes vigentes; las tablas Excel de ofertas y financiamiento van en Ofertas Vigentes > Ofertas Moviles.';
   if(/422/.test(m)&&modulo==='lista_precios')return 'El Excel no pudo procesarse como Lista de Precios.';
   if(/422/.test(m)&&modulo==='inalambrico_iot')return 'El documento no pudo procesarse como fuente Inalambrico / IoT.';
@@ -3333,12 +3898,12 @@ function fcBaseCategoriasActivas(){return fcBaseModuleKey==='moviles'?[['movil',
 function fcBasePreviewRequestBody(fecha){
   var body=fcBaseModuleKey==='moviles'?{fuente_ids:fcBaseCompanionIds}:{};
   if(fecha)body.fecha_actualizacion_base=fecha;
+  if(fcBasePreview&&fcBasePreview.preview_fingerprint)body.preview_fingerprint=fcBasePreview.preview_fingerprint;
   return body;
 }
 function fcBaseFechaDetectada(){
   if(fcBasePreview&&fcBasePreview.fecha_actualizacion_base)return fcBasePreview.fecha_actualizacion_base;
-  if(!fcBaseFuente)return '';
-  return ovDetectarVigenciaHasta([{name:fcBaseFuente.nombre_original||fcBaseFuente.titulo||''}]);
+  return '';
 }
 function ofPrimaryFuenteForCatalogo(rows,key){
   if(key!=='moviles')return rows[0]||null;
@@ -3373,15 +3938,6 @@ function fcRenderBaseRulesSummary(p){
   var conf=Object.keys(confianza).sort().map(function(k){return '<span class="pill '+(k==='confirmado'?'green':(k==='contradiccion'?'red':'amber'))+'">'+esc(k)+': '+esc(confianza[k])+'</span>';}).join('');
   return '<div class="card" style="padding:12px;margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b>Reglas detectadas</b><span class="pill violet">Total '+esc(s.total||0)+'</span></div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+(tipos||'<span class="s">Sin tipos detectados</span>')+'</div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+(conf||'<span class="s">Sin estado de confianza</span>')+'</div></div>';
 }
-function fcHydrateBaseDraftsFromHistorial(publicaciones){
-  if(!fcBaseFuente)return;
-  (publicaciones||[]).forEach(function(p){
-    if(String(p.fuente_comercial_id)!==String(fcBaseFuente.id))return;
-    if(!['fijo','claro_tv','movil','inalambrico'].includes(p.categoria))return;
-    var actual=fcBaseDrafts[p.categoria];
-    if(!actual||Number(p.numero||0)>=Number(actual.numero||0))fcBaseDrafts[p.categoria]=p;
-  });
-}
 function fcRenderBasePanel(){
   var el=$('fcBasePreviewPanel'); if(!el)return;
   if(!fcBaseFuente){el.innerHTML='';return;}
@@ -3389,16 +3945,16 @@ function fcRenderBasePanel(){
   var categorias=fcBaseCategoriasActivas();
   var tabs=categorias.map(function(t){return '<button class="btn '+(fcBaseTab===t[0]?'':'ghost')+'" onclick="fcSetBaseTab(\''+t[0]+'\')">'+esc(t[1])+' '+fcCountBase(t[0])+'</button>';}).join('');
   var canSave=!!fcBasePreview&&!fcBaseDrafts[fcBaseTab]&&!fcBaseBusy;
-  var canValidate=pub&&pub.estado==='borrador'&&!fcBaseBusy;
-  var canApprove=pub&&pub.estado==='validada'&&!fcBaseBusy;
-  var canPublish=pub&&pub.estado==='aprobada'&&!fcBaseBusy;
+  var canValidate=pub&&fcBasePreview&&pub.estado==='borrador'&&!fcBaseBusy;
+  var canApprove=pub&&fcBasePreview&&pub.estado==='validada'&&!fcBaseBusy;
+  var canPublish=pub&&fcBasePreview&&pub.estado==='aprobada'&&!fcBaseBusy;
   var fechaBase=fcBasePreview&&fcBasePreview.fecha_actualizacion_base||fcBaseFechaDetectada();
   el.innerHTML='<div class="card" style="margin-top:12px;padding:14px">'
-    +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><b>'+esc(fcBaseFuente.nombre_original||fcBaseFuente.titulo||'Fuente')+'</b><div class="s">Hash '+esc((fcBaseFuente.sha256||'').slice(0,12))+' · No se publica automáticamente; la vista previa tampoco guarda cambios.</div></div><span class="pill '+(estado==='aprobada'||estado==='publicada'?'green':(estado==='sin_borrador'?'amber':'violet'))+'">'+esc(estado)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap"><div><b>Documento seleccionado: '+esc(fcBaseFuente.nombre_original||fcBaseFuente.titulo||'Fuente')+'</b><div class="s">Hash '+esc((fcBaseFuente.sha256||'').slice(0,12))+' · No se publica automáticamente; la vista previa tampoco guarda cambios.</div></div><span class="pill '+(estado==='aprobada'||estado==='publicada'?'green':(estado==='sin_borrador'?'amber':'violet'))+'">'+esc(estado==='sin_borrador'?'Sin borrador seleccionado':estado)+'</span></div>'
     +'<div class="impgrid" style="margin-top:12px"><div><div class="flbl">Fecha de actualización de la base</div><input class="inp" id="fcBaseFecha" type="date" value="'+esc(fechaBase||'')+'"></div><div style="display:flex;align-items:end;gap:8px;flex-wrap:wrap"><button class="btn" id="fcBasePreviewBtn" onclick="fcGenerarBasePreview()" '+(fcBaseBusy?'disabled':'')+'>'+(fcBaseBusy?'Procesando documento':'Generar vista previa')+'</button><button class="btn ghost" onclick="fcLoadBaseHistorial()">Historial</button></div></div>'
     +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+tabs+'</div>'
     +(fcBasePreview?fcRenderBasePreviewBody():'<div class="empty" style="padding:18px">Generá la vista previa. Si el boletín trae fecha clara, se detecta automáticamente.</div>')
-    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="fcGuardarBaseBorrador()" '+(fcBaseBusy?'disabled':'')+'>Guardar borrador</button><button class="btn ghost" onclick="fcBaseTransicion(\'validar\')" '+(canValidate?'':'disabled')+'>Validar</button><button class="btn ghost" onclick="fcBaseTransicion(\'aprobar\')" '+(canApprove?'':'disabled')+'>Aprobar</button><button class="btn green" onclick="fcBaseTransicion(\'publicar\')" '+(canPublish?'':'disabled')+'>Publicar</button></div>'
+    +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="fcGuardarBaseBorrador()" '+(canSave?'':'disabled')+'>Guardar borrador</button><button class="btn ghost" onclick="fcBaseTransicion(\'validar\')" '+(canValidate?'':'disabled')+'>Validar revisión</button><button class="btn ghost" onclick="fcBaseTransicion(\'aprobar\')" '+(canApprove?'':'disabled')+'>Aprobar</button><button class="btn green" onclick="fcBaseTransicion(\'publicar\')" '+(canPublish?'':'disabled')+'>Publicar</button></div>'
     +'<div id="fcBaseEstado" class="s" style="margin-top:8px">'+fcBaseMessage+'</div></div>';
 }
 function fcRenderBasePreviewBody(){
@@ -3412,10 +3968,11 @@ function fcRenderBasePreviewBody(){
   var changes=[];
   (diff.nuevos||[]).forEach(function(item){changes.push(row('Nuevo',label(item.registro),null,item.registro.precio_texto||item.registro.precio));});
   (diff.modificados||[]).forEach(function(item){(item.cambios||[]).forEach(function(change){changes.push(row('Cambio',item.codigo+' · '+change.campo.replace(/_/g,' '),change.antes,change.ahora));});});
-  (diff.eliminados||[]).forEach(function(item){changes.push(row('Eliminado',label(item.registro),item.registro.precio_texto||item.registro.precio,null));});
-  var blocked=preview.publicable?'':'<p>No se puede publicar: hay datos que requieren revision.</p>';
-  if(!changes.length)return blocked+'<p>Sin cambios respecto a la version publicada.</p>';
-  return blocked+'<p>'+((diff.nuevos||[]).length)+' nuevos · '+((diff.modificados||[]).length)+' modificados · '+((diff.eliminados||[]).length)+' eliminados</p><div style="overflow:auto"><table><thead><tr><th>Cambio</th><th>Elemento</th><th>Antes</th><th>Ahora</th></tr></thead><tbody>'+changes.join('')+'</tbody></table></div>';
+  (diff.eliminados||[]).forEach(function(item){changes.push(row('Ausente en propuesta',label(item.registro),item.registro.precio_texto||item.registro.precio,null));});
+  var blocked=preview.comparacion_guardada?'<p>Comparacion guardada al crear el borrador; no revalidada contra la publicacion actual.</p>':(preview.publicable?'':'<p>No se puede publicar: hay datos que requieren revision.</p>');
+  if((diff.eliminados||[]).length)blocked+='<p class="pill amber">Revision comercial pendiente: la ausencia en esta propuesta no autoriza eliminar registros publicados. Contrastar fuente y extraccion antes de publicar.</p>';
+  if(!changes.length)return blocked+'<p>'+(preview.comparacion_guardada?'Sin cambios en la comparacion guardada.':'Sin cambios respecto a la version publicada.')+'</p>';
+  return blocked+'<p>'+((diff.nuevos||[]).length)+' nuevos · '+((diff.modificados||[]).length)+' modificados · '+((diff.eliminados||[]).length)+' ausentes en propuesta</p><div style="overflow:auto"><table><thead><tr><th>Cambio</th><th>Elemento</th><th>Antes</th><th>Ahora</th></tr></thead><tbody>'+changes.join('')+'</tbody></table></div>';
 }
 function fcRenderBasePreviewAuditBody(){
   var p=fcBasePreview.previews&&fcBasePreview.previews[fcBaseTab]; if(!p)return '<div class="empty">Sin datos de '+esc(fcBaseTab)+'</div>';
@@ -3431,38 +3988,90 @@ function fcRenderBasePreviewAuditBody(){
     +'<div class="card" style="padding:12px;margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b>Registros candidatos</b><input class="inp" style="max-width:260px" placeholder="Buscar" value="'+esc(fcBaseSearch)+'" oninput="fcBaseSearch=this.value;fcRenderBasePanel()"></div><div style="overflow-x:auto;margin-top:8px"><table style="min-width:1180px"><thead><tr><th>Código</th><th>Descripción</th><th class="r">Precio</th><th>Tecnología</th><th class="r">Min. adicional</th><th>Instalación</th><th>Activación</th><th class="r">Penalidad</th><th>Sección</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+esc(r.codigo||'')+'</td><td>'+esc(r.descripcion||'')+'</td><td class="r">'+esc(r.precio_texto||fcMontoBase(r.precio))+'</td><td>'+esc(r.tecnologia||'')+'</td><td class="r">'+esc(fcMontoBase(r.minuto_adicional))+'</td><td>'+esc(fcCargoPlazos(r.instalacion))+'</td><td>'+esc(fcCargoPlazos(r.activacion))+'</td><td class="r">'+esc(fcMontoBase(r.penalidad))+'</td><td>'+esc(r.seccion_key||'')+'</td></tr>';}).join('')+'</tbody></table></div></div>';
 }
 async function fcGenerarBasePreview(){
-  var estadoCarga=$('ofBaseEstado_'+fcBaseModuleKey);
+  var key=fcBaseModuleKey, tab=fcBaseTab, viewTab=ofTab, sourceId=fcBaseFuente?.id||null;
+  var generation=++fcBaseGeneration, estadoCarga=$('ofBaseEstado_'+key);
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&(fcBaseFuente?.id||null)===sourceId;}
   var fecha=String($('fcBaseFecha')&&$('fcBaseFecha').value||fcBaseFechaDetectada()||'').trim();
-  if(fcBaseModuleKey==='moviles'&&!fcBaseCompanionIds.length){fcBaseMessage='<span class="pill red">Falta BYOP-BAN</span> Guarda también la fuente BYOP-BAN para generar Planes Moviles.';fcRenderBasePanel();return;}
+  fcBasePreview=null;fcBaseDrafts={};fcBaseBusy=false;
+  if(!sourceId){fcBaseMessage='<span class="pill red">Falta fuente</span> Primero selecciona o carga el documento oficial.';fcRenderBasePanel();return;}
+  if(key==='moviles'&&!fcBaseCompanionIds.length){fcBaseMessage='<span class="pill red">Falta BYOP-BAN</span> Guarda también la fuente BYOP-BAN para generar Planes Moviles.';fcRenderBasePanel();return;}
   fcBaseBusy=true;fcBaseMessage='Generando vista previa...';if(estadoCarga)estadoCarga.textContent=fcBaseMessage;fcRenderBasePanel();
-  try{fcBasePreview=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody(fecha)});fcBaseDrafts={};fcBaseMessage='<span class="pill green">Vista previa lista</span> Ahora puedes guardar borrador.';if(estadoCarga)estadoCarga.innerHTML=fcBaseMessage;}
-  catch(e){fcBaseMessage='<span class="pill red">No se pudo generar vista previa</span> '+esc(fcMensajeApi(e,fcBaseModuleKey));if(estadoCarga)estadoCarga.innerHTML=fcBaseMessage;alert(fcMensajeApi(e,fcBaseModuleKey));}
-  finally{fcBaseBusy=false;fcRenderBasePanel();}
+  try{
+    var preview=await api('/api/fuentes-comerciales/'+sourceId+'/preview-base',{method:'POST',body:fcBasePreviewRequestBody(fecha)});
+    if(!current())return;
+    if(!preview.ok)throw new Error(preview.error||preview.codigo||'Analisis no disponible');
+    fcBasePreview=preview;fcBaseDrafts={};fcBaseMessage='<span class="pill green">Vista previa lista</span> Ahora puedes guardar borrador.';
+    if(estadoCarga)estadoCarga.innerHTML=fcBaseMessage;
+  }catch(e){
+    if(!current())return;
+    fcBasePreview=null;fcBaseDrafts={};fcBaseMessage='<span class="pill red">No se pudo generar vista previa</span> '+esc(fcMensajeApi(e,key));
+    if(estadoCarga)estadoCarga.innerHTML=fcBaseMessage;
+    alert(fcMensajeApi(e,key));
+  }finally{
+    if(generation===fcBaseGeneration){fcBaseBusy=false;if(!current())fcBaseMessage='';if(ofTab===viewTab)fcRenderBasePanel();}
+  }
 }
 async function fcGuardarBaseBorrador(){
+  if(fcBaseBusy||fcBaseDrafts[fcBaseTab])return;
   if(!fcBaseFuente){fcBaseMessage='<span class="pill red">Falta fuente</span> Primero selecciona o carga el documento oficial.';fcRenderBasePanel();return;}
   if(!fcBasePreview){fcBaseMessage='<span class="pill amber">Primero genera la vista previa</span> Después se puede guardar borrador.';fcRenderBasePanel();return;}
   var fecha=String(fcBasePreview&&fcBasePreview.fecha_actualizacion_base||$('fcBaseFecha')&&$('fcBaseFecha').value||'').trim();
   if(!fecha){fcBaseMessage='<span class="pill red">Falta fecha base</span> Genera la vista previa o escribe la fecha de actualización.';fcRenderBasePanel();return;}
   if(fcBaseModuleKey==='moviles'&&!fcBaseCompanionIds.length){fcBaseMessage='<span class="pill red">Falta BYOP-BAN</span> Guarda también la fuente BYOP-BAN para generar Planes Moviles.';fcRenderBasePanel();return;}
+  var generation=fcBaseGeneration, key=fcBaseModuleKey, tab=fcBaseTab, viewTab=ofTab, sourceId=fcBaseFuente.id, reviewed=fcBasePreview;
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&fcBaseFuente?.id===sourceId&&fcBasePreview===reviewed;}
   fcBaseBusy=true;fcBaseMessage='Guardando borrador...';fcRenderBasePanel();
-  try{var r=await api('/api/fuentes-comerciales/'+fcBaseFuente.id+'/preview-base/borradores',{method:'POST',body:fcBasePreviewRequestBody(fecha)});fcBaseDrafts={};(r.publicaciones||[]).forEach(function(p){fcBaseDrafts[p.categoria]=p;});fcBaseMessage='<span class="pill green">Borrador guardado</span> Revisa '+esc(fcBaseModuleKey==='moviles'?'Planes Moviles':(fcBaseModuleKey==='inalambrico_iot'?'Inalambrico / IoT':'Fijo y Claro TV'))+'; luego puedes validar.';fcLoadBaseHistorial();}
-  catch(e){fcBaseMessage='<span class="pill red">No se pudo guardar borrador</span> '+esc(fcMensajeApi(e,fcBaseModuleKey));alert(fcMensajeApi(e,fcBaseModuleKey));}
-  finally{fcBaseBusy=false;fcRenderBasePanel();}
+  try{
+    var r=await api('/api/fuentes-comerciales/'+sourceId+'/preview-base/borradores',{method:'POST',body:fcBasePreviewRequestBody(fecha)});
+    if(!current())return;
+    if(!r.ok)throw new Error(r.error||r.codigo||'No se pudo guardar el borrador');
+    fcBaseDrafts={};(r.publicaciones||[]).forEach(function(p){fcBaseDrafts[p.categoria]=p;});
+    fcBaseMessage='<span class="pill green">Borrador guardado</span> Revisa '+esc(key==='moviles'?'Planes Moviles':(key==='inalambrico_iot'?'Inalambrico / IoT':'Fijo y Claro TV'))+'; luego puedes validar.';
+    var evidence=null;
+    try{evidence=await api('/api/admin-control/modules');}catch(e){}
+    if(!current())return;
+    if(evidence)ofCenterEvidence=evidence;
+    ofRefreshOperationalState(fcBaseFuente);
+    fcLoadBaseHistorial();
+  }catch(e){
+    if(!current())return;
+    fcBaseMessage='<span class="pill red">No se pudo guardar borrador</span> '+esc(fcMensajeApi(e,key));alert(fcMensajeApi(e,key));
+  }finally{
+    if(generation===fcBaseGeneration){fcBaseBusy=false;if(!current())fcBaseMessage='';if(ofTab===viewTab)fcRenderBasePanel();}
+  }
 }
 async function fcBaseTransicion(accion){
+  if(fcBaseBusy)return;
   var pub=fcBasePublicacionActual();
-  if(!pub){fcBaseMessage='<span class="pill amber">No hay borrador activo</span> Guardá el borrador o esperá que cargue el historial.';fcRenderBasePanel();fcLoadBaseHistorial();return;}
-  if(accion==='publicar'&&!confirm('Publicar '+fcBaseTab+' actualizará el portal local y reemplazará la versión vigente. ¿Continuar?'))return;
+  if(!pub||pub.categoria!==fcBaseTab||String(pub.fuente_comercial_id)!==String(fcBaseFuente?.id)){fcBaseMessage='<span class="pill amber">No hay borrador activo</span> Selecciona el borrador exacto para continuar.';fcRenderBasePanel();return;}
+  if(accion==='publicar'&&!confirm('Publicar '+fcBaseTab+' actualizará el portal de la instancia consultada y reemplazará la versión vigente. ¿Continuar?'))return;
+  var generation=fcBaseGeneration, key=fcBaseModuleKey, tab=fcBaseTab, viewTab=ofTab, sourceId=fcBaseFuente.id;
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&fcBaseFuente?.id===sourceId&&fcBaseDrafts[tab]?.id===pub.id;}
   fcBaseBusy=true;fcBaseMessage='Procesando '+accion+'...';fcRenderBasePanel();
-  try{var r=await api('/api/fuentes-comerciales/bases-informativas/'+pub.id+'/'+accion,{method:'POST'});fcBaseDrafts[fcBaseTab]=r.publicacion;fcBaseMessage='<span class="pill green">Transición aplicada</span> '+esc(fcBaseTab)+' quedó en estado '+esc(r.publicacion&&r.publicacion.estado||'actualizado')+'.';fcLoadBaseHistorial();}
-  catch(e){fcBaseMessage='<span class="pill red">No se pudo '+esc(accion)+'</span> '+esc(fcMensajeApi(e,fcBaseModuleKey));alert(fcMensajeApi(e,fcBaseModuleKey));}
-  finally{fcBaseBusy=false;fcRenderBasePanel();}
+  try{
+    var r=await api('/api/fuentes-comerciales/bases-informativas/'+pub.id+'/'+accion,{method:'POST'});
+    if(!current())return;
+    if(!r.ok||!r.publicacion||String(r.publicacion.id)!==String(pub.id)||r.publicacion.categoria!==tab||String(r.publicacion.fuente_comercial_id)!==String(sourceId))throw new Error(r.error||r.codigo||'Transicion no aplicada');
+    fcBaseDrafts[tab]=r.publicacion;fcBaseMessage='<span class="pill green">Transición aplicada</span> '+esc(tab)+' quedó en estado '+esc(r.publicacion.estado||'actualizado')+'.';
+    var evidence=null;
+    try{evidence=await api('/api/admin-control/modules');}catch(e){}
+    if(!current())return;
+    if(evidence)ofCenterEvidence=evidence;
+    ofRefreshOperationalState(fcBaseFuente);
+    fcLoadBaseHistorial();
+  }catch(e){
+    if(!current())return;
+    fcBaseMessage='<span class="pill red">No se pudo '+esc(accion)+'</span> '+esc(fcMensajeApi(e,key));alert(fcMensajeApi(e,key));
+  }finally{
+    if(generation===fcBaseGeneration){fcBaseBusy=false;if(!current())fcBaseMessage='';if(ofTab===viewTab)fcRenderBasePanel();}
+  }
 }
 async function fcLoadBaseHistorial(){
   var el=$('fcBaseHistorial'); if(!el)return;
-  try{var r=await api('/api/fuentes-comerciales/bases-informativas/historial');fcHydrateBaseDraftsFromHistorial(r.publicaciones||[]);var permitidas=fcBaseModuleKey==='moviles'?['movil']:(fcBaseModuleKey==='inalambrico_iot'?['inalambrico']:['fijo','claro_tv']);var rows=(r.publicaciones||[]).filter(function(p){return permitidas.includes(p.categoria);}).slice(0,20).map(function(p){return '<tr><td>'+esc(p.categoria)+'</td><td>'+esc(p.numero||'')+'</td><td><span class="pill '+(p.estado==='publicada'?'green':(p.estado==='aprobada'?'violet':'amber'))+'">'+esc(p.estado)+'</span></td><td>'+esc(String(p.fecha_actualizacion_base||'').slice(0,10))+'</td><td class="r">'+esc(p.candidatos_total||0)+'</td><td>'+esc(p.fuente_nombre||'')+'</td></tr>';}).join('');el.innerHTML='<div class="card" style="padding:12px"><b>Historial de bases informativas</b><div style="overflow-x:auto;margin-top:8px"><table style="min-width:760px"><thead><tr><th>Categoría</th><th>Versión</th><th>Estado</th><th>Fecha base</th><th class="r">Candidatos</th><th>Fuente</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Sin historial.</td></tr>')+'</tbody></table></div></div>';fcRenderBasePanel();}
-  catch(e){el.innerHTML='<div class="empty">No se pudo cargar historial: '+fcMensajeApi(e,fcBaseModuleKey)+'</div>';}
+  var generation=fcBaseGeneration, key=fcBaseModuleKey, tab=fcBaseTab, viewTab=ofTab, sourceId=fcBaseFuente?.id||null;
+  function current(){return generation===fcBaseGeneration&&ofTab===viewTab&&fcBaseModuleKey===key&&fcBaseTab===tab&&(fcBaseFuente?.id||null)===sourceId&&$('fcBaseHistorial')===el;}
+  try{var r=await api('/api/fuentes-comerciales/bases-informativas/historial');if(!current())return;var permitidas=key==='moviles'?['movil']:(key==='inalambrico_iot'?['inalambrico']:['fijo','claro_tv']);var rows=(r.publicaciones||[]).filter(function(p){return permitidas.includes(p.categoria);}).slice(0,20).map(function(p){return '<tr><td>'+esc(p.categoria)+'</td><td>'+esc(p.numero||'')+'</td><td><span class="pill '+(p.estado==='publicada'?'green':(p.estado==='aprobada'?'violet':'amber'))+'">'+esc(p.estado)+'</span></td><td>'+esc(String(p.fecha_actualizacion_base||'').slice(0,10))+'</td><td class="r">'+esc(p.candidatos_total||0)+'</td><td>'+esc(p.fuente_nombre||'')+'</td></tr>';}).join('');el.innerHTML='<div class="card" style="padding:12px"><b>Historial de bases informativas</b><div style="overflow-x:auto;margin-top:8px"><table style="min-width:760px"><thead><tr><th>Categoría</th><th>Versión</th><th>Estado</th><th>Fecha base</th><th class="r">Candidatos</th><th>Fuente</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Sin historial.</td></tr>')+'</tbody></table></div></div>';}
+  catch(e){if(!current())return;el.innerHTML='<div class="empty">No se pudo cargar historial: '+esc(fcMensajeApi(e,key))+'</div>';}
 }
 function fcToggleFuente(id,checked){id=String(id);if(checked&&!fcSeleccionadas.includes(id))fcSeleccionadas.push(id);if(!checked)fcSeleccionadas=fcSeleccionadas.filter(function(x){return x!==id;});}
 async function fcPreviewPlanesFijos(){
@@ -3724,7 +4333,7 @@ async function viewProspeccion(){
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end">
       <div><div class="flbl">Rubro</div><input class="inp" id="prApifyRubro" placeholder="Ej. farmacia"></div>
       <div><div class="flbl">Zona</div><input class="inp" id="prApifyZona" placeholder="Ej. San Juan"></div>
-      <div><div class="flbl">Cantidad</div><input class="inp" id="prApifyCantidad" type="number" min="1" max="500" value="25"></div>
+      <div><div class="flbl">Cantidad</div><input class="inp" id="prApifyCantidad" type="number" min="1" max="1000" value="25"></div>
       <div style="display:flex;gap:12px;align-items:center;min-height:38px;flex-wrap:wrap">
         <label class="s"><input type="checkbox" id="prApifyTelefono" checked> Con teléfono</label>
         <label class="s"><input type="checkbox" id="prApifyWebsite"> Con web</label>
@@ -4082,7 +4691,26 @@ function impMostrarResultado(){
     +'<button class="btn ghost" onclick="impDescargarDetalle()">Descargar detalle de cambios ('+cambios+')</button>'+erroresHtml+'</div>';
 }
 // ---------------- ACTIONS ----------------
-async function nuevoCliente(){const name=prompt('Empresa del cliente:');if(!name)return;await api('/api/clients',{method:'POST',body:{name}});router();}
+async function nuevoCliente(){
+  openForm('Nuevo cliente',[
+    {key:'name',label:'Empresa',value:''},
+    {key:'owner_name',label:'Dueño',value:''},
+    {key:'contact_person',label:'Contacto',value:''},
+    {key:'email',label:'Email',value:''},
+    {key:'phone',label:'Tel. principal',value:''},
+    {key:'additional_phone',label:'Tel. secundario',value:''},
+    {key:'cellular',label:'Celular contacto',value:''},
+    {key:'address',label:'Dirección',value:''},
+    {key:'city',label:'Ciudad',value:''},
+    {key:'zip_code',label:'Código postal',value:''},
+    {key:'tax_id',label:'TAX/SSN',value:''},
+    {key:'salesperson_id',label:'Asignar vendedor',type:'select',options:await cliSalespeopleOptions(''),value:''}
+  ], async function(v){
+    const r=await api('/api/clients-real',{method:'POST',body:cliNormalizeClientPayload(v)});
+    if(r&&r.id){ location.hash='#/cliente/'+r.id; return; }
+    router();
+  });
+}
 async function enviarSeguimiento(id){const r=await api('/api/clients/'+id+'/seguimiento',{method:'POST',body:{product_key:'fijo_ren'}});if(r.error){alert(r.error);return;}location.hash='#/asana';}
 async function addLog(oid,type){const b=$('logbody').value;if(!b){alert('Escribí algo');return;}await api('/api/opportunities/'+oid+'/log',{method:'POST',body:{type,body:b}});router();}
 let asanaGestionType='llamada';
@@ -4099,6 +4727,15 @@ function submitAsanaGestion(oid){
   addAsanaLog(oid,type,asanaGestionType==='agenda');
 }
 async function addAsanaLog(oid,type,scheduled){const el=$('asanaLogBody');const b=el&&el.value.trim();if(!b){alert('Escribe algo');return;}const body={type,body:b};if(scheduled){const at=$('asanaCallAt')&&$('asanaCallAt').value;if(!at){alert('Selecciona fecha y hora para agendar la llamada');return;}body.scheduled_call_at=at;}await api('/api/asana-real/'+oid+'/log',{method:'POST',body});if(type==='llamada')asanaLogTab='llamada';else if(type==='nota')asanaLogTab='nota';router();}
+async function eliminarNotaAsana(oid,noteId,fromClient){
+  if(!oid||!noteId)return;
+  if(!confirm('Eliminar este registro de Asana? Quedara conservado como historial eliminado.'))return;
+  try{
+    await api('/api/asana-real/'+oid+'/log/'+noteId,{method:'DELETE'});
+    if(fromClient&&cliM&&cliM.id){ refreshCli(); return; }
+    router();
+  }catch(e){ alert('No se pudo eliminar la nota: '+e.message); }
+}
 async function avanzar(oid,sid){await api('/api/asana-real/'+oid+'/steps/'+sid+'/done',{method:'POST'});router();}
 async function cerrarOpp(oid){if(!confirm('¿Eliminar esta oportunidad de seguimiento y devolver el cliente al pool?'))return;try{await api('/api/asana-real/'+oid,{method:'DELETE'});location.hash='#/asana';router();}catch(e){alert('No se pudo eliminar de seguimiento: '+e.message);}}
 
@@ -4108,7 +4745,9 @@ function togg(gi){var ar=document.getElementById('ar'+gi);var open=ar.textConten
 async function editComR(sid,m,v){try{await api('/api/comisiones/'+sid+'/'+m,{method:'PATCH',body:{vendor_commission:v}});}catch(e){alert('No se pudo guardar');}}
 async function payR(sid,m){await api('/api/comisiones/'+sid+'/'+m+'/pay',{method:'POST'});router();}
 // ---------------- ROUTER ----------------
+let routerRunId=0;
   async function router(){
+    const runId=++routerRunId;
     const h=(location.hash.slice(1)||'/clientes').split('/').filter(Boolean);
     let [route,arg]=h;
     document.body.setAttribute('data-page',route==='cliente'?'clientes':route);
@@ -4134,16 +4773,20 @@ async function payR(sid,m){await api('/api/comisiones/'+sid+'/'+m+'/pay',{method
     else if(route==='correos')html=await viewCorreos();
     else if(route==='campanas')html=await viewCampanas();
     else if(route==='import')html=await viewImport();
-        else if(route==='ofertas')html=await viewOfertas();
+        else if(route==='ofertas'){if(arg&&OF_TABS.some(tab=>tab[0]===arg))ofTab=arg;html=await viewOfertas();}
         else if(route==='prospeccion')html=await viewProspeccion();
+        else if(route==='tareas-reglas-admin')html=await viewTareasReglasAdmin();
         else html=await viewClientes();
+    if(runId!==routerRunId)return;
     $('view').innerHTML=html;
     if(route==='ofertas'){ await reOfertas(); return; }
+    if(runId!==routerRunId)return;
     if(route==='import')impInitDrop();
+    if(runId!==routerRunId)return;
     if(route==='prospeccion')prInit();
     if(route==='config')cfgRenderBody();
     if(route==='correos')coInit();
-  }catch(e){$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
+  }catch(e){if(runId!==routerRunId)return;$('view').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
 }
 window.addEventListener('hashchange',router);
 

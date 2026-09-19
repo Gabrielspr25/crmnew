@@ -18,9 +18,9 @@ test('Asana usa el estilo compacto oscuro sin inputs deshabilitados en productos
   assert.match(appHtml, /\.asana-table\{min-width:920px;table-layout:auto;/);
   assert.match(appHtml, /nth-child\(n\+3\):nth-child\(-n\+9\)\{min-width:46px;width:4\.8%;\}/);
   assert.doesNotMatch(appHtml, /\.acell\{[^}]*background:linear-gradient/);
-  assert.match(appHtml, /<div class="asana-value \$\{p\?'':'empty'\}">\$\{display\}<\/div>/);
+  assert.match(appHtml, /<div class="asana-value \$\{type==='money'\?'av-money':'av-qty'\} \$\{p\?'':'empty'\}">\$\{display\}<\/div>/);
   assert.match(appHtml, /<div class="asana-client-cell" title="\$\{esc\(clientLineTitle\)\}">/);
-  assert.match(appHtml, /<span class="asana-vendor">/);
+  assert.match(appHtml, /<span class="asana-vendor \$\{\(o\.vendor_name\|\|'Sin asignar'\)==='Sin asignar'\?'unassigned':''\}">/);
   assert.match(appHtml, /\.asubs\{font-size:12px;color:#b9a06d;/);
   assert.match(appHtml, /\.asana-client-line \.linkbtn\{font-size:12px!important;font-weight:400!important;/);
   assert.match(appHtml, /\.asana-client-line\{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;/);

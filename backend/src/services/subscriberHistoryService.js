@@ -19,6 +19,7 @@ export const AUDITABLE_SUBSCRIBER_FIELDS = [
   'payments_made',
   'remaining_payments',
   'tango_ventaid',
+  'ban_number',
 ];
 
 export const SUBSCRIBER_HISTORY_LABELS = {
@@ -42,6 +43,7 @@ export const SUBSCRIBER_HISTORY_LABELS = {
   payments_made: 'Cuotas pagadas',
   remaining_payments: 'Pagos restantes',
   tango_ventaid: 'Venta Tango',
+  ban_number: 'BAN',
 };
 
 const MONEY_FIELDS = new Set(['monthly_value']);
