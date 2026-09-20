@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { AFFINITY_DOMINIO, normalizeAffinityBenefitSources } from '../src/services/affinityBenefitsNormalizer.js';
+import { AFFINITY_DOMINIO, affinityResolutionsFromPublishedRules, normalizeAffinityBenefitSources } from '../src/services/affinityBenefitsNormalizer.js';
 
 const textoOficial = readFileSync(new URL('./fixtures/affinity-boletin-5nov2025.txt', import.meta.url), 'utf8');
 
@@ -174,6 +174,20 @@ test('una aclaracion comercial resuelve la contradiccion y deja la traza de lo d
   assert.equal(registro.estado, 'resuelta');
   assert.equal(registro.bloqueante, false);
   assert.match(registro.detalle, /Gabriel/);
+});
+
+test('reutiliza una aclaracion publicada solo cuando el PDF conserva el mismo hash', () => {
+  const publishedRules = [{
+    contrato: {
+      fuente: { sha256: 'fuente-affinity-exacta' },
+      condiciones: { tecnologias: [{ tecnologia: 'gpon', resolucion: { megas: 100, actor: 'Gabriel', motivo: 'aclaracion_comercial' } }] },
+    },
+  }];
+
+  assert.deepEqual(affinityResolutionsFromPublishedRules(publishedRules, 'fuente-affinity-exacta'), {
+    gpon: { megas: 100, actor: 'Gabriel', motivo: 'aclaracion_comercial' },
+  });
+  assert.deepEqual(affinityResolutionsFromPublishedRules(publishedRules, 'otro-pdf'), {});
 });
 
 test('solo se acepta una aclaracion con un valor que el boletin realmente menciona', () => {

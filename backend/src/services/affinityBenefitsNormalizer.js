@@ -310,6 +310,24 @@ function aplicarResolucion(item, resolucion) {
   };
 }
 
+// Una aclaracion anterior solo se reutiliza cuando el original es exactamente
+// el mismo. Un PDF nuevo conserva su propia revision comercial.
+export function affinityResolutionsFromPublishedRules(rules = [], sourceSha256) {
+  if (!sourceSha256) return {};
+  const resolutions = {};
+  for (const rule of rules) {
+    const contract = rule?.contrato || rule || {};
+    if (contract?.fuente?.sha256 !== sourceSha256) continue;
+    for (const technology of contract?.condiciones?.tecnologias || []) {
+      const resolution = technology?.resolucion;
+      const megas = Number(resolution?.megas);
+      if (!technology?.tecnologia || !Number.isFinite(megas)) continue;
+      resolutions[technology.tecnologia] = { ...resolution, megas };
+    }
+  }
+  return resolutions;
+}
+
 export function normalizeAffinityBenefitSources(sources = [], { resoluciones = {} } = {}) {
   const entry = (Array.isArray(sources) ? sources : [])[0] || {};
   const source = { ...(entry.fuente || entry.source || {}), familia: 'affinity' };

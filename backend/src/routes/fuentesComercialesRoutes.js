@@ -13,7 +13,7 @@ import { diffFilasPlanesFijos } from '../services/planesOfertasDiff.js';
 import { buildBasesInformativasPreviews } from '../services/basesInformativasPreview.js';
 import { buildListaPreciosPreview } from '../services/listaPreciosPreview.js';
 import { normalizeFijoOfferBenefitSources } from '../services/fijoBenefitsNormalizer.js';
-import { AFFINITY_DOMINIO, AFFINITY_NORMALIZADOR_VERSION, normalizeAffinityBenefitSources } from '../services/affinityBenefitsNormalizer.js';
+import { AFFINITY_DOMINIO, AFFINITY_NORMALIZADOR_VERSION, affinityResolutionsFromPublishedRules, normalizeAffinityBenefitSources } from '../services/affinityBenefitsNormalizer.js';
 import { readAffinityPortalDetail, readBenefitsPortalCatalog } from '../services/benefitsPortalCatalog.js';
 import {
   diffCompositeRules,
@@ -792,14 +792,14 @@ fuentesComercialesRouter.post('/affinity/preview', requireAdmin, async (req, res
       });
     }
     // Las aclaraciones sobre contradicciones del documento las decide una persona y quedan con su traza.
-    const resoluciones = {};
+    const vigente = await readCurrentPublishedCompositeRules({ db: pool, dominio: AFFINITY_DOMINIO });
+    const resoluciones = affinityResolutionsFromPublishedRules(vigente?.reglas, row.sha256);
     for (const [tecnologia, valor] of Object.entries(req.body?.resoluciones || {})) {
       const megas = Number(valor?.megas ?? valor);
       if (!Number.isFinite(megas)) continue;
       resoluciones[tecnologia] = { megas, actor: uname(req), motivo: String(valor?.motivo || 'aclaracion_comercial').slice(0, 200) };
     }
     const reglasComerciales = normalizeAffinityBenefitSources([{ fuente: row, text: extracted.text || '' }], { resoluciones });
-    const vigente = await readCurrentPublishedCompositeRules({ db: pool, dominio: AFFINITY_DOMINIO });
     const diferencias = diffCompositeRules({ dominio: AFFINITY_DOMINIO, previousRules: vigente?.reglas || [], currentRules: reglasComerciales.reglas_compuestas });
     const previewId = crypto.randomUUID();
     previews.set(previewId, { created: Date.now(), rows: [row], sourceResults: [sourceSummary(row)], reglasComerciales, warnings: [], usuario: uname(req), dominio: AFFINITY_DOMINIO });
