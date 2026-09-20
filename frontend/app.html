@@ -3958,7 +3958,7 @@ function fcRenderBasePanel(){
     +'<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><b>Cambios contra la version publicada</b><div class="s">'+esc(fcBaseFuente.nombre_original||fcBaseFuente.titulo||'Documento seleccionado')+'</div></div><button class="btn ghost" onclick="fcLoadBaseHistorial()">Historial de versiones</button></div>'
     +'<input id="fcBaseFecha" type="hidden" value="'+esc(fechaBase||'')+'">'
     +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+tabs+'</div>'
-    +(fcBasePreview?fcRenderBasePreviewBody():'<div class="empty" style="padding:14px 0">Elegí “Comparar cambios” para ver solo las diferencias.</div>')
+    +(fcBasePreview?fcRenderBasePreviewBody():'<div class="empty" style="padding:14px 0"><button class="btn" onclick="fcGenerarBasePreview()" '+(fcBaseBusy?'disabled':'')+'>Comparar cambios</button></div>')
     +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" onclick="fcGuardarBaseBorrador()" '+(canSave?'':'disabled')+'>Confirmar revision</button><button class="btn ghost" onclick="fcToggleAdvancedActions()">Controles de publicacion</button></div>'
     +'<div id="fcBaseAdvancedActions" class="of-advanced-actions"><button class="btn ghost" onclick="fcBaseTransicion(\'validar\')" '+(canValidate?'':'disabled')+'>Validar</button><button class="btn ghost" onclick="fcBaseTransicion(\'aprobar\')" '+(canApprove?'':'disabled')+'>Aprobar</button><button class="btn green" onclick="fcBaseTransicion(\'publicar\')" '+(canPublish?'':'disabled')+'>Publicar</button></div>'
     +'<div id="fcBaseEstado" class="s" style="margin-top:8px">'+fcBaseMessage+'</div></div>';

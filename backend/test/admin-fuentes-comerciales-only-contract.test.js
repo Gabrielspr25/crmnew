@@ -145,6 +145,15 @@ test('Admin Ofertas recupera la ultima fuente base al refrescar el modulo', asyn
   assert.match(html, /fcLoadBaseHistorial\(\)/);
 });
 
+test('Admin Ofertas permite comparar una fuente ya archivada antes de confirmar revision', async () => {
+  const html = await readFile(frontendPath, 'utf8');
+  const panel = html.match(/function fcRenderBasePanel\(\){[\s\S]*?\n\}/)?.[0];
+
+  assert.ok(panel, 'fcRenderBasePanel debe existir');
+  assert.match(panel, /onclick="fcGenerarBasePreview\(\)"/);
+  assert.match(panel, /Comparar cambios/);
+});
+
 test('Directorio de Fijo no reutiliza documentos de Fijo', async () => {
   const html = await readFile(frontendPath, 'utf8');
 
