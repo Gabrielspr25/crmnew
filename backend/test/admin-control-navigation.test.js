@@ -7,6 +7,10 @@ import vm from 'node:vm';
 const html = await readFile(new URL('../../frontend/app.html', import.meta.url), 'utf8');
 const sourceUrl = new URL('../../frontend/app.html', import.meta.url).pathname;
 
+test('el menu del CRM ofrece acceso directo y seguro al Portal de Ofertas', () => {
+  assert.match(html, /href="https:\/\/ofertas\.ss-group\.cloud\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"[^>]*>[^<]*<span class="d"><\/span>Portal de Ofertas<\/a>/);
+});
+
 function between(start, end) {
   const from = html.indexOf(start);
   const to = html.indexOf(end, from + start.length);
