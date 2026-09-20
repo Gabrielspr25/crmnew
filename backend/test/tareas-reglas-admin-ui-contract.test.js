@@ -48,7 +48,8 @@ test('panel conserva publicada y pendiente simultaneas sin copiar estados del pl
   const detail = r.run('tareasReglasDetalleHtml(0)');
   for (const value of ['Analisis fallido', 'Previsto:', 'Sin verificar', 'Falta analisis', 'Documento nuevo', 'Generar vista previa', '&lt;original.pdf>']) assert.ok(detail.includes(value), value);
   assert.doesNotMatch(block, /production_status|local_status|Al d[ií]a/);
-  assert.match(html, /href="#\/tareas-reglas-admin"/);
+  assert.match(html, /href="#\/ofertas"[^>]*>.*Administraci[oó]n de Ofertas/);
+  assert.doesNotMatch(html, /href="#\/tareas-reglas-admin"/);
 });
 test('sin evidencia nunca significa que no existe publicacion', async () => {
   const r = runtime([{ ...tv, publication: null, pending: null }]);

@@ -26,12 +26,13 @@ test('el Portal no conserva accesos al Constructor ni a Ofertas heredados', () =
   }
 });
 
-test('el CRM deja Tareas y reglas Admin como unico acceso administrativo', () => {
+test('el CRM concentra la administracion comercial en una unica entrada', () => {
   const crm = leer('frontend/app.html');
   assert.doesNotMatch(crm, /CONSTRUCTOR_OFERTAS_URL/);
   assert.doesNotMatch(crm, /abrirPortalOfertas/);
   assert.doesNotMatch(crm, /abrirConstructorCliente/);
-  assert.match(crm, /href="#\/tareas-reglas-admin"[^>]*>.*Tareas y reglas Admin/);
+  assert.match(crm, /href="#\/ofertas"[^>]*>.*Administraci[oó]n de Ofertas/);
+  assert.doesNotMatch(crm, /href="#\/tareas-reglas-admin"/);
 });
 
 test('las pantallas heredadas no quedan publicadas como interfaz funcional', () => {

@@ -374,6 +374,9 @@
   .report-ai-card-grid b{display:block;color:var(--txt);margin-top:1px;word-break:break-word;}
   @media(max-width:900px){.report-ai-table-wrap{display:none;}.report-ai-mobile{display:flex;}.report-ai-result{max-height:calc(100vh - 170px);padding:10px;}.report-ai-card-grid{grid-template-columns:1fr;}}
   .of-center-page{min-height:calc(100vh - 92px);padding:6px 4px 0;border-radius:18px;background:radial-gradient(circle at 35% 0%,rgba(32,242,189,.14),transparent 34%),linear-gradient(135deg,#071827,#0b2237 54%,#071525);color:#f4f8ff;}
+  .of-admin-nav{display:flex;gap:4px;padding:4px;margin:0 0 16px;border:1px solid rgba(91,139,184,.28);border-radius:10px;background:rgba(8,30,48,.75);width:max-content;max-width:100%;}
+  .of-admin-nav button{border:0;border-radius:7px;background:transparent;color:#a9c8ec;padding:8px 12px;font:inherit;font-size:13px;font-weight:750;cursor:pointer;white-space:nowrap;}
+  .of-admin-nav button[aria-selected="true"]{background:#6D1FAD;color:#fff;box-shadow:0 4px 12px rgba(109,31,173,.26);}
   .of-center-page .head{margin-bottom:14px;}
   .of-center-page .head h1{font-size:30px;line-height:1.1;color:#f8fbff;font-weight:850;letter-spacing:0;}
   .of-center-page .head .s,.of-center-page .s{color:#a9c8ec;}
@@ -610,12 +613,11 @@
     <a class="nav" href="#/historial"><span class="d"></span>Historial</a>
     <a class="nav" href="#/correos"><span class="d"></span>Correos</a>
     <a class="nav" href="#/campanas"><span class="d"></span>Campañas</a>
-    <a class="nav" href="#/ofertas"><span class="d"></span>Admin Ofertas<span class="nav-badge" id="navOfertasAlertas" hidden title="Módulos pendientes de revisión o comprobación"></span></a>
+    <a class="nav" href="#/ofertas"><span class="d"></span>Administración de Ofertas<span class="nav-badge" id="navOfertasAlertas" hidden title="Módulos pendientes de revisión o comprobación"></span></a>
     <a class="nav" href="#/prospeccion"><span class="d"></span>Prospección</a>
     <a class="nav" href="#/import"><span class="d"></span>Import New</a>
     <a class="nav" href="#/config"><span class="d"></span>Configuración</a>
     <a class="nav" href="#/perfil"><span class="d"></span>Perfil</a>
-    <a class="nav" href="#/tareas-reglas-admin"><span class="d"></span>Tareas y reglas Admin</a>
   </aside>
   <div class="main">
     <div class="topbar"><span id="conn" class="conn bad">conectando…</span><div class="sp"></div><button class="btn ghost" style="padding:9px 13px;margin-right:8px" onclick="logout()">Salir</button><button class="toggle" onclick="tog()"><span id="tgt">Modo suave</span></button></div>
@@ -2422,6 +2424,7 @@ async function viewCategorias(){
   <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
 }
 let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada';
+function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Control de reglas':'Tareas y reglas Admin';}
 function tareasReglasClase(status){
   return /^(publicada|publicado|confirmado|comprobado|recibido|registrada|registrado)$/i.test(status||'')?'green':/fall|bloque|vencid|error/i.test(status||'')?'red':'amber';
 }
@@ -2502,13 +2505,13 @@ async function viewTareasReglasAdmin(){
   if(!control){
     tareasReglasModules=[];
     tareasReglasEnvironment='Instancia consultada; entorno sin verificar';
-    return '<div class="tra-page"><div class="head"><h1>Tareas y reglas Admin</h1></div>'+checklistHtml+'<div role="alert" class="empty">Sin verificar. No se pudo consultar la evidencia operativa. Esto no invalida las publicaciones existentes. <button class="btn ghost" onclick="router()">Reintentar consulta</button></div></div>';
+    return '<div class="tra-page"><div class="head"><h1>'+tareasReglasTitle()+'</h1></div>'+checklistHtml+'<div role="alert" class="empty">Sin verificar. No se pudo consultar la evidencia operativa. Esto no invalida las publicaciones existentes. <button class="btn ghost" onclick="router()">Reintentar consulta</button></div></div>';
   }
   tareasReglasModules=Array.isArray(control.modules)?control.modules:[];
   tareasReglasEnvironment=control.environment||'Instancia consultada; entorno sin verificar';
   const selected=Math.max(0,tareasReglasModules.findIndex(m=>m.key===tareasReglasSelected));
   const rows=tareasReglasModules.map((module,index)=>'<tr data-tra-module="'+esc(module.key)+'" class="'+(index===selected?'tra-selected':'')+'"><th scope="row"><button class="tra-module" type="button" onclick="tareasReglasDetalle('+index+')">'+esc(module.title)+'</button></th><td><b>'+esc(module.publication?.label||'Sin verificar')+'</b><div class="s">'+esc(tareasReglasTexto(module.publication?.validity))+'</div></td><td>'+esc(module.pending?.label||'Sin actualizacion identificada')+'</td><td>'+esc(module.verification?.status||'Sin verificar')+'</td><td><button class="btn ghost" type="button" aria-label="Ver detalle de '+esc(module.title)+'" onclick="tareasReglasDetalle('+index+')">Ver detalle</button></td></tr>').join('');
-  return '<div class="tra-page"><div class="head"><div><h1>Tareas y reglas Admin</h1><div class="s">Portal, Motor Comercial y Constructor</div></div><button class="btn ghost" onclick="router()">Actualizar evidencia</button></div>'
+  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Portal, Motor Comercial y Constructor</div></div><button class="btn ghost" onclick="router()">Actualizar evidencia</button></div>'
     +checklistHtml
     +'<div class="tra-context"><b>'+esc(control.environment||'Instancia consultada; entorno sin verificar')+'</b><span>Consulta: '+esc(tareasReglasFecha(control.checked_at))+'</span></div>'
     +'<div class="tra-table-wrap"><table class="tra-table"><thead><tr><th>Modulo</th><th>Publicado actualmente / vigencia</th><th>Actualización pendiente</th><th>Destino</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
@@ -2819,7 +2822,16 @@ function ofRenderProcessSteps(){
   var steps=['Documento','Análisis y comparación','Revisión y borrador','Aprobación','Publicación y comprobación'];
   return '<div class="of-stepper">'+steps.map(function(s,i){return '<div class="of-step"><span class="of-step-num">'+(i+1)+'</span><div class="of-step-title">'+esc(s)+'</div></div>';}).join('')+'</div>';
 }
-let ofCenterEvidence={modules:[],environment:'Sin verificar'};
+let ofCenterEvidence={modules:[],environment:'Sin verificar'}, ofAdminView='operacion';
+function ofRenderAdminNavigation(){
+  return '<nav class="of-admin-nav" aria-label="Administración de Ofertas" role="tablist">'
+    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='operacion')+'" onclick="ofSetAdminView(\'operacion\')">Operación</button>'
+    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='control')+'" onclick="ofSetAdminView(\'control\')">Control de reglas</button>'
+    +'</nav>';
+}
+function ofSetAdminView(view){
+  location.hash=view==='control'?'#/ofertas/control':'#/ofertas/'+encodeURIComponent(ofTab||'fijo');
+}
 async function ofLoadCenterData(){
   var data={fuentes:[],publicaciones:[],affinityVersiones:[],benefitsCatalog:null,alertas:null,error:null};
   try{ofCenterEvidence=await api('/api/admin-control/modules');}catch(e){ofCenterEvidence={modules:[],environment:'Sin verificar',error:e.message};data.error=e;}
@@ -3313,9 +3325,12 @@ function ofRenderRightPanel(rows,publicaciones){
     +'</div></div>';
 }
 async function viewOfertas(){
+  if(ofAdminView==='control'){
+    return '<div class="of-center-page">'+ofRenderAdminNavigation()+await viewTareasReglasAdmin()+'</div>';
+  }
   var data=await ofLoadCenterData();
   var rows=ofBuildCenterRows(ofCenterEvidence);
-  return `<div class="of-center-page"><div class="head"><div><h1>Admin Ofertas — Centro de Cargas</h1><div class="s">Sube, revisa cambios y publica. Solo ves lo que requiere tu atención.</div></div>
+  return `<div class="of-center-page">${ofRenderAdminNavigation()}<div class="head"><div><h1>Admin Ofertas — Centro de Cargas</h1><div class="s">Sube, revisa cambios y publica. Solo ves lo que requiere tu atención.</div></div>
     </div>
   <p class="s">Ambiente: ${esc(ofCenterEvidence.environment||'Sin verificar')} · Lectura: ${esc(ofCenterEvidence.checked_at||'Sin verificar')}${ofCenterEvidence.error?' · No se pudo consultar la evidencia: '+esc(ofCenterEvidence.error):''}</p>
   ${ofRenderVigenciaAlertas(ofCenterEvidence)}
@@ -3325,7 +3340,7 @@ async function viewOfertas(){
     <div style="min-width:0"><div id="ofOperationalState">${ofRenderOperationalState(ofTab)}</div><div id="ofCenterMain">${ofTab==='benefits'?ofRenderBenefitsMain(data.benefitsCatalog):''}</div><div id="ofBody" style="display:none"></div></div>
   </div></div>`;
 }
-function ofSetTab(t){ ofTab=t||'fijo'; reOfertas(); }
+function ofSetTab(t){ ofAdminView='operacion';ofTab=t||'fijo'; reOfertas(); }
 async function reOfertas(){
   $('view').innerHTML=await viewOfertas();
   ofRenderBody();
@@ -4773,13 +4788,13 @@ let routerRunId=0;
     else if(route==='correos')html=await viewCorreos();
     else if(route==='campanas')html=await viewCampanas();
     else if(route==='import')html=await viewImport();
-        else if(route==='ofertas'){if(arg&&OF_TABS.some(tab=>tab[0]===arg))ofTab=arg;html=await viewOfertas();}
+        else if(route==='ofertas'){if(arg==='control')ofAdminView='control';else{ofAdminView='operacion';if(arg&&OF_TABS.some(tab=>tab[0]===arg))ofTab=arg;}html=await viewOfertas();}
         else if(route==='prospeccion')html=await viewProspeccion();
-        else if(route==='tareas-reglas-admin')html=await viewTareasReglasAdmin();
+        else if(route==='tareas-reglas-admin'){location.hash='#/ofertas/control';return;}
         else html=await viewClientes();
     if(runId!==routerRunId)return;
     $('view').innerHTML=html;
-    if(route==='ofertas'){ await reOfertas(); return; }
+    if(route==='ofertas'&&ofAdminView==='operacion'){ await reOfertas(); return; }
     if(runId!==routerRunId)return;
     if(route==='import')impInitDrop();
     if(runId!==routerRunId)return;
