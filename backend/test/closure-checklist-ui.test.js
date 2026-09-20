@@ -6,34 +6,29 @@ import vm from 'node:vm';
 const html = readFileSync(new URL('../../frontend/app.html', import.meta.url), 'utf8');
 const block = html.slice(html.indexOf('let tareasReglasModules='), html.indexOf('async function viewHistorial()'));
 
-function runtime(modulesError = false) {
+function runtime() {
   const calls = [];
   const ctx = vm.createContext({
     ofAdminView: 'control',
     esc: value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'),
-    api: async (url, options = {}) => {
-      assert.equal(options.method || 'GET', 'GET');
-      calls.push(url);
-      assert.equal(url, '/api/admin-control/modules');
-      if (modulesError) throw Error('SQL privado');
-      return { environment: 'Instancia de prueba', modules: [{ key: 'claro_tv', title: 'Claro TV', publication: { label: 'Version 14 publicada' }, pending: { label: 'Sin actualización registrada' }, verification: { status: 'Verificado' } }] };
-    },
+    api: async url => { calls.push(url); throw Error('No debe consultar estado'); },
   });
   vm.runInContext(block, ctx);
   return { ctx, calls };
 }
 
-test('estado compacto muestra un modulo y una accion sin desplegar la auditoria tecnica', async () => {
+test('reglas por boletin muestra sus modulos de impacto sin desplegar la auditoria tecnica', async () => {
   const { ctx, calls } = runtime();
   const result = await ctx.viewTareasReglasAdmin();
-  for (const value of ['Estado de módulos', 'Claro TV', 'Version 14 publicada', 'Sin actualización registrada', 'Abrir módulo']) assert.ok(result.includes(value), value);
-  for (const hidden of ['Checklist de cierre', 'Evidencia', 'Bloqueo', 'Criterio de cierre', 'Portal, Motor Comercial y Constructor']) assert.ok(!result.includes(hidden), hidden);
+  for (const value of ['Reglas por boletín', 'Boletín Fijo / Claro TV', 'Planes Fijos', 'Claro TV']) assert.ok(result.includes(value), value);
+  for (const hidden of ['Checklist de cierre', 'Evidencia', 'Bloqueo', 'Criterio de cierre', 'Estado por confirmar']) assert.ok(!result.includes(hidden), hidden);
   assert.deepEqual(calls, ['/api/admin-control/modules']);
 });
 
-test('fallo operativo muestra un mensaje simple y no filtra detalles tecnicos', async () => {
-  const { ctx } = runtime(true);
+test('reglas por boletin mantiene los impactos visibles aunque no haya respuesta de estado', async () => {
+  const { ctx } = runtime();
   const result = await ctx.viewTareasReglasAdmin();
-  assert.match(result, /No se pudo cargar el estado de los módulos/);
-  assert.doesNotMatch(result, /SQL privado|Checklist de cierre/);
+  assert.match(result, /Lista de Equipos y Precios/);
+  assert.match(result, /Lista de Precios/);
+  assert.doesNotMatch(result, /Sin verificar|No se pudo cargar/);
 });

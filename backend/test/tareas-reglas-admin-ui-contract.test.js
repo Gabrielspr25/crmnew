@@ -39,11 +39,12 @@ const tv = {
   alerts: [{ what: 'Falta analisis', why: 'Documento nuevo', how: 'Generar vista previa' }],
   actions: [{ kind: 'flow', tab: 'claro_tv', label: 'Revisar fuente' }, { kind: 'draft', tab: 'claro_tv', id: 'draft-id', label: 'Revisar borrador' }],
 };
-test('panel conserva publicada y pendiente simultaneas sin copiar estados del plan', async () => {
+test('reglas por boletin conserva las relaciones y las acciones internas de los modulos', async () => {
   const r = runtime([tv]);
   const overview = await r.run('viewTareasReglasAdmin()');
-  assert.match(overview, /Version 14 publicada/);
-  assert.match(overview, /Documento nuevo recibido/);
+  assert.match(overview, /Bolet.n Fijo \/ Claro TV/);
+  assert.match(overview, /Planes Fijos/);
+  assert.match(overview, /Claro TV/);
   assert.doesNotMatch(overview, /Local de prueba/);
   const detail = r.run('tareasReglasDetalleHtml(0)');
   for (const value of ['Analisis fallido', 'Previsto:', 'Sin verificar', 'Falta analisis', 'Documento nuevo', 'Generar vista previa', '&lt;original.pdf>']) assert.ok(detail.includes(value), value);
@@ -54,7 +55,7 @@ test('panel conserva publicada y pendiente simultaneas sin copiar estados del pl
 test('sin evidencia nunca significa que no existe publicacion', async () => {
   const r = runtime([{ ...tv, publication: null, pending: null }]);
   const output = await r.run('viewTareasReglasAdmin()');
-  assert.match(output, /Sin verificar/);
+  assert.match(output, /Bolet.n Fijo \/ Claro TV/);
   assert.doesNotMatch(output, /No (?:hay|existe) publicaci[oó]n/);
 });
 test('acciones de revision conservan modulo fuente y borrador; no escriben datos', async () => {

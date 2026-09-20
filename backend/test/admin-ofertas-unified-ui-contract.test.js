@@ -4,13 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 const html = await readFile(new URL('../../frontend/app.html', import.meta.url), 'utf8');
 
-test('Administracion de Ofertas es la unica entrada lateral y expone Operacion y Estado', () => {
+test('Administracion de Ofertas es la unica entrada lateral y expone Operacion y Reglas', () => {
   assert.match(html, /href="#\/ofertas"[^>]*>.*Administraci[oó]n de Ofertas/);
   assert.doesNotMatch(html, /href="#\/tareas-reglas-admin"/);
   assert.match(html, /function ofRenderAdminNavigation\(\)/);
   assert.match(html, />Operaci[oó]n</);
-  assert.match(html, />Estado</);
-  assert.doesNotMatch(html, />Control de reglas</);
+  assert.match(html, />Reglas</);
 });
 
 test('la ruta historica de Tareas y reglas redirige al control sin alterar rutas de modulos', () => {

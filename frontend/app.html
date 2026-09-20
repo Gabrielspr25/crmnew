@@ -2440,7 +2440,7 @@ async function viewCategorias(){
   <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
 }
 let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada';
-function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Estado de módulos':'Tareas y reglas Admin';}
+function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Reglas por boletín':'Tareas y reglas Admin';}
 function tareasReglasClase(status){
   return /^(publicada|publicado|confirmado|comprobado|recibido|registrada|registrado)$/i.test(status||'')?'green':/fall|bloque|vencid|error/i.test(status||'')?'red':'amber';
 }
@@ -2515,21 +2515,27 @@ function tareasReglasChecklistHtml(checklist){
     +(rows||'<tr><td colspan="8">Sin pasos registrados.</td></tr>')+'</tbody></table></div></section>';
 }
 async function viewTareasReglasAdmin(){
-  const runtime=await Promise.allSettled([api('/api/admin-control/modules')]);
-  const control=runtime[0].status==='fulfilled'?runtime[0].value:null;
-  if(!control){
+  try{
+    const control=await api('/api/admin-control/modules');
+    tareasReglasModules=Array.isArray(control.modules)?control.modules:[];
+    tareasReglasEnvironment=control.environment||'Instancia consultada';
+  }catch(e){
     tareasReglasModules=[];
-    tareasReglasEnvironment='Instancia consultada; entorno sin verificar';
-    return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Revisá un módulo a la vez.</div></div></div><div role="alert" class="empty">No se pudo cargar el estado de los módulos. <button class="btn ghost" onclick="router()">Reintentar</button></div></div>';
+    tareasReglasEnvironment='Instancia consultada';
   }
-  tareasReglasModules=Array.isArray(control.modules)?control.modules:[];
-  tareasReglasEnvironment=control.environment||'Instancia consultada; entorno sin verificar';
-  const cards=tareasReglasModules.map(module=>{
-    const published=module.publication?.label||'Estado por confirmar';
-    const pending=module.pending?.label||'Sin actualización registrada';
-    return '<article class="panel tra-status-card"><header><h2>'+esc(module.title)+'</h2><span class="pill '+tareasReglasClase(module.verification?.status)+'">'+esc(module.verification?.status||'Sin verificar')+'</span></header><p><b>Actual:</b> '+esc(published)+'</p><p class="s">'+esc(pending)+'</p><button class="btn ghost" type="button" onclick="ofSetTab(\''+esc(module.key)+'\')">Abrir módulo</button></article>';
-  }).join('');
-  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Elegí un módulo para cargar y comparar su documento.</div></div><button class="btn ghost" onclick="router()">Actualizar</button></div><div class="tra-status-grid">'+(cards||'<div class="empty">No hay módulos disponibles.</div>')+'</div></div>';
+  const rules=[
+    ['Boletín Fijo / Claro TV',[['Planes Fijos','fijo'],['Claro TV','claro_tv']]],
+    ['Boletín de Planes Móviles',[['Planes Móviles','moviles']]],
+    ['Boletín Inalámbrico / IoT',[['Inalámbrico / IoT','inalambrico_iot']]],
+    ['Lista de Equipos y Precios',[['Lista de Precios','lista_precios']]],
+    ['Boletín de Beneficios',[['Beneficios','benefits']]],
+    ['Boletín Affinity',[['Affinity','affinity']]],
+    ['Fuente de Servicios',[['Servicios','servicios']]],
+    ['Ofertas vigentes',[['Ofertas','ofertas_vigentes']]],
+    ['Directorio de Fijo',[['Directorio de Fijo','directorio_fijo']]],
+  ];
+  const cards=rules.map(([source,targets])=>'<article class="panel tra-status-card"><header><h2>'+esc(source)+'</h2></header><p class="s">Impacta estos módulos</p><div class="tra-actions">'+targets.map(([label,tab])=>'<button class="btn ghost" type="button" onclick="ofSetTab(\''+esc(tab)+'\')">'+esc(label)+'</button>').join('')+'</div></article>').join('');
+  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Cada boletín indica qué módulo se actualiza cuando lo confirmás.</div></div></div><div class="tra-status-grid">'+cards+'</div></div>';
 }
 async function viewHistorial(){
   const log=await api('/api/audit');
@@ -2836,7 +2842,7 @@ let ofCenterEvidence={modules:[],environment:'Sin verificar'}, ofAdminView='oper
 function ofRenderAdminNavigation(){
   return '<nav class="of-admin-nav" aria-label="Administración de Ofertas" role="tablist">'
     +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='operacion')+'" onclick="ofSetAdminView(\'operacion\')">Operación</button>'
-    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='control')+'" onclick="ofSetAdminView(\'control\')">Estado</button>'
+    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='control')+'" onclick="ofSetAdminView(\'control\')">Reglas</button>'
     +'</nav>';
 }
 function ofSetAdminView(view){
