@@ -44,7 +44,7 @@ test('panel conserva publicada y pendiente simultaneas sin copiar estados del pl
   const overview = await r.run('viewTareasReglasAdmin()');
   assert.match(overview, /Version 14 publicada/);
   assert.match(overview, /Documento nuevo recibido/);
-  assert.match(overview, /Local de prueba/);
+  assert.doesNotMatch(overview, /Local de prueba/);
   const detail = r.run('tareasReglasDetalleHtml(0)');
   for (const value of ['Analisis fallido', 'Previsto:', 'Sin verificar', 'Falta analisis', 'Documento nuevo', 'Generar vista previa', '&lt;original.pdf>']) assert.ok(detail.includes(value), value);
   assert.doesNotMatch(block, /production_status|local_status|Al d[ií]a/);

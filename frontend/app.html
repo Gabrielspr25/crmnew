@@ -575,6 +575,11 @@
   .logmeta{font-size:11px;color:var(--txt3);margin-top:3px;}
   @media(max-width:720px){.logbox,.gestion-box{grid-template-columns:1fr;}.logbox .btn,.gestion-submit{width:100%;}.gestion-meta .inp{max-width:100%;}}
   .tra-page{min-width:0;letter-spacing:0;}
+  .tra-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+  .tra-status-card{display:grid;gap:8px;padding:14px;min-width:0;}
+  .tra-status-card header{display:flex;justify-content:space-between;gap:10px;align-items:center;}
+  .tra-status-card h2{font-size:15px;margin:0;}.tra-status-card p{font-size:13px;margin:0;overflow-wrap:anywhere;}
+  .tra-status-card .btn{justify-self:start;}
   .tra-page .head,.tra-context,.tra-detail-head,.tra-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .tra-context{justify-content:flex-start;border-bottom:1px solid var(--line);padding:0 0 12px;margin-bottom:12px;font-size:12px;color:var(--txt2);}
   .tra-table-wrap{overflow-x:auto;}
@@ -2435,7 +2440,7 @@ async function viewCategorias(){
   <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
 }
 let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada';
-function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Control de reglas':'Tareas y reglas Admin';}
+function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Estado de módulos':'Tareas y reglas Admin';}
 function tareasReglasClase(status){
   return /^(publicada|publicado|confirmado|comprobado|recibido|registrada|registrado)$/i.test(status||'')?'green':/fall|bloque|vencid|error/i.test(status||'')?'red':'amber';
 }
@@ -2510,23 +2515,21 @@ function tareasReglasChecklistHtml(checklist){
     +(rows||'<tr><td colspan="8">Sin pasos registrados.</td></tr>')+'</tbody></table></div></section>';
 }
 async function viewTareasReglasAdmin(){
-  const [runtime,checklist]=await Promise.allSettled([api('/api/admin-control/modules'),api('/api/admin-control/closure-checklist')]);
-  const checklistHtml=tareasReglasChecklistHtml(checklist.status==='fulfilled'?checklist.value:null);
-  const control=runtime.status==='fulfilled'?runtime.value:null;
+  const runtime=await Promise.allSettled([api('/api/admin-control/modules')]);
+  const control=runtime[0].status==='fulfilled'?runtime[0].value:null;
   if(!control){
     tareasReglasModules=[];
     tareasReglasEnvironment='Instancia consultada; entorno sin verificar';
-    return '<div class="tra-page"><div class="head"><h1>'+tareasReglasTitle()+'</h1></div>'+checklistHtml+'<div role="alert" class="empty">Sin verificar. No se pudo consultar la evidencia operativa. Esto no invalida las publicaciones existentes. <button class="btn ghost" onclick="router()">Reintentar consulta</button></div></div>';
+    return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Revisá un módulo a la vez.</div></div></div><div role="alert" class="empty">No se pudo cargar el estado de los módulos. <button class="btn ghost" onclick="router()">Reintentar</button></div></div>';
   }
   tareasReglasModules=Array.isArray(control.modules)?control.modules:[];
   tareasReglasEnvironment=control.environment||'Instancia consultada; entorno sin verificar';
-  const selected=Math.max(0,tareasReglasModules.findIndex(m=>m.key===tareasReglasSelected));
-  const rows=tareasReglasModules.map((module,index)=>'<tr data-tra-module="'+esc(module.key)+'" class="'+(index===selected?'tra-selected':'')+'"><th scope="row"><button class="tra-module" type="button" onclick="tareasReglasDetalle('+index+')">'+esc(module.title)+'</button></th><td><b>'+esc(module.publication?.label||'Sin verificar')+'</b><div class="s">'+esc(tareasReglasTexto(module.publication?.validity))+'</div></td><td>'+esc(module.pending?.label||'Sin actualizacion identificada')+'</td><td>'+esc(module.verification?.status||'Sin verificar')+'</td><td><button class="btn ghost" type="button" aria-label="Ver detalle de '+esc(module.title)+'" onclick="tareasReglasDetalle('+index+')">Ver detalle</button></td></tr>').join('');
-  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Portal, Motor Comercial y Constructor</div></div><button class="btn ghost" onclick="router()">Actualizar evidencia</button></div>'
-    +checklistHtml
-    +'<div class="tra-context"><b>'+esc(control.environment||'Instancia consultada; entorno sin verificar')+'</b><span>Consulta: '+esc(tareasReglasFecha(control.checked_at))+'</span></div>'
-    +'<div class="tra-table-wrap"><table class="tra-table"><thead><tr><th>Modulo</th><th>Publicado actualmente / vigencia</th><th>Actualización pendiente</th><th>Destino</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +(rows?'<section id="tareasReglasDetalle" class="tra-detail" tabindex="-1">'+tareasReglasDetalleHtml(selected)+'</section>':'<p>Sin verificar: no se recibieron modulos de control.</p>')+'</div>';
+  const cards=tareasReglasModules.map(module=>{
+    const published=module.publication?.label||'Estado por confirmar';
+    const pending=module.pending?.label||'Sin actualización registrada';
+    return '<article class="panel tra-status-card"><header><h2>'+esc(module.title)+'</h2><span class="pill '+tareasReglasClase(module.verification?.status)+'">'+esc(module.verification?.status||'Sin verificar')+'</span></header><p><b>Actual:</b> '+esc(published)+'</p><p class="s">'+esc(pending)+'</p><button class="btn ghost" type="button" onclick="ofSetTab(\''+esc(module.key)+'\')">Abrir módulo</button></article>';
+  }).join('');
+  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Elegí un módulo para cargar y comparar su documento.</div></div><button class="btn ghost" onclick="router()">Actualizar</button></div><div class="tra-status-grid">'+(cards||'<div class="empty">No hay módulos disponibles.</div>')+'</div></div>';
 }
 async function viewHistorial(){
   const log=await api('/api/audit');
@@ -2833,7 +2836,7 @@ let ofCenterEvidence={modules:[],environment:'Sin verificar'}, ofAdminView='oper
 function ofRenderAdminNavigation(){
   return '<nav class="of-admin-nav" aria-label="Administración de Ofertas" role="tablist">'
     +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='operacion')+'" onclick="ofSetAdminView(\'operacion\')">Operación</button>'
-    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='control')+'" onclick="ofSetAdminView(\'control\')">Control de reglas</button>'
+    +'<button type="button" role="tab" aria-selected="'+(ofAdminView==='control')+'" onclick="ofSetAdminView(\'control\')">Estado</button>'
     +'</nav>';
 }
 function ofSetAdminView(view){
