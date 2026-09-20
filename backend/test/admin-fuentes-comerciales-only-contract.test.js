@@ -25,7 +25,7 @@ test('Admin Ofertas usa un flujo compacto de documento, cambios y confirmacion',
   assert.match(html, /Admin Ofertas/);
   assert.match(html, /Comparar cambios/);
   assert.match(html, /Confirmar revision/);
-  assert.match(html, /function ofRenderModuleSelector\(/);
+  assert.match(html, /function ofRenderModuleList\(/);
   assert.match(html, /function ofBuildCenterRows\(/);
   assert.match(html, /\.of-center-page/);
   assert.doesNotMatch(html, /function ofRenderProcessSteps\(/);
@@ -51,7 +51,7 @@ test('Admin Ofertas usa un flujo compacto de documento, cambios y confirmacion',
   assert.match(html, /\.of-center-page \.btn\.of-document-btn\{background:#6D1FAD/);
   assert.match(html, /Ver documento actual/);
   assert.match(html, /class="of-center-page"/);
-  assert.match(html, /id="ofModuleSelect"/);
+  assert.match(html, /aria-label="Módulos de ofertas"/);
   assert.doesNotMatch(html, /<aside id="ofCenterRight"/);
   assert.doesNotMatch(html, /Requiere atención/);
   assert.match(html, /function ofRenderModuleShell\(/);

@@ -42,7 +42,7 @@ test('cola separa version publicada de nueva fuente y no inventa Al dia', () => 
 test('Operacion no repite el resumen de evidencia encima del formulario', () => {
   assert.doesNotMatch(html, /id="ofOperationalState"/);
   assert.doesNotMatch(html, /function ofRenderOperationalState\(/);
-  assert.doesNotMatch(fn('ofRenderModuleSelector'), /Publicado actualmente/);
+  assert.doesNotMatch(fn('ofRenderModuleList'), /Publicado actualmente/);
 });
 
 test('fallo de reanalisis limpia comparacion y aprobacion previas sin tocar publicacion', async () => {
