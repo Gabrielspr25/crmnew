@@ -39,14 +39,10 @@ test('cola separa version publicada de nueva fuente y no inventa Al dia', () => 
   assert.doesNotMatch(rows.map(r => r.badge).join(' '), /Al d[ií]a|Falta fuente|Fuente sin publicar/);
 });
 
-test('estado de modulo muestra original publicado y seleccion sin borrar publicacion', () => {
-  const ctx = context(['esc','ofModuleEvidence','ofRenderOperationalState'], {ofCenterEvidence:evidence,ofTab:'claro_tv'});
-  const markup = ctx.ofRenderOperationalState('claro_tv', {id:'nuevo',nombre_original:'Nuevo.pdf'});
-  assert.match(markup, /Publicado actualmente/);
-  assert.match(markup, /Actualización pendiente/);
-  assert.match(markup, /Version 14 publicada/);
-  assert.match(markup, /Base oficial.pdf/);
-  assert.match(markup, /Nuevo.pdf/);
+test('Operacion no repite el resumen de evidencia encima del formulario', () => {
+  assert.doesNotMatch(html, /id="ofOperationalState"/);
+  assert.doesNotMatch(html, /function ofRenderOperationalState\(/);
+  assert.doesNotMatch(fn('ofRenderCenterQueue'), /Publicado actualmente/);
 });
 
 test('fallo de reanalisis limpia comparacion y aprobacion previas sin tocar publicacion', async () => {

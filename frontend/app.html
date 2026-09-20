@@ -2922,7 +2922,7 @@ function ofBuildCenterRows(evidence){
 function ofRenderCenterQueue(rows){
   var pending=(rows||[]).filter(function(r){return r.attention;});
   var ok=(rows||[]).filter(function(r){return !r.attention;});
-  function render(r){return '<div class="of-module-row '+(r.key===ofTab?'active':'')+'"><div class="of-module-head"><b>'+esc(r.label)+'</b><span class="pill '+(r.vencida?'red':'amber')+'">'+esc(r.badge)+'</span></div><div class="s">Publicado actualmente: '+esc(r.publication?.label||'Sin verificar')+'</div><button class="btn ghost" onclick="ofOpenCenterModule(\''+esc(r.key)+'\')">Revisar módulo</button></div>';}
+  function render(r){return '<div class="of-module-row '+(r.key===ofTab?'active':'')+'"><div class="of-module-head"><b>'+esc(r.label)+'</b><span class="pill '+(r.vencida?'red':'amber')+'">'+esc(r.badge)+'</span></div><button class="btn ghost" onclick="ofOpenCenterModule(\''+esc(r.key)+'\')">Revisar módulo</button></div>';}
   var pendingHtml=pending.map(render).join('');
   var okHtml=ok.map(render).join('');
   return '<div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Requiere atención</h3><span class="pill '+(pending.length?'amber':'green')+'">'+pending.length+'</span></div>'
@@ -2939,29 +2939,6 @@ function ofOpenCenterModule(key){
   var a=actions.find(function(a){return a.kind==='draft';})||actions.find(function(a){return a.kind==='flow';});
   tareasReglasFlowTarget=a?{tab:key,source_id:a.source_id||null,draft_id:a.kind==='draft'?a.id:null}:null;
   ofSetTab(key);
-}
-function ofRenderOperationalState(key,selected){
-  var m=ofModuleEvidence(key), p=m.publication, u=m.pending;
-  var docs=(m.documents||[]).filter(function(d){return d.role==='Publicada';});
-  var pendingDocs=(m.documents||[]).filter(function(d){return d.role==='Pendiente';});
-  var next=(m.actions||[]).find(function(a){return a.kind==='draft';});
-  return '<div class="tra-detail" style="margin-bottom:12px"><div class="tra-columns"><section><h3>Publicado actualmente</h3><b>'+esc(p?.label||'Sin verificar')+'</b><p>'+esc(p?.detail||'La consulta no acredita una publicacion; tampoco demuestra su inexistencia.')+'</p>'
-    +docs.map(function(d){return '<button class="btn ghost" onclick="ofAbrirDocumentoFuente(\''+esc(d.id)+'\')">'+esc(d.name)+'</button>';}).join('')
-    +(!docs.length&&p?.source_name?'<p>Documento de origen: '+esc(p.source_name)+' · vínculo al original sin verificar.</p>':'')
-    +'<p>Vigencia: '+esc(p?.validity||'Sin verificar')+(p?.validity_period?' · '+esc(p.validity_period):'')+'</p></section>'
-    +'<section><h3>Actualización pendiente</h3><b>'+esc(u?.label||'Sin actualizacion identificada')+'</b><p>'+esc(u?.detail||'Sin borrador de la seleccion no significa que el modulo nunca fue publicado.')+'</p>'
-    +pendingDocs.map(function(d){return '<div class="s">'+esc(d.name)+'</div>';}).join('')
-    +(selected?'<p>Documento seleccionado: <b>'+esc(selected.nombre_original||selected.name)+'</b></p>':'')
-    +(next?'<button class="btn ghost" onclick="ofOpenCenterModule(\''+esc(key)+'\')">Continuar borrador</button>':'')+'</section></div>'
-    +(m.alerts||[]).filter(function(a){return !['Seguimiento del Plan y publicacion','Circuito Affinity independiente'].includes(a.what);}).map(function(a){return '<p class="s"><b>'+esc(a.what)+':</b> '+esc(a.why)+' '+esc(a.how)+'</p>';}).join('')
-    +'<p class="s">Comprobación del destino: '+esc(m.verification?.status||'Sin verificar')+'. '+esc(m.verification?.detail||'Sin evidencia de lectura del destino.')+'</p></div>';
-}
-function ofRefreshOperationalState(selected){
-  var el=$('ofOperationalState');if(el)el.innerHTML=ofRenderOperationalState(ofTab,selected);
-}
-async function ofReloadOperationalEvidence(){
-  try{ofCenterEvidence=await api('/api/admin-control/modules');}catch(e){ofCenterEvidence={modules:[],environment:'Sin verificar',error:e.message};}
-  ofRefreshOperationalState();
 }
 function ofCenterOpenAction(r){
   return 'ofSetTab(\''+esc(r.key)+'\')';
@@ -3337,7 +3314,7 @@ async function viewOfertas(){
   ${ofRenderProcessSteps()}
   <div class="of-center-layout${ofTab==='benefits'?' of-benefits-layout':''}">
     ${ofRenderCenterQueue(rows)}
-    <div style="min-width:0"><div id="ofOperationalState">${ofRenderOperationalState(ofTab)}</div><div id="ofCenterMain">${ofTab==='benefits'?ofRenderBenefitsMain(data.benefitsCatalog):''}</div><div id="ofBody" style="display:none"></div></div>
+    <div style="min-width:0"><div id="ofCenterMain">${ofTab==='benefits'?ofRenderBenefitsMain(data.benefitsCatalog):''}</div><div id="ofBody" style="display:none"></div></div>
   </div></div>`;
 }
 function ofSetTab(t){ ofAdminView='operacion';ofTab=t||'fijo'; reOfertas(); }
@@ -3551,7 +3528,6 @@ async function ofAnalizarCatalogoBase(key){
     try{evidence=await api('/api/admin-control/modules');}catch(e){}
     if(!current())return;
     if(evidence)ofCenterEvidence=evidence;
-    ofRefreshOperationalState(r.fuente);
     if(key==='affinity'){
       ofAffinityFuente=r.fuente; ofAffinityPreview=null; ofAffinityVersion=null; ofAffinityBusy=false;
       try{var ha=await api('/api/fuentes-comerciales/affinity/historial');if(!current())return;ofAffinityHistorial=ha.versiones||[];}catch(e2){}
@@ -4046,7 +4022,6 @@ async function fcGuardarBaseBorrador(){
     try{evidence=await api('/api/admin-control/modules');}catch(e){}
     if(!current())return;
     if(evidence)ofCenterEvidence=evidence;
-    ofRefreshOperationalState(fcBaseFuente);
     fcLoadBaseHistorial();
   }catch(e){
     if(!current())return;
@@ -4072,7 +4047,6 @@ async function fcBaseTransicion(accion){
     try{evidence=await api('/api/admin-control/modules');}catch(e){}
     if(!current())return;
     if(evidence)ofCenterEvidence=evidence;
-    ofRefreshOperationalState(fcBaseFuente);
     fcLoadBaseHistorial();
   }catch(e){
     if(!current())return;
