@@ -10,6 +10,8 @@ Antes de modificar codigo, datos, contratos o documentacion:
 2. Leer `CLAUDE.md`.
 3. Leer la documentacion especifica del modulo afectado.
 4. Leer `DEPLOY.md` antes de cualquier accion de publicacion.
+5. Para Admin Ofertas, Tareas y reglas Admin o Portal de Ofertas, leer
+   `docs/incidentes/2026-09-20-admin-ofertas-lecciones-obligatorias.md`.
 
 ## Repositorio activo
 
