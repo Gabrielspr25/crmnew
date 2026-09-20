@@ -580,6 +580,13 @@
   .tra-status-card header{display:flex;justify-content:space-between;gap:10px;align-items:center;}
   .tra-status-card h2{font-size:15px;margin:0;}.tra-status-card p{font-size:13px;margin:0;overflow-wrap:anywhere;}
   .tra-status-card .btn{justify-self:start;}
+  .tra-rule-map{display:grid;grid-template-columns:minmax(180px,1fr) 36px minmax(180px,1fr);gap:14px;align-items:center;max-width:760px;margin:0 auto;}
+  .tra-rule-group{display:grid;gap:10px;justify-items:center;}.tra-rule-group h2{font-size:13px;color:var(--txt2);margin:0;}
+  .tra-rule-nodes{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  .tra-rule-node{display:grid;place-items:center;width:104px;height:104px;border:1px solid var(--line);border-radius:50%;padding:10px;background:var(--card2);color:var(--txt);font:inherit;font-size:12px;font-weight:700;line-height:1.2;text-align:center;cursor:pointer;overflow-wrap:anywhere;}
+  .tra-rule-node:hover,.tra-rule-node:focus-visible{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);outline:0;}.tra-rule-node.is-source{background:var(--primary);border-color:var(--primary);color:var(--on-accent);}.tra-rule-node.is-target{width:88px;height:88px;background:var(--teal-soft);border-color:var(--teal);}
+  .tra-rule-connector{height:1px;background:var(--line);position:relative;}.tra-rule-connector::after{content:'›';position:absolute;right:-2px;top:50%;transform:translateY(-53%);color:var(--teal);font-size:24px;line-height:1;}.tra-rule-reset{justify-self:end;}
+  @media(max-width:600px){.tra-rule-map{grid-template-columns:1fr;}.tra-rule-connector{width:1px;height:24px;justify-self:center;}.tra-rule-connector::after{right:auto;left:50%;top:auto;bottom:-11px;transform:translateX(-50%) rotate(90deg);}.tra-rule-node{width:92px;height:92px;}.tra-rule-node.is-target{width:78px;height:78px;}}
   .tra-page .head,.tra-context,.tra-detail-head,.tra-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .tra-context{justify-content:flex-start;border-bottom:1px solid var(--line);padding:0 0 12px;margin-bottom:12px;font-size:12px;color:var(--txt2);}
   .tra-table-wrap{overflow-x:auto;}
@@ -2439,7 +2446,7 @@ async function viewCategorias(){
   return `<div class="head"><div><h1>Categorías</h1><div class="s">Familias de producto</div></div></div>
   <div class="kpis">${cats.map(c=>`<div class="kpi"><div class="l">${c.name}</div><div class="v">${prods.filter(p=>p.category_name===c.name).length}</div><div style="font-size:11px;color:var(--txt3)">${c.description||''}</div></div>`).join('')}</div>`;
 }
-let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada';
+let tareasReglasModules=[], tareasReglasSelected='', tareasReglasFlowTarget=null, tareasReglasEnvironment='Instancia consultada', tareasReglasSelectedRule='';
 function tareasReglasTitle(){return typeof ofAdminView!=='undefined'&&ofAdminView==='control'?'Reglas por boletín':'Tareas y reglas Admin';}
 function tareasReglasClase(status){
   return /^(publicada|publicado|confirmado|comprobado|recibido|registrada|registrado)$/i.test(status||'')?'green':/fall|bloque|vencid|error/i.test(status||'')?'red':'amber';
@@ -2449,6 +2456,7 @@ function tareasReglasTexto(value){
   return typeof value==='object'?Object.entries(value).map(([key,val])=>key+': '+tareasReglasTexto(val)).join(' · '):String(value);
 }
 function tareasReglasFecha(value){return value?new Date(value).toLocaleString('es'):'Sin verificar';}
+function tareasReglasSeleccionar(key){tareasReglasSelectedRule=key||'';if(typeof router==='function')router();}
 function tareasReglasDestinoSeguro(url){return /^\/constructor\/[a-z0-9-]+\.html$/i.test(url||'')&&!/oferta-const|ofertas\.html/i.test(url);}
 function tareasReglasDocumento(index,docIndex){
   const doc=tareasReglasModules[index]?.documents?.[docIndex];
@@ -2524,18 +2532,22 @@ async function viewTareasReglasAdmin(){
     tareasReglasEnvironment='Instancia consultada';
   }
   const rules=[
-    ['Boletín Fijo / Claro TV',[['Planes Fijos','fijo'],['Claro TV','claro_tv']]],
-    ['Boletín de Planes Móviles',[['Planes Móviles','moviles']]],
-    ['Boletín Inalámbrico / IoT',[['Inalámbrico / IoT','inalambrico_iot']]],
-    ['Lista de Equipos y Precios',[['Lista de Precios','lista_precios']]],
-    ['Boletín de Beneficios',[['Beneficios','benefits']]],
-    ['Boletín Affinity',[['Affinity','affinity']]],
-    ['Fuente de Servicios',[['Servicios','servicios']]],
-    ['Ofertas vigentes',[['Ofertas','ofertas_vigentes']]],
-    ['Directorio de Fijo',[['Directorio de Fijo','directorio_fijo']]],
+    ['fijo_tv','Boletín Fijo / Claro TV',[['Planes Fijos','fijo'],['Claro TV','claro_tv']]],
+    ['moviles','Boletín de Planes Móviles',[['Planes Móviles','moviles']]],
+    ['inalambrico_iot','Boletín Inalámbrico / IoT',[['Inalámbrico / IoT','inalambrico_iot']]],
+    ['lista_precios','Lista de Equipos y Precios',[['Lista de Precios','lista_precios']]],
+    ['beneficios','Boletín de Beneficios',[['Beneficios','benefits']]],
+    ['affinity','Boletín Affinity',[['Affinity','affinity']]],
+    ['servicios','Fuente de Servicios',[['Servicios','servicios']]],
+    ['ofertas','Ofertas vigentes',[['Ofertas','ofertas_vigentes']]],
+    ['directorio_fijo','Directorio de Fijo',[['Directorio de Fijo','directorio_fijo']]],
   ];
-  const cards=rules.map(([source,targets])=>'<article class="panel tra-status-card"><header><h2>'+esc(source)+'</h2></header><p class="s">Impacta estos módulos</p><div class="tra-actions">'+targets.map(([label,tab])=>'<button class="btn ghost" type="button" onclick="ofSetTab(\''+esc(tab)+'\')">'+esc(label)+'</button>').join('')+'</div></article>').join('');
-  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Cada boletín indica qué módulo se actualiza cuando lo confirmás.</div></div></div><div class="tra-status-grid">'+cards+'</div></div>';
+  const selected=rules.find(([key])=>key===tareasReglasSelectedRule)||null;
+  const sourceNodes=(selected?[selected]:rules).map(([key,source])=>'<button class="tra-rule-node '+(selected?'is-source':'')+'" data-role="rule-source" type="button" onclick="tareasReglasSeleccionar(\''+esc(key)+'\')">'+esc(source)+'</button>').join('');
+  const targets=selected?selected[2].map(([label,tab])=>'<button class="tra-rule-node is-target" type="button" onclick="ofSetTab(\''+esc(tab)+'\')">'+esc(label)+'</button>').join(''):'';
+  const targetGroup=selected?'<div class="tra-rule-connector" aria-hidden="true"></div><section class="tra-rule-group"><h2>Módulos que impacta</h2><div class="tra-rule-nodes">'+targets+'</div></section>':'<section class="tra-rule-group"><p class="s">Elegí un boletín para ver sus módulos.</p></section>';
+  const reset=selected?'<button class="btn ghost tra-rule-reset" type="button" title="Ver todos los boletines" aria-label="Ver todos los boletines" onclick="tareasReglasSeleccionar(\'\')">×</button>':'';
+  return '<div class="tra-page"><div class="head"><div><h1>'+tareasReglasTitle()+'</h1><div class="s">Elegí un boletín para ver qué módulos impacta.</div></div>'+reset+'</div><div class="tra-rule-map"><section class="tra-rule-group"><h2>Boletines</h2><div class="tra-rule-nodes">'+sourceNodes+'</div></section>'+targetGroup+'</div></div>';
 }
 async function viewHistorial(){
   const log=await api('/api/audit');

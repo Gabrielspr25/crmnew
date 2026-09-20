@@ -41,6 +41,7 @@ const tv = {
 };
 test('reglas por boletin conserva las relaciones y las acciones internas de los modulos', async () => {
   const r = runtime([tv]);
+  await r.run("tareasReglasSeleccionar('fijo_tv')");
   const overview = await r.run('viewTareasReglasAdmin()');
   assert.match(overview, /Bolet.n Fijo \/ Claro TV/);
   assert.match(overview, /Planes Fijos/);
