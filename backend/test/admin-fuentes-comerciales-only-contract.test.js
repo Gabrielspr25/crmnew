@@ -145,6 +145,17 @@ test('Admin Ofertas recupera la ultima fuente base al refrescar el modulo', asyn
   assert.match(html, /fcLoadBaseHistorial\(\)/);
 });
 
+test('Directorio de Fijo no reutiliza documentos de Fijo', async () => {
+  const html = await readFile(frontendPath, 'utf8');
+
+  assert.doesNotMatch(html, /key==='fijo'\|\|key==='directorio_fijo'/);
+  assert.doesNotMatch(html, /key==='directorio_fijo'\)return 'fijos'/);
+  assert.match(html, /function ofRenderDirectorioFijo\(\)/);
+  assert.match(html, /Directorio Operaciones Clientes Masivos dic\. 2025\.xlsx/);
+  assert.match(html, /directorio-fijo\.html/);
+  assert.match(html, /No hay una copia del Excel archivada en Admin Ofertas/);
+});
+
 test('Admin Ofertas trata Planes Moviles como base movil compuesta y no como Fijo Claro TV', async () => {
   const html = await readFile(frontendPath, 'utf8');
 

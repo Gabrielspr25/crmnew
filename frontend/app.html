@@ -2902,7 +2902,7 @@ async function ofRefreshNavAlertas(){
 }
 function ofCenterFamilyForModule(key){
   if(key==='lista_precios')return 'equipos';
-  if(key==='fijo'||key==='directorio_fijo')return 'fijos';
+  if(key==='fijo')return 'fijos';
   if(key==='ofertas_vigentes')return 'ofertas_moviles';
   return key;
 }
@@ -2910,7 +2910,7 @@ function ofPublishedCategoriaForModule(key){
   if(key==='moviles')return 'movil';
   if(key==='inalambrico_iot')return 'inalambrico';
   if(key==='claro_tv')return 'claro_tv';
-  if(key==='fijo'||key==='directorio_fijo')return 'fijo';
+  if(key==='fijo')return 'fijo';
   if(key==='servicios')return 'servicios';
   if(key==='lista_precios')return 'equipos';
   if(key==='ofertas_vigentes')return 'movil';
@@ -3356,7 +3356,6 @@ function ofModuloLabel(key){
 function ofModuleSourceFamily(key){
   if(key==='fijo')return 'fijos';
   if(key==='lista_precios')return 'equipos';
-  if(key==='directorio_fijo')return 'fijos';
   return key;
 }
 function ofRenderModuleShell(config){
@@ -3391,7 +3390,10 @@ function ofRenderServiciosBase(){
   return ofRenderModuleShell({title:'Servicios',accept:'.pdf,.xlsx,.xls',details:'Carga la fuente oficial de Servicios para preparar una publicación nueva.',note:'Análisis y publicación no conectados en este formulario. La publicación actual se consulta por separado arriba.',extra:''});
 }
 function ofRenderDirectorioFijo(){
-  return ofRenderModuleShell({title:'Directorio de Fijo',accept:'.xlsx,.xls,.pdf',details:'El Directorio publicado es un archivo estático independiente de Fijo. Este formulario no tiene análisis ni publicación conectados.',note:'Si vence sin reemplazo, el portal sigue usando la ultima version publicada, marcada como vencida o pendiente de reemplazo.'});
+  var b=$('ofBody');if(!b)return;
+  b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3 style="margin:0">Directorio de Fijo</h3><a class="btn ghost" href="https://ofertas.ss-group.cloud/directorio-fijo.html" target="_blank" rel="noopener noreferrer">Abrir Directorio publicado</a></div>'
+    +'<div class="of-simple-flow"><div class="of-current-source"><div><b>Directorio publicado</b><div class="s" style="margin-top:4px">Referencia: Directorio Operaciones Clientes Masivos dic. 2025.xlsx.</div><div class="s" style="margin-top:4px">Es un contenido propio del portal; no pertenece a Planes Fijos.</div></div></div>'
+    +'<div class="s" style="margin-top:12px">No hay una copia del Excel archivada en Admin Ofertas. Por eso no aparece un documento para abrir ni se muestran boletines de Fijo. Cuando llegue un Directorio nuevo, se carga como Directorio de Fijo, no como Fijo.</div></div></div>';
 }
 let ofAffinityFuente=null, ofAffinityPreview=null, ofAffinityVersion=null, ofAffinityBusy=false, ofAffinityHistorial=[], ofAffinityResoluciones={};
 function ofRenderAffinity(){
