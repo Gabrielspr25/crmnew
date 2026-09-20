@@ -504,6 +504,10 @@ function fechaActualizacionBase({ body, fuente }) {
   }
   const detectada = fechaDesdeNombreFuenteBase(fuente);
   if (detectada) return { value: detectada, origen: 'nombre_archivo_confirmado' };
+  if (fuente?.familia === 'inalambrico_iot') {
+    const vigencia = inalambricoVigenciaDesdeNombre(fuente.nombre_original);
+    if (vigencia?.desde) return { value: vigencia.desde.slice(0, 10), origen: 'vigencia_nombre_confirmada' };
+  }
   throw Object.assign(new Error('fecha_actualizacion_base_requerida'), { code: 'fecha_actualizacion_base_requerida' });
 }
 

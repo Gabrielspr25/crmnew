@@ -405,7 +405,7 @@ test('preview-base devuelve Fijo 81 y Claro TV 9 sin mezclar categorias ni expon
   }
 });
 
-test('preview-base acepta Inalambrico IoT y usa el parser de equipos inalambricos', async () => {
+test('preview-base detecta la fecha base de Inalambrico IoT y usa el parser de equipos inalambricos', async () => {
   const ws = makeWorkspace();
   try {
     let scriptUsed = null;
@@ -438,10 +438,12 @@ test('preview-base acepta Inalambrico IoT y usa el parser de equipos inalambrico
 
     const res = await request(app, 'POST', `/api/fuentes-comerciales/${UUID}/preview-base`, {
       token: tokenFor('admin'),
-      body: { fecha_actualizacion_base: '2026-09-01' },
+      body: {},
     });
 
     assert.equal(res.status, 200);
+    assert.equal(res.json.fecha_actualizacion_base, '2026-09-01');
+    assert.equal(res.json.fecha_actualizacion_base_origen, 'vigencia_nombre_confirmada');
     assert.equal(scriptUsed, 'parse_equipos_pdf.py');
     assert.equal(res.json.resumen.inalambrico, 1);
     assert.equal(res.json.previews.inalambrico.modulos_generados.length, 4);
