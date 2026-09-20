@@ -910,9 +910,9 @@
         "Reintento de fuente fallida tratado aparte",
         "Inventario de 35 fuentes y cruce contra tablas locales generado",
         "UI local muestra archivo identico por SHA-256 y habilita el panel de Inalambrico / IoT para preview, borrador, validacion, aprobacion y publicacion",
-        "Admin Ofertas local muestra bandeja de requiere atencion, modulos al dia, recordatorios, historial reciente y conserva los modulos reales existentes",
+        "Admin Ofertas reduce la operacion a selector de modulo, documento actual, reemplazo, comparacion y confirmacion; historial y controles de publicacion quedan secundarios",
         "Admin Ofertas Centro de Cargas tiene paleta visual propia con textos claros, paneles azul profundo y botones principales verde/teal",
-        "Admin Ofertas Centro de Cargas reproduce la estructura objetivo en el area de trabajo: cabecera, stepper horizontal de 82px y grid 280px/minmax/330px sin tabs visibles ni formularios permanentes",
+        "Admin Ofertas evita el stepper, alertas generales y formularios permanentes para conservar una sola tarea visible por modulo",
         "Botones Abrir de Todo al dia e Historial reciente consultan en modo read-only la version publicada vigente, documento original, datos publicados y borrador posterior si existe",
         "Modal read-only incorpora visor embebido del documento original cuando la publicacion tiene fuente archivada enlazada",
         "Publicaciones base historicas sin fuente_comercial_id pueden abrir documento original si el SHA-256 guardado coincide exactamente con un documento oficial local permitido",
@@ -957,8 +957,8 @@
         "scripts/inventariar-fuentes-plan-maestro.mjs",
         "scripts/auditar-publicaciones-plan-maestro.mjs"
       ],
-      "last_change": "Documentacion 2026-09-09: el boletin oficial de Planes Moviles se conserva integro; Government RED se excluye de Portal y Constructor, pero permanece trazable en auditoria como segmento_no_incluido: gobierno.",
-      "updated_at": "2026-09-17"
+      "last_change": "UI operativa compactada: seleccionar modulo, reemplazar documento, comparar cambios y confirmar revision; historial y controles de publicacion se muestran solo a demanda.",
+      "updated_at": "2026-09-20"
     },
     {
       "id": "PM-015",

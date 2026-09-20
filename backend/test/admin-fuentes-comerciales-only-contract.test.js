@@ -20,16 +20,16 @@ test('Admin Ofertas muestra los modulos base del portal sin Fuentes comerciales 
   assert.doesNotMatch(html, /<h3 style="margin:0">Fuentes comerciales<\/h3>/);
 });
 
-test('Admin Ofertas renderiza por modulo y conserva fuente interna', async () => {
+test('Admin Ofertas usa un flujo compacto de documento, cambios y confirmacion', async () => {
   const html = await readFile(frontendPath, 'utf8');
-  assert.match(html, /Admin Ofertas — Centro de Cargas/);
-  assert.match(html, /Sube, revisa cambios y publica\. Solo ves lo que requiere tu atención\./);
-  assert.match(html, /function ofRenderProcessSteps\(/);
-  assert.match(html, /function ofRenderCenterQueue\(/);
+  assert.match(html, /Admin Ofertas/);
+  assert.match(html, /Comparar cambios/);
+  assert.match(html, /Confirmar revision/);
+  assert.match(html, /function ofRenderModuleSelector\(/);
   assert.match(html, /function ofBuildCenterRows\(/);
   assert.match(html, /\.of-center-page/);
-  assert.match(html, /\.of-stepper\{height:82px/);
-  assert.match(html, /\.of-center-layout\{display:grid;grid-template-columns:280px minmax\(0,1fr\);gap:16px/);
+  assert.doesNotMatch(html, /function ofRenderProcessSteps\(/);
+  assert.doesNotMatch(html, /function ofRenderVigenciaAlertas\(/);
   assert.match(html, /function ofRenderCenterMain\(/);
   assert.match(html, /function ofAbrirVersionPublicada\(/);
   assert.match(html, /function ofAbrirDetallePublicacion\(/);
@@ -49,18 +49,16 @@ test('Admin Ofertas renderiza por modulo y conserva fuente interna', async () =>
   assert.match(html, /#f4f8ff/);
   assert.match(html, /\.of-center-page \.btn\{background:#5FAD1F/);
   assert.match(html, /\.of-center-page \.btn\.of-document-btn\{background:#6D1FAD/);
-  assert.match(html, /class="btn of-document-btn"[^>]*>Abrir documentos<\/button>/);
+  assert.match(html, /Ver documento actual/);
   assert.match(html, /class="of-center-page"/);
-  assert.match(html, /Requiere atención/);
-  assert.match(html, /Sin pendientes identificados/);
+  assert.match(html, /id="ofModuleSelect"/);
   assert.doesNotMatch(html, /<aside id="ofCenterRight"/);
-  assert.match(html, /No se encontraron fuentes que requieran atención/);
-  assert.doesNotMatch(html, /var tabs=OF_TABS\.map/);
+  assert.doesNotMatch(html, /Requiere atención/);
   assert.match(html, /function ofRenderModuleShell\(/);
   assert.match(html, /function ofRenderCatalogoBase\(/);
   assert.match(html, /async function ofRenderBody\(\)/);
-  assert.match(html, /guarda la fuente internamente/i);
-  assert.match(html, /sigue usando la ultima version publicada/i);
+  assert.match(html, /Contra la version publicada/i);
+  assert.match(html, /Historial de versiones/);
 });
 
 test('Admin Ofertas abre publicaciones vigentes en modo solo lectura', async () => {
@@ -143,7 +141,7 @@ test('Admin Ofertas recupera la ultima fuente base al refrescar el modulo', asyn
   assert.match(html, /ofLoadCatalogoBaseState\(key\)/);
   assert.match(html, /api\('\/api\/fuentes-comerciales\?familia='\+encodeURIComponent\(family\)\)/);
   assert.match(html, /fcBaseFuente=fuente/);
-  assert.match(html, /Puedes generar vista previa sin volver a subir/);
+  assert.match(html, /Contra la version publicada/);
   assert.match(html, /fcLoadBaseHistorial\(\)/);
 });
 

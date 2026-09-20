@@ -356,7 +356,7 @@ test('carga normal no hereda aprobacion y reanudar conserva el borrador exacto a
   await setImmediate();
   assert.equal(Object.keys(r.ctx.fcBaseDrafts).length, 0);
   assert.equal(r.ctx.fcBasePreview, null);
-  assert.match(r.panel(), /Sin borrador seleccionado/);
+  assert.match(r.panel(), /Elegí “Comparar cambios”/);
   r.ctx.tareasReglasFlowTarget = { tab: 'claro_tv', source_id: source.id, draft_id: selected.id };
   await r.ctx.ofLoadCatalogoBaseState('claro_tv');
   await setImmediate();

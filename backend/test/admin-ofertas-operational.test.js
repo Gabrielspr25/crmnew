@@ -42,7 +42,7 @@ test('cola separa version publicada de nueva fuente y no inventa Al dia', () => 
 test('Operacion no repite el resumen de evidencia encima del formulario', () => {
   assert.doesNotMatch(html, /id="ofOperationalState"/);
   assert.doesNotMatch(html, /function ofRenderOperationalState\(/);
-  assert.doesNotMatch(fn('ofRenderCenterQueue'), /Publicado actualmente/);
+  assert.doesNotMatch(fn('ofRenderModuleSelector'), /Publicado actualmente/);
 });
 
 test('fallo de reanalisis limpia comparacion y aprobacion previas sin tocar publicacion', async () => {
@@ -68,8 +68,8 @@ test('guardar usa comparacion revisada y no permite duplicar un borrador activo'
 
 test('carga nunca solicita publicacion automatica y recibir no significa aprobar', () => {
   assert.match(fn('ofAnalizarCatalogoBase'), /fd.append\('publicacion_modo','borrador'\)/);
-  assert.doesNotMatch(fn('ofRenderVigenciaAlertas'), /la alerta se limpia sola/);
-  assert.doesNotMatch(fn('ofRenderProcessSteps'), /i<2/);
+  assert.doesNotMatch(fn('ofRenderModuleShell'), /Publicar/);
+  assert.match(fn('fcRenderBasePanel'), /Confirmar revision/);
 });
 
 test('vigencia documental no se infiere del nombre ni se usa como fecha base', () => {
