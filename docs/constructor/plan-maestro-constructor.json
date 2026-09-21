@@ -271,7 +271,7 @@
         "local_status": "en_validacion",
         "production_status": "en_validacion",
         "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: fijo_benefits v1 vigente aprobada/publicada el 2026-08-30 con nueve reglas; catalogo agrega ofertas_moviles y devuelve 12 entradas. Fuente Claro Full archivada con hash verificado; Affinity historico sigue publicado en Fijo. API informa vigencia por entrada; Claro Full desde 2026-07-23 sin fin. Doce entradas no equivalen a doce aprobaciones ni a cierre documental completo.",
+        "evidence": "Produccion auditada 2026-09-17: fijo_benefits v1 vigente aprobada/publicada el 2026-08-30 con nueve reglas; catalogo agrega ofertas_moviles y devuelve 12 entradas. Fuente Claro Full archivada con hash verificado; Affinity historico sigue publicado en Fijo. API informa vigencia por entrada; Claro Full desde 2026-07-23 sin fin. Doce entradas no equivalen a doce aprobaciones ni a cierre documental completo. Inventario de fuentes directas y cruzadas: docs/constructor/inventario-boletines-beneficios-2026-09-21.md.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Portal web: Beneficios",
