@@ -27,8 +27,12 @@ import { runParser } from '../services/secureParserRunner.js';
 import { dateOnly } from '../services/vigenciaTexto.js';
 import { DIAS_ALERTA_VENCIMIENTO, buildVigenciaAlertas } from '../services/vigenciaAlertas.js';
 import { importarListaEquiposDesdeFuente, parsearExcel } from './equiposRoutes.js';
+import { diffDirectorioFijo, parseDirectorioFijoWorkbook } from '../services/directorioFijoSource.js';
 
 export const fuentesComercialesRouter = Router();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CRM_ROOT = path.resolve(__dirname, '../../..');
+const DIRECTORIO_FIJO_DATA_PATH = path.resolve(CRM_ROOT, 'Planes para web/directorio-fijo-data.js');
 
 fuentesComercialesRouter.get('/benefits-vigentes', async (_req, res) => {
   try {
@@ -48,14 +52,20 @@ fuentesComercialesRouter.get('/affinity-vigente', async (_req, res) => {
   }
 });
 
+fuentesComercialesRouter.get('/directorio-fijo/publicado', async (_req, res) => {
+  try {
+    res.json({ ok: true, directorio: readDirectorioFijoPublicado() });
+  } catch (error) {
+    res.status(500).json({ ok: false, codigo: error.code || 'lectura_directorio_publicado_error', error: error.message });
+  }
+});
+
 fuentesComercialesRouter.use(requireAuth);
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_UPLOAD_DIR = path.resolve(__dirname, '../../uploads/fuentes-comerciales');
 const UPLOAD_DIR = process.env.FUENTES_COMERCIALES_UPLOAD_DIR || DEFAULT_UPLOAD_DIR;
-const FAMILIAS = new Set(['equipos', 'fijos', 'moviles', 'inalambrico_iot', 'servicios', 'cloud_sva', 'claro_tv', 'ofertas_moviles', 'ofertas_fijo', 'beneficios', 'affinity']);
+const FAMILIAS = new Set(['equipos', 'fijos', 'moviles', 'inalambrico_iot', 'servicios', 'cloud_sva', 'claro_tv', 'ofertas_moviles', 'ofertas_fijo', 'beneficios', 'affinity', 'directorio_fijo']);
 const BASE_PDF_FAMILIES = new Set(['fijos', 'claro_tv', 'moviles', 'inalambrico_iot']);
-const CRM_ROOT = path.resolve(__dirname, '../../..');
 const LEGACY_BASE_DOCUMENT_DIRS = [
   path.resolve(CRM_ROOT, 'Planes para web/Estructura de planes/planes'),
   path.resolve(CRM_ROOT, 'documentos-ofertas'),
@@ -117,6 +127,47 @@ function resolveFuentePath(row, options = {}) {
 }
 function sourcePath(row) {
   return resolveFuentePath(row);
+}
+
+function readDirectorioFijoPublicado() {
+  let source;
+  try {
+    source = fs.readFileSync(DIRECTORIO_FIJO_DATA_PATH, 'utf8');
+  } catch {
+    throw Object.assign(new Error('No se encontro el Directorio publicado.'), { code: 'directorio_publicado_no_encontrado' });
+  }
+  const match = source.match(/window\.DIRECTORIO_FIJO_DATA\s*=\s*([\s\S]*?);\s*$/);
+  if (!match) throw Object.assign(new Error('El Directorio publicado no tiene un formato valido.'), { code: 'directorio_publicado_invalido' });
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    throw Object.assign(new Error('No se pudo leer el contenido del Directorio publicado.'), { code: 'directorio_publicado_invalido' });
+  }
+}
+
+function serializarDirectorioFijo(data) {
+  return `window.DIRECTORIO_FIJO_DATA = ${JSON.stringify(data, null, 2)};\n`;
+}
+
+function directorioSnapshotPath() {
+  return path.resolve(UPLOAD_DIR, 'directorio_fijo', 'snapshots', `directorio-fijo-${Date.now()}-${crypto.randomUUID()}.js`);
+}
+
+function reemplazarDirectorioPublicado(data) {
+  const anterior = fs.readFileSync(DIRECTORIO_FIJO_DATA_PATH, 'utf8');
+  const respaldo = directorioSnapshotPath();
+  fs.mkdirSync(path.dirname(respaldo), { recursive: true });
+  fs.writeFileSync(respaldo, anterior, 'utf8');
+  const temporal = `${DIRECTORIO_FIJO_DATA_PATH}.${crypto.randomUUID()}.tmp`;
+  fs.writeFileSync(temporal, serializarDirectorioFijo(data), 'utf8');
+  fs.renameSync(temporal, DIRECTORIO_FIJO_DATA_PATH);
+  return { anterior, respaldo };
+}
+
+function restaurarDirectorioPublicado(contenido) {
+  const temporal = `${DIRECTORIO_FIJO_DATA_PATH}.${crypto.randomUUID()}.restore`;
+  fs.writeFileSync(temporal, contenido, 'utf8');
+  fs.renameSync(temporal, DIRECTORIO_FIJO_DATA_PATH);
 }
 
 function normalizeSha256(value) {
@@ -375,6 +426,12 @@ function baseCatalogUploadError(familia, originalName) {
     return {
       codigo: 'formato_affinity_pdf_invalido',
       error: 'Affinity solo acepta el PDF oficial del programa.',
+    };
+  }
+  if (familia === 'directorio_fijo' && !/\.(xlsx|xls)$/i.test(name)) {
+    return {
+      codigo: 'formato_directorio_excel_invalido',
+      error: 'Directorio de Fijo requiere el Excel oficial (.xlsx o .xls).',
     };
   }
   if (familia === 'moviles' && /nuevas?\s+ofertas|accesorios/i.test(name)) {
@@ -1565,6 +1622,110 @@ fuentesComercialesRouter.get('/alertas-vencimiento', async (req, res) => {
     res.json({ ok: true, ...buildVigenciaAlertas({ fuentes: rows, diasAlerta }) });
   } catch (e) {
     res.status(500).json({ ok: false, codigo: 'alertas_vencimiento_error', error: e.message });
+  }
+});
+
+fuentesComercialesRouter.get('/directorio-fijo/estado', requireAdmin, async (_req, res) => {
+  try {
+    const directorio = readDirectorioFijoPublicado();
+    const [{ rows: fuentes }, { rows: publicaciones }] = await Promise.all([
+      pool.query(`SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+        mime_type, bytes, vigencia_desde, vigencia_hasta, vigencia_documental, notas, estado, subido_por, creado_en
+        FROM public.fuentes_comerciales WHERE familia='directorio_fijo' ORDER BY creado_en DESC LIMIT 20`),
+      pool.query(`SELECT id, numero, estado, fuente_comercial_id, fuente_nombre, fuente_sha256, resumen, diferencias,
+        publicada_por, publicada_en, reemplazada_en, creado_en
+        FROM public.directorio_fijo_publicaciones ORDER BY numero DESC LIMIT 20`),
+    ]);
+    res.json({
+      ok: true,
+      publicado: {
+        fuente_nombre: directorio.source_file || null,
+        hoja: directorio.source_sheet || null,
+        total_contactos: Number(directorio.total_contactos || 0) || ((directorio.admin || []).length + (directorio.groups || []).reduce((total, group) => total + 1 + (group.contacts || []).length, 0)),
+        fuente_archivada: publicaciones.some((item) => item.estado === 'publicada'),
+      },
+      fuentes: fuentes.map(publicFuente),
+      publicaciones,
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, codigo: error.code || 'lectura_directorio_estado_error', error: error.message });
+  }
+});
+
+fuentesComercialesRouter.post('/directorio-fijo/preview', requireAdmin, async (req, res) => {
+  gcPreviews();
+  const fuenteId = String(req.body?.fuente_id || '').trim();
+  if (!UUID_RE.test(fuenteId)) return res.status(400).json({ ok: false, codigo: 'fuente_directorio_requerida', error: 'Selecciona el Excel oficial del Directorio.' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, familia, titulo, documento_tipo, nombre_original, nombre_archivado, ruta_relativa, sha256,
+        mime_type, bytes, vigencia_desde, vigencia_hasta, vigencia_documental, notas, estado, subido_por, creado_en
+       FROM public.fuentes_comerciales WHERE id=$1`, [fuenteId],
+    );
+    const fuente = rows[0];
+    if (!fuente) return res.status(404).json({ ok: false, codigo: 'fuente_no_encontrada' });
+    if (fuente.familia !== 'directorio_fijo' || fuente.documento_tipo !== 'excel') {
+      return res.status(422).json({ ok: false, codigo: 'archivo_incompatible', error: 'Directorio de Fijo solo acepta el Excel oficial archivado como Directorio de Fijo.' });
+    }
+    const candidato = parseDirectorioFijoWorkbook(fs.readFileSync(sourcePath(fuente)));
+    const vigente = readDirectorioFijoPublicado();
+    const diferencias = diffDirectorioFijo(vigente, candidato);
+    const previewId = crypto.randomUUID();
+    previews.set(previewId, { tipo: 'directorio_fijo', created: Date.now(), fuente, candidato, vigente, diferencias, usuario: uname(req) });
+    res.json({
+      ok: true,
+      preview_id: previewId,
+      expira_en_min: 30,
+      fuente: publicFuentePreview(fuente),
+      candidato: { hoja: candidato.source_sheet, total_contactos: candidato.total_contactos, grupos: candidato.groups.length, administracion: candidato.admin.length },
+      publicado_actual: { fuente_nombre: vigente.source_file || null, hoja: vigente.source_sheet || null },
+      diferencias,
+      publicable: true,
+    });
+  } catch (error) {
+    const status = String(error.code || '').startsWith('directorio_') ? 422 : 500;
+    res.status(status).json({ ok: false, codigo: error.code || 'directorio_preview_error', error: error.message });
+  }
+});
+
+fuentesComercialesRouter.post('/directorio-fijo/publicar', requireAdmin, async (req, res) => {
+  gcPreviews();
+  const preview = previews.get(String(req.body?.preview_id || ''));
+  if (!preview || preview.tipo !== 'directorio_fijo') return res.status(404).json({ ok: false, codigo: 'preview_expirado', error: 'La vista previa expiró. Vuelve a comparar el Excel.' });
+  const client = await pool.connect();
+  let reemplazo = null;
+  try {
+    await client.query('BEGIN');
+    await client.query(`SELECT pg_advisory_xact_lock(hashtext('directorio_fijo_publicacion'))`);
+    const datosPublicados = {
+      ...preview.candidato,
+      source_file: preview.fuente.nombre_original,
+      source_sheet: preview.candidato.source_sheet,
+    };
+    reemplazo = reemplazarDirectorioPublicado(datosPublicados);
+    await client.query(`UPDATE public.directorio_fijo_publicaciones SET estado='reemplazada', reemplazada_en=now() WHERE estado='publicada'`);
+    const { rows } = await client.query(
+      `INSERT INTO public.directorio_fijo_publicaciones
+        (estado, fuente_comercial_id, fuente_nombre, fuente_sha256, contenido, resumen, diferencias, publicada_por, publicada_en, respaldo_anterior)
+       VALUES ('publicada',$1,$2,$3,$4,$5,$6,$7,now(),$8) RETURNING *`,
+      [preview.fuente.id, preview.fuente.nombre_original, preview.fuente.sha256, JSON.stringify(datosPublicados), JSON.stringify({ total_contactos: preview.candidato.total_contactos, grupos: preview.candidato.groups.length, administracion: preview.candidato.admin.length }), JSON.stringify(preview.diferencias), preview.usuario, reemplazo.respaldo],
+    );
+    await client.query(
+      `UPDATE public.fuentes_comerciales
+       SET estado='activa', vigencia_documental='vigente', notas=NULL
+       WHERE id=$1`, [preview.fuente.id],
+    );
+    await client.query('COMMIT');
+    previews.delete(String(req.body.preview_id));
+    res.json({ ok: true, publicacion: rows[0], diferencias: preview.diferencias });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    if (reemplazo) {
+      try { restaurarDirectorioPublicado(reemplazo.anterior); } catch { /* La copia queda en respaldo para recuperación manual. */ }
+    }
+    res.status(500).json({ ok: false, codigo: 'directorio_publicacion_error', error: error.message });
+  } finally {
+    client.release();
   }
 });
 

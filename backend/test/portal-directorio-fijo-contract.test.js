@@ -22,6 +22,8 @@ test('portal de fijo publica Directorio de fijo como pagina aparte', () => {
   assert.match(directoryPage, /href="directorio-fijo\.html" class="active"/);
   assert.match(indexPage, /Directorio de fijo/);
   assert.match(directoryPage, /function render\(\)/);
+  assert.match(directoryPage, /async function cargarDirectorioPublicado\(\)/);
+  assert.match(directoryPage, /\/api\/fuentes-comerciales\/directorio-fijo\/publicado/);
   assert.match(directoryPage, /Gerente Operaciones de Campo/);
 });
 

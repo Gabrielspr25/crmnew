@@ -156,13 +156,25 @@ test('Admin Ofertas permite comparar una fuente ya archivada antes de confirmar 
 
 test('Directorio de Fijo no reutiliza documentos de Fijo', async () => {
   const html = await readFile(frontendPath, 'utf8');
+  const route = await readFile(fuentesRoutePath, 'utf8');
 
   assert.doesNotMatch(html, /key==='fijo'\|\|key==='directorio_fijo'/);
   assert.doesNotMatch(html, /key==='directorio_fijo'\)return 'fijos'/);
   assert.match(html, /function ofRenderDirectorioFijo\(\)/);
-  assert.match(html, /Directorio Operaciones Clientes Masivos dic\. 2025\.xlsx/);
   assert.match(html, /directorio-fijo\.html/);
-  assert.match(html, /No hay una copia del Excel archivada en Admin Ofertas/);
+  assert.match(html, /Directorio publicado sin fuente archivada/);
+  assert.match(html, /Comparar cambios/);
+  assert.match(html, /function ofAnalizarDirectorioFijo\(\)/);
+  assert.match(html, /function ofPublicarDirectorioFijo\(\)/);
+  assert.match(html, /\/api\/fuentes-comerciales\/directorio-fijo\/estado/);
+  assert.match(html, /\/api\/fuentes-comerciales\/directorio-fijo\/preview/);
+  assert.match(html, /\/api\/fuentes-comerciales\/directorio-fijo\/publicar/);
+  assert.match(route, /directorio_fijo/);
+  assert.match(route, /directorio-fijo\/preview/);
+  assert.match(route, /directorio-fijo\/publicar/);
+  assert.match(route, /directorio-fijo\/publicado/);
+  assert.match(route, /vigencia_documental='vigente'/);
+  assert.doesNotMatch(route, /vigencia_documental='hasta_nuevo_boletin'/);
 });
 
 test('Admin Ofertas trata Planes Moviles como base movil compuesta y no como Fijo Claro TV', async () => {

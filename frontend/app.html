@@ -2821,6 +2821,7 @@ let ofBenefitsCatalog=null, ofBenefitsSearch='', ofBenefitsCategory='all', ofBen
 let fcSeleccionadas=[], fcPreviewPlanesFijosData=null, fcSeleccionInicializada=false;
 let fcBaseFuente=null, fcBasePreview=null, fcBaseTab='fijo', fcBaseSearch='', fcBaseDrafts={}, fcBaseBusy=false, fcBaseMessage='', fcBaseModuleKey='fijo', fcBaseCompanionIds=[], fcBaseGeneration=0;
 let ofListaPreciosFuente=null, ofListaPreciosPreview=null, ofListaPreciosDraft=false, ofListaPreciosBusy=false;
+let ofDirectorioFuente=null, ofDirectorioPreview=null, ofDirectorioEstado=null, ofDirectorioBusy=false;
 const FC_FAMILIAS=[
   ['equipos','Equipos'],['fijos','Fijos'],['moviles','Móviles'],['inalambrico_iot','Inalámbrico / IoT'],
   ['servicios','Servicios'],['cloud_sva','Cloud / SVA'],['claro_tv','Claro TV'],['ofertas_moviles','Ofertas móviles'],['ofertas_fijo','Ofertas fijo'],['beneficios','Beneficios'],['affinity','Affinity']
@@ -3392,8 +3393,59 @@ function ofRenderServiciosBase(){
 function ofRenderDirectorioFijo(){
   var b=$('ofBody');if(!b)return;
   b.innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h3 style="margin:0">Directorio de Fijo</h3><a class="btn ghost" href="https://ofertas.ss-group.cloud/directorio-fijo.html" target="_blank" rel="noopener noreferrer">Abrir Directorio publicado</a></div>'
-    +'<div class="of-simple-flow"><div class="of-current-source"><div><b>Directorio publicado</b><div class="s" style="margin-top:4px">Referencia: Directorio Operaciones Clientes Masivos dic. 2025.xlsx.</div><div class="s" style="margin-top:4px">Es un contenido propio del portal; no pertenece a Planes Fijos.</div></div></div>'
-    +'<div class="s" style="margin-top:12px">No hay una copia del Excel archivada en Admin Ofertas. Por eso no aparece un documento para abrir ni se muestran boletines de Fijo. Cuando llegue un Directorio nuevo, se carga como Directorio de Fijo, no como Fijo.</div></div></div>';
+    +'<div class="of-simple-flow"><div class="of-current-source"><div id="ofDirectorioActual" class="s">Leyendo Directorio publicado...</div><button class="btn ghost" type="button" onclick="ofToggleDirectorioCarga()">Reemplazar Directorio</button></div>'
+    +'<div class="of-upload-replacement" id="ofDirectorioCarga"><div class="flbl">Excel nuevo</div><input class="inp" id="ofDirectorioDocumento" type="file" accept=".xlsx,.xls"><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="ofDirectorioComparar" onclick="ofAnalizarDirectorioFijo()">Comparar cambios</button></div></div>'
+    +'<div id="ofDirectorioPanel" style="margin-top:12px"></div></div></div>';
+  ofLoadDirectorioFijoState();
+}
+function ofToggleDirectorioCarga(){var el=$('ofDirectorioCarga');if(el)el.classList.toggle('show');}
+function ofDirectorioMensaje(message,kind){var el=$('ofDirectorioActual');if(el)el.innerHTML='<span class="pill '+(kind||'amber')+'">'+(kind==='green'?'Listo':kind==='red'?'No disponible':'Directorio')+'</span> '+esc(message);}
+async function ofLoadDirectorioFijoState(){
+  try{
+    var r=await api('/api/fuentes-comerciales/directorio-fijo/estado');
+    ofDirectorioEstado=r; ofDirectorioFuente=(r.fuentes||[])[0]||null;
+    var actual=r.publicado||{};
+    var texto=(actual.fuente_nombre||'Directorio publicado sin fuente archivada')+(actual.hoja?' · Hoja '+actual.hoja:'')+(actual.total_contactos?' · '+actual.total_contactos+' contactos':'');
+    ofDirectorioMensaje(texto,actual.fuente_archivada?'green':'amber');
+  }catch(e){ofDirectorioMensaje(fcMensajeApi(e,'directorio_fijo'),'red');}
+  ofRenderDirectorioFijoPanel();
+}
+function ofRenderDirectorioFijoPanel(){
+  var el=$('ofDirectorioPanel');if(!el)return;
+  var p=ofDirectorioPreview;
+  if(!p){el.innerHTML='';return;}
+  var d=p.diferencias&&p.diferencias.resumen||{};
+  el.innerHTML='<div class="card" style="padding:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b>Comparación lista</b><div class="s">'+esc((p.fuente&&p.fuente.nombre_original)||'Excel oficial')+' · Hoja '+esc((p.candidato&&p.candidato.hoja)||'—')+'</div></div><span class="pill violet">Vista previa</span></div>'
+    +'<div class="kpis" style="margin-top:12px"><div class="kpi"><div class="l">Altas</div><div class="v">'+esc(d.altas||0)+'</div></div><div class="kpi"><div class="l">Cambios</div><div class="v">'+esc(d.cambios||0)+'</div></div><div class="kpi"><div class="l">Bajas</div><div class="v">'+esc(d.bajas||0)+'</div></div><div class="kpi"><div class="l">Contactos nuevos</div><div class="v">'+esc((p.candidato&&p.candidato.total_contactos)||0)+'</div></div></div>'
+    +'<div class="s">El Directorio actual no se modifica hasta confirmar la publicación.</div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn green" onclick="ofPublicarDirectorioFijo()" '+(ofDirectorioBusy?'disabled':'')+'>Confirmar publicación</button></div><div class="s" id="ofDirectorioResultado" style="margin-top:8px"></div></div>';
+}
+async function ofAnalizarDirectorioFijo(){
+  var input=$('ofDirectorioDocumento'),btn=$('ofDirectorioComparar');
+  if(!input||!input.files||!input.files.length){ofDirectorioMensaje('Selecciona el Excel oficial antes de comparar.','red');return;}
+  if(!/\.(xlsx|xls)$/i.test(String(input.files[0].name||''))){ofDirectorioMensaje('Directorio de Fijo acepta solo Excel (.xlsx o .xls).','red');return;}
+  ofDirectorioBusy=true;if(btn){btn.disabled=true;btn.textContent='Comparando...';}
+  try{
+    var fd=new FormData();fd.append('familia','directorio_fijo');fd.append('documento',input.files[0]);fd.append('publicacion_modo','borrador');
+    var carga=await apiForm('/api/fuentes-comerciales',fd);
+    if(!carga.ok)throw new Error(carga.error||carga.reason||carga.codigo||'No se pudo archivar el Excel');
+    ofDirectorioFuente=carga.fuente;
+    var preview=await api('/api/fuentes-comerciales/directorio-fijo/preview',{method:'POST',body:{fuente_id:ofDirectorioFuente.id}});
+    if(!preview.ok)throw new Error(preview.error||preview.codigo||'No se pudo comparar el Directorio');
+    ofDirectorioPreview=preview;ofDirectorioMensaje('Excel archivado y comparación lista. Revisá los cambios antes de confirmar.','green');ofRenderDirectorioFijoPanel();
+  }catch(e){ofDirectorioPreview=null;ofDirectorioMensaje(fcMensajeApi(e,'directorio_fijo'),'red');ofRenderDirectorioFijoPanel();
+  }finally{ofDirectorioBusy=false;if(btn){btn.disabled=false;btn.textContent='Comparar cambios';}}
+}
+async function ofPublicarDirectorioFijo(){
+  if(!ofDirectorioPreview){return;}
+  if(!confirm('¿Confirmas publicar este Directorio? Reemplaza solamente el Directorio de Fijo del portal.'))return;
+  ofDirectorioBusy=true;ofRenderDirectorioFijoPanel();
+  try{
+    var r=await api('/api/fuentes-comerciales/directorio-fijo/publicar',{method:'POST',body:{preview_id:ofDirectorioPreview.preview_id}});
+    if(!r.ok)throw new Error(r.error||r.codigo||'No se pudo publicar');
+    ofDirectorioPreview=null;await ofLoadDirectorioFijoState();
+    var result=$('ofDirectorioResultado');if(result)result.innerHTML='<span class="pill green">Publicado</span> Directorio actualizado en el portal.';
+  }catch(e){var target=$('ofDirectorioResultado');if(target)target.innerHTML='<span class="pill red">No se publicó</span> '+esc(fcMensajeApi(e,'directorio_fijo'));}
+  finally{ofDirectorioBusy=false;ofRenderDirectorioFijoPanel();}
 }
 let ofAffinityFuente=null, ofAffinityPreview=null, ofAffinityVersion=null, ofAffinityBusy=false, ofAffinityHistorial=[], ofAffinityResoluciones={};
 function ofRenderAffinity(){

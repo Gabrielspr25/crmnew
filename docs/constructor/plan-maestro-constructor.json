@@ -342,8 +342,8 @@
         "key": "directorio_fijo",
         "title": "Directorio de Fijo",
         "environment": "produccion",
-        "evidence": "85 contactos visibles desde directorio-fijo-data.js?v=2026081101; referencia Directorio Operaciones Clientes Masivos dic. 2025.xlsx. La cola hereda familia fijos/publicacion fijo v13; no demuestra el circuito propio de Directorio. Decision Gabriel 2026-09-20: el Directorio actual permanece vigente hasta que se cargue y publique su propio reemplazo oficial.",
-        "next_action": "Conservar el Directorio actual hasta que se cargue su propio Excel oficial; entonces comparar cambios antes de publicar. No heredar documentos ni estado de Fijo.",
+        "evidence": "Produccion: Directorio vigente desde directorio-fijo-data.js?v=2026081101, referencia Directorio Operaciones Clientes Masivos dic. 2025.xlsx; el original historico no esta archivado. 2026-09-21: circuito independiente desplegado con familia directorio_fijo, hash, parser de Excel, comparacion contra el Directorio publicado, respaldo atomico del artefacto y publicacion explicita. La migracion creo public.directorio_fijo_publicaciones y otorgo SELECT/INSERT/UPDATE a crm_user. API publica /api/fuentes-comerciales/directorio-fijo/publicado y portal verificados: 85 contactos visibles. Pruebas locales: backend/test/directorio-fijo-source.test.js y contratos Admin/Portal (22/22). Decision Gabriel 2026-09-20: el Directorio actual permanece vigente hasta que se cargue y publique su propio reemplazo oficial.",
+        "next_action": "Cuando llegue un Excel oficial nuevo de Directorio, cargarlo en Directorio de Fijo, comparar los cambios y confirmar publicación. No heredar documentos ni estado de Fijo.",
         "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       }
     ]

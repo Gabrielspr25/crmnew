@@ -154,8 +154,19 @@ function render(){
   document.getElementById('sourceLabel').textContent='Fuente: '+(data.source_file||'Directorio Operaciones Clientes Masivos dic. 2025.xlsx');
 }
 document.getElementById('searchInput').addEventListener('input',render);
-buildFilters((window.DIRECTORIO_FIJO_DATA||{}).groups||[]);
-render();
+async function cargarDirectorioPublicado(){
+  try{
+    const base=window.PORTAL_API_BASE||window.location.origin;
+    const response=await fetch(base+'/api/fuentes-comerciales/directorio-fijo/publicado');
+    const result=await response.json();
+    if(response.ok&&result&&result.ok&&result.directorio)window.DIRECTORIO_FIJO_DATA=result.directorio;
+  }catch(_error){
+    // Conserva el Directorio estático previamente publicado si el CRM no está disponible.
+  }
+  buildFilters((window.DIRECTORIO_FIJO_DATA||{}).groups||[]);
+  render();
+}
+cargarDirectorioPublicado();
 </script>
 </body>
 </html>
