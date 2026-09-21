@@ -7,7 +7,7 @@ Este inventario identifica documentos que aportan beneficios, condiciones de con
 | Documento | Aporte identificado | Estado documental |
 | --- | --- | --- |
 | Boletin Beneficios Convergencia Claro Full PYMES @23.JUL.2026 (16)-260713.pdf | Beneficios Claro Full y condiciones de convergencia entre servicios. | Fuente activa archivada; hash `e50a2fb7f1d40e45acb93ca312b44ed8efd67cf556796c44f529723938c4c9eb`. |
-| Boletin Affinity Movil y Fijo desde el 5 de noviembre del 2025.pdf | Beneficio Affinity de 8% para movil y fijo, con condiciones distintas por producto. | Fuente activa archivada; hash `488e506078f2dd5fb987ed8e1cc335ad8c5bf7171844d7839ce0c262273dd9ef`. |
+| Boletin Oferta Descuentos Modems, MIFI y Tablets planes multilineas Update Plus y Financiamiento 10 de abril de 2026.pdf | Descuentos directos de modems, MiFi y tablets para planes multilineas. | Fuente directa de descuentos de equipos; se aplica solo bajo sus condiciones comerciales. |
 
 ## Boletines Que Aportan Beneficios Por Oferta O Convergencia
 
@@ -18,6 +18,12 @@ Este inventario identifica documentos que aportan beneficios, condiciones de con
 | Paquete Update Plus y Financiamiento 27 de agosto al 16 de septiembre de 2026: PDF + Tabla Excel | Oferta de equipos, financiamiento, plazos y condiciones donde convergencia puede habilitar beneficios. | Debe leerse como paquete; la tabla de equipos no se separa de sus terminos. |
 | Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf | Equipos y condiciones de Internet On The Go, Claro Oficina e IoT que se cruzan con elegibilidad convergente. | Aporta contexto de producto/equipo; no crea un beneficio de convergencia sin regla expresa. |
 | Boletin Nuevos Planes Multilineas Business Red PYMES-SUB-240802-rv.pdf | Bono streaming, AutoPay, equipos gratis y descuento TV en planes Business RED. | Fuente de condiciones moviles y convergentes; debe evaluarse por plan, evento y cantidad de lineas. |
+
+## Fuente Independiente
+
+| Documento | Tratamiento |
+| --- | --- |
+| Boletin Affinity Movil y Fijo desde el 5 de noviembre del 2025.pdf | Affinity es un modulo independiente. No forma parte de este inventario de Beneficios ni se mezcla con sus reglas. |
 
 ## Regla De Uso
 
