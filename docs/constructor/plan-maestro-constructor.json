@@ -1,6 +1,6 @@
 {
   "project": "Constructor Comercial",
-  "updated_at": "2026-09-20",
+  "updated_at": "2026-09-21",
   "phase": "Admin Ofertas probado localmente; checklist de Tareas y reglas Admin, correccion de equipos de Claro TV y atomicidad de borradores comprobados en local, sin publicar TV v10 ni desplegar",
   "overall_status": "en_validacion",
   "environment": "local",
@@ -119,7 +119,8 @@
       "Avances, pruebas y done anteriores son evidencia historica en su fecha y ambiente, no certificacion del runtime actual. El Constructor retirado no se reconstruye en esta etapa.",
       "Auditoria inicial: docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md. Posteriormente se consulto tambien la base local para revisar el panel; no confundir sus versiones con produccion.",
       "Panel Admin: implementacion local de solo lectura de evidencia. Publicacion existente, nueva fuente, borrador y comprobacion del destino se separan. Revision visual de Gabriel y despliegue pendientes; no se reactiva el Constructor.",
-      "Revision operativa posterior: docs/constructor/revision-admin-ofertas-local-2026-09-17.md. Prueba documental acotada en BD local: fuente archivada, Fijo v9 borrador y TV v10 aprobada tecnicamente, sin publicar. TV v3/Fijo v2 locales conservadas; no confundir con TV v14/Fijo v13 productivas. No despliegue."
+      "Revision operativa posterior: docs/constructor/revision-admin-ofertas-local-2026-09-17.md. Prueba documental acotada en BD local: fuente archivada, Fijo v9 borrador y TV v10 aprobada tecnicamente, sin publicar. TV v3/Fijo v2 locales conservadas; no confundir con TV v14/Fijo v13 productivas. No despliegue.",
+      "Decision de Gabriel 2026-09-20: Fijo, Claro TV, Moviles y Directorio mantienen su publicacion actual hasta que se cargue y publique un reemplazo oficial. Una fecha o la falta de una fuente nueva no los vence, no los retira y no autoriza inferir bajas."
     ],
     "modules": [
       {
@@ -129,19 +130,19 @@
         "local_status": "terminado",
         "production_status": "en_validacion",
         "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: Base v13 publicada el 2026-08-20: 81 filas en cuatro modulos. Original y hash verificados; extraccion y candidatos persistidos; validada/aprobada/publicada con fechas. Versiones anteriores conservadas. Fuente pendiente_confirmacion, fechas de vigencia nulas; fecha base 2026-03-30 no es vencimiento.",
+        "evidence": "Produccion auditada 2026-09-17: Base v13 publicada el 2026-08-20: 81 filas en cuatro modulos. Original y hash verificados; extraccion y candidatos persistidos; validada/aprobada/publicada con fechas. Versiones anteriores conservadas. Fuente pendiente_confirmacion, fechas de vigencia nulas; fecha base 2026-03-30 no es vencimiento. Decision Gabriel 2026-09-20: permanece publicada hasta reemplazo oficial.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Portal web: Planes Fijos",
           "Claro TV cuando el documento contiene su bloque"
         ],
-        "next_action": "Conservar v13; revisar vigencia documental y fuente seleccionada sin republicar.",
+        "next_action": "Conservar v13 hasta que se cargue un reemplazo oficial; entonces comparar cambios antes de publicar.",
         "publication_audit": {
           "environment": "produccion",
           "observed_at": "2026-09-17",
           "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
           "source_analysis_workflow": "Base v13 publicada el 2026-08-20: 81 filas en cuatro modulos. Original y hash verificados; extraccion y candidatos persistidos; validada/aprobada/publicada con fechas. Versiones anteriores conservadas.",
-          "document_validity": "Fuente pendiente_confirmacion, fechas de vigencia nulas; fecha base 2026-03-30 no es vencimiento.",
+          "document_validity": "Fecha base 2026-03-30 no es vencimiento. Por decision de Gabriel, la publicacion permanece vigente hasta que se cargue y publique un reemplazo oficial.",
           "destination_check": "/api/planes-modulos/fijos 200; contenido coincide con snapshot; index.html muestra v13 y 81 registros.",
           "real_blocker": "Sin bloqueo tecnico de lectura observado; falta confirmacion de vigencia y reconciliar Al dia."
         }
@@ -153,18 +154,18 @@
         "local_status": "en_validacion",
         "production_status": "en_validacion",
         "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: v14 publicada el 2026-08-20 13:14:16-04: 6 planes y 3 complementos; fuente fija d0c88196-e9d8-48f7-aa3d-7250b4459c63 y SHA verificados. Carga, validacion, aprobacion y publicacion registradas; borradores anteriores no anulan v14. Fuente vinculada pendiente_confirmacion y fechas nulas. Base 2026-03-30 no equivale a vigencia.",
+        "evidence": "Produccion auditada 2026-09-17: v14 publicada el 2026-08-20 13:14:16-04: 6 planes y 3 complementos; fuente fija d0c88196-e9d8-48f7-aa3d-7250b4459c63 y SHA verificados. Carga, validacion, aprobacion y publicacion registradas; borradores anteriores no anulan v14. Fuente vinculada pendiente_confirmacion y fechas nulas. Base 2026-03-30 no equivale a vigencia. Decision Gabriel 2026-09-20: permanece publicada hasta reemplazo oficial.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Portal web: Claro TV"
         ],
-        "next_action": "Conservar v14; separar seguimiento de publicacion y confirmar vigencia. No republicar para corregir una tarjeta.",
+        "next_action": "Conservar v14 hasta que se cargue un reemplazo oficial; entonces comparar cambios antes de publicar. No republicar para corregir una tarjeta.",
         "publication_audit": {
           "environment": "produccion",
           "observed_at": "2026-09-17",
           "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
           "source_analysis_workflow": "v14 publicada el 2026-08-20 13:14:16-04: 6 planes y 3 complementos; fuente fija d0c88196-e9d8-48f7-aa3d-7250b4459c63 y SHA verificados. Carga, validacion, aprobacion y publicacion registradas; borradores anteriores no anulan v14.",
-          "document_validity": "Fuente vinculada pendiente_confirmacion y fechas nulas. Base 2026-03-30 no equivale a vigencia.",
+          "document_validity": "Base 2026-03-30 no equivale a vencimiento. Por decision de Gabriel, v14 permanece vigente hasta que se cargue y publique un reemplazo oficial.",
           "destination_check": "/api/planes-modulos/claro_tv 200; ambos modulos coinciden con snapshot; claro-tv.html muestra Version 14 y 9 registros.",
           "real_blocker": "No hay bloqueo de publicacion constatado. Produccion: Pendiente procede del JSON y no de la consulta comercial."
         }
@@ -176,19 +177,19 @@
         "local_status": "terminado",
         "production_status": "en_validacion",
         "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: Catalogo base v17 publicado el 2026-09-09: 48 candidatos, tres modulos. Fuente/hash verificados, validacion sin errores, aprobacion/publicacion registradas; v15/v16 reemplazadas. Base 2026-06-19; fuente pendiente_confirmacion, fechas nulas. Las ofertas v2 son otro circuito con fecha fin 2026-08-26.",
+        "evidence": "Produccion auditada 2026-09-17: Catalogo base v17 publicado el 2026-09-09: 48 candidatos, tres modulos. Fuente/hash verificados, validacion sin errores, aprobacion/publicacion registradas; v15/v16 reemplazadas. Base 2026-06-19; fuente pendiente_confirmacion, fechas nulas. Las ofertas v2 son otro circuito. Decision Gabriel 2026-09-20: base y ofertas publicadas permanecen vigentes hasta reemplazo oficial.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Portal web: Planes Moviles",
           "Constructor futuro"
         ],
-        "next_action": "Confirmar vigencia base y revisar por separado ofertas v2; no confundir catalogo con promociones.",
+        "next_action": "Conservar base y ofertas publicadas hasta que se cargue un reemplazo oficial; entonces comparar cambios antes de publicar. No confundir catalogo con promociones.",
         "publication_audit": {
           "environment": "produccion",
           "observed_at": "2026-09-17",
           "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
           "source_analysis_workflow": "Catalogo base v17 publicado el 2026-09-09: 48 candidatos, tres modulos. Fuente/hash verificados, validacion sin errores, aprobacion/publicacion registradas; v15/v16 reemplazadas.",
-          "document_validity": "Base 2026-06-19; fuente pendiente_confirmacion, fechas nulas. Las ofertas v2 son otro circuito con fecha fin 2026-08-26.",
+          "document_validity": "La base y las ofertas son circuitos separados. Por decision de Gabriel, ambas publicaciones permanecen vigentes hasta que se cargue y publique un reemplazo oficial; una fecha de la fuente no las vence automaticamente.",
           "destination_check": "/api/planes-modulos/moviles 200, snapshot coincidente; movil.html carga base y ofertas desde /api/ofertas-movil/vigente.",
           "real_blocker": "Sin bloqueo tecnico del catalogo observado; vigencia base por confirmar y ofertas vencidas rotuladas vigentes."
         }
@@ -317,22 +318,22 @@
         "local_status": "en_validacion",
         "production_status": "en_validacion",
         "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: ofertas_movil_versiones v2 vigente publicada el 2026-08-07; v1 reemplazada. motor_ofertas_versiones v1 movil_equipos es otro circuito. Fuentes archivadas/hash verificados; retirar pantallas no borro versiones. v2 fecha 2026-08-06 a 2026-08-26: vencida al corte aunque API estado_vigencia=vigente.",
+        "evidence": "Produccion auditada 2026-09-17: ofertas_movil_versiones v2 vigente publicada el 2026-08-07; v1 reemplazada. motor_ofertas_versiones v1 movil_equipos es otro circuito. Fuentes archivadas/hash verificados; retirar pantallas no borro versiones. Decision Gabriel 2026-09-20: v2 permanece publicada hasta que se cargue y publique su reemplazo oficial.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Motor Comercial",
           "Portal web",
           "Constructor futuro"
         ],
-        "next_action": "Revisar calculo de vigencia y reemplazo por dominio; conservar historial, sin promover Motor ni reconstruir Constructor.",
+        "next_action": "Conservar v2 hasta que se cargue un reemplazo oficial; entonces comparar cambios antes de publicar. Conservar historial, sin promover Motor ni reconstruir Constructor.",
         "publication_audit": {
           "environment": "produccion",
           "observed_at": "2026-09-17",
           "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
           "source_analysis_workflow": "ofertas_movil_versiones v2 vigente publicada el 2026-08-07; v1 reemplazada. motor_ofertas_versiones v1 movil_equipos es otro circuito. Fuentes archivadas/hash verificados; retirar pantallas no borro versiones.",
-          "document_validity": "v2 fecha 2026-08-06 a 2026-08-26: vencida al corte aunque API estado_vigencia=vigente.",
+          "document_validity": "La fecha 2026-08-06 a 2026-08-26 describe el documento, no retira la version. Por decision de Gabriel, v2 permanece vigente hasta que se cargue y publique un reemplazo oficial.",
           "destination_check": "/api/ofertas-movil/vigente 200; movil.html muestra Version 2 y la etiqueta vigente.",
-          "real_blocker": "Vencimiento y etiqueta inconsistentes; no equivale a ausencia de publicacion. Causa interna aun no resuelta."
+          "real_blocker": "No hay bloqueo para mantener la publicacion actual. El siguiente cambio requiere una fuente oficial nueva y comparacion previa."
         }
       }
     ],
@@ -341,8 +342,8 @@
         "key": "directorio_fijo",
         "title": "Directorio de Fijo",
         "environment": "produccion",
-        "evidence": "85 contactos visibles desde directorio-fijo-data.js?v=2026081101; referencia Directorio Operaciones Clientes Masivos dic. 2025.xlsx. La cola hereda familia fijos/publicacion fijo v13; no demuestra el circuito propio de Directorio.",
-        "next_action": "Auditar fuente, aprobacion y vigencia de Directorio por separado; no heredar Al dia de Fijo.",
+        "evidence": "85 contactos visibles desde directorio-fijo-data.js?v=2026081101; referencia Directorio Operaciones Clientes Masivos dic. 2025.xlsx. La cola hereda familia fijos/publicacion fijo v13; no demuestra el circuito propio de Directorio. Decision Gabriel 2026-09-20: el Directorio actual permanece vigente hasta que se cargue y publique su propio reemplazo oficial.",
+        "next_action": "Conservar el Directorio actual hasta que se cargue su propio Excel oficial; entonces comparar cambios antes de publicar. No heredar documentos ni estado de Fijo.",
         "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md"
       }
     ]
