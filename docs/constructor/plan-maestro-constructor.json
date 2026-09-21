@@ -1,6 +1,6 @@
 {
   "project": "Constructor Comercial",
-  "updated_at": "2026-09-19",
+  "updated_at": "2026-09-20",
   "phase": "Admin Ofertas probado localmente; checklist de Tareas y reglas Admin, correccion de equipos de Claro TV y atomicidad de borradores comprobados en local, sin publicar TV v10 ni desplegar",
   "overall_status": "en_validacion",
   "environment": "local",
@@ -196,24 +196,24 @@
       {
         "key": "inalambrico_iot",
         "title": "Inalambrico / IoT",
-        "status": "en_validacion",
+        "status": "terminado",
         "local_status": "terminado",
-        "production_status": "en_validacion",
-        "last_review": "2026-09-17",
-        "evidence": "Produccion auditada 2026-09-17: Cuatro modulos productivos de agosto, actualizados 2026-08-15. Fuentes agosto/septiembre archivadas y hashes verificados. Septiembre no esta aplicado al destino; no hay borrador persistido en bases. Su publicacion previa documentada es local. Publicado agosto: 2026-08-01 a 2026-08-31, vencido al corte. Fuente agosto sigue etiquetada vigente; septiembre tiene fechas nulas.",
+        "production_status": "terminado",
+        "last_review": "2026-09-20",
+        "evidence": "Produccion comprobada 2026-09-20: la fuente oficial Boletin INT Go, Claro Oficina y IoT 1al30sept2026- CORP.pdf (SHA-256 c302b8eb28036d2b877c907230c887bab541f5a3a208c633cdec8d00ea04e076) se comparo contra agosto: 18 altas, 0 modificaciones y 0 ausencias en propuesta. La vigencia escrita se detecto como 2026-09-01 a 2026-09-30. La version 18 fue validada, aprobada y publicada; /api/planes-modulos/inalambrico devuelve la fuente, vigencia y Franklin JEXstream RG2100 5G, codigo 33638H, $249.99.",
         "impacts": [
           "CRM PYMES/Admin Ofertas",
           "Portal web: Inalambrico / IoT"
         ],
-        "next_action": "Revisar analisis/diff de septiembre y aprobacion para un reemplazo futuro autorizado; conservar evidencia de agosto.",
+        "next_action": "Conservar fuente, hash, diferencia y version 18; esperar el proximo boletin oficial. CG890 sigue siendo una comprobacion comercial separada, no resuelta por inferencia.",
         "publication_audit": {
           "environment": "produccion",
-          "observed_at": "2026-09-17",
+          "observed_at": "2026-09-20",
           "report": "docs/constructor/auditoria-centro-cargas-produccion-2026-09-17.md",
-          "source_analysis_workflow": "Cuatro modulos productivos de agosto, actualizados 2026-08-15. Fuentes agosto/septiembre archivadas y hashes verificados. Septiembre no esta aplicado al destino; no hay borrador persistido en bases. Su publicacion previa documentada es local.",
-          "document_validity": "Publicado agosto: 2026-08-01 a 2026-08-31, vencido al corte. Fuente agosto sigue etiquetada vigente; septiembre tiene fechas nulas.",
-          "destination_check": "/api/planes-modulos/inalambrico 200 y banda-ancha.html muestran agosto. publicacion=null significa sin cabecera en bases, no sin contenido publicado.",
-          "real_blocker": "Falta reemplazo vigente aplicado; la cola no reconoce el circuito de planes_modulos."
+          "source_analysis_workflow": "Fuente septiembre archivada, comparada contra agosto y guardada como borrador; validacion y aprobacion completadas antes de la publicacion de la version 18.",
+          "document_validity": "Vigencia confirmada por el nombre oficial: 2026-09-01 a 2026-09-30.",
+          "destination_check": "/api/planes-modulos/inalambrico 200 devuelve cuatro modulos generados desde el boletin de septiembre; publicacion 18 registrada 2026-09-20 20:02 America/Puerto_Rico.",
+          "real_blocker": "No hay bloqueo de publicacion para septiembre. CG890 requiere una fuente comercial propia si debe evaluarse como disponibilidad vigente."
         }
       },
       {
@@ -685,21 +685,20 @@
       "id": "PM-009",
       "area": "Inalambrico / IoT",
       "title": "Publicacion local boletin septiembre",
-      "status": "en_validacion",
+      "status": "terminado",
       "local_status": "terminado",
-      "production_status": "en_validacion",
-      "summary": "La publicacion local de Inalambrico / IoT genera modulos consumibles y expone Franklin RG2100 a precio vigente local.",
+      "production_status": "terminado",
+      "summary": "La publicacion de Inalambrico / IoT aplica la fuente oficial de septiembre al consumidor publico y conserva diferencia, version y vigencia comprobables.",
       "done": [
-        "Fuente septiembre aceptada localmente",
-        "Version local publicada",
-        "Franklin RG2100 $249.99 disponible por consumidor local"
+        "Fuente septiembre comparada contra agosto: 18 altas, 0 modificaciones, 0 ausencias en propuesta",
+        "Version 18 validada, aprobada y publicada en produccion",
+        "API publica entrega vigencia 2026-09-01 a 2026-09-30 y Franklin RG2100 5G 33638H a $249.99"
       ],
       "remaining": [
-        "Demostrar comparacion contra revision anterior si aparece el PDF anterior oficial",
-        "Confirmar si CG890 pertenece a otra fuente vigente; la publicacion local septiembre localizada contiene RG2100 item 33638H, no CG890"
+        "Confirmar CG890 solo cuando exista fuente oficial especifica; septiembre identifica RG2100 33638H y no prueba disponibilidad de CG890"
       ],
       "blocker": null,
-      "next_action": "Conservar septiembre local; produccion sirve agosto vencido. Revisar diff/aprobacion de septiembre antes de reemplazo autorizado.",
+      "next_action": "Conservar version 18 y su evidencia; esperar siguiente fuente oficial sin convertir CG890 en una baja o alta por deduccion.",
       "tests": {
         "passed": 69,
         "failed": 0,
@@ -718,8 +717,8 @@
         "backend/src/routes/fuentesComercialesRoutes.js",
         "frontend/app.html"
       ],
-      "last_change": "Auditoria distingue septiembre local de agosto productivo; fuente septiembre archivada pero no aplicada al destino.",
-      "updated_at": "2026-09-17"
+      "last_change": "Fuente septiembre publicada en produccion despues de comparacion, validacion y aprobacion; el consumidor publico ya no entrega agosto.",
+      "updated_at": "2026-09-20"
     },
     {
       "id": "PM-010",
