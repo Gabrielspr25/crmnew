@@ -75,3 +75,7 @@ Estado de version, y solo de version:
 - Toda tarea relacionada con Constructor, Motor Comercial, Fuentes, Servicios/Benefits o Agente Comercial debe actualizar `docs/constructor/plan-maestro-constructor.json` y regenerar `docs/constructor/00-PLAN-MAESTRO-CONSTRUCTOR.md` antes de declararse terminada.
 
 Actualizado: 2026-07-12.
+
+## Regla completa de cuotas y oportunidades — 2026-10-07
+
+Fijo: contrato vencido o sin fecha final. Móvil: cero cuotas efectivas. Descuento mensual por aniversario desde inicio/plazo independiente de Tango, compartido por Clientes, Asana y comparativa-base. Datos insuficientes no se convierten a cero; no se sobrescriben suscriptores. Metas sigue midiendo ventas confirmadas. Detalle y verificación pública: docs/auditorias/2026-10-07-asana-regla-completa-publicada.md.

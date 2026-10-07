@@ -10,6 +10,8 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { buildClientSearchFilter } from '../services/clientSearchQuery.js';
+import { effectiveContractPayments } from '../services/contractPayments.js';
+import { clientNameKeySql } from '../services/clientIdentity.js';
 
 export const clientsRealRouter = Router();
 
@@ -137,15 +139,34 @@ const CANCELLED_CLIENT_SQL = `(
   EXISTS (SELECT 1 FROM bans b WHERE b.client_id = c.id)
   AND NOT (${ACTIVE_CLIENT_RELATION_SQL}))`;
 const ALL_CLIENT_SQL = `((${ACTIVE_CLIENT_SQL}) OR (${CANCELLED_CLIENT_SQL}) OR (${FOLLOWING_CLIENT_SQL}) OR (${INCOMPLETE_CLIENT_SQL}))`;
-const CLIENT_GROUP_KEY_SQL = `LOWER(REGEXP_REPLACE(TRIM(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), c.id::text)), '\\s+', ' ', 'g'))`;
+// Agrupa cuentas duplicadas ("Acme Inc.", "ACME, INC", "Acme  Inc") bajo la
+// misma llave, sin que nadie tenga que igualar el nombre a mano.
+// Regla completa en backend/src/services/clientIdentity.js.
+const CLIENT_GROUP_KEY_SQL = clientNameKeySql(`COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), c.id::text)`);
+const clientGroupKeySql = (alias) => clientNameKeySql(
+  `COALESCE(NULLIF(${alias}.business_name,''), NULLIF(${alias}.name,''), ${alias}.id::text)`
+);
+
+async function resolveClientGroupIds(conn, clientId) {
+  const grouped = await conn.query(
+    `SELECT array_agg(c_group.id ORDER BY c_group.created_at DESC, c_group.id) AS client_ids
+       FROM clients c_anchor
+       JOIN clients c_group
+         ON ${clientGroupKeySql('c_group')} = ${clientGroupKeySql('c_anchor')}
+      WHERE c_anchor.id = $1`,
+    [clientId]
+  );
+  return grouped.rows[0]?.client_ids || [];
+}
 const EMPTY_DUPLICATE_CLIENT_SQL = `(
   NOT EXISTS (SELECT 1 FROM bans b_empty WHERE b_empty.client_id = c.id)
+  AND ${clientNameKeySql(`COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), '')`)} <> ''
   AND EXISTS (
     SELECT 1
     FROM clients c2
     WHERE c2.id <> c.id
-      AND lower(trim(COALESCE(NULLIF(c2.business_name,''), NULLIF(c2.name,''), ''))) =
-          lower(trim(COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), '')))
+      AND ${clientNameKeySql(`COALESCE(NULLIF(c2.business_name,''), NULLIF(c2.name,''), '')`)} =
+          ${clientNameKeySql(`COALESCE(NULLIF(c.business_name,''), NULLIF(c.name,''), '')`)}
       AND EXISTS (SELECT 1 FROM bans b_keep WHERE b_keep.client_id = c2.id)
   )
 )`;
@@ -161,6 +182,9 @@ const SERVICE_KIND_SQL = (subscriberAlias) => `LOWER(COALESCE(
     WHEN 'T' THEN 'fijo'
     WHEN 'V' THEN 'fijo'
     WHEN 'K' THEN 'cloud'
+  END,
+  CASE
+    WHEN regexp_replace(COALESCE(${subscriberAlias}.phone::text,''),'[^0-9]','','g') LIKE '989%' THEN 'cloud'
   END,
   ''
 ))`;
@@ -208,6 +232,32 @@ const mobileSql = (alias) => `(${LINE_KIND_SQL(alias)} = 'movil')`;
 const tvSql = (alias) => `(${LINE_KIND_SQL(alias)} IN ('claro tv','clarotv','tv'))`;
 const cloudSql = (alias) => `(${LINE_KIND_SQL(alias)} = 'cloud')`;
 const incompleteSql = (alias) => `(NOT ${mobileSql(alias)} AND NOT ${fixedSql(alias)} AND NOT ${mplsSql(alias)} AND NOT ${tvSql(alias)} AND NOT ${cloudSql(alias)})`;
+
+const banCountsJson = () => `(
+  SELECT json_build_object(
+    'total', COUNT(*)::int,
+    'active', COUNT(*) FILTER (WHERE COALESCE(LOWER(b_summary.status::text),'') IN ('a','activo','active'))::int,
+    'cancelled', COUNT(*) FILTER (WHERE COALESCE(LOWER(b_summary.status::text),'') NOT IN ('a','activo','active'))::int)
+  FROM bans b_summary)`;
+
+const subscriberCountsJson = () => `(
+  SELECT json_build_object(
+    'active', COUNT(*) FILTER (WHERE ${ACTIVE_SUB_STATUS('s_summary')})::int,
+    'active_mobile', COUNT(*) FILTER (WHERE ${ACTIVE_SUB_STATUS('s_summary')} AND ${mobileSql('s_summary')})::int,
+    'active_fixed', COUNT(*) FILTER (WHERE ${ACTIVE_SUB_STATUS('s_summary')} AND ${fixedSql('s_summary')})::int,
+    'active_cloud', COUNT(*) FILTER (WHERE ${ACTIVE_SUB_STATUS('s_summary')} AND ${cloudSql('s_summary')})::int,
+    'active_unclassified', COUNT(*) FILTER (WHERE ${ACTIVE_SUB_STATUS('s_summary')} AND ${incompleteSql('s_summary')})::int,
+    'cancelled', COUNT(*) FILTER (WHERE NOT ${ACTIVE_SUB_STATUS('s_summary')})::int)
+  FROM subscribers s_summary)`;
+
+const incompleteBanCountSql = () => `(
+  SELECT COUNT(*)::int
+    FROM bans b_incomplete_summary
+    JOIN clients c_incomplete_summary ON c_incomplete_summary.id = b_incomplete_summary.client_id
+   WHERE (NULLIF(TRIM(COALESCE(c_incomplete_summary.name,'')),'') IS NULL
+          OR c_incomplete_summary.name ILIKE 'SIN NOMBRE - BAN %')
+     AND (NULLIF(TRIM(COALESCE(c_incomplete_summary.business_name,'')),'') IS NULL
+          OR c_incomplete_summary.business_name ILIKE 'SIN NOMBRE - BAN %'))`;
 
 const RENEWAL_CLIENT_SQL = {
   expired: `(EXISTS (SELECT 1 FROM bans b_renewal JOIN subscribers s_renewal ON s_renewal.ban_id=b_renewal.id
@@ -413,7 +463,7 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
 
     const stats = includeStats ? await conn.query(
       `WITH scoped_lines AS (
-         SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type,
+         SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type, s_metric.phone,
                 s_metric.status AS line_status, s_metric.monthly_value, s_metric.contract_end_date, b_metric.account_type
          FROM clients c
          JOIN bans b_metric ON b_metric.client_id = c.id
@@ -425,6 +475,9 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
         (SELECT COUNT(*)::int FROM clients c WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
         (SELECT COUNT(*)::int FROM clients c WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
         (SELECT COUNT(*)::int FROM subscribers s_cancelled WHERE NOT ${ACTIVE_SUB_STATUS('s_cancelled')}) AS cancelled_lines_count,
+        ${banCountsJson()} AS ban_counts,
+        ${subscriberCountsJson()} AS subscriber_counts,
+        ${incompleteBanCountSql()} AS incomplete_ban_count,
         ${serviceCountsJson()} AS service_counts,
         json_build_object(
           'expired_clients', (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL} AND ${RENEWAL_CLIENT_SQL.expired}),
@@ -449,6 +502,40 @@ clientsRealRouter.get('/clients-real', requireAuth, async (req, res) => {
   }
 });
 
+// Listado visible de líneas activas que todavía no tienen tipo reconocido.
+clientsRealRouter.get('/clients-real/unclassified-subscribers', requireAuth, async (_req, res) => {
+  const conn = await pool.connect();
+  try {
+    await conn.query('BEGIN');
+    await conn.query('SET LOCAL search_path TO public');
+    const result = await conn.query(`
+      WITH classified AS (
+        SELECT s.id,
+               c.id AS client_id,
+               COALESCE(NULLIF(TRIM(c.business_name),''), NULLIF(TRIM(c.name),''), 'Sin nombre') AS client_name,
+               b.ban_number::text AS ban_number,
+               s.phone::text AS subscriber,
+               COALESCE(s.plan::text,'') AS plan,
+               ${SERVICE_KIND_SQL('s')} AS service_kind
+          FROM subscribers s
+          JOIN bans b ON b.id = s.ban_id
+          JOIN clients c ON c.id = b.client_id
+         WHERE ${ACTIVE_SUB_STATUS('s')}
+      )
+      SELECT id, client_id, client_name, ban_number, subscriber, plan, 'Activo' AS status_label
+        FROM classified
+       WHERE service_kind NOT IN ('movil','fijo','cloud','mpls','claro tv','clarotv','tv')
+       ORDER BY client_name, ban_number, subscriber
+    `);
+    await conn.query('COMMIT');
+    res.json({ subscribers: result.rows, total: result.rows.length });
+  } catch (e) {
+    try { await conn.query('ROLLBACK'); } catch {}
+    console.error('[clients-real/unclassified-subscribers]', e.message);
+    res.status(500).json({ error: e.message });
+  } finally { conn.release(); }
+});
+
 // Resumen pesado separado: la tabla de Clientes puede aparecer sin esperarlo.
 clientsRealRouter.get('/clients-real/stats', requireAuth, async (_req, res) => {
   const conn = await pool.connect();
@@ -457,7 +544,7 @@ clientsRealRouter.get('/clients-real/stats', requireAuth, async (_req, res) => {
     await conn.query('SET LOCAL search_path TO public');
     const stats = await conn.query(
       `WITH scoped_lines AS (
-         SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type,
+         SELECT c.id AS client_id, s_metric.id AS subscriber_id, s_metric.line_kind, s_metric.product_type, s_metric.phone,
                 s_metric.status AS line_status, s_metric.monthly_value, s_metric.contract_end_date, b_metric.account_type
          FROM clients c
          JOIN bans b_metric ON b_metric.client_id = c.id
@@ -469,6 +556,9 @@ clientsRealRouter.get('/clients-real/stats', requireAuth, async (_req, res) => {
         (SELECT COUNT(*)::int FROM clients c WHERE ${FOLLOWING_CLIENT_SQL}) AS following_count,
         (SELECT COUNT(*)::int FROM clients c WHERE ${INCOMPLETE_CLIENT_SQL}) AS incomplete_count,
         (SELECT COUNT(*)::int FROM subscribers s_cancelled WHERE NOT ${ACTIVE_SUB_STATUS('s_cancelled')}) AS cancelled_lines_count,
+        ${banCountsJson()} AS ban_counts,
+        ${subscriberCountsJson()} AS subscriber_counts,
+        ${incompleteBanCountSql()} AS incomplete_ban_count,
         ${serviceCountsJson()} AS service_counts,
         json_build_object(
           'expired_clients', (SELECT COUNT(*)::int FROM clients c WHERE ${ACTIVE_CLIENT_SQL} AND ${RENEWAL_CLIENT_SQL.expired}),
@@ -495,6 +585,8 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
   try {
     await conn.query('BEGIN');
     await conn.query('SET LOCAL search_path TO public');
+    const clientIds = await resolveClientGroupIds(conn, req.params.id);
+    if (!clientIds.length) { await conn.query('ROLLBACK'); return res.status(404).json({ error: 'Cliente no existe' }); }
     const c = await conn.query(
       `SELECT c.id, c.name, c.business_name, c.business_name AS company, c.email,
               c.owner_name, c.contact_person,
@@ -502,14 +594,14 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
               c.address, c.city, c.zip_code, c.tax_id, c.source AS base, c.created_at,
               c.pendiente_validacion, c.salesperson_id, sp.name AS vendor_name,
               (SELECT so.id FROM sales_opportunities so
-                 WHERE so.client_id = c.id AND so.archived_at IS NULL
-                 ORDER BY so.created_at DESC LIMIT 1) AS opportunity_id
+                 WHERE so.client_id = ANY($2::uuid[]) AND so.archived_at IS NULL
+                 ORDER BY so.updated_at DESC NULLS LAST, so.created_at DESC NULLS LAST LIMIT 1) AS opportunity_id
          FROM clients c LEFT JOIN salespeople sp ON sp.id = c.salesperson_id
-        WHERE c.id = $1`, [req.params.id]);
+        WHERE c.id = $1`, [req.params.id, clientIds]);
     if (!c.rows[0]) { await conn.query('ROLLBACK'); return res.status(404).json({ error: 'Cliente no existe' }); }
     const bans = await conn.query(
       `SELECT id, ban_number, account_type, status, credit_class, source
-         FROM bans WHERE client_id = $1 ORDER BY ban_number`, [req.params.id]);
+         FROM bans WHERE client_id = ANY($1::uuid[]) ORDER BY ban_number`, [clientIds]);
     const subs = await conn.query(
       `SELECT s.id, s.phone, s.plan, s.monthly_value, s.status, s.line_kind, s.line_type,
               s.activation_date, s.contract_start_date, s.contract_term, s.remaining_payments, s.contract_end_date,
@@ -540,7 +632,7 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
             ORDER BY COALESCE(comment_updated_at, created_at) DESC, id DESC
             LIMIT 1
          ) sh_last ON true
-        WHERE b.client_id = $1 ORDER BY b.ban_number, s.phone`, [req.params.id]);
+        WHERE b.client_id = ANY($1::uuid[]) ORDER BY b.ban_number, s.phone`, [clientIds]);
     let ventasTango = { rows: [] };
     const salesTable = await conn.query(`
       SELECT COALESCE(
@@ -551,11 +643,15 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
       ventasTango = await conn.query(
         `SELECT id, tango_venta_id, ban_number, phone, product_key, ventatipo_nombre,
                 monthly_value, company_commission, vendor_commission, vendor_name,
-                sale_date, synced, paid, paid_at, paid_by, review_reason, created_at
+                sale_date, synced, paid, paid_at, paid_by, review_reason, created_at,
+                COALESCE(NULLIF(TRIM(raw_payload->'sale'->>'equipo'), ''),
+                         NULLIF(TRIM(raw_payload->'sale'->>'equipment'), ''),
+                         NULLIF(TRIM(raw_payload->'sale'->>'modelo'), ''),
+                         NULLIF(TRIM(raw_payload->'sale'->'device'->>'model'), '')) IS NOT NULL AS tango_has_equipment
            FROM ${salesTable.rows[0].table_name}
-          WHERE client_id = $1
-             OR ban_number IN (SELECT ban_number FROM bans WHERE client_id = $1)
-          ORDER BY sale_date DESC NULLS LAST, created_at DESC`, [req.params.id]);
+          WHERE client_id = ANY($1::uuid[])
+             OR ban_number IN (SELECT ban_number FROM bans WHERE client_id = ANY($1::uuid[]))
+          ORDER BY sale_date DESC NULLS LAST, created_at DESC`, [clientIds]);
     }
     // Comisiones del cliente = subscriber_reports sincronizados/validados desde Tango
     const ventas = await conn.query(
@@ -564,8 +660,8 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
          FROM subscriber_reports sr
          JOIN subscribers s ON s.id = sr.subscriber_id
          JOIN bans b ON b.id = s.ban_id
-        WHERE b.client_id = $1
-        ORDER BY sr.report_month DESC, b.ban_number`, [req.params.id]);
+        WHERE b.client_id = ANY($1::uuid[])
+        ORDER BY sr.report_month DESC, b.ban_number`, [clientIds]);
     let clientNotes = { rows: [] };
     const hasClientNotes = await conn.query(`SELECT to_regclass('public.client_notes') AS t`);
     if (hasClientNotes.rows[0].t) {
@@ -574,10 +670,10 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
                 COALESCE(created_by_name, created_by::text, 'Usuario') AS created_by,
                 created_at
            FROM client_notes
-          WHERE client_id = $1
+          WHERE client_id = ANY($1::uuid[])
             AND deleted_at IS NULL
           ORDER BY created_at DESC
-          LIMIT 100`, [req.params.id]);
+          LIMIT 100`, [clientIds]);
     }
     // Historial de gestiones = bitácora de Asana de las oportunidades del cliente
     let historial = [];
@@ -587,9 +683,9 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
         `SELECT n.id, n.opportunity_id, n.note, n.product_key, n.step_name, n.created_by_username, n.created_at
            FROM opportunity_notes n
            JOIN sales_opportunities o ON o.id = n.opportunity_id
-          WHERE o.client_id = $1
+          WHERE o.client_id = ANY($1::uuid[])
             AND n.deleted_at IS NULL
-          ORDER BY n.created_at DESC`, [req.params.id]);
+          ORDER BY n.created_at DESC`, [clientIds]);
       historial = h.rows;
     }
     let comparativas = { rows: [] };
@@ -600,14 +696,15 @@ clientsRealRouter.get('/clients-real/:id', requireAuth, async (req, res) => {
       ) AS table_name`);
     if (comparativasTable.rows[0]?.table_name) {
       comparativas = await conn.query(
-        `SELECT id, client_id, name, current_total, offer_total, created_by, created_at
+        `SELECT id, client_id, name, current_total, offer_total, lines, created_by, created_at
            FROM ${comparativasTable.rows[0].table_name}
-          WHERE client_id = $1
+          WHERE client_id = ANY($1::uuid[])
           ORDER BY created_at DESC
-          LIMIT 50`, [req.params.id]);
+          LIMIT 50`, [clientIds]);
     }
     await conn.query('COMMIT');
-    res.json({ ...c.rows[0], bans: bans.rows, subscribers: subs.rows, ventas: ventas.rows, ventas_tango: ventasTango.rows, historial, client_notes: clientNotes.rows, comparativas: comparativas.rows });
+    const subscribers = subs.rows.map(s => effectiveContractPayments(s));
+    res.json({ ...c.rows[0], client_ids: clientIds, client_record_count: clientIds.length, bans: bans.rows, subscribers, ventas: ventas.rows, ventas_tango: ventasTango.rows, historial, client_notes: clientNotes.rows, comparativas: comparativas.rows });
   } catch (e) {
     try { await conn.query('ROLLBACK'); } catch {}
     console.error('[clients-real/:id]', e.message);

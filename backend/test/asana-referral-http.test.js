@@ -1,0 +1,48 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import {pool} from '../src/db.js';
+const {asanaRealRouter}=await import(process.env.ASANA_REFERRAL_STAGE==='1'?'../../output/asana-referidos/asanaReal.stage.mjs':'../src/routes/asanaReal.js');
+const id='dddddddd-dddd-4ddd-8ddd-dddddddddddd',one='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',two='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const integration=process.env.ASANA_REFERRAL_TEST==='1'?test:test.skip;
+integration('HTTP + PostgreSQL aislado: permisos, recarga, borrado opcional, sincronización y rollback',async()=>{
+ assert.equal(process.env.PGPORT,'55437');assert.equal(process.env.PGDATABASE,'asana_referral_test');
+ const app=express();app.use(express.json());app.use('/api',asanaRealRouter);
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));const base='http://127.0.0.1:'+server.address().port;
+ const token=(rol,nombre)=>jwt.sign({rol,nombre},process.env.JWT_SECRET||'dev-secret-cambiar');
+ const admin=token('admin','Admin prueba'),owner=token('vendedor','Vendedor Uno - Prueba'),other=token('vendedor','Vendedor Dos - Prueba');
+ const patch=(body,t)=>fetch(base+'/api/asana-real/'+id+'/referral',{method:'PATCH',headers:{'Content-Type':'application/json',...(t?{Authorization:'Bearer '+t}:{})},body:JSON.stringify(body)});
+ const state=()=>pool.query('SELECT salesperson_id,referred_by_name FROM sales_opportunities WHERE id=$1',[id]).then(r=>r.rows[0]);
+ try{
+  await pool.query('UPDATE clients SET salesperson_id=$1',[one]);
+  await pool.query('UPDATE sales_opportunities SET salesperson_id=$1,referred_by_name=NULL',[one]);
+  assert.equal((await patch({referred_by_name:'Persona externa'})).status,401);
+  assert.equal((await patch({referred_by_name:'Persona externa'},other)).status,403);
+  assert.equal((await patch({salesperson_id:two},owner)).status,403);
+  assert.equal((await patch({referred_by_name:'  Persona externa  '},owner)).status,200);
+  assert.equal((await state()).referred_by_name,'Persona externa');
+  const list=await fetch(base+'/api/asana-real',{headers:{Authorization:'Bearer '+admin}});
+  assert.equal(list.status,200);assert.ok((await list.json()).some(o=>o.referred_by_name==='Persona externa'));
+  assert.equal((await patch({referred_by_name:'Cambio parcial',salesperson_id:'ffffffff-ffff-4fff-8fff-ffffffffffff'},admin)).status,400);
+  assert.equal((await state()).referred_by_name,'Persona externa');
+  await pool.query("ALTER TABLE opportunity_notes ADD CONSTRAINT reject_test_note CHECK (note NOT LIKE '%Rollback de prueba%')");
+  assert.equal((await patch({referred_by_name:'Rollback de prueba',salesperson_id:two},admin)).status,500);
+  assert.deepEqual(await state(),{referred_by_name:'Persona externa',salesperson_id:one});
+  await pool.query('ALTER TABLE opportunity_notes DROP CONSTRAINT reject_test_note');
+  assert.equal((await patch({referred_by_name:'Ana externa',salesperson_id:two},admin)).status,200);
+  assert.equal((await pool.query('SELECT salesperson_id FROM clients')).rows[0].salesperson_id,two);
+  assert.ok((await pool.query('SELECT salesperson_id FROM sales_opportunities')).rows.every(r=>r.salesperson_id===two));
+  const refreshed=await fetch(base+'/api/asana-real',{headers:{Authorization:'Bearer '+admin}}).then(r=>r.json());
+  assert.equal(refreshed[0].vendor_name,'Vendedor Dos - Prueba');assert.equal(refreshed[0].referred_by_name,'Ana externa');
+  assert.equal((await patch({referred_by_name:'<script>alert(1)</script>'},admin)).status,200);
+  assert.equal((await patch({referred_by_name:''},admin)).status,200);
+  assert.equal((await state()).referred_by_name,null);
+  await pool.query('UPDATE clients SET salesperson_id=$1',[one]);
+  await pool.query('UPDATE sales_opportunities SET salesperson_id=$1',[one]);
+  const concurrentBody={salesperson_id:two,expected_salesperson_id:one};
+  const results=await Promise.all([patch(concurrentBody,admin),fetch(base+'/api/asana-real/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/referral',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+admin},body:JSON.stringify(concurrentBody)})]);
+  assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);
+  assert.equal((await pool.query('SELECT salesperson_id FROM clients')).rows[0].salesperson_id,two);
+ }finally{await new Promise(r=>server.close(r));await pool.end();}
+});
