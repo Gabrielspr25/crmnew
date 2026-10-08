@@ -18,6 +18,14 @@ Base propuesta al montar: /api/tracking/v1.
 | PATCH /nodes/:id | tracking:write | Actualizar campos permitidos de una rama |
 | POST /nodes/:id/notes | tracking:write | Registrar nota/decisión vinculada |
 
+Actualización publicada el 2026-10-08: GET /projects y GET /nodes/:id incluyen
+`business_rules`, con versión, fecha de aprobación y reglas del resumen
+`docs/audiencia/reglas-negocio.json`. Audiencia > newcrm > Reglas del negocio
+consulta esa misma fuente. No es una nota ni modifica el seguimiento privado;
+PUT /data ignora business_rules recibidas del navegador. No agrega herramientas
+ni amplía scopes. Tras el reinicio se reconectó la cuenta existente y se comprobó
+la lectura real del complemento: revisión 16 y regla de cuotas móviles vacías.
+
 PATCH recibe revision y changes. Campos permitidos: description, status, fulfillment, verification, assignee, role, nextStep, deadline, reviewedAt, requirements, missing, corrections, improvements, steps, evidence y workState. No altera id, project, parentId, kind ni history. El validador existente comprueba estados, responsables, fechas y evidencia; no basta pedir publicado_verificado para acreditar una publicación.
 
 POST notes recibe revision y text, hasta 5.000 caracteres. La fecha se genera en el servidor; el autor procede del autorizador. La nota se almacena en tracking.decisions y queda auditada, sin reemplazar notas ni historial.

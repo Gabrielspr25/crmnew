@@ -48,6 +48,28 @@ No se insertan opportunity_lines desde lecturas ni se crea seguimiento para toda
 la cartera. Enviar un cliente a seguimiento habilita este cálculo para ese cliente;
 los seguimientos existentes se benefician inmediatamente, sin backfill.
 
+## Checklist y notas — 2026-10-08
+
+El nombre y el resumen BAN/suscriptores abren una sola ventana compacta. Muestra
+BAN, teléfono y equipo real; sin equipo se indica `Sin equipo registrado`.
+Solo incluye renovaciones pendientes elegibles, renovaciones confirmadas
+coincidentes y decisiones explícitas de No renovar. Una venta confirmada desde
+la fecha del seguimiento se conserva como Renovada aunque se actualice el inicio
+del contrato; la cartera con cuotas pendientes no se presenta como Pendiente.
+
+No renovar guarda `status=no_trabajar_ahora`, `reason=no_renueva` en la línea de
+seguimiento y registra una nota en la misma transacción. No cambia el suscriptor,
+contrato, cuotas, ventas ni estado general del cliente. Exige sesión y permiso
+del propietario o administrador; rechaza líneas ajenas o no elegibles.
+
+Las notas visibles se ordenan por fecha/hora real descendente, sin agrupar por
+autor ni mostrarlo. El autor se conserva en el historial. Las marcas internas de
+prioridad se excluyen; la última nota aparece también en la tabla principal.
+
+`docs/audiencia/reglas-negocio.json` contiene el resumen aprobado. Audiencia y
+las consultas de proyectos/detalle del conector Katy leen esa misma fuente; no
+se guarda como nota ni se sobrescribe el seguimiento privado de Audiencia.
+
 ## Adjuntos de notas — publicado 2026-10-07
 
 En Gestión rápida > Nota se pueden adjuntar o pegar imágenes JPG, PNG y WebP,
