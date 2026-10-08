@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "approved_on": "2026-10-08",
+  "scope": "Resumen operativo de reglas del CRM; no reemplaza fuentes comerciales oficiales",
+  "rules": [
+    {
+      "title": "Identidad antes de seguimiento",
+      "text": "Una oportunidad requiere empresa o nombre utilizable. La lista operativa excluye registros históricos sin identidad válida y conserva sus datos.",
+      "source": "docs/REGLAS_ASANA_SEGUIMIENTO.md · Entrada operativa y Lista de Asana"
+    },
+    {
+      "title": "Renovaciones de Fijo y Móvil",
+      "text": "Regla actualizada el 8 de octubre: Fijo entra sin fecha final o con contrato vencido. Móvil entra con cero cuotas pendientes efectivas o con cuotas efectivas vacías. Primero se calcula por inicio y plazo válidos; si faltan se conserva la cuota guardada. Vacío cuenta como cero solo para elegibilidad móvil de Asana, sin modificar datos originales ni afirmar pagos realizados. Valores inválidos o negativos no equivalen a cero.",
+      "source": "docs/REGLAS_ASANA_SEGUIMIENTO.md · Renovaciones desde contratos y pagos"
+    },
+    {
+      "title": "Ventas y oportunidades",
+      "text": "Se excluyen canceladas, inactivas y No renueva. Las ventas sincronizadas y confirmadas descuentan una sola vez la línea o producto coincidente. Se conservan nuevas y adicionales manuales.",
+      "source": "docs/REGLAS_ASANA_SEGUIMIENTO.md · Renovaciones desde contratos y pagos"
+    },
+    {
+      "title": "Precio y unidad",
+      "text": "Fijo se suma en dinero únicamente con mensualidad válida; sin precio se mantiene la oportunidad y se indica Sin precio. Los demás productos se cuentan en unidades. No se inventan precios ni cuotas.",
+      "source": "docs/REGLAS_ASANA_SEGUIMIENTO.md · Clasificación de líneas"
+    },
+    {
+      "title": "Fuentes comerciales y trazabilidad",
+      "text": "Cada módulo conserva su fuente oficial, original, hash y vigencia. Cargar, analizar o guardar borrador no equivale a publicar. Debe contrastarse la versión con su consumidor; una falla no justifica sustituirla por datos vacíos.",
+      "source": "docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md · Estado verificable y Ciclo por categoría; AGENTS.md · Fuente comercial"
+    },
+    {
+      "title": "Publicado, vigente y completo",
+      "text": "Estado de versión, vigencia documental y contradicciones son conceptos separados. Publicado no acredita todos los requisitos ni todas las funciones. Sin verificar indica falta de evidencia, no ausencia de publicación.",
+      "source": "CLAUDE.md · Estados del motor; docs/motor-ofertas/CENTRO_CARGAS_CONTRATO_OPERATIVO.md · Estados de operación"
+    },
+    {
+      "title": "Cambios protegidos",
+      "text": "Audiencia conserva revisión e historial generado por el servidor con autor y antes/después. Una revisión obsoleta se rechaza; las notas y el seguimiento no conceden permisos ni ejecutan operaciones comerciales.",
+      "source": "docs/audiencia/README.md · Registro tracking; docs/audiencia/API-TRACKING-KATY.md · Escrituras"
+    }
+  ]
+}

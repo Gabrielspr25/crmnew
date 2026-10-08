@@ -17,8 +17,9 @@ test('fijo vigente con cero cuotas no entra',()=>{
 test('fijo sin contrato o vencido entra aunque conserve cuotas',()=>{
  for(const end of [null,'2026-10-06'])assert.equal(run(subscriber({product_type:'O',contract_start_date:null,contract_end_date:end,remaining_payments:5,monthly_value:45})).total_money,45);
 });
-test('movil sin cuotas ni fechas no se inventa oportunidad',()=>{
- assert.equal(run(subscriber({contract_start_date:null,contract_end_date:null,remaining_payments:null})).total_lines,0);
+test('movil con cuota efectiva vacia entra por regla aprobada sin cambiar el dato',()=>{
+ const s=subscriber({contract_start_date:null,contract_end_date:null,remaining_payments:null});
+ assert.equal(run(s).total_lines,1);assert.equal(s.remaining_payments,null);
 });
 test('cero informado sin fechas se conserva',()=>{
  assert.equal(run(subscriber({contract_start_date:null,contract_end_date:null,remaining_payments:0})).total_lines,1);

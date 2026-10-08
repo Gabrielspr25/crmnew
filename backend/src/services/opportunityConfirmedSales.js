@@ -3,7 +3,7 @@ const fixed = key => ['fijo_new','fijo_ren'].includes(key);
 const digits = value => String(value||'').replace(/\D/g,'');
 const amount = value => Math.max(0,Number(value)||0);
 const dateKey = value => value instanceof Date ? value.toISOString().slice(0,10) : String(value||'').slice(0,10);
-const excluded = value => ['cancelada','cancelado','cancelled','canceled','c','inactivo','inactive','no_renueva','no_renueva_ahora','trabajada','vendida','completada'].includes(String(value||'').trim().toLowerCase());
+const excluded = value => ['cancelada','cancelado','cancelled','canceled','c','inactivo','inactive','no_renueva','no_renueva_ahora','no_trabajar_ahora','excluida','ganada','trabajada','vendida','completada'].includes(String(value||'').trim().toLowerCase());
 const todayPR = () => new Intl.DateTimeFormat('en-CA',{timeZone:'America/Puerto_Rico',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const portfolioProduct = s => {
  const kind=String(s.line_kind||'').toLowerCase(),type=String(s.product_type||'').toUpperCase();
@@ -29,7 +29,8 @@ function portfolioLines(opportunity, saved, subscribers, today) {
   const related=saved.filter(l=>isRelated(l,s,key));
   if(related.some(l=>excluded(l.status)))continue;
   const end=dateKey(s.contract_end_date),start=dateKey(s.contract_start_date);
-  const payments=s.remaining_payments===null||s.remaining_payments===undefined||String(s.remaining_payments).trim()===''?null:Number(s.remaining_payments);
+  const paymentsMissing=s.remaining_payments===null||s.remaining_payments===undefined||(typeof s.remaining_payments==='string'&&s.remaining_payments.trim()==='');
+  const payments=paymentsMissing?null:['string','number'].includes(typeof s.remaining_payments)?Number(s.remaining_payments):NaN;
   const issues=[];
   if(payments===null||!Number.isFinite(payments)||payments<0)issues.push('Pagos pendientes sin dato válido');
   if(!end)issues.push('Sin fecha de contrato');
@@ -41,7 +42,9 @@ function portfolioLines(opportunity, saved, subscribers, today) {
   if(Number(s.contract_term)>0&&Number(s.payments_made)>=Number(s.contract_term)&&payments>0)issues.push('Pagos realizados y pendientes inconsistentes');
   if(issues.length)reviews.push({subscriber_id:s.id,phone:s.phone,issues});
   const contractEligible=!end||end<today;
-  const eligible=fixed(key)?contractEligible:key==='movil_ren'?payments===0:contractEligible||payments===0;
+  // Regla de Asana 2026-10-08: vacío efectivo admite renovación móvil;
+  // no cambia cuotas guardadas ni suplanta el cálculo por calendario válido.
+  const eligible=fixed(key)?contractEligible:key==='movil_ren'?payments===0||paymentsMissing:contractEligible||payments===0;
   if(!eligible)continue;
   const previous=related.find(l=>!excluded(l.status));
   const since=[dateKey(opportunity.created_at),start].filter(Boolean).sort().at(-1);
@@ -53,10 +56,10 @@ export function reconcileOpportunity(opportunity, lines, sales, subscribers, tod
   const portfolio=subscribers?portfolioLines(opportunity,lines,subscribers,today):{lines,reviews:[]};
   const unique=[...new Map(sales.map(s=>[String(s.sale_id),s])).values()];
   const available=unique.map(s=>({...s,used:false}));
-  const remaining=[],products={};
+  const remaining=[],products={},renewedSubscriberIds=new Set();
   let total_lines=0,total_money=0;
   for(const line of [...portfolio.lines].sort((a,b)=>String(a.created_at||'').localeCompare(String(b.created_at||'')) || String(a.id).localeCompare(String(b.id)))){
-    if(['cancelada','cancelado','no_renueva','trabajada','vendida','completada'].includes(String(line.status||'').toLowerCase()))continue;
+    if(excluded(line.status))continue;
     const key=line.product_key,isFixed=fixed(key),phone=digits(line.phone);
     let value=isFixed?amount(line.money_value??line.target_monthly_value??line.amount):amount(line.quantity_value??line.qty??(phone?1:0));
     const original=value;
@@ -65,7 +68,7 @@ export function reconcileOpportunity(opportunity, lines, sales, subscribers, tod
     const since=dateKey(line.created_at||opportunity.created_at);
     if(automaticFixed&&phone){
       const confirmed=available.find(s=>!s.used&&s.product_key===key&&dateKey(s.sale_date)>=since&&digits(s.phone)===phone);
-      if(confirmed){confirmed.used=true;continue;}
+      if(confirmed){confirmed.used=true;if(line.subscriber_id)renewedSubscriberIds.add(line.subscriber_id);continue;}
     }
     for(const sale of available){
       if(!value)break;
@@ -74,6 +77,7 @@ export function reconcileOpportunity(opportunity, lines, sales, subscribers, tod
       if(!credit)continue;
       value=Math.max(0,Math.round((value-credit)*100)/100);sale.used=true;
     }
+    if(!value&&original>0&&line.subscriber_id)renewedSubscriberIds.add(line.subscriber_id);
     if(!value&&!automaticFixed)continue;
     const row={...line,quantity_value:isFixed?line.quantity_value:value,money_value:isFixed?value:line.money_value,qty:isFixed?line.qty:value,amount:isFixed?(automaticFixed&&!value?null:value):line.amount,sold_value:original-value};
     remaining.push(row);
@@ -83,7 +87,25 @@ export function reconcileOpportunity(opportunity, lines, sales, subscribers, tod
     if(isFixed){products[key].money_value+=value;total_money+=value;}
     else{products[key].quantity_value+=value;total_lines+=value;}
   }
-  return {lines:remaining,products,total_lines,total_money:Math.round(total_money*100)/100,sold_count:available.filter(s=>s.used).length,review_count:portfolio.reviews.length,reviews:portfolio.reviews};
+  return {lines:remaining,products,total_lines,total_money:Math.round(total_money*100)/100,sold_count:available.filter(s=>s.used).length,review_count:portfolio.reviews.length,reviews:portfolio.reviews,renewed_subscriber_ids:[...renewedSubscriberIds]};
+}
+
+export function opportunityChecklist(opportunity,lines,sales,subscribers,today=todayPR()){
+ const pending=reconcileOpportunity(opportunity,lines,sales,subscribers,today),renewed=new Set(pending.renewed_subscriber_ids),seen=new Set();
+ const rows=[];
+ for(const s of subscribers){
+  const status=String(s.status||'').trim().toLowerCase(),key=portfolioProduct(s),identity=`${key}:${digits(s.phone)||s.id}`;
+  if(!key||seen.has(identity)||['cancelada','cancelado','cancelled','canceled','c','inactivo','inactive'].includes(status))continue;
+  seen.add(identity);
+  const related=lines.filter(l=>l.product_key===key&&(l.subscriber_id===s.id||(digits(s.phone)&&digits(l.phone)===digits(s.phone)))&&!['new','nueva','nuevo','manual','adicional'].includes(String(l.line_mode||'').toLowerCase()));
+  const noRenew=['no_renueva','no_renueva_ahora'].includes(status)||related.some(l=>['no_renueva','no_renueva_ahora'].includes(String(l.status||'').toLowerCase())||(l.status==='no_trabajar_ahora'&&l.reason==='no_renueva'));
+  const since=dateKey(opportunity.created_at);
+  const confirmed=digits(s.phone)&&sales.some(sale=>sale.product_key===key&&digits(sale.phone)===digits(s.phone)&&dateKey(sale.sale_date)>=since);
+  const completed=renewed.has(s.id)||confirmed||related.some(l=>['ganada','trabajada','vendida','completada'].includes(String(l.status||'').toLowerCase()));
+  if(!noRenew&&!completed&&!pending.lines.some(l=>l.subscriber_id===s.id))continue;
+  rows.push({subscriber_id:s.id,ban_id:s.ban_id,ban_number:s.ban_number||null,phone:s.phone,equipment:s.equipment??null,product_key:key,state:noRenew?'no_renueva':completed?'renovada':'pendiente'});
+ }
+ return {lines:rows,pending};
 }
 
 export async function opportunitySalesContext(db, opportunityId) {
@@ -102,7 +124,7 @@ export async function opportunitySalesContext(db, opportunityId) {
         AND EXISTS(SELECT 1 FROM public.subscriber_reports sr WHERE sr.external_sale_id::text=vs.tango_venta_id::text AND sr.validation_status='confirmed')
       ORDER BY vs.sale_date,vs.tango_venta_id::text`,[opportunityId]);
   const subscribers=await db.query(`
-    SELECT s.* FROM public.sales_opportunities o
+    SELECT s.*, b.ban_number FROM public.sales_opportunities o
       JOIN public.clients anchor ON anchor.id=o.client_id
       JOIN public.clients grouped ON grouped.id=anchor.id OR
         regexp_replace(lower(trim(COALESCE(NULLIF(grouped.name,''),grouped.business_name,''))),'[^a-z0-9]','','g')=

@@ -76,6 +76,8 @@ Estado de version, y solo de version:
 
 Actualizado: 2026-07-12.
 
-## Regla completa de cuotas y oportunidades — 2026-10-07
 
-Fijo: contrato vencido o sin fecha final. Móvil: cero cuotas efectivas. Descuento mensual por aniversario desde inicio/plazo independiente de Tango, compartido por Clientes, Asana y comparativa-base. Datos insuficientes no se convierten a cero; no se sobrescriben suscriptores. Metas sigue midiendo ventas confirmadas. Detalle y verificación pública: docs/auditorias/2026-10-07-asana-regla-completa-publicada.md.
+## Renovaciones automáticas en Asana — decisión de Gabriel, 2026-10-07
+
+Esta decisión sustituye el límite anterior de carga manual para renovaciones existentes: Asana obtiene las oportunidades desde las líneas reales del cliente agrupado. Regla completa confirmada el 2026-10-07: Fijo entra sin fecha final o con contrato vencido; Móvil con cero cuotas efectivas o cuotas efectivas vacías, según actualización aprobada el 2026-10-08. Las cuotas se descuentan por aniversario desde inicio y plazo sin exigir venta Tango; Clientes, Asana y comparativa-base comparten el cálculo. Si esos datos faltan, se conserva la cuota guardada; cuotas efectivas vacías cuentan como cero solo para elegibilidad móvil de Asana, sin modificar datos originales ni inferir pagos. Valores inválidos o negativos no cuentan como cero. Se excluyen canceladas, No renueva y renovaciones confirmadas coincidentes. Se conservan las oportunidades manuales adicionales y nuevas. La lectura calcula el resultado sin insertar ni actualizar suscriptores u opportunity_lines. Detalle: `docs/REGLAS_ASANA_SEGUIMIENTO.md` y `docs/auditorias/2026-10-07-asana-regla-completa-publicada.md`.
+

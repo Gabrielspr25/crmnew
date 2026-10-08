@@ -26,11 +26,11 @@ del cliente agrupado, sin depender de que existan productos guardados en Asana.
 Regla completa aprobada y publicada el 2026-10-07:
 
 - Fijo: no tiene fecha final registrada o su contrato venció (fecha final anterior al día actual de Puerto Rico).
-- Móvil: tiene cero cuotas pendientes efectivas; vencimiento o ausencia de contrato por sí solos no lo incluyen.
+- Móvil (actualización aprobada 2026-10-08): tiene cero cuotas pendientes efectivas o ese valor efectivo sigue vacío. Vacío (null, ausente o texto vacío) cuenta como cero exclusivamente para elegibilidad móvil de Asana; no significa que se hayan pagado cuotas ni modifica el dato guardado.
 - Las cuotas efectivas se calculan desde inicio y plazo por aniversario mensual, sin exigir vínculo a Tango. Clientes, Asana y comparativa-base comparten el cálculo, sin sobrescribir los registros originales.
 - Otros productos conservan el criterio anterior: sin fecha final, vencidos o cero cuotas. Las nuevas/adicionales manuales se conservan.
 
-Cuando faltan inicio o plazo válidos se conserva la cuota guardada. Pagos vacíos no equivalen a cero. Se señalan datos faltantes, fechas/plazo
+Primero se calcula por inicio y plazo válidos, aunque las cuotas guardadas estén vacías. Cuando faltan esos datos se conserva la cuota guardada. Solo si el resultado efectivo sigue vacío se admite la renovación móvil. Datos inválidos, booleanos o negativos no equivalen a cero. Clientes y comparativa conservan los datos y su cálculo de cuotas. Se señalan datos faltantes, fechas/plazo
 inconsistentes y contradicciones entre pagos realizados y pendientes. No se
 modifican los contratos ni se inventan cuotas o precios.
 

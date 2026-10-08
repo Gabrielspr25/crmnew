@@ -1,5 +1,6 @@
 import express from 'express';
 import {randomUUID} from 'node:crypto';
+import {readBusinessRules} from '../services/businessRules.js';
 
 const READ='tracking:read',WRITE='tracking:write';
 const EDITABLE=new Set(['description','status','fulfillment','verification','assignee','role','nextStep','deadline','reviewedAt','requirements','missing','corrections','improvements','steps','evidence','workState']);
@@ -23,12 +24,12 @@ export function createKatyTrackingRouter({store,authorize}){
   }catch(error){next(error);}
  });
  const handle=(scope,fn)=>async(req,res,next)=>{try{if(!req.trackingIdentity.scopes.includes(scope))throw fail(403,'El acceso de integración no permite esta operación.');await fn(req,res);}catch(error){next(error);}};
- router.get('/projects',handle(READ,async(_req,res)=>{const data=await store.read();res.json({revision:data.revision,projects:data.projects});}));
+ router.get('/projects',handle(READ,async(_req,res)=>{const data=await store.read();res.json({revision:data.revision,projects:data.projects,business_rules:readBusinessRules()});}));
  router.get('/nodes',handle(READ,async(req,res)=>{
   if(Object.keys(req.query).some(k=>k!=='project')||(req.query.project!==undefined&&(typeof req.query.project!=='string'||req.query.project.length>160)))throw fail(400,'Filtro de proyecto inválido.');
   const data=await store.read();res.json({revision:data.revision,nodes:data.tracking.nodes.filter(n=>!req.query.project||n.project===req.query.project)});
  }));
- router.get('/nodes/:id',handle(READ,async(req,res)=>{const data=await store.read();res.json({revision:data.revision,node:nodeById(data,req.params.id),notes:data.tracking.decisions.filter(note=>note.nodeId===req.params.id)});}));
+ router.get('/nodes/:id',handle(READ,async(req,res)=>{const data=await store.read();res.json({revision:data.revision,node:nodeById(data,req.params.id),notes:data.tracking.decisions.filter(note=>note.nodeId===req.params.id),business_rules:readBusinessRules()});}));
  router.patch('/nodes/:id',handle(WRITE,async(req,res)=>{
   bodyKeys(req.body,['revision','changes']);const expected=revision(req.body.revision),changes=req.body.changes;
   if(!object(changes)||!Object.keys(changes).length||Object.keys(changes).some(k=>!EDITABLE.has(k)))throw fail(400,'Los campos de la rama no están permitidos.');

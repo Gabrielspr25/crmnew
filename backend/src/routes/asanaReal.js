@@ -1,4 +1,4 @@
-import {createAsanaAttachmentsRouter,listAsanaAttachments} from './asanaAttachments.js';
+import {createAsanaAttachmentsRouter,listAsanaAttachments,authorizeAsanaAttachments} from './asanaAttachments.js';
 // Asana Seg. con DATA REAL de crm_pro (SOV2): sales_opportunities + opportunity_lines + opportunity_steps.
 // Lee del schema public (real). Usa BEGIN + SET LOCAL search_path para NO contaminar el pool.
 import { randomUUID } from 'node:crypto';
@@ -6,12 +6,15 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { updateOpportunityReferral } from '../services/asanaReferral.js';
-import { reconcileOpportunity, opportunitySalesContext } from '../services/opportunityConfirmedSales.js';
+import { reconcileOpportunity, opportunitySalesContext, opportunityChecklist } from '../services/opportunityConfirmedSales.js';
+import {markOpportunityNoRenew} from '../services/opportunityNoRenew.js';
 import { clientNameKeySql } from '../services/clientIdentity.js';
 
 export const asanaRealRouter = Router();
 asanaRealRouter.use(createAsanaAttachmentsRouter({pool,requireAuth}));
 
+let asanaListCache={at:0,rows:null};
+async function sellerCanOpenOpportunity(c,id,user){await authorizeAsanaAttachments(c,id,user);return true;}
 async function withPublic(fn) {
   const c = await pool.connect();
   try {
@@ -328,6 +331,10 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
                JOIN client_groups grouped_client ON grouped_client.client_id = b.client_id
               WHERE grouped_client.client_group_key = o.client_group_key)::int AS subscriber_count,
             COALESCE(sp.name,'Sin asignar') AS vendor_name,
+            (SELECT json_build_object('id',n.id,'body',regexp_replace(n.note,'^\\[NOTA\\]\\s*','','i'),'created_at',n.created_at)
+           FROM opportunity_notes n WHERE n.opportunity_id=o.id AND n.deleted_at IS NULL
+             AND n.note NOT ILIKE '[LLAMADA%' AND n.note NOT ILIKE '[PASO]%' AND n.note NOT ILIKE '[PRIORIDAD_ASANA:%'
+           ORDER BY n.created_at DESC,n.id DESC LIMIT 1) AS latest_note,
             COALESCE((SELECT json_object_agg(t.pk, t.jb) FROM (
                 SELECT ol.product_key AS pk, json_build_object(
                   'quantity_value', SUM(COALESCE(ol.quantity_value,0))::numeric,
@@ -443,11 +450,43 @@ asanaRealRouter.patch('/asana-real/:id/referral', requireAuth, async (req, res) 
   }
 });
 
+asanaRealRouter.post('/asana-real/:id/lines/:subscriberId/no-renew',requireAuth,async(req,res)=>{
+ try{
+  const result=await withPublic(async c=>{
+   if(!await sellerCanOpenOpportunity(c,req.params.id,req.user))return {forbidden:true};
+   const anchor=await c.query('SELECT id,client_id,created_at FROM sales_opportunities WHERE id=$1 AND archived_at IS NULL FOR UPDATE',[req.params.id]);
+   if(!anchor.rows[0])return null;
+   const context=await opportunitySalesContext(c,req.params.id);
+   return markOpportunityNoRenew({db:c,opportunity:anchor.rows[0],context,subscriberId:req.params.subscriberId,user:req.user});
+  });
+  if(!result)return res.status(404).json({error:'Oportunidad no existe'});
+  if(result.forbidden)return res.status(403).json({error:'No puedes modificar un seguimiento asignado a otro vendedor.'});
+  asanaListCache={at:0,rows:null};res.json(result);
+ }catch(e){res.status(e.status||500).json({error:e.status?e.message:'No se pudo registrar No renovar.'});}
+});
+
+asanaRealRouter.get('/asana-real/:id/checklist', requireAuth, async(req,res)=>{
+ try{
+  const result=await withPublic(async c=>{
+   if(!await sellerCanOpenOpportunity(c,req.params.id,req.user))return {forbidden:true};
+   const anchor=await c.query(`SELECT o.id,o.created_at,${CLIENT_NAME} AS client_name FROM sales_opportunities o JOIN clients c ON c.id=o.client_id WHERE o.id=$1 AND o.archived_at IS NULL`,[req.params.id]);
+   if(!anchor.rows[0])return null;
+   const context=await opportunitySalesContext(c,req.params.id);
+   const checklist=opportunityChecklist(anchor.rows[0],context.lines,context.sales,context.subscribers);
+   const notes=await c.query(`SELECT id,regexp_replace(note,'^\\[NOTA\\]\\s*','','i') AS body,created_at FROM opportunity_notes WHERE opportunity_id=$1 AND deleted_at IS NULL AND note NOT ILIKE '[LLAMADA%' AND note NOT ILIKE '[PASO]%' AND note NOT ILIKE '[PRIORIDAD_ASANA:%' ORDER BY created_at DESC,id DESC`,[req.params.id]);
+   return {...anchor.rows[0],lines:checklist.lines,notes:notes.rows};
+  });
+  if(!result)return res.status(404).json({error:'Oportunidad no existe'});
+  if(result.forbidden)return res.status(403).json({error:'No puedes abrir un seguimiento asignado a otro vendedor.'});
+  res.json(result);
+ }catch(e){res.status(e.status||500).json({error:e.status?e.message:'No se pudo consultar el checklist.'});}
+});
+
 asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
   try {
     const data = await withPublic(async c => {
       const o = await c.query(
-        `SELECT o.id, o.title, o.status, o.created_at, o.opportunity_type, o.expected_monthly_value, o.salesperson_id, o.referred_by_name,
+        `SELECT o.id, o.client_id, o.title, o.status, o.created_at, o.opportunity_type, o.expected_monthly_value, o.salesperson_id, o.referred_by_name,
                 ${CLIENT_NAME} AS client_name, COALESCE(sp.name,'—') AS salesperson
            FROM sales_opportunities o
            JOIN clients c ON c.id = o.client_id
@@ -455,6 +494,8 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
               WHERE o.id = $1`, [req.params.id]);
       if (!o.rows[0]) return null;
       const attachments=await listAsanaAttachments(c,req.params.id,req.user,{hideForbidden:true});
+      const context=await opportunitySalesContext(c,req.params.id);
+      const pending=reconcileOpportunity(o.rows[0],context.lines,context.sales,context.subscribers);
       await ensureOpportunityWorkflowSteps(c, req.params.id);
       const steps = await c.query(
         `SELECT id, product_key, name, step_order, (completed_at IS NOT NULL) AS done
@@ -475,8 +516,6 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
            FROM opportunity_notes
           WHERE opportunity_id = $1 AND deleted_at IS NULL
           ORDER BY created_at DESC, id DESC`, [req.params.id]);
-      const context=await opportunitySalesContext(c,req.params.id);
-      const pending=reconcileOpportunity(o.rows[0],context.lines,context.sales,context.subscribers);
       return { ...o.rows[0], steps: steps.rows, lines: pending.lines, review_count:pending.review_count,reviews:pending.reviews,sold_count:pending.sold_count, log: log.rows.map(n=>({...n,attachments:attachments.filter(a=>a.note_id===n.id)})) };
     });
     if (!data) return res.status(404).json({ error: 'Oportunidad no existe' });

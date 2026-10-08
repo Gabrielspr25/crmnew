@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { reconcileOpportunity } from '../src/services/opportunityConfirmedSales.js';
+import { reconcileOpportunity, opportunityChecklist } from '../src/services/opportunityConfirmedSales.js';
 const opp={id:'opp',created_at:'2026-10-05'};
 const sub=(id,extra={})=>({id,phone:'787000000'+id,status:'activo',product_type:'G',contract_end_date:'2028-03-05',remaining_payments:17,...extra});
 const run=(subs,lines=[],sales=[])=>reconcileOpportunity(opp,lines,sales,subs,'2026-10-07');
@@ -11,9 +11,25 @@ test('CAS sin productos guardados muestra cuatro renovaciones y excluye la vigen
 test('movil con cuotas pendientes no entra aunque el contrato venza o falte',()=>{
  assert.equal(run([sub('1',{contract_end_date:'2026-10-06'}),sub('2',{contract_end_date:null})]).total_lines,0);
 });
-test('pagos vacios no son cero con contrato vigente',()=>{
+test('cuotas efectivas vacias admiten renovacion movil sin alterar el dato original',()=>{
  const r=run([sub('1',{remaining_payments:null}),sub('2',{remaining_payments:''})]);
- assert.equal(r.total_lines,0);assert.equal(r.review_count,2);
+ assert.equal(r.total_lines,2);assert.equal(r.review_count,2);
+});
+
+test('Samary con cinco moviles activos sin contratos ni cuotas genera cinco renovaciones pendientes',()=>{
+ const subscribers=Array.from({length:5},(_,i)=>sub(String(i+1),{ban_id:'ban-samary',contract_start_date:null,contract_end_date:null,contract_term:null,remaining_payments:null}));
+ const before=structuredClone(subscribers),result=run(subscribers);
+ assert.equal(result.products.movil_ren.quantity_value,5);assert.equal(result.lines.length,5);assert.deepEqual(subscribers,before);
+});
+
+test('cuotas vacias respetan primero calendario valido y rechazan datos invalidos o negativos',()=>{
+ const result=run([sub('1',{remaining_payments:null,contract_start_date:'2026-09-07',contract_term:24}),...['mal',-1,NaN,Infinity,false].map((remaining_payments,i)=>sub(String(i+2),{remaining_payments}))]);
+ assert.equal(result.total_lines,0);
+});
+
+test('cuotas vacias conservan exclusiones y descuento de renovacion confirmada',()=>{
+ const result=run([sub('1',{remaining_payments:null,status:'inactive'}),sub('2',{remaining_payments:null}),sub('3',{remaining_payments:null})],[{subscriber_id:'2',product_key:'movil_ren',status:'no_renueva'}],[{sale_id:'venta',phone:'7870000003',product_key:'movil_ren',sale_date:'2026-10-06'}]);
+ assert.equal(result.total_lines,0);assert.equal(result.sold_count,1);
 });
 test('no renueva y canceladas quedan fuera',()=>{
  assert.equal(run([sub('1',{status:'no_renueva_ahora',remaining_payments:0}),sub('2',{status:'cancelado',remaining_payments:0})]).total_lines,0);
@@ -47,4 +63,23 @@ test('Cloud nueva manual no desaparece al coincidir su telefono con cartera vige
 });
 test('estado canceled no genera oportunidades',()=>{
  assert.equal(run([sub('1',{status:'canceled',remaining_payments:0})]).total_lines,0);
+});
+
+test('checklist conserva renovada confirmada y No renovar sin contarlas pendientes',()=>{
+ const subs=[sub('1',{remaining_payments:null,ban_number:'123',equipment:'Equipo real'}),sub('2',{remaining_payments:null,status:'no_renueva'}),sub('3',{remaining_payments:null,equipment:null}),sub('4',{status:'cancelado'})];
+ const sale={sale_id:'venta',phone:subs[0].phone,product_key:'movil_ren',sale_date:'2026-10-06'};
+ const result=opportunityChecklist(opp,[],[sale],subs,'2026-10-07');
+ assert.deepEqual(result.lines.map(l=>l.state),['renovada','no_renueva','pendiente']);
+ assert.equal(result.lines[0].equipment,'Equipo real');assert.equal(result.lines[0].ban_number,'123');
+ assert.equal(result.lines[2].equipment,null);assert.equal(result.pending.total_lines,1);
+});
+
+test('checklist no convierte cuotas pendientes en oportunidades ni suspensión en No renovar',()=>{
+ const result=opportunityChecklist(opp,[],[],[sub('1',{remaining_payments:19}),sub('2',{status:'suspendido',remaining_payments:0})],'2026-10-07');
+ assert.equal(result.lines.length,1);assert.equal(result.lines[0].subscriber_id,'2');assert.equal(result.lines[0].state,'pendiente');
+});
+test('checklist conserva renovación confirmada aunque el nuevo contrato tenga cuotas',()=>{
+ const s=sub('1',{remaining_payments:24,contract_start_date:'2026-10-08'});
+ const checklist=opportunityChecklist(opp,[],[{sale_id:'sale',product_key:'movil_ren',phone:s.phone,sale_date:'2026-10-06'}],[s],'2026-10-08');
+ assert.equal(checklist.lines.length,1);assert.equal(checklist.lines[0].state,'renovada');assert.equal(checklist.pending.total_lines,0);
 });

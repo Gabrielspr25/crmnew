@@ -25,6 +25,7 @@ test('API exige autorización y scopes de escritura',async t=>{
 });
 test('lectura filtrada muestra revisión y no entrega documento privado completo',async t=>{
  const f=await fixture(t),projects=await(await f.request('/projects')).json();assert.ok(projects.projects.length);
+ assert.equal(projects.business_rules.approved_on,'2026-10-08');assert.ok(projects.business_rules.rules.some(rule=>rule.text.includes('cuotas efectivas vacías')));
  const r=await f.request('/nodes?project=newcrm');assert.equal(r.headers.get('cache-control'),'no-store');const list=await r.json();assert.ok(list.nodes.every(n=>n.project==='newcrm'));assert.equal(list.items,undefined);
  assert.equal((await f.request('/nodes/no-existe')).status,404);
 });

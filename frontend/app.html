@@ -733,7 +733,7 @@
 <script src="/import-workbook.js"></script>
 <script src="/ofertas-moviles-analisis.js?v=20261001"></script>
 <script src="/lanzamientos.js?v=20261001"></script>
-<script src="/audiencia.js?v=20261005-arbol-r30"></script>
+<script src="/audiencia.js?v=20261008-reglas"></script>
 </head>
 <body data-theme="soft-dark">
   <aside class="side">
@@ -2595,8 +2595,28 @@ function abrirTareaPaso(opportunityId,clientId,stepId,stepName){
   $('asanaTaskTitle').value=stepName||'';
   $('asanaTaskDate').focus();
 }
+let asanaListRefresh=false;
+function asanaNotesNewestFirst(notes){return [...(notes||[])].sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)||String(b.id||'').localeCompare(String(a.id||'')));}
+function asanaNoteDate(value){const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString('es'):'Fecha no registrada';}
+function asanaChecklistHtml(data){
+ const states={pendiente:'Pendiente',renovada:'Renovada',no_renueva:'No renovar'};
+ const rows=(data.lines||[]).map(line=>`<tr><td>${esc(line.ban_number||'Sin BAN')}</td><td>${esc(fmtPhone(line.phone)||'Sin teléfono')}</td><td>${esc(cliEquipmentLabel(line.equipment)||'Sin equipo registrado')}</td><td><span class="pill ${line.state==='renovada'?'green':line.state==='no_renueva'?'amber':''}">${states[line.state]||'Pendiente'}</span>${line.state==='pendiente'?` <button type="button" class="btn ghost" style="padding:3px 6px;font-size:11px" data-subscriber-id="${esc(line.subscriber_id)}" data-opportunity-id="${esc(data.id)}" onclick="asanaChecklistNoRenew(this)">No renovar</button>`:''}</td></tr>`).join('');
+ const notes=asanaNotesNewestFirst(data.notes).map(note=>`<div style="padding:7px 0;border-top:1px solid var(--border)"><small class="s">${esc(asanaNoteDate(note.created_at))}</small><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(note.body||'')}</div></div>`).join('');
+ return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px"><b>${esc(data.client_name||'Líneas del cliente')}</b><button type="button" class="btn ghost" onclick="cerrarModal()">Cerrar</button></div><div style="overflow-x:auto"><table style="font-size:12px"><thead><tr><th>BAN</th><th>Teléfono</th><th>Equipo</th><th>Estado</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Sin líneas visibles</td></tr>'}</tbody></table></div><h3 style="font-size:13px;margin:12px 0 6px">Notas recientes</h3>${notes||'<div class="s">Sin notas</div>'}`;
+}
+async function abrirChecklistAsana(id){
+ try{const data=await api('/api/asana-real/'+id+'/checklist');cerrarModal();document.body.insertAdjacentHTML('beforeend','<div class="modal-bg" id="modalBg" onclick="if(event.target===this)cerrarModal()"><div class="modal" id="asanaChecklistModal" role="dialog" aria-label="Líneas y notas del cliente" style="max-width:760px;width:94vw;max-height:78vh;overflow:auto">'+asanaChecklistHtml(data)+'</div></div>');}
+ catch(e){alert('No se pudo abrir el checklist: '+e.message);}
+}
+async function asanaChecklistNoRenew(button){
+ if(!confirm('¿Marcar No renovar esta línea?'))return;
+ button.disabled=true;
+ try{await api('/api/asana-real/'+button.dataset.opportunityId+'/lines/'+button.dataset.subscriberId+'/no-renew',{method:'POST'});const data=await api('/api/asana-real/'+button.dataset.opportunityId+'/checklist');if($('asanaChecklistModal'))$('asanaChecklistModal').innerHTML=asanaChecklistHtml(data);asanaListRefresh=true;await router();}
+ catch(e){button.disabled=false;alert('No se pudo guardar: '+e.message);}
+}
 async function viewAsana(){
-  const [rawData,callAlerts,agenda]=await Promise.all([api('/api/asana-real'),loadCallAlerts(),api('/api/asana-real/agenda?scope='+asanaAgendaScope)]);
+  const refresh=asanaListRefresh;asanaListRefresh=false;
+  const [rawData,callAlerts,agenda]=await Promise.all([api('/api/asana-real'+(refresh?'?refresh=1':'')),loadCallAlerts(),api('/api/asana-real/agenda?scope='+asanaAgendaScope)]);
   asanaAgendaItems=agenda.items||[];
   const data=rawData.filter(o=>isAsanaClientVisible(o.client_name));
   const callByOpp=asanaCallMap(callAlerts);
@@ -2643,7 +2663,7 @@ async function viewAsana(){
     const manual=o.priority_signals.manual_priority;
     const priorityMeta=manual?'Manual':(o.priority_signals.nextDue?fmtDate(o.priority_signals.nextDue):'Automática');
     return `<tr class="asana-row" data-search="${esc(searchText)}" data-priority-group="${esc(o.priority_group)}" data-priority-rank="${o.priority_rank}">
-    <td><div class="asana-client-cell" title="${esc(clientLineTitle)}"><div class="asana-client-line"><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button><span class="asana-ban-inline">${esc(banText)}</span><span class="asana-meta-inline">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</span></div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}${asanaRecentSaleBadge(o.recent_sale_review)}${o.sold_count?'<div class="s" style="margin-top:3px">'+Number(o.sold_count)+' ventas descontadas de Comisiones</div>':''}</div></td>
+    <td><div class="asana-client-cell" title="${esc(clientLineTitle)}"><div class="asana-client-line"><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirChecklistAsana('${o.id}')">${esc(o.client_name||'—')}</button><span class="asana-ban-inline">${esc(banText)}</span><button type="button" class="linkbtn asana-meta-inline" style="font:inherit;cursor:pointer" onclick="abrirChecklistAsana('${o.id}')">${o.ban_count||0} BAN · ${o.subscriber_count||0} subs</button></div>${o.client_pending_validation?'<span class="pill amber" style="font-size:9px;margin:3px 0;display:inline-block">CLIENTE NUEVO</span>':''}${asanaRecentSaleBadge(o.recent_sale_review)}${o.sold_count?'<div class="s" style="margin-top:3px">'+Number(o.sold_count)+' ventas descontadas de Comisiones</div>':''}${o.latest_note?'<div class="s" style="margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(o.latest_note.body||'')+'">'+esc(asanaNoteDate(o.latest_note.created_at))+' · '+esc(o.latest_note.body||'')+'</div>':''}</div></td>
     <td><button type="button" class="asana-vendor asana-vendor-edit ${(o.vendor_name||'Sin asignar')==='Sin asignar'?'unassigned':''}" data-opportunity-id="${esc(o.id)}" data-salesperson-id="${esc(o.salesperson_id||'')}" data-referred-by="${esc(o.referred_by_name||'')}" onclick="abrirReferidoAsana(this)" title="Editar vendedor y referido" aria-label="Editar vendedor y referido de ${esc(o.client_name||'cliente')}">${esc(o.vendor_name||'Sin asignar')}</button>${o.referred_by_name?`<span class="asana-referral-label">Referido por: ${esc(o.referred_by_name)}</span>`:''}</td>
     <td><select class="asana-priority-select" title="Prioridad manual" onchange="cambiarPrioridadAsana('${o.id}',this.value)"><option value=""${manual?'':' selected'}>Automática</option><option value="alta"${manual==='alta'?' selected':''}>Alta</option><option value="media"${manual==='media'?' selected':''}>Media</option><option value="baja"${manual==='baja'?' selected':''}>Baja</option></select><span class="asana-priority-meta">${esc(priorityMeta)}</span><button type="button" class="btn ghost" style="padding:3px 7px;margin-top:4px;font-size:11px" data-opportunity-id="${esc(o.id)}" onclick="agendarLlamadaDesdeCliente(this)" aria-label="Agendar llamada">📅 Agendar</button>${callByOpp.get(o.id)?.scheduled_call_at?'<span class="asana-priority-meta">Llamar: '+esc(new Date(callByOpp.get(o.id).scheduled_call_at).toLocaleDateString('es'))+'</span>':''}</td>
     ${ASANA_PRODS.map(p=>cell(o,p[0],p[2])).join('')}
@@ -2694,14 +2714,14 @@ async function viewOpp(id){ prepareAsanaAttachmentComposer(id);
     </div>`;
   }).join('')||'<div class="empty">Sin pasos cargados en esta oportunidad.</div>';
   const logIcon={llamada:'☎',nota:'✎',paso:'✓'};
-  const logs=o.log||[];
+  const logs=asanaNotesNewestFirst(o.log);
   if(!ASANA_LOG_TABS.some(t=>t[0]===asanaLogTab))asanaLogTab='llamada';
   const logCounts=ASANA_LOG_TABS.reduce((acc,t)=>{acc[t[0]]=logs.filter(l=>(l.type||'nota')===t[0]).length;return acc;},{});
   const logTabs=ASANA_LOG_TABS.map(t=>`<button class="ctab ${asanaLogTab===t[0]?'on':''}" onclick="setAsanaLogTab('${t[0]}')">${t[1]} <span class="pill" style="background:var(--card2);color:var(--txt3);font-size:10px">${logCounts[t[0]]||0}</span></button>`).join('');
   const activeLogs=logs.filter(l=>(l.type||'nota')===asanaLogTab);
   const logItems=activeLogs.map(l=>{
     const scheduled=l.scheduled_call_at?`<span class="pill amber" style="margin-left:6px">Agendada: ${new Date(l.scheduled_call_at).toLocaleString('es')}</span>`:'';
-    return `<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0;flex:1"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}${scheduled}</div>${asanaNoteAttachmentsHtml(o.id,l)}<div class="logmeta">${esc(l.user_name||'Sistema')} · ${new Date(l.created_at).toLocaleString('es')}</div></div><button class="btn ghost" title="Eliminar nota" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="eliminarNotaAsana('${o.id}','${l.id||''}')">Eliminar</button></div>`;
+    return `<div class="logitem"><span class="lic ${l.type||'nota'}">${logIcon[l.type]||'✎'}</span><div style="min-width:0;flex:1"><div style="font-size:13px;color:var(--txt)">${esc(l.body||l.note||'')}${scheduled}</div>${asanaNoteAttachmentsHtml(o.id,l)}<div class="logmeta">${esc(asanaNoteDate(l.created_at))}</div></div><button class="btn ghost" title="Eliminar nota" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="eliminarNotaAsana('${o.id}','${l.id||''}')">Eliminar</button></div>`;
   }).join('')||`<div class="empty">Sin ${ASANA_LOG_TABS.find(t=>t[0]===asanaLogTab)[1].toLowerCase()} todavía.</div>`;
   return `<div class="crumb"><a href="#/asana">Asana</a> / Seguimiento</div>
   <div class="head"><div class="cli"><span class="av" style="width:48px;height:48px;font-size:16px">${ini(o.client_name)}</span><div><h1><button type="button" class="linkbtn" style="font:inherit;text-align:left;padding:0;background:none;border:0;cursor:pointer" onclick="abrirCliente('${o.client_id||''}')">${esc(o.client_name||'—')}</button></h1><div class="s">${o.title||'Seguimiento'} · ${o.salesperson}</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="location.hash='#/asana'">Volver a Asana</button><button class="btn ghost" onclick="cerrarOpp('${o.id}')">Eliminar de seguimiento</button></div></div>

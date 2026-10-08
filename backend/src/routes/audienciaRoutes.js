@@ -1,4 +1,5 @@
 import express from 'express';
+import {readBusinessRules} from '../services/businessRules.js';
 
 function sendError(res, caught) {
   return res.status(caught?.status || 500).json({ error: caught?.message || 'No se pudo completar la operación de Audiencia.' });
@@ -62,7 +63,7 @@ export function createAudienciaRouter({ access, store, delegation }) {
   router.get('/data', async (req, res) => {
     try {
       access.verify(req.user, audienceToken(req));
-      return res.json(await store.read());
+      return res.json({...await store.read(),business_rules:readBusinessRules()});
     } catch (caught) {
       return sendError(res, caught);
     }
@@ -72,10 +73,12 @@ export function createAudienciaRouter({ access, store, delegation }) {
     try {
       access.verify(req.user, audienceToken(req));
       const expectedRevision = req.body?.revision;
-      return res.json(await store.write(req.body, expectedRevision, {
+      const {business_rules:_ignored,...payload}=req.body||{};
+      const saved=await store.write(payload, expectedRevision, {
         id: String(req.user?.id || req.user?.nick || ''),
         name: String(req.user?.nombre || req.user?.nick || 'Usuario autenticado'),
-      }));
+      });
+      return res.json({...saved,business_rules:readBusinessRules()});
     } catch (caught) {
       return sendError(res, caught);
     }
