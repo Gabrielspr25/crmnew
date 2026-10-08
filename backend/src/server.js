@@ -30,6 +30,15 @@ import { subscriberHistoryRouter } from './routes/subscriberHistoryRoutes.js';
 import { adminControlRouter } from './routes/adminControlRoutes.js';
 
 
+import { createAudienceAccess } from './services/audienciaAccess.js';
+import { createAudienciaCredentialStore } from './services/audienciaCredentials.js';
+import { createAudienciaStore } from './services/audienciaStore.js';
+import { createAudienciaRouter } from './routes/audienciaRoutes.js';
+import { createTrackingGateway } from '../../plugins/katy-tracking/src/gateway.mjs';
+import { createTrackingOwnerVerifier } from './services/katyTrackingOwner.js';
+
+import { createAudienciaDelegation } from './services/audienciaDelegation.js';
+
 // Una consulta que falla dentro de una ruta async no debe tumbar el CRM entero:
 // antes, un error de SQL en una sola pantalla mataba el proceso y todo dejaba de responder.
 // Queda registrado en el log para poder corregirlo, pero el servidor sigue en pie.
@@ -46,6 +55,24 @@ app.use(express.json({ limit: '50mb' }));
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const FRONT = path.resolve(__dir, '../../frontend');
 const OFFERS = path.resolve(__dir, '../../Planes para web');
+const audienciaDataDirectory = process.env.AUDIENCIA_DATA_DIR || path.resolve(__dir, '../private-data/audiencia');
+const audienciaAccess = createAudienceAccess({
+  ownerNick: process.env.AUDIENCIA_GABRIEL_NICK,
+  ownerName: process.env.AUDIENCIA_GABRIEL_NOMBRE,
+  passwordHash: process.env.AUDIENCIA_PASSWORD_HASH,
+  tokenSecret: process.env.AUDIENCIA_TOKEN_SECRET,
+  credentialStore: createAudienciaCredentialStore({ directory: audienciaDataDirectory }),
+});
+const audienciaStore = createAudienciaStore({ directory: audienciaDataDirectory });
+const katyGateway = createTrackingGateway({
+  clientsFile: path.join(audienciaDataDirectory, 'katy-oauth-clients.json'),
+  origin: 'https://crmp.ss-group.cloud',
+  store: audienciaStore,
+  verifyOwner: createTrackingOwnerVerifier({ secret: process.env.JWT_SECRET, access: audienciaAccess }),
+});
+app.use(katyGateway.app);
+
+
 app.use(express.static(FRONT, {
   etag: true,
   setHeaders: (res, fp) => {
@@ -97,6 +124,9 @@ app.use('/api', reportsAiRouter);             // Reportes inteligentes de solo l
 app.use('/api', subscriberHistoryRouter);      // Historial/bitacora por suscriptor
 app.use('/api/admin-control', adminControlRouter); // Control operativo derivado del Plan Maestro
 
+
+const audienciaDelegation = createAudienciaDelegation({ access: audienciaAccess, store: audienciaStore });
+app.use('/api/audiencia', audienciaDelegation.gate, requireAuth, createAudienciaRouter({ access: audienciaAccess, store: audienciaStore, delegation: audienciaDelegation }));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`[ventaspro-nuevo] backend en :${PORT}`));
