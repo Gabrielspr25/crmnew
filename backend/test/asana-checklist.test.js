@@ -5,6 +5,12 @@ import vm from 'node:vm';
 import {markOpportunityNoRenew} from '../src/services/opportunityNoRenew.js';
 import {reconcileOpportunity} from '../src/services/opportunityConfirmedSales.js';
 
+test('notas del checklist y lista excluyen marcas de prioridad antiguas y actuales',()=>{
+ const source=readFileSync(new URL('../src/routes/asanaReal.js',import.meta.url),'utf8');
+ assert.match(source,/n\.note NOT ILIKE '\[ASANA_PRIORITY:%'/);
+ assert.match(source,/note NOT ILIKE '\[PRIORIDAD_ASANA:%' AND note NOT ILIKE '\[ASANA_PRIORITY:%'/);
+});
+
 test('No renovar registra decisión e historial sin cambiar contrato ni suscriptor',async()=>{
  const opportunity={id:'opp',client_id:'client',created_at:'2026-10-07'};
  const context={lines:[],sales:[],subscribers:[{id:'sub',ban_id:'ban',phone:'7870000001',product_type:'G',status:'activo',remaining_payments:null}]};

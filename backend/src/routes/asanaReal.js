@@ -333,7 +333,7 @@ asanaRealRouter.get('/asana-real', requireAuth, async (req, res) => {
             COALESCE(sp.name,'Sin asignar') AS vendor_name,
             (SELECT json_build_object('id',n.id,'body',regexp_replace(n.note,'^\\[NOTA\\]\\s*','','i'),'created_at',n.created_at)
            FROM opportunity_notes n WHERE n.opportunity_id=o.id AND n.deleted_at IS NULL
-             AND n.note NOT ILIKE '[LLAMADA%' AND n.note NOT ILIKE '[PASO]%' AND n.note NOT ILIKE '[PRIORIDAD_ASANA:%'
+             AND n.note NOT ILIKE '[LLAMADA%' AND n.note NOT ILIKE '[PASO]%' AND n.note NOT ILIKE '[PRIORIDAD_ASANA:%' AND n.note NOT ILIKE '[ASANA_PRIORITY:%'
            ORDER BY n.created_at DESC,n.id DESC LIMIT 1) AS latest_note,
             COALESCE((SELECT json_object_agg(t.pk, t.jb) FROM (
                 SELECT ol.product_key AS pk, json_build_object(
@@ -473,7 +473,7 @@ asanaRealRouter.get('/asana-real/:id/checklist', requireAuth, async(req,res)=>{
    if(!anchor.rows[0])return null;
    const context=await opportunitySalesContext(c,req.params.id);
    const checklist=opportunityChecklist(anchor.rows[0],context.lines,context.sales,context.subscribers);
-   const notes=await c.query(`SELECT id,regexp_replace(note,'^\\[NOTA\\]\\s*','','i') AS body,created_at FROM opportunity_notes WHERE opportunity_id=$1 AND deleted_at IS NULL AND note NOT ILIKE '[LLAMADA%' AND note NOT ILIKE '[PASO]%' AND note NOT ILIKE '[PRIORIDAD_ASANA:%' ORDER BY created_at DESC,id DESC`,[req.params.id]);
+   const notes=await c.query(`SELECT id,regexp_replace(note,'^\\[NOTA\\]\\s*','','i') AS body,created_at FROM opportunity_notes WHERE opportunity_id=$1 AND deleted_at IS NULL AND note NOT ILIKE '[LLAMADA%' AND note NOT ILIKE '[PASO]%' AND note NOT ILIKE '[PRIORIDAD_ASANA:%' AND note NOT ILIKE '[ASANA_PRIORITY:%' ORDER BY created_at DESC,id DESC`,[req.params.id]);
    return {...anchor.rows[0],lines:checklist.lines,notes:notes.rows};
   });
   if(!result)return res.status(404).json({error:'Oportunidad no existe'});
@@ -514,7 +514,7 @@ asanaRealRouter.get('/asana-real/:id', requireAuth, async (req, res) => {
                 COALESCE(created_by_username, 'Sistema') AS user_name,
                 created_at
            FROM opportunity_notes
-          WHERE opportunity_id = $1 AND deleted_at IS NULL
+          WHERE opportunity_id = $1 AND deleted_at IS NULL AND note NOT ILIKE '[ASANA_PRIORITY:%' AND note NOT ILIKE '[PRIORIDAD_ASANA:%'
           ORDER BY created_at DESC, id DESC`, [req.params.id]);
       return { ...o.rows[0], steps: steps.rows, lines: pending.lines, review_count:pending.review_count,reviews:pending.reviews,sold_count:pending.sold_count, log: log.rows.map(n=>({...n,attachments:attachments.filter(a=>a.note_id===n.id)})) };
     });
